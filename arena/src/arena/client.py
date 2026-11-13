@@ -46,31 +46,41 @@ class HttpSession:
     def truth(self) -> dict:
         return self.http.get(f"/sessions/{self.session_id}/truth")
 
-    def end(self, reason: str) -> None:
-        self.http.post(f"/sessions/{self.session_id}/end", {"reason": reason})
+    def end(self, reason: str, outcome: str | None = None, usage_total: dict | None = None) -> None:
+        body = {"reason": reason, "outcome": outcome, "usage_total": usage_total}
+        self.http.post(f"/sessions/{self.session_id}/end", {k: v for k, v in body.items() if v is not None})
+
+
+class AlreadyFinished(Exception):
+    """POST /sessions returned 409: this run_key already has a finished run."""
 
 
 class _Http:
-    def __init__(self, base: str):
+    def __init__(self, base: str, transport=None, backoff: float = 1.5):
         import httpx
         self.base = base.rstrip("/")
         if not self.base.endswith("/api"):
             self.base += "/api"
-        self.c = httpx.Client(timeout=60)
+        self.backoff = backoff
+        self.c = httpx.Client(timeout=60, transport=transport)
 
     def _do(self, method, path, **kw):
+        import httpx
         for attempt in range(4):
             try:
                 r = self.c.request(method, self.base + path, **kw)
-                if r.status_code >= 500 and attempt < 3:
-                    time.sleep(1.5 * 2 ** attempt)
-                    continue
-                r.raise_for_status()
-                return r.json() if r.content else {}
-            except Exception:  # network blips on a venue tunnel
+            except httpx.TransportError:  # network blips on a venue tunnel
                 if attempt == 3:
                     raise
-                time.sleep(1.5 * 2 ** attempt)
+                time.sleep(self.backoff * 2 ** attempt)
+                continue
+            if r.status_code >= 500 and attempt < 3:
+                time.sleep(self.backoff * 2 ** attempt)
+                continue
+            if r.status_code == 409 and method == "POST" and path == "/sessions":
+                raise AlreadyFinished(r.text)
+            r.raise_for_status()  # 4xx are our bugs: fail loudly, no retry
+            return r.json() if r.content else {}
 
     def get(self, path, **params):
         return self._do("GET", path, params=params)
@@ -80,10 +90,12 @@ class _Http:
 
 
 class HttpClient:
-    def __init__(self, base_url: str):
-        self.http = _Http(base_url)
+    def __init__(self, base_url: str, collection: str | None = None, transport=None, backoff: float = 1.5):
+        self.http = _Http(base_url, transport=transport, backoff=backoff)
+        self.collection = collection
 
     def list_games(self, collection: str) -> list[dict]:
+        self.collection = collection
         out = self.http.get("/games", collection=collection)
         return out if isinstance(out, list) else out.get("games", [])
 
@@ -91,16 +103,20 @@ class HttpClient:
         return self.http.get(f"/games/{game_id}")
 
     def start(self, game_id, player, run_key=None):
-        data = self.http.post("/sessions", {"game_id": game_id, "player": player, "run_key": run_key})
+        body = {"game_id": game_id, "collection": self.collection, "run_key": run_key,
+                "harness_version": player.get("harness_version"),
+                "player": player}
+        data = self.http.post("/sessions", {k: v for k, v in body.items() if v is not None})
         return HttpSession(self.http, data), data
 
     def finished_run_keys(self) -> set[str]:
-        try:
-            runs = self.http.get("/runs")
-        except Exception:
-            return set()
+        params = {"limit": 100000}
+        if self.collection:
+            params["collection"] = self.collection
+        runs = self.http.get("/runs", **params)
         runs = runs if isinstance(runs, list) else runs.get("runs", [])
-        return {r["run_key"] for r in runs if r.get("run_key") and r.get("ended_at")}
+        return {r["run_key"] for r in runs
+                if r.get("run_key") and r.get("ended_at") and r.get("outcome") != "IN_PROGRESS"}
 
 
 # ---------------------------------------------------------------- mock
@@ -123,7 +139,7 @@ class MockSession:
     def truth(self) -> dict:
         return self.game.truth()
 
-    def end(self, reason: str) -> None:
+    def end(self, reason: str, outcome: str | None = None, usage_total: dict | None = None) -> None:
         t = self.game.truth()
         self.meta.update(ended_at=time.time(), reason=reason, outcome=t["state"],
                          levels_completed=t["level"] - (0 if t["state"] == "WIN" else 1),

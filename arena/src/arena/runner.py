@@ -19,7 +19,7 @@ import yaml
 
 from .agent_loop import HARNESS_VERSION, Budgets, play_model
 from .baselines import BASELINES
-from .client import make_client
+from .client import AlreadyFinished, make_client
 from .cost import est_tokens_per_step, price
 from .frames import _repo_root
 from .providers import get_provider
@@ -177,6 +177,8 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
         for f in cf.as_completed(futs):
             try:
                 f.result()
+            except AlreadyFinished:
+                log("  skipped: server says this run_key already finished")
             except Exception as e:  # one broken run must not kill the sweep; it stays unfinished -> rerun
                 log(f"  run failed: {type(e).__name__}: {e}")
     log(f"results: {results_path}")

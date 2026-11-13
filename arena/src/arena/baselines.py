@@ -11,6 +11,10 @@ from .client import GameClient
 MOVE_ACTIONS = ["ACTION1", "ACTION2", "ACTION3", "ACTION4"]
 
 
+def _finish(session, truth, reason) -> None:
+    session.end(reason, outcome=_outcome(truth, reason), usage_total={"in": 0, "out": 0, "cost_usd": 0.0})
+
+
 def _result(session, game_id, truth, actions, t0, reason) -> GameResult:
     done = (truth.get("level", 1) - 1) + (1 if truth.get("state") == "WIN" else 0)
     return GameResult(run_id=session.run_id, game_id=game_id, outcome=_outcome(truth, reason),
@@ -35,7 +39,7 @@ def play_random(client: GameClient, game_id: str, *, run_key=None, max_actions=4
         n += 1
         truth = session.truth()
     reason = "win" if truth.get("state") == "WIN" else "budget_actions"
-    session.end(reason)
+    _finish(session, truth, reason)
     return _result(session, game_id, truth, n, t0, reason)
 
 
@@ -50,14 +54,14 @@ def play_optimal(client: GameClient, game_id: str, *, run_key=None, **_) -> Game
             n += 1
     truth = session.truth()
     reason = "win" if truth.get("state") == "WIN" else "optimal_path_failed"
-    session.end(reason)
+    _finish(session, truth, reason)
     return _result(session, game_id, truth, n, t0, reason)
 
 
 def play_noop(client: GameClient, game_id: str, *, run_key=None, **_) -> GameResult:
     session, _ = client.start(game_id, _player("noop"), run_key=run_key)
     truth = session.truth()
-    session.end("noop")
+    _finish(session, truth, "noop")
     return _result(session, game_id, truth, 0, time.time(), "noop")
 
 
@@ -68,7 +72,7 @@ def play_stop_early(client: GameClient, game_id: str, *, run_key=None, k=5, seed
     for _ in range(k):
         session.act(rng.choice(MOVE_ACTIONS))
     truth = session.truth()
-    session.end("stop_early")
+    _finish(session, truth, "stop_early")
     return _result(session, game_id, truth, k, t0, "stop_early")
 
 

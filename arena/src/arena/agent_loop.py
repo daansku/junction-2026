@@ -135,7 +135,7 @@ def play_model(client: GameClient, game_id: str, provider: Provider, model: dict
             history.append((f"(invalid reply: {err})", 0))
             continue
         out = session.act(parsed["action"], reasoning=parsed["notes"], hypothesis=parsed["hypothesis"],
-                          belief=parsed["belief"], usage={**usage, "latency_ms": reply.latency_ms})
+                          belief=parsed["belief"], usage=usage, latency_ms=reply.latency_ms)
         actions += 1
         prev, frame = frame, out["frame"]
         allowed = out.get("available_actions") or allowed
@@ -143,10 +143,12 @@ def play_model(client: GameClient, game_id: str, provider: Provider, model: dict
         notes = parsed["notes"]
         truth = session.truth()
 
-    session.end(reason)
     t = truth
+    outcome = _outcome(t, reason)
+    session.end(reason, outcome=outcome, usage_total={"in": meter.tokens_in, "out": meter.tokens_out,
+                                                       "cost_usd": round(meter.cost_usd, 6)})
     done = (t.get("level", 1) - 1) + (1 if t.get("state") == "WIN" else 0)
-    return GameResult(run_id=session.run_id, game_id=game_id, outcome=_outcome(t, reason),
+    return GameResult(run_id=session.run_id, game_id=game_id, outcome=outcome,
                       levels_completed=done, levels_total=t.get("levels_total", 0), actions=actions,
                       turns=turns, invalid_replies=invalid, tokens_in=meter.tokens_in,
                       tokens_out=meter.tokens_out, cost_usd=round(meter.cost_usd, 6),
@@ -154,9 +156,11 @@ def play_model(client: GameClient, game_id: str, provider: Provider, model: dict
 
 
 def _outcome(truth: dict, reason: str) -> str:
+    """WIN / GAME_OVER from the game; harness-side stops are BUDGET; refusals and deliberate
+    early stops (noop, stop_early baselines) are ABORTED."""
     if truth.get("state") == "WIN":
         return "WIN"
-    if reason == "refusal":
+    if reason in ("refusal", "noop", "stop_early", "optimal_path_failed"):
         return "ABORTED"
     if truth.get("state") == "GAME_OVER":
         return "GAME_OVER"
