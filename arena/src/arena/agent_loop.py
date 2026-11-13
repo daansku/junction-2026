@@ -16,7 +16,7 @@ from pathlib import Path
 
 from .client import GameClient
 from .cost import Meter
-from .frames import diff_count, to_png, to_text
+from .frames import diff_count, to_png, to_rle, to_text
 from .providers import Provider, Reply
 
 HARNESS_VERSION = "h1"
@@ -89,6 +89,10 @@ def build_parts(frame, notes, history, allowed, input_modes, step) -> list[dict]
     if "text" in input_modes:
         parts.append({"type": "text", "text": "Current screen (64 rows of 64 hex colour indices, row 0 at top):\n"
                                               + to_text(frame)})
+    if "rle" in input_modes:
+        parts.append({"type": "text", "text": "Current screen, run-length encoded (64x64, colour indices 0-f; "
+                                              "each row lists colourxcount runs left to right; rN-M = identical rows):\n"
+                                              + to_rle(frame)})
     parts.append({"type": "text", "text": "Reply with the JSON object only."})
     return parts
 

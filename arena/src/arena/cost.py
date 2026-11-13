@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 EST_PROMPT_TOKENS = 900          # system + notes + recent history
 EST_TEXT_GRID_TOKENS = 2600      # 64 rows x 64 hex chars
 EST_IMAGE_TOKENS = 400           # 512x512 PNG
+EST_RLE_TOKENS = 700             # run-length rows (measured on fake-engine frames: see tests)
 EST_OUT_TOKENS = {"low": 400, "medium": 1200, "high": 2500, "xhigh": 4000, "max": 6000, None: 800}
 
 
@@ -23,6 +24,8 @@ def est_tokens_per_step(model: dict, input_mode: str, effort: str | None) -> tup
         tin += EST_TEXT_GRID_TOKENS
     if input_mode in ("image", "both"):
         tin += EST_IMAGE_TOKENS
+    if input_mode == "rle":
+        tin += EST_RLE_TOKENS
     return tin, EST_OUT_TOKENS.get(effort, EST_OUT_TOKENS[None])
 
 

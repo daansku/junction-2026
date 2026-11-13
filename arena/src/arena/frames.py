@@ -83,3 +83,43 @@ def diff_count(a: list[str] | None, b: list[str]) -> int:
     if a is None:
         return SIZE * SIZE
     return sum(x != y for ra, rb in zip(a, b) for x, y in zip(ra, rb))
+
+
+def to_rle(frame: list[str]) -> str:
+    """Lossless run-length text: each row as `colour x count` runs; identical consecutive rows merged.
+
+        r0-1: 0x2 4x60 0x2
+        r2: 0x64
+    Same information as the full grid at a fraction of the tokens. Applied identically to every
+    model that uses input mode "rle" (and stated on the dashboard), so it is fair perception.
+    """
+    def runs(row: str) -> str:
+        out, cur, n = [], row[0], 0
+        for ch in row:
+            if ch == cur:
+                n += 1
+            else:
+                out.append(f"{cur}x{n}")
+                cur, n = ch, 1
+        out.append(f"{cur}x{n}")
+        return " ".join(out)
+
+    lines, i = [], 0
+    while i < len(frame):
+        j = i
+        while j + 1 < len(frame) and frame[j + 1] == frame[i]:
+            j += 1
+        tag = f"r{i}" if i == j else f"r{i}-{j}"
+        lines.append(f"{tag}: {runs(frame[i])}")
+        i = j + 1
+    return "\n".join(lines)
+
+
+def from_rle(text: str) -> list[str]:
+    rows: list[str] = []
+    for line in text.splitlines():
+        tag, body = line.split(": ", 1)
+        a, _, b = tag[1:].partition("-")
+        row = "".join(c * int(n) for c, n in (r.split("x") for r in body.split()))
+        rows += [row] * (int(b or a) - int(a) + 1)
+    return rows

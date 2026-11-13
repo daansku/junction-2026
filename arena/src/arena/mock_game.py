@@ -135,8 +135,30 @@ class MockGame:
                 "active_rules": ["walls", "goal"], "new_rule": None, "events": self.events,
                 "optimal_moves": len(lv["optimal"])}
 
+    def available_actions(self) -> list[str]:
+        return list(ACTIONS)
+
+    def clone(self) -> "MockGame":
+        import copy
+        return copy.deepcopy(self)
+
+    def state_hash(self) -> str:
+        return hashlib.sha1(repr((self.level, self.pos, self.moves, self.state)).encode()).hexdigest()
+
     def describe(self) -> dict:
-        return {"game_id": self.game_id, "engine_version": "mock-0",
-                "levels": [{"index": i + 1, "rules": ["walls", "goal"], "move_budget": lv["budget"],
+        return {"game_id": self.game_id, "engine_version": "mock-0", "levels_total": self.n_levels,
+                "spec": {"family": "mock", "seed": self.seed, "n_levels": self.n_levels},
+                "available_actions": list(ACTIONS),
+                "levels": [{"level": i + 1, "rules": ["walls", "goal"], "new_rule": None, "move_budget": lv["budget"],
                             "optimal_path": list(lv["optimal"]), "optimal_moves": len(lv["optimal"])}
                            for i, lv in enumerate(self.levels)]}
+
+
+# contract-shaped entry points so engine_adapter can fall back to this module
+class GameSpec:
+    def __init__(self, family="mock", seed=0, n_levels=3, difficulty=1, rules=None, skin_shuffle=True):
+        self.family, self.seed, self.n_levels, self.difficulty = family, seed, n_levels, difficulty
+
+
+def make_game(spec) -> MockGame:
+    return MockGame(spec.seed, spec.n_levels)

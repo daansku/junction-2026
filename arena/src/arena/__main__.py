@@ -42,7 +42,25 @@ def main(argv=None):
     p.add_argument("--game", required=True)
     p.add_argument("--api", default="local")
     p.add_argument("--effort")
+    d = sub.add_parser("dataset", help="build SFT data (A3-09) from train games")
+    d.add_argument("--collection", help="train collection name/path (never eval)")
+    d.add_argument("--seeds", help="spec seeds instead of a collection, e.g. 0-199")
+    d.add_argument("--levels", type=int, default=6)
+    d.add_argument("--recover", type=int, default=2, help="recover-from-mistake trajectories per game")
+    d.add_argument("--out", required=True)
     a = ap.parse_args(argv)
+
+    if a.cmd == "dataset":
+        from .dataset import build, games_from
+        from .engine_adapter import load_engine
+        eng, name = load_engine()
+        print(f"engine: {name}")
+        seeds = None
+        if a.seeds:
+            lo, _, hi = a.seeds.partition("-")
+            seeds = list(range(int(lo), int(hi or lo) + 1))
+        build(games_from(eng, a.collection, seeds, a.levels), Path(a.out).expanduser(), n_recover=a.recover)
+        return
 
     if a.cmd == "run":
         from .runner import execute, load_sweep

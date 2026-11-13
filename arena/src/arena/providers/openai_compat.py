@@ -40,13 +40,17 @@ class OpenAICompatProvider:
         self.client = make_client(model["provider"], model.get("base_url"))
 
     def complete(self, system, parts, effort=None, max_tokens=16000) -> Reply:
-        content = []
-        for p in parts:
-            if p["type"] == "text":
-                content.append({"type": "text", "text": p["text"]})
-            else:
-                url = "data:image/png;base64," + base64.b64encode(p["data"]).decode()
-                content.append({"type": "image_url", "image_url": {"url": url}})
+        if all(p["type"] == "text" for p in parts):
+            # one string, joined exactly like arena.dataset.parts_to_text (fine-tune train == inference)
+            content = "\n\n".join(p["text"] for p in parts)
+        else:
+            content = []
+            for p in parts:
+                if p["type"] == "text":
+                    content.append({"type": "text", "text": p["text"]})
+                else:
+                    url = "data:image/png;base64," + base64.b64encode(p["data"]).decode()
+                    content.append({"type": "image_url", "image_url": {"url": url}})
         kw = {"max_tokens": max_tokens}
         if effort and effort in (self.model.get("efforts") or []):
             kw["reasoning_effort"] = effort
