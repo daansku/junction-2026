@@ -1,0 +1,126 @@
+# Model registry (PLAN.md §4.7). Owned by A3.
+# Rules: api_model and prices come from provider docs, never memory. `verified: false` entries are
+# skipped by the runner until `python -m arena models --check` confirms the id on the live /models
+# endpoint (or a human fills it in from the docs). Prices: USD per 1M tokens, null = unknown.
+#
+# Anthropic ids/prices: Claude API model table, docs snapshot 2026-11-03.
+
+- id: claude-opus-5-5
+  display_name: Claude Opus 5.5
+  provider: anthropic
+  api_model: claude-opus-5-5
+  tier: frontier
+  input_modes: [image, text]
+  efforts: [low, medium, high, xhigh, max]
+  default_effort: medium        # API default for this model is medium
+  price_in: 4.00
+  price_out: 20.00
+  params: null
+  link: https://docs.claude.com/en/docs/about-claude/models/overview
+  max_concurrency: 4
+  verified: true
+
+- id: claude-sonnet-5-5
+  display_name: Claude Sonnet 5.5
+  provider: anthropic
+  api_model: claude-sonnet-5-5
+  tier: frontier
+  input_modes: [image, text]
+  efforts: [low, medium, high, xhigh, max]
+  default_effort: high
+  price_in: 2.00
+  price_out: 10.00
+  params: null
+  link: https://docs.claude.com/en/docs/about-claude/models/overview
+  max_concurrency: 4
+  verified: true
+
+- id: claude-haiku-5-5
+  display_name: Claude Haiku 5.5
+  provider: anthropic
+  api_model: claude-haiku-5-5
+  tier: frontier
+  input_modes: [image, text]
+  efforts: [low, medium, high, xhigh, max]
+  default_effort: medium
+  price_in: 0.10                # prompts <= 100K tokens; ours are ~2-5K
+  price_out: 0.50
+  params: null
+  link: https://docs.claude.com/en/docs/about-claude/models/overview
+  max_concurrency: 6
+  verified: true
+
+# ---- to confirm when keys land (`python -m arena models --check`) ----
+- id: gemini-flash
+  display_name: Gemini Flash (current)
+  provider: google
+  api_model: null               # pick from the live list; docs page examples were inconsistent
+  tier: frontier
+  input_modes: [image, text]
+  efforts: [low, medium, high]  # reasoning_effort on the OpenAI-compat layer
+  price_in: null
+  price_out: null
+  link: https://ai.google.dev/gemini-api/docs/models
+  max_concurrency: 4
+  verified: false
+
+- id: gemini-pro
+  display_name: Gemini Pro (current)
+  provider: google
+  api_model: null
+  tier: frontier
+  input_modes: [image, text]
+  efforts: [low, medium, high]
+  price_in: null
+  price_out: null
+  link: https://ai.google.dev/gemini-api/docs/models
+  max_concurrency: 2
+  verified: false
+
+- id: nvidia-open-large
+  display_name: NVIDIA-hosted open model (TBD)
+  provider: nvidia
+  api_model: null               # namespaced, e.g. org/model; pick from build.nvidia.com
+  tier: open
+  input_modes: [text]
+  price_in: null
+  price_out: null
+  link: https://build.nvidia.com/models
+  max_concurrency: 2
+  verified: false
+
+- id: featherless-open
+  display_name: featherless open model (TBD)
+  provider: featherless
+  api_model: null
+  tier: open
+  input_modes: [text]
+  price_in: null
+  price_out: null
+  link: https://featherless.ai/models
+  max_concurrency: 2
+  verified: false
+
+- id: verda-small
+  display_name: Small open model on Verda (base for fine-tune)
+  provider: verda
+  api_model: null               # whatever we deploy with vLLM/SGLang
+  tier: open
+  input_modes: [text]
+  price_in: null
+  price_out: null
+  link: https://verda.com
+  max_concurrency: 8
+  verified: false
+
+# ---- offline harness test model ----
+- id: mock-random
+  display_name: Mock (random JSON)
+  provider: mock
+  api_model: mock
+  tier: open
+  input_modes: [text]
+  price_in: 0
+  price_out: 0
+  verified: true
+  test_only: true

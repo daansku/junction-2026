@@ -1,0 +1,12 @@
+# Offline harness check: no keys, no server. python -m arena run sweeps/mock.yaml --api mock
+name: mock
+collection: dev
+games: {first: 3}
+attempts: 2
+concurrency: 4
+models:
+  - id: mock-random
+baselines: [random, optimal, noop, stop_early]
+budgets:
+  max_actions: 60
+  max_turns: 80
