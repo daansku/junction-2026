@@ -1,0 +1,131 @@
+// Mirrors PLAN.md §4 (contracts/ wins once A2 writes it). Fields we do not
+// rely on are typed loosely so additive contract changes never break the build.
+
+/** 64 strings of 64 hex chars, row 0 at top. */
+export type Frame = string[]
+
+export type ActionName =
+  | 'RESET'
+  | 'ACTION1'
+  | 'ACTION2'
+  | 'ACTION3'
+  | 'ACTION4'
+  | 'ACTION5'
+  | 'ACTION6'
+  | 'ACTION7'
+
+export type GameState = 'NOT_FINISHED' | 'WIN' | 'GAME_OVER'
+export type RunOutcome = 'WIN' | 'GAME_OVER' | 'BUDGET' | 'ABORTED'
+
+export interface Truth {
+  state: GameState
+  level: number
+  levels_total: number
+  moves_used: number
+  move_budget: number
+  resets: number
+  active_rules: string[]
+  new_rule: string | null
+  events: string[]
+  optimal_moves: number
+  [k: string]: unknown
+}
+
+export interface GameMeta {
+  game_id: string
+  collection?: string
+  family?: string
+  seed?: number
+  difficulty?: number
+  n_levels?: number
+  rules?: string[]
+  thumbnail_url?: string
+  [k: string]: unknown
+}
+
+export interface LevelDescribe {
+  level: number
+  rules: string[]
+  new_rule?: string | null
+  move_budget: number
+  optimal_moves: number
+  optimal_path?: ActionName[]
+  [k: string]: unknown
+}
+
+export interface GameDescribe extends GameMeta {
+  levels: LevelDescribe[]
+  engine_version?: string
+}
+
+export interface Player {
+  kind: 'human' | 'model' | 'baseline'
+  name: string
+  model_id?: string
+  provider?: string
+  effort?: string
+}
+
+export interface SessionStart {
+  session_id: string
+  run_id: string
+  frame: Frame
+  available_actions: ActionName[]
+}
+
+export interface ActBody {
+  action: ActionName
+  x?: number
+  y?: number
+  reasoning?: string
+  hypothesis?: string
+  belief?: string
+  usage?: { in?: number; out?: number; cost_usd?: number }
+}
+
+export interface ActResponse {
+  frame: Frame
+  available_actions: ActionName[]
+}
+
+export interface RunMeta {
+  run_id: string
+  run_key?: string
+  game_id: string
+  collection?: string
+  split?: string
+  player: Player
+  harness_version?: string
+  started_at?: string
+  ended_at?: string | null
+  outcome?: RunOutcome | null
+  levels_completed?: number
+  levels_total?: number
+  actions?: number
+  resets?: number
+  tokens_in?: number
+  tokens_out?: number
+  cost_usd?: number
+  wall_s?: number
+  [k: string]: unknown
+}
+
+export interface Step {
+  i: number
+  t_ms?: number
+  action: ActionName
+  frame: Frame
+  truth?: Partial<Truth>
+  reasoning?: string
+  hypothesis?: string
+  belief?: string
+  usage?: { in?: number; out?: number; cost_usd?: number }
+  latency_ms?: number
+  [k: string]: unknown
+}
+
+export interface RunsQuery {
+  game_id?: string
+  model_id?: string
+  kind?: string
+}

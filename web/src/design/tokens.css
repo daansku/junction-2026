@@ -1,0 +1,94 @@
+/* Design tokens — see web/DESIGN.md §3–4. Use tokens, never raw hex. */
+:root {
+  color-scheme: dark;
+  --bg: #0e0e0f;
+  --surface-1: #161617;
+  --surface-2: #1f1f21;
+  --line: #2c2c2f;
+  --line-strong: #3d3d42;
+  --text-1: #efefec;
+  --text-2: #a9a8a2;
+  --text-3: #76756f;
+  --accent: #ffdc00;
+  --good: #0ca30c;
+  --warn: #fab219;
+  --bad: #d03b3b;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --seq-low: #104281;
+  --seq-high: #cde2fb;
+
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+  --radius: 2px;
+  --topbar-h: 40px;
+  --gutter: 16px;
+}
+
+@media (min-width: 1024px) {
+  :root { --gutter: 24px; }
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --bg: #f6f6f4;
+    --surface-1: #ffffff;
+    --surface-2: #efefec;
+    --line: #dddcd7;
+    --line-strong: #c3c2bb;
+    --text-1: #111111;
+    --text-2: #52514e;
+    --text-3: #86857f;
+    --accent: #8a6d00;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --series-4: #eda100;
+    --series-5: #e87ba4;
+    --series-6: #008300;
+    --series-7: #6250d6;
+    --series-8: #e34948;
+    --seq-low: #cde2fb;
+    --seq-high: #0d366b;
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f6f6f4;
+  --surface-1: #ffffff;
+  --surface-2: #efefec;
+  --line: #dddcd7;
+  --line-strong: #c3c2bb;
+  --text-1: #111111;
+  --text-2: #52514e;
+  --text-3: #86857f;
+  --accent: #8a6d00;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-8: #e34948;
+  --seq-low: #cde2fb;
+  --seq-high: #0d366b;
+}
