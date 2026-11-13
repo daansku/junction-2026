@@ -1,0 +1,179 @@
+{
+ "game_id": "gridworld-s2-d2-l6-f978fc99",
+ "spec": {
+  "family": "gridworld",
+  "seed": 2,
+  "n_levels": 6,
+  "difficulty": 2,
+  "rules": null,
+  "skin_shuffle": true
+ },
+ "engine_version": "fake-0.1",
+ "levels_total": 6,
+ "available_actions": [
+  "RESET",
+  "ACTION1",
+  "ACTION2",
+  "ACTION3",
+  "ACTION4"
+ ],
+ "levels": [
+  {
+   "level": 1,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": "walls",
+   "move_budget": 10,
+   "optimal_moves": 5,
+   "optimal_path": [
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION3"
+   ]
+  },
+  {
+   "level": 2,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 32,
+   "optimal_moves": 16,
+   "optimal_path": [
+    "ACTION1",
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION1",
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION3",
+    "ACTION3",
+    "ACTION2",
+    "ACTION3",
+    "ACTION3"
+   ]
+  },
+  {
+   "level": 3,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 38,
+   "optimal_moves": 19,
+   "optimal_path": [
+    "ACTION1",
+    "ACTION4",
+    "ACTION4",
+    "ACTION2",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION4",
+    "ACTION4"
+   ]
+  },
+  {
+   "level": 4,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 36,
+   "optimal_moves": 18,
+   "optimal_path": [
+    "ACTION3",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION4",
+    "ACTION2",
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION1",
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1"
+   ]
+  },
+  {
+   "level": 5,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 22,
+   "optimal_moves": 11,
+   "optimal_path": [
+    "ACTION4",
+    "ACTION2",
+    "ACTION4",
+    "ACTION4",
+    "ACTION2",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION4",
+    "ACTION4"
+   ]
+  },
+  {
+   "level": 6,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 20,
+   "optimal_moves": 10,
+   "optimal_path": [
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION2",
+    "ACTION2",
+    "ACTION4",
+    "ACTION4"
+   ]
+  }
+ ]
+}

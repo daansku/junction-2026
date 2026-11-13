@@ -1,0 +1,150 @@
+{
+ "game_id": "gridworld-s3-d3-l6-a71c9950",
+ "spec": {
+  "family": "gridworld",
+  "seed": 3,
+  "n_levels": 6,
+  "difficulty": 3,
+  "rules": null,
+  "skin_shuffle": true
+ },
+ "engine_version": "fake-0.1",
+ "levels_total": 6,
+ "available_actions": [
+  "RESET",
+  "ACTION1",
+  "ACTION2",
+  "ACTION3",
+  "ACTION4"
+ ],
+ "levels": [
+  {
+   "level": 1,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": "walls",
+   "move_budget": 12,
+   "optimal_moves": 8,
+   "optimal_path": [
+    "ACTION2",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION4",
+    "ACTION4"
+   ]
+  },
+  {
+   "level": 2,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 8,
+   "optimal_moves": 5,
+   "optimal_path": [
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION4",
+    "ACTION4"
+   ]
+  },
+  {
+   "level": 3,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 18,
+   "optimal_moves": 12,
+   "optimal_path": [
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION3",
+    "ACTION3",
+    "ACTION3",
+    "ACTION2",
+    "ACTION2",
+    "ACTION3",
+    "ACTION3",
+    "ACTION3",
+    "ACTION3"
+   ]
+  },
+  {
+   "level": 4,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 11,
+   "optimal_moves": 7,
+   "optimal_path": [
+    "ACTION4",
+    "ACTION4",
+    "ACTION1",
+    "ACTION4",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1"
+   ]
+  },
+  {
+   "level": 5,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 14,
+   "optimal_moves": 9,
+   "optimal_path": [
+    "ACTION3",
+    "ACTION3",
+    "ACTION3",
+    "ACTION1",
+    "ACTION3",
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION4"
+   ]
+  },
+  {
+   "level": 6,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 14,
+   "optimal_moves": 9,
+   "optimal_path": [
+    "ACTION1",
+    "ACTION1",
+    "ACTION1",
+    "ACTION3",
+    "ACTION3",
+    "ACTION1",
+    "ACTION3",
+    "ACTION1",
+    "ACTION1"
+   ]
+  }
+ ]
+}

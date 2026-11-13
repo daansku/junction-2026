@@ -1,0 +1,149 @@
+[
+ {
+  "game_id": "gridworld-s1-d1-l3-4d157334",
+  "collection": "dev",
+  "spec": {
+   "family": "gridworld",
+   "seed": 1,
+   "n_levels": 3,
+   "difficulty": 1,
+   "rules": null,
+   "skin_shuffle": true
+  },
+  "engine_version": "fake-0.1",
+  "levels_total": 3,
+  "difficulty": 1,
+  "rules": [
+   "walls",
+   "goal",
+   "move_budget"
+  ],
+  "rules_per_level": [
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ]
+  ],
+  "optimal_moves_total": 26,
+  "thumbnail_url": "/api/games/gridworld-s1-d1-l3-4d157334/thumbnail.png"
+ },
+ {
+  "game_id": "gridworld-s2-d2-l6-f978fc99",
+  "collection": "dev",
+  "spec": {
+   "family": "gridworld",
+   "seed": 2,
+   "n_levels": 6,
+   "difficulty": 2,
+   "rules": null,
+   "skin_shuffle": true
+  },
+  "engine_version": "fake-0.1",
+  "levels_total": 6,
+  "difficulty": 2,
+  "rules": [
+   "walls",
+   "goal",
+   "move_budget"
+  ],
+  "rules_per_level": [
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ]
+  ],
+  "optimal_moves_total": 79,
+  "thumbnail_url": "/api/games/gridworld-s2-d2-l6-f978fc99/thumbnail.png"
+ },
+ {
+  "game_id": "gridworld-s3-d3-l6-a71c9950",
+  "collection": "dev",
+  "spec": {
+   "family": "gridworld",
+   "seed": 3,
+   "n_levels": 6,
+   "difficulty": 3,
+   "rules": null,
+   "skin_shuffle": true
+  },
+  "engine_version": "fake-0.1",
+  "levels_total": 6,
+  "difficulty": 3,
+  "rules": [
+   "walls",
+   "goal",
+   "move_budget"
+  ],
+  "rules_per_level": [
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   [
+    "walls",
+    "goal",
+    "move_budget"
+   ]
+  ],
+  "optimal_moves_total": 50,
+  "thumbnail_url": "/api/games/gridworld-s3-d3-l6-a71c9950/thumbnail.png"
+ }
+]

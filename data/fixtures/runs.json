@@ -1,0 +1,30 @@
+[
+ {
+  "run_id": "fixture-run-0001",
+  "run_key": "fixture",
+  "game_id": "gridworld-s2-d2-l6-f978fc99",
+  "collection": "dev",
+  "split": "dev",
+  "player": {
+   "kind": "model",
+   "name": "Mock Model",
+   "model_id": "mock-model",
+   "provider": "mock",
+   "effort": "medium"
+  },
+  "harness_version": "h1",
+  "engine_version": "fake-0.1",
+  "started_at": "2026-11-14T04:30:00Z",
+  "ended_at": "2026-11-14T04:30:34.545000Z",
+  "outcome": "BUDGET",
+  "end_reason": "action budget reached (30)",
+  "levels_completed": 2,
+  "levels_total": 6,
+  "actions": 30,
+  "resets": 1,
+  "tokens_in": 119100,
+  "tokens_out": 4965,
+  "cost_usd": 0.143925,
+  "wall_s": 34.545
+ }
+]

@@ -1,0 +1,87 @@
+{
+ "game_id": "gridworld-s1-d1-l3-4d157334",
+ "spec": {
+  "family": "gridworld",
+  "seed": 1,
+  "n_levels": 3,
+  "difficulty": 1,
+  "rules": null,
+  "skin_shuffle": true
+ },
+ "engine_version": "fake-0.1",
+ "levels_total": 3,
+ "available_actions": [
+  "RESET",
+  "ACTION1",
+  "ACTION2",
+  "ACTION3",
+  "ACTION4"
+ ],
+ "levels": [
+  {
+   "level": 1,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": "walls",
+   "move_budget": 21,
+   "optimal_moves": 7,
+   "optimal_path": [
+    "ACTION4",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2"
+   ]
+  },
+  {
+   "level": 2,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 21,
+   "optimal_moves": 7,
+   "optimal_path": [
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION4",
+    "ACTION4"
+   ]
+  },
+  {
+   "level": 3,
+   "rules": [
+    "walls",
+    "goal",
+    "move_budget"
+   ],
+   "new_rule": null,
+   "move_budget": 36,
+   "optimal_moves": 12,
+   "optimal_path": [
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION2",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4",
+    "ACTION4"
+   ]
+  }
+ ]
+}
