@@ -1,4 +1,5 @@
 import io
+import os
 import json
 import tarfile
 from concurrent.futures import ThreadPoolExecutor
@@ -39,7 +40,7 @@ def start(c, game_id, **kw):
 
 def test_health(client):
     h = client.get("/api/health").json()
-    assert h["ok"] and h["engine"] == "fake"
+    assert h["ok"] and h["engine"] == os.environ["SERVER_ENGINE"]
 
 
 def test_play_optimal_to_win_and_trace(client):
