@@ -1,0 +1,308 @@
+openapi: 3.1.0
+info:
+  title: junction-2026 game server
+  version: "1.0.0"
+  description: |
+    REST contract (PLAN.md 4.4). Base path /api. Frozen at G0; additive changes only, via a request to A2.
+    Frames are 64 strings of 64 lowercase hex chars (row 0 at top), palette in contracts/palette.json.
+    Model-facing responses (POST /sessions, POST /sessions/{id}/act) are pixels only: no state, score or rule names.
+    Trace and derived shapes: contracts/trace.schema.json, contracts/derived.schema.json.
+servers:
+  - url: /api
+paths:
+  /health:
+    get:
+      summary: Liveness + versions
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {type: boolean}
+                  engine: {type: string, description: "engine package in use: engine | fake"}
+                  engine_version: {type: string}
+                  published_mode: {type: boolean}
+  /collections:
+    get:
+      summary: Names of available collections
+      responses:
+        "200":
+          description: list
+          content:
+            application/json:
+              schema: {type: array, items: {type: string}}
+  /games:
+    get:
+      summary: Game catalogue (gallery)
+      parameters:
+        - {name: collection, in: query, required: false, schema: {type: string, default: dev}}
+      responses:
+        "200":
+          description: list of game metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/GameMeta"}
+  /games/{game_id}:
+    get:
+      summary: Full describe() output. Contains the truth; UI only.
+      parameters:
+        - {name: game_id, in: path, required: true, schema: {type: string}}
+        - {name: collection, in: query, required: false, schema: {type: string}}
+      responses:
+        "200":
+          description: description
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Description"}
+        "404": {description: unknown game}
+  /games/{game_id}/thumbnail.png:
+    get:
+      summary: PNG of level 1 initial frame
+      parameters:
+        - {name: game_id, in: path, required: true, schema: {type: string}}
+        - {name: level, in: query, required: false, schema: {type: integer, default: 1}}
+      responses:
+        "200":
+          description: png
+          content:
+            image/png: {}
+  /sessions:
+    post:
+      summary: Start a game session (opens a run)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [game_id, player]
+              properties:
+                game_id: {type: string}
+                collection: {type: string, nullable: true}
+                player: {$ref: "#/components/schemas/Player"}
+                run_key: {type: string, nullable: true, description: "idempotency key; an existing finished run with this key returns 409"}
+                harness_version: {type: string, nullable: true}
+      responses:
+        "200":
+          description: session started
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [session_id, run_id, frame, available_actions]
+                properties:
+                  session_id: {type: string}
+                  run_id: {type: string}
+                  frame: {$ref: "#/components/schemas/Frame"}
+                  available_actions: {type: array, items: {$ref: "#/components/schemas/Action"}}
+        "404": {description: unknown game}
+        "409": {description: run_key already has a finished run}
+  /sessions/{session_id}/act:
+    post:
+      summary: Take one action. Pixels only in the response.
+      parameters:
+        - {name: session_id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: {$ref: "#/components/schemas/Action"}
+                x: {type: integer, minimum: 0, maximum: 63, nullable: true}
+                y: {type: integer, minimum: 0, maximum: 63, nullable: true}
+                reasoning: {type: string, nullable: true}
+                hypothesis: {type: string, nullable: true}
+                belief: {enum: [playing, won, lost], nullable: true}
+                usage: {$ref: "#/components/schemas/Usage"}
+                latency_ms: {type: integer, nullable: true}
+      responses:
+        "200":
+          description: new frame
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [frame, available_actions]
+                properties:
+                  frame: {$ref: "#/components/schemas/Frame"}
+                  available_actions: {type: array, items: {$ref: "#/components/schemas/Action"}}
+        "404": {description: unknown session}
+        "409": {description: session already ended}
+        "422": {description: invalid action}
+  /sessions/{session_id}/truth:
+    get:
+      summary: Hidden truth. Harness and human debug overlay only; never shown to a model.
+      parameters:
+        - {name: session_id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200":
+          description: truth
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Truth"}
+  /sessions/{session_id}/end:
+    post:
+      summary: Close the run
+      parameters:
+        - {name: session_id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: {type: string, description: "free text; 'budget' sets outcome BUDGET"}
+                outcome: {enum: [WIN, GAME_OVER, BUDGET, ABORTED], nullable: true, description: "optional override; default derived from truth"}
+                usage_total: {$ref: "#/components/schemas/Usage"}
+      responses:
+        "200":
+          description: final run meta
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/RunMeta"}
+  /runs:
+    get:
+      summary: Run metas, newest first
+      parameters:
+        - {name: game_id, in: query, schema: {type: string}}
+        - {name: model_id, in: query, schema: {type: string}}
+        - {name: kind, in: query, schema: {enum: [human, model, baseline]}}
+        - {name: collection, in: query, schema: {type: string}}
+        - {name: run_key, in: query, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer, default: 500}}
+      responses:
+        "200":
+          description: list
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/RunMeta"}}
+  /runs/export:
+    get:
+      summary: tar.gz of finished run folders (meta.json + steps.jsonl) ended since `since`
+      parameters:
+        - {name: since, in: query, required: false, schema: {type: string, format: date-time}}
+      responses:
+        "200":
+          description: archive
+          content:
+            application/gzip: {}
+  /runs/{run_id}:
+    get:
+      summary: Run meta
+      parameters:
+        - {name: run_id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200":
+          description: meta
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/RunMeta"}
+  /runs/{run_id}/steps:
+    get:
+      summary: All steps of a run (replay)
+      parameters:
+        - {name: run_id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200":
+          description: steps
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Step"}}
+  /derived/{name}.json:
+    get:
+      summary: File from data/derived/ (or data/published/ in published mode, falling back to data/fixtures/derived/)
+      parameters:
+        - {name: name, in: path, required: true, schema: {enum: [leaderboard, rules, insights]}}
+      responses:
+        "200": {description: json per contracts/derived.schema.json}
+        "404": {description: not built yet}
+  /admin/rebuild:
+    post:
+      summary: Run `analysis build` on the shared host
+      security: [{adminToken: []}]
+      responses:
+        "200": {description: rebuilt}
+        "401": {description: bad token}
+  /live:
+    get:
+      summary: "WebSocket (upgrade). Messages: {run_id, step} for every recorded step, plus {run_id, event: started|ended, meta}"
+      responses:
+        "101": {description: switching protocols}
+components:
+  securitySchemes:
+    adminToken:
+      type: http
+      scheme: bearer
+  schemas:
+    Frame:
+      type: array
+      minItems: 64
+      maxItems: 64
+      items: {type: string, pattern: "^[0-9a-f]{64}$"}
+    Action:
+      enum: [RESET, ACTION1, ACTION2, ACTION3, ACTION4, ACTION5, ACTION6, ACTION7]
+    Player:
+      type: object
+      required: [kind, name]
+      properties:
+        kind: {enum: [human, model, baseline]}
+        name: {type: string}
+        model_id: {type: string, nullable: true}
+        provider: {type: string, nullable: true}
+        effort: {type: string, nullable: true}
+    Usage:
+      type: object
+      nullable: true
+      properties:
+        in: {type: integer}
+        out: {type: integer}
+        cost_usd: {type: number}
+    Truth:
+      $ref: "trace.schema.json#/$defs/truth"
+    RunMeta:
+      $ref: "trace.schema.json#/$defs/meta"
+    Step:
+      $ref: "trace.schema.json#/$defs/step"
+    GameMeta:
+      type: object
+      required: [game_id, levels_total, thumbnail_url]
+      properties:
+        game_id: {type: string}
+        collection: {type: string}
+        spec: {type: object}
+        engine_version: {type: string}
+        levels_total: {type: integer}
+        difficulty: {type: integer}
+        rules: {type: array, items: {type: string}, description: "union of rules across levels"}
+        rules_per_level: {type: array, items: {type: array, items: {type: string}}}
+        optimal_moves_total: {type: integer}
+        thumbnail_url: {type: string}
+    Description:
+      type: object
+      required: [game_id, spec, engine_version, levels_total, levels, available_actions]
+      properties:
+        game_id: {type: string}
+        spec: {type: object}
+        engine_version: {type: string}
+        levels_total: {type: integer}
+        available_actions: {type: array, items: {$ref: "#/components/schemas/Action"}}
+        levels:
+          type: array
+          items:
+            type: object
+            properties:
+              level: {type: integer}
+              rules: {type: array, items: {type: string}}
+              new_rule: {type: string, nullable: true}
+              move_budget: {type: integer}
+              optimal_moves: {type: integer}
+              optimal_path: {type: array, items: {$ref: "#/components/schemas/Action"}}

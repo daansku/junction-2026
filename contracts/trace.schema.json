@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "trace.schema.json",
+  "title": "Run trace (PLAN.md 4.5). Written only by the server.",
+  "$defs": {
+    "frame": {
+      "type": "array",
+      "minItems": 64,
+      "maxItems": 64,
+      "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    },
+    "action": {
+      "enum": ["RESET", "ACTION1", "ACTION2", "ACTION3", "ACTION4", "ACTION5", "ACTION6", "ACTION7"]
+    },
+    "truth": {
+      "type": "object",
+      "required": ["state", "level", "levels_total", "moves_used", "move_budget", "resets", "active_rules", "new_rule", "events", "optimal_moves"],
+      "properties": {
+        "state": {"enum": ["NOT_FINISHED", "WIN", "GAME_OVER"]},
+        "level": {"type": "integer", "minimum": 1},
+        "levels_total": {"type": "integer", "minimum": 1},
+        "moves_used": {"type": "integer", "minimum": 0},
+        "move_budget": {"type": "integer", "minimum": 0},
+        "resets": {"type": "integer", "minimum": 0},
+        "active_rules": {"type": "array", "items": {"type": "string"}},
+        "new_rule": {"type": ["string", "null"]},
+        "events": {"type": "array", "items": {"type": "string"}},
+        "optimal_moves": {"type": "integer", "minimum": 0}
+      }
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "in": {"type": "integer", "minimum": 0},
+        "out": {"type": "integer", "minimum": 0},
+        "cost_usd": {"type": "number", "minimum": 0}
+      }
+    },
+    "player": {
+      "type": "object",
+      "required": ["kind", "name"],
+      "properties": {
+        "kind": {"enum": ["human", "model", "baseline"]},
+        "name": {"type": "string"},
+        "model_id": {"type": ["string", "null"]},
+        "provider": {"type": ["string", "null"]},
+        "effort": {"type": ["string", "null"]}
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["run_id", "game_id", "player", "harness_version", "started_at", "outcome", "levels_completed", "levels_total", "actions", "resets"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "run_key": {"type": ["string", "null"]},
+        "game_id": {"type": "string"},
+        "collection": {"type": ["string", "null"]},
+        "split": {"type": ["string", "null"]},
+        "player": {"$ref": "#/$defs/player"},
+        "harness_version": {"type": ["string", "null"]},
+        "engine_version": {"type": ["string", "null"]},
+        "started_at": {"type": "string", "format": "date-time"},
+        "ended_at": {"type": ["string", "null"], "format": "date-time"},
+        "outcome": {"enum": ["IN_PROGRESS", "WIN", "GAME_OVER", "BUDGET", "ABORTED"]},
+        "end_reason": {"type": ["string", "null"]},
+        "levels_completed": {"type": "integer", "minimum": 0},
+        "levels_total": {"type": "integer", "minimum": 1},
+        "actions": {"type": "integer", "minimum": 0},
+        "resets": {"type": "integer", "minimum": 0},
+        "tokens_in": {"type": "integer", "minimum": 0},
+        "tokens_out": {"type": "integer", "minimum": 0},
+        "cost_usd": {"type": "number", "minimum": 0},
+        "wall_s": {"type": "number", "minimum": 0}
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["i", "t_ms", "action", "frame", "truth"],
+      "properties": {
+        "i": {"type": "integer", "minimum": 0, "description": "0 = initial frame after start (action null), then 1..N"},
+        "t_ms": {"type": "integer", "minimum": 0},
+        "action": {"anyOf": [{"$ref": "#/$defs/action"}, {"type": "null"}]},
+        "x": {"type": ["integer", "null"]},
+        "y": {"type": ["integer", "null"]},
+        "frame": {"$ref": "#/$defs/frame"},
+        "truth": {"$ref": "#/$defs/truth"},
+        "reasoning": {"type": ["string", "null"]},
+        "hypothesis": {"type": ["string", "null"]},
+        "belief": {"enum": ["playing", "won", "lost", null]},
+        "usage": {"$ref": "#/$defs/usage"},
+        "latency_ms": {"type": ["integer", "null"]}
+      }
+    }
+  },
+  "oneOf": [{"$ref": "#/$defs/meta"}, {"$ref": "#/$defs/step"}]
+}

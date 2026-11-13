@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "derived.schema.json",
+  "title": "Derived data (PLAN.md 4.6). Written only by analysis, served at GET /api/derived/{name}.json.",
+  "$defs": {
+    "model_card": {
+      "type": "object",
+      "description": "Copied from arena/models.yaml (PLAN.md 4.7). Null for baselines.",
+      "properties": {
+        "id": {"type": "string"},
+        "display_name": {"type": "string"},
+        "provider": {"type": "string"},
+        "api_model": {"type": "string"},
+        "tier": {"enum": ["frontier", "open", "finetuned", "baseline"]},
+        "input_modes": {"type": "array", "items": {"enum": ["image", "text"]}},
+        "efforts": {"type": "array", "items": {"type": "string"}},
+        "price_in": {"type": ["number", "null"]},
+        "price_out": {"type": ["number", "null"]},
+        "params": {"type": ["string", "null"]},
+        "link": {"type": ["string", "null"]}
+      }
+    },
+    "leaderboard_row": {
+      "type": "object",
+      "required": ["player_id", "kind", "collection", "games", "levels_attempted", "level_solve_rate", "game_win_rate", "score"],
+      "properties": {
+        "player_id": {"type": "string", "description": "model id, or random | optimal | human"},
+        "kind": {"enum": ["model", "baseline", "human"]},
+        "effort": {"type": ["string", "null"]},
+        "collection": {"type": "string"},
+        "harness_version": {"type": ["string", "null"]},
+        "games": {"type": "integer", "minimum": 0},
+        "levels_attempted": {"type": "integer", "minimum": 0},
+        "level_solve_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "game_win_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "score": {"type": "number", "minimum": 0, "maximum": 1, "description": "mean over levels of min(1, optimal/actions) if solved else 0"},
+        "median_actions": {"type": ["number", "null"]},
+        "tokens_in": {"type": ["integer", "null"]},
+        "tokens_out": {"type": ["integer", "null"]},
+        "cost_per_game": {"type": ["number", "null"]},
+        "cost_per_solved_level": {"type": ["number", "null"]},
+        "latency_ms_median": {"type": ["number", "null"]},
+        "subset_note": {"type": ["string", "null"]},
+        "model": {"anyOf": [{"$ref": "#/$defs/model_card"}, {"type": "null"}]}
+      }
+    },
+    "leaderboard": {
+      "type": "object",
+      "required": ["generated_at", "rows"],
+      "properties": {
+        "generated_at": {"type": "string", "format": "date-time"},
+        "rows": {"type": "array", "items": {"$ref": "#/$defs/leaderboard_row"}}
+      }
+    },
+    "rule_cell": {
+      "type": "object",
+      "required": ["rule", "player_id", "intro_levels", "intro_solve_rate"],
+      "properties": {
+        "rule": {"type": "string"},
+        "player_id": {"type": "string"},
+        "effort": {"type": ["string", "null"]},
+        "intro_levels": {"type": "integer", "minimum": 0},
+        "intro_solve_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "actions_to_first_use": {"type": ["number", "null"]},
+        "wasted_actions": {"type": ["number", "null"]},
+        "hypothesis_match_rate": {"type": ["number", "null"]}
+      }
+    },
+    "rules": {
+      "type": "object",
+      "required": ["generated_at", "rules", "players", "cells"],
+      "properties": {
+        "generated_at": {"type": "string", "format": "date-time"},
+        "rules": {"type": "array", "items": {"type": "string"}},
+        "players": {"type": "array", "items": {"type": "string"}},
+        "cells": {"type": "array", "items": {"$ref": "#/$defs/rule_cell"}}
+      }
+    },
+    "insight": {
+      "type": "object",
+      "required": ["id", "title", "summary", "evidence"],
+      "properties": {
+        "id": {"type": "string"},
+        "title": {"type": "string"},
+        "summary": {"type": "string"},
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {"type": "string"},
+              "value": {"type": ["number", "string", "null"]},
+              "run_id": {"type": ["string", "null"]},
+              "step": {"type": ["integer", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "insights": {
+      "type": "object",
+      "required": ["generated_at", "insights"],
+      "properties": {
+        "generated_at": {"type": "string", "format": "date-time"},
+        "insights": {"type": "array", "items": {"$ref": "#/$defs/insight"}}
+      }
+    }
+  },
+  "oneOf": [
+    {"$ref": "#/$defs/leaderboard"},
+    {"$ref": "#/$defs/rules"},
+    {"$ref": "#/$defs/insights"}
+  ]
+}
