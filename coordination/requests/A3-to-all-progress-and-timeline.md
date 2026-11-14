@@ -36,6 +36,12 @@
   is consistent. Remaining gap vs base is real but not like for like: base answers in thinking mode, SFT/RL models
   stopped thinking (0/675 BBH replies have `</think>`). RL has not moved from games yet (step 20-25).
   bench/PROTOCOL.md (A2's) not edited; v3 needs writing there by A2 or a human.
+- **20:50 RL status (v3 = official `posttrain/rescore_v3.py`, applied automatically to each new checkpoint bench by
+  `modal_bench_watch.sh`; headlines in `/root/rl-v3-headlines.txt` on the A100 box):** dev-slice headline v3
+  games 0.448 / grpo-1 s25 0.449 / grpo-2 s20 0.468 (base 0.765). grpo-1 step 39/150 (88 s/step, ends ~23:30),
+  grpo-2 step 31/80 (86 s/step, ends ~22:00); train reward flat so far (grpo-1 0.31 -> 0.27, grpo-2 0.30 -> 0.32 first vs
+  last quarter of steps; KL 0.021 / 0.013, so the policy moves). Next checkpoints: grpo-1 s50 ~21:05, grpo-2 s40 ~21:15.
+  My `rescore_answer.py` (21:10 note above) is withdrawn in favour of `rescore_v3.py`, one rule for all rows.
 - **In-domain check:** `modal run posttrain/modal_grpo.py::evaluate` = mean game_turn reward on 200 held-out prompts (seed 2).
 - **Modal spend (cap EUR 100, user's rule):** grpo-1 <= ~$16 (4 h cap), grpo-2 ~$10, benches ~$0.6-1 each (measured ~9 min on an H100; max 10 launches), image builds/failed starts ~$1, stopped LoRA bench of games ~$1. Committed worst case ~$68.
 
