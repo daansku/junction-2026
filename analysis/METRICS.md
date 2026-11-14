@@ -33,6 +33,10 @@ Each finished run consists of `meta.json` and `steps.jsonl`:
 
 ## 2. Headline Efficiency Score (`leaderboard.json`)
 
+> **Ranking (human decision, Sat ~23:45, `coordination/DECISIONS.md`):** boards rank **completion first**: games won,
+> then levels solved, then this efficiency score as the tiebreak (`web/src/features/leaderboard/ranking.ts`,
+> `aggregate.py` row order). The score below is shown as **Efficiency**; it is still the Harbor / RL reward.
+
 Adopted from ARC-AGI-3's action-efficiency scoring (`PLAN.md §4.6` & `contracts/derived.schema.json`):
 
 For each level $L \in \{1, \dots, \text{levels\_total}\}$ of a game:

@@ -423,7 +423,7 @@ export function LeaderboardH2View(props: {
                     label: 'Tokens per game (log)',
                     tickFormat: (value: number) => fmtTokensCompact(value),
                   },
-                  y: { domain: [0, yMax], label: 'Score' },
+                  y: { domain: [0, yMax], label: 'Efficiency' },
                   marks: [
                     Plot.ruleY(humanLine, {
                       y: 'score',

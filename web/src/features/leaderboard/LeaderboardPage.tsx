@@ -16,14 +16,14 @@ import {
 import { api } from '@/lib/api'
 import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
 import type { RunMeta } from '@/lib/types'
-import { fetchLeaderboardH2 } from './phase2Api'
+import { fetchLeaderboardH2, fetchLeaderboardH2b } from './phase2Api'
 import { ModelCardDialog } from './ModelCardDialog'
 import { bestByCompletion, completionCompare } from './ranking'
 import { LeaderboardH2View } from './PostTrainingSection'
 import type { LeaderboardDocument, LeaderboardRow } from './types'
 import './leaderboard.css'
 
-type BoardView = 'h1' | 'h2'
+type BoardView = 'h1' | 'h2' | 'h2b'
 
 type SortKey = 'score' | 'level_solve_rate' | 'game_win_rate' | 'median_actions' | 'cost_per_game'
 
@@ -92,7 +92,7 @@ export function LeaderboardPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const rawView = searchParams.get('view')
-  const view: BoardView = rawView === 'h2' ? 'h2' : 'h1'
+  const view: BoardView = rawView === 'h2' || rawView === 'h2b' ? rawView : 'h1'
 
   const setView = (next: BoardView) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -108,6 +108,10 @@ export function LeaderboardPage() {
   const lbH2 = useQuery({
     queryKey: ['derived', 'leaderboard_h2'],
     queryFn: fetchLeaderboardH2,
+  })
+  const lbH2b = useQuery({
+    queryKey: ['derived', 'leaderboard_h2b'],
+    queryFn: fetchLeaderboardH2b,
   })
   const runsQ = useQuery({
     queryKey: ['runs', 'lb-best-lookup'],
@@ -318,12 +322,23 @@ export function LeaderboardPage() {
           <span>Extended</span>
           <span className="lb-tab-count">{lbH2.data?.rows.length ?? '—'}</span>
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'h2b'}
+          className={cx('lb-view-tab', view === 'h2b' && 'active')}
+          onClick={() => setView('h2b')}
+          title="Extended harness, up to 5 moves per model call"
+        >
+          <span>Extended, multi-move</span>
+          <span className="lb-tab-count">{lbH2b.data?.rows.length ?? '—'}</span>
+        </button>
       </div>
 
-      {view === 'h2' ? (
+      {view === 'h2' || view === 'h2b' ? (
         <LeaderboardH2View
-          doc={lbH2.data}
-          isLoading={lbH2.isLoading}
+          doc={view === 'h2' ? lbH2.data : lbH2b.data}
+          isLoading={view === 'h2' ? lbH2.isLoading : lbH2b.isLoading}
           resolveRunFallback={resolveBestRun}
         />
       ) : lb.isLoading ? (
@@ -492,7 +507,7 @@ export function LeaderboardPage() {
                   <thead>
                     <tr>
                       <th>Player</th>
-                      <th className="num">Score</th>
+                      <th className="num">Efficiency</th>
                       <th className="num">Cost / Game</th>
                       <th className="num">Tokens / Game</th>
                     </tr>
@@ -660,7 +675,7 @@ export function LeaderboardPage() {
                         },
                         y: {
                           domain: [0, yMax],
-                          label: 'Score',
+                          label: 'Efficiency',
                         },
                         marks: [
                           Plot.ruleY(solidRefs, {

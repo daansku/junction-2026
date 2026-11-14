@@ -577,7 +577,7 @@ export function InsightsPage() {
                     <th className="num">Level</th>
                     <th>Player</th>
                     <th className="num">Solved</th>
-                    <th className="num">Score</th>
+                    <th className="num">Efficiency</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -603,7 +603,7 @@ export function InsightsPage() {
                   label: 'Level (each level adds 1 new rule)',
                   tickFormat: (d: number) => `L${d}`,
                 },
-                y: { domain: [0, 1.04], label: 'Score' },
+                y: { domain: [0, 1.04], label: 'Efficiency' },
                 color: { legend: true, range: seriesColors() },
                 marks: [
                   Plot.ruleY([1.0], { stroke: cssVar('--text-2') }),

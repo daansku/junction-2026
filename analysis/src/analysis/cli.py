@@ -176,6 +176,8 @@ def build_all(
 
     leaderboard = aggregate_runs(runs, models_registry=models, game_descs=games, harness_filter="h1")
     leaderboard_h2 = aggregate_h2_runs(runs, models_registry=models, game_descs=games)
+    # h2b (A3, Sat 22:32): h2 with up to 5 actions per model call; its own board, never mixed with h1 or h2
+    leaderboard_h2b = aggregate_h2_runs(runs, models_registry=models, game_descs=games, harness="h2b")
     rules_data = analyze_rules(runs, models_registry=models, game_descs=games)
     insights = synthesize_insights(leaderboard, rules_data, runs=runs)
     explanations = build_explanations(runs, game_descs=games, repo_root=root)
@@ -210,12 +212,13 @@ def build_all(
             pass
 
     schema_path = root / "contracts" / "derived.schema.json"
-    for payload in (leaderboard, leaderboard_h2, rules_data, insights, explanations):
+    for payload in (leaderboard, leaderboard_h2, leaderboard_h2b, rules_data, insights, explanations):
         validate_against_schema(payload, schema_path)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "leaderboard.json").write_text(json.dumps(leaderboard, indent=2) + "\n", encoding="utf-8")
     (out_dir / "leaderboard_h2.json").write_text(json.dumps(leaderboard_h2, indent=2) + "\n", encoding="utf-8")
+    (out_dir / "leaderboard_h2b.json").write_text(json.dumps(leaderboard_h2b, indent=2) + "\n", encoding="utf-8")
     (out_dir / "rules.json").write_text(json.dumps(rules_data, indent=2) + "\n", encoding="utf-8")
     (out_dir / "insights.json").write_text(json.dumps(insights, indent=2) + "\n", encoding="utf-8")
     (out_dir / "explanations.json").write_text(json.dumps(explanations, indent=2) + "\n", encoding="utf-8")
@@ -232,6 +235,7 @@ def build_all(
         "out_dir": str(out_dir),
         "leaderboard_rows": len(leaderboard["rows"]),
         "leaderboard_h2_rows": len(leaderboard_h2["rows"]),
+        "leaderboard_h2b_rows": len(leaderboard_h2b["rows"]),
         "rule_cells": len(rules_data["cells"]),
         "insights": len(insights["insights"]),
         "explanations": len(explanations["explanations"]),

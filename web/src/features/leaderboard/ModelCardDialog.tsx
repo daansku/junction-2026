@@ -66,7 +66,8 @@ export function ModelCardDialog({
   const tokensIn = fmtTokens(row.tokens_in)
   const tokensOut = fmtTokens(row.tokens_out)
   const stats: CardEntry[] = [
-    ['Score', fmtFloat(row.score)],
+    ['Games won', row.game_win_rate != null ? `${Math.round(row.game_win_rate * 100)}%` : null],
+    ['Efficiency', fmtFloat(row.score)],
     ['Levels won', `${row.levels_solved}/${row.levels_attempted}`],
     ['vs Human', fmtFloat(row.rhae_vs_human)],
     ...extra,

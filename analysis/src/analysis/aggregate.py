@@ -90,7 +90,8 @@ def aggregate_runs(
         # harness (h2, and variants such as h2b) has its own board and is never mixed into h1.
         if harness_filter == "h1" and rh not in (None, "h1"):
             continue
-        if harness_filter == "h2" and rh != "h2" and (run["meta"].get("player") or {}).get("kind") == "model":
+        # Lab-style boards (h2, h2b, ...): model runs of exactly that harness; human / baseline references pass.
+        if harness_filter not in (None, "h1") and rh != harness_filter and (run["meta"].get("player") or {}).get("kind") == "model":
             continue
         filtered_runs.append(run)
 
@@ -262,7 +263,7 @@ def aggregate_runs(
         notes: list[str] = []
         if kind == "model" and col_total_games > 1 and len(game_ids) < col_total_games:
             notes.append(f"Evaluated on {len(game_ids)}/{col_total_games} games in {collection}")
-        if harness == "h2" and single_attempt:
+        if harness not in (None, "h1") and single_attempt:
             notes.append("single-attempt (k=1)")
         cost_note: str | None = None
         if any_gemini_underreported:
@@ -332,10 +333,12 @@ def aggregate_runs(
         if len(cols_per_player[(row["player_id"], row["effort"])]) > 1:
             row["display_name"] = f"{row['display_name']} [{row['collection']}]"
 
+    # Completion first (human decision Sat ~23:45, DECISIONS.md): games won, levels solved, then efficiency (score).
     pre_rows.sort(
         key=lambda r: (
-            -r["score"],
+            -(r.get("game_win_rate") or 0),
             -r["level_solve_rate"],
+            -r["score"],
             r["cost_per_game"] if r["cost_per_game"] is not None else float("inf"),
             r["player_id"],
         )
@@ -353,8 +356,10 @@ def aggregate_h2_runs(
     models_registry: dict[str, dict[str, Any]] | None = None,
     game_descs: dict[str, dict[str, Any]] | None = None,
     generated_at: str | None = None,
+    harness: str = "h2",
 ) -> dict[str, Any]:
-    """Build the dedicated h2 Lab-Standard Leaderboard (`leaderboard_h2.json`, PLAN.md §3.1).
+    """Build a dedicated lab-style leaderboard for one harness (`h2` -> leaderboard_h2.json, `h2b` ->
+    leaderboard_h2b.json). Originally: the dedicated h2 Lab-Standard Leaderboard (`leaderboard_h2.json`, PLAN.md §3.1).
 
     Never mixes h1 model runs into h2. Includes Optimal and Human reference rows matched to the
     exact game subset evaluated under h2 per collection (falling back to collection-wide Human/Optimal
@@ -363,7 +368,7 @@ def aggregate_h2_runs(
     models_registry = models_registry if models_registry is not None else load_models()
     game_descs = game_descs if game_descs is not None else load_collections()
 
-    h2_model_runs = [r for r in runs if _run_harness(r["meta"]) == "h2" and (r["meta"].get("player") or {}).get("kind") == "model"]
+    h2_model_runs = [r for r in runs if _run_harness(r["meta"]) == harness and (r["meta"].get("player") or {}).get("kind") == "model"]
     h2_games_by_col: dict[str, set[str]] = defaultdict(set)
     for r in h2_model_runs:
         col = str(r["meta"].get("collection") or "dev")
@@ -396,7 +401,7 @@ def aggregate_h2_runs(
         models_registry=models_registry,
         game_descs=game_descs,
         generated_at=generated_at,
-        harness_filter="h2",
+        harness_filter=harness,
     )
 
     # Guarantee an exact BFS Optimal (1.000) ceiling row per h2 collection from collection specs if not recorded as a session

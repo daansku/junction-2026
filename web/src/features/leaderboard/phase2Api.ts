@@ -54,6 +54,20 @@ export async function fetchLeaderboardH2(): Promise<LeaderboardH2Document> {
   }
 }
 
+/** h2b board (A3, Sat 22:32): h2 with up to 5 moves per model call, each move counted and scored as in h2. */
+export async function fetchLeaderboardH2b(): Promise<LeaderboardH2Document> {
+  const H2B_NOTE = 'Up to 5 moves per model call (each move counted and scored exactly as in h2); smaller context.'
+  try {
+    const doc = await api.derived<LeaderboardH2Document>('leaderboard_h2b')
+    if (doc && Array.isArray(doc.rows)) {
+      return { ...doc, h2_rules: [H2B_NOTE, ...(doc.h2_rules?.length ? doc.h2_rules : DEFAULT_H2_RULES)] }
+    }
+  } catch {
+    /* not built yet on this server */
+  }
+  return { generated_at: '', harness_version: 'h2b', h2_rules: [H2B_NOTE, ...DEFAULT_H2_RULES], h2_games_by_collection: {}, rows: [] }
+}
+
 export async function fetchBenchSummary(): Promise<BenchSummaryDocument> {
   try {
     const doc = await api.derived<BenchSummaryDocument>('bench_summary')

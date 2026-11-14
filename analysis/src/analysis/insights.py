@@ -109,10 +109,12 @@ def synthesize_insights(
                     "step": None,
                 },
             )
+            h_won = h_row.get("game_win_rate") or 0.0
+            m_won = best_model.get("game_win_rate") or 0.0
             summary = (
-                f"Best evaluated model ({best_model['display_name']}) achieved an action-efficiency "
-                f"score of {best_model['score']:.3f} vs. {h_score:.3f} for first-attempt humans and "
-                f"{opt_score:.3f} for BFS optimal play."
+                f"Best evaluated model ({best_model['display_name']}) won {m_won * 100:.0f}% of its games "
+                f"({best_model['level_solve_rate'] * 100:.0f}% of levels) vs. {h_won * 100:.0f}% for first-attempt "
+                f"humans; efficiency {best_model['score']:.3f} vs. {h_score:.3f} (BFS optimal {opt_score:.3f})."
             )
         else:
             gap = round(opt_score - best_model["score"], 4)

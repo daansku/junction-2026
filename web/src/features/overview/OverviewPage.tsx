@@ -367,7 +367,7 @@ export function OverviewPage() {
                 <thead>
                   <tr>
                     <th>Player</th>
-                    <th className="num">Score</th>
+                    <th className="num">Efficiency</th>
                     <th className="num">Cost / Game</th>
                     <th className="num">Tokens / Game</th>
                   </tr>
@@ -547,7 +547,7 @@ export function OverviewPage() {
                     },
                     y: {
                       domain: [0, yMax],
-                      label: 'Score',
+                      label: 'Efficiency',
                     },
                     marks: [
                       Plot.ruleY(solidRefs, {

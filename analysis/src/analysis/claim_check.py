@@ -38,7 +38,7 @@ def check_claims(derived_dir: Path, repo_root: Path | None = None) -> dict[str, 
         except Exception as exc:
             errors.append(f"{name}.json failed schema validation: {exc}")
 
-    for opt_schema_doc in ("explanations", "leaderboard_h2"):
+    for opt_schema_doc in ("explanations", "leaderboard_h2", "leaderboard_h2b"):
         p = derived_dir / f"{opt_schema_doc}.json"
         if p.exists():
             try:
