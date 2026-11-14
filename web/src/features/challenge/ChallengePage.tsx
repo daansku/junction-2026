@@ -63,7 +63,8 @@ interface Review {
   last: boolean
 }
 
-const REVIEW_FPS = 10
+/** Replay speed: slow enough to follow each move (human feedback: 10/s was too fast). */
+const REVIEW_FPS = 4
 
 interface LevelResult {
   level: number
@@ -655,6 +656,8 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           nLevels={nLevels}
           optimal={optimal[review.idx] ?? 0}
           frame={frame}
+          ghosts={ghostQs[review.idx]?.data?.ghosts ?? []}
+          optimalGhost={ghostQs[review.idx]?.data?.optimal ?? null}
           onPrimary={reviewPrimary}
           onSecondary={reviewSecondary}
         />
@@ -720,10 +723,12 @@ function LevelReview(props: {
   nLevels: number
   optimal: number
   frame: Frame | null
+  ghosts: GhostSlice[]
+  optimalGhost: GhostSlice | null
   onPrimary: () => void
   onSecondary: () => void
 }) {
-  const { review, levelNo, nLevels, optimal, frame, onPrimary, onSecondary } = props
+  const { review, levelNo, nLevels, optimal, frame, ghosts, optimalGhost, onPrimary, onSecondary } = props
   const headline =
     review.kind === 'solved'
       ? `Level ${levelNo} solved in ${review.actions} moves.`
@@ -753,7 +758,16 @@ function LevelReview(props: {
     </section>
   )
   return (
-    review.kind === 'solved' || !frame ? (
+    review.kind === 'solved' ? (
+      // level done, so its AI attempts can no longer spoil it (lost / stopped levels can be retried: no AI there)
+      <div className="ch-grid">
+        <section className="ch-card ch-review">
+          <span className="kicker">the AI on level {levelNo} · recorded attempts, replayed</span>
+          <LevelReels key={review.level} ghosts={ghosts} optimalGhost={optimalGhost} level={levelNo} />
+        </section>
+        <aside className="ch-side">{card}</aside>
+      </div>
+    ) : !frame ? (
       // nothing to show beside it: the card takes the main column (an empty frame column left it off-screen)
       <div className="ch-solo">{card}</div>
     ) : (
@@ -767,41 +781,51 @@ function LevelReview(props: {
   )
 }
 
-/** After the challenge: every recorded model attempt + the optimal path, one level at a time. */
-function AiReplays({ levels, from }: { levels: Array<{ ghosts: GhostSlice[]; optimal: GhostSlice | null }>; from: number }) {
-  const [sel, setSel] = useState(0)
+/** Every recorded model attempt + the optimal path on one level, replayed in lockstep from move 0. */
+function LevelReels({ ghosts, optimalGhost, level }: { ghosts: GhostSlice[]; optimalGhost: GhostSlice | null; level: number }) {
   const [tick, setTick] = useState(0)
+  // restarts from move 0 on mount; callers remount with `key` to restart (array props are not stable refs)
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1000 / REVIEW_FPS)
     return () => clearInterval(id)
   }, [])
-  const cur = levels[sel] ?? { ghosts: [], optimal: null }
   const reels = [
-    ...cur.ghosts.filter((g) => g.steps.length).map((g) => ({ g, title: ghostName(g) })),
-    ...(cur.optimal?.steps.some((s) => s.frame) ? [{ g: cur.optimal, title: 'Optimal path' }] : []),
+    ...ghosts.filter((g) => g.steps.length).map((g) => ({ g, title: ghostName(g) })),
+    ...(optimalGhost?.steps.some((s) => s.frame) ? [{ g: optimalGhost, title: 'Optimal path' }] : []),
   ]
+  return (
+    <>
+      {!ghosts.length && (
+        <p className="muted">No finished AI run on level {level} of this game yet{reels.length ? '; the optimal path is shown.' : '.'}</p>
+      )}
+      {!!reels.length && (
+        <div className="ch-reels">
+          {reels.map((r) => (
+            <Reel key={`${level}-${r.g.run_id ?? r.title}`} g={r.g} title={r.title} tick={tick} scale={4} />
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+/** After the challenge: every recorded model attempt + the optimal path, one level at a time. */
+function AiReplays({ levels, from }: { levels: Array<{ ghosts: GhostSlice[]; optimal: GhostSlice | null }>; from: number }) {
+  const [sel, setSel] = useState(0)
+  const cur = levels[sel] ?? { ghosts: [], optimal: null }
   return (
     <section className="ch-card ch-review">
       <div className="ch-review-head">
         <span className="kicker">how the AI played · recorded attempts, replayed</span>
         <div className="ch-tabs" role="tablist">
           {levels.map((_, i) => (
-            <Button key={i} variant="ghost" mono active={i === sel} onClick={() => { setSel(i); setTick(0) }} role="tab" aria-selected={i === sel}>
+            <Button key={i} variant="ghost" mono active={i === sel} onClick={() => setSel(i)} role="tab" aria-selected={i === sel}>
               L{i + 1}
             </Button>
           ))}
         </div>
       </div>
-      {!cur.ghosts.length && (
-        <p className="muted">No finished AI run on level {sel + 1} of this game yet{reels.length ? '; the optimal path is shown.' : '.'}</p>
-      )}
-      {!!reels.length && (
-        <div className="ch-reels">
-          {reels.map((r) => (
-            <Reel key={`${sel}-${r.g.run_id ?? r.title}`} g={r.g} title={r.title} tick={tick} scale={4} />
-          ))}
-        </div>
-      )}
+      <LevelReels key={sel} ghosts={cur.ghosts} optimalGhost={cur.optimal} level={sel + 1} />
       <p className="muted ch-note">Level numbers are within this challenge (game levels {from}–{from + levels.length - 1}).</p>
     </section>
   )
