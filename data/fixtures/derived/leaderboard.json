@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-14T00:07:25Z",
+  "generated_at": "2026-11-14T11:05:42Z",
   "rows": [
     {
       "player_id": "optimal",
@@ -24,10 +24,14 @@
       "display_name": "Optimal",
       "provider": "baseline",
       "tier": "baseline",
+      "input_modes": null,
       "model_order": 999,
       "resets_total": 0,
       "belief_accuracy": null,
       "no_effect_rate": 0.0,
+      "seen_score": null,
+      "unseen_pair_score": null,
+      "unseen_skin_score": null,
       "rhae_vs_human": null
     },
     {
@@ -53,10 +57,14 @@
       "display_name": "Mock Model",
       "provider": "mock",
       "tier": "model",
+      "input_modes": null,
       "model_order": 999,
       "resets_total": 1,
       "belief_accuracy": 1.0,
       "no_effect_rate": 0.0333,
+      "seen_score": null,
+      "unseen_pair_score": null,
+      "unseen_skin_score": null,
       "rhae_vs_human": null
     },
     {
@@ -82,10 +90,14 @@
       "display_name": "Random",
       "provider": "baseline",
       "tier": "baseline",
+      "input_modes": null,
       "model_order": 999,
       "resets_total": 31,
       "belief_accuracy": null,
       "no_effect_rate": 0.3217,
+      "seen_score": null,
+      "unseen_pair_score": null,
+      "unseen_skin_score": null,
       "rhae_vs_human": null
     },
     {
@@ -111,10 +123,14 @@
       "display_name": "Noop",
       "provider": "baseline",
       "tier": "baseline",
+      "input_modes": null,
       "model_order": 999,
       "resets_total": 0,
       "belief_accuracy": null,
       "no_effect_rate": null,
+      "seen_score": null,
+      "unseen_pair_score": null,
+      "unseen_skin_score": null,
       "rhae_vs_human": null
     },
     {
@@ -140,10 +156,14 @@
       "display_name": "Stop Early",
       "provider": "baseline",
       "tier": "baseline",
+      "input_modes": null,
       "model_order": 999,
       "resets_total": 0,
       "belief_accuracy": null,
       "no_effect_rate": 0.4,
+      "seen_score": null,
+      "unseen_pair_score": null,
+      "unseen_skin_score": null,
       "rhae_vs_human": null
     }
   ]

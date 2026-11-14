@@ -68,6 +68,17 @@ function fmtInt(v: number | null | undefined): string {
   return Math.round(v).toLocaleString()
 }
 
+function fmtTokensCompact(v: number): string {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`
+  if (v >= 1_000) return `${Math.round(v / 1_000)}k`
+  return String(Math.round(v))
+}
+
+function rowModes(row: LeaderboardRow): string {
+  const modes = row.input_modes ?? row.model?.input_modes
+  return modes && modes.length ? modes.join('+') : '—'
+}
+
 function rowLabel(row: LeaderboardRow): string {
   const base = row.display_name || row.model?.display_name || row.player_id
   return row.effort ? `${base} (${row.effort})` : base
@@ -93,6 +104,7 @@ export function LeaderboardPage() {
   const [sortKey, setSortKey] = useState<SortKey>('score')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [frontierMode, setFrontierMode] = useState<'chart' | 'table'>('chart')
+  const [frontierAxis, setFrontierAxis] = useState<'auto' | 'tokens' | 'usd'>('auto')
   const [effortMode, setEffortMode] = useState<'chart' | 'table'>('chart')
 
   const allRows = lb.data?.rows ?? []
@@ -181,18 +193,48 @@ export function LeaderboardPage() {
     }
   }, [collectionRows])
 
-  const costPoints = useMemo(
+  const hasUnpricedTokenModels = useMemo(
+    () =>
+      collectionRows.some(
+        (r) =>
+          r.kind === 'model' &&
+          (r.cost_per_game == null || r.cost_per_game <= 0) &&
+          (r.tokens_in ?? 0) + (r.tokens_out ?? 0) > 0,
+      ),
+    [collectionRows],
+  )
+
+  const effectiveAxis: 'tokens' | 'usd' =
+    frontierAxis === 'auto' ? (hasUnpricedTokenModels ? 'tokens' : 'usd') : frontierAxis
+
+  const frontierPoints = useMemo(
     () =>
       collectionRows
-        .map((row, idx) => ({
-          row,
-          label: rowLabel(row),
-          cost: row.cost_per_game ?? 0,
-          score: row.score,
-          color: seriesColorFor(row, idx),
-        }))
-        .filter((pt) => pt.cost > 0),
-    [collectionRows],
+        .map((row, idx) => {
+          const totalTokens = (row.tokens_in ?? 0) + (row.tokens_out ?? 0)
+          const tokensPerGame = row.games > 0 ? totalTokens / row.games : 0
+          const xVal = effectiveAxis === 'usd' ? (row.cost_per_game ?? 0) : tokensPerGame
+          return {
+            row,
+            label: rowLabel(row),
+            xVal,
+            cost: row.cost_per_game ?? null,
+            tokensPerGame,
+            score: row.score,
+            color: seriesColorFor(row, idx),
+          }
+        })
+        .filter((pt) => pt.row.kind === 'model' && pt.xVal > 0),
+    [collectionRows, effectiveAxis],
+  )
+
+  const hasHoldout = useMemo(
+    () =>
+      sortedRows.some(
+        (r) =>
+          r.seen_score != null || r.unseen_pair_score != null || r.unseen_skin_score != null,
+      ),
+    [sortedRows],
   )
 
   const effortSeries = useMemo(() => {
@@ -362,15 +404,35 @@ export function LeaderboardPage() {
           </div>
 
           <Panel
-            label="Cost vs Action-Efficiency Frontier"
+            label={
+              effectiveAxis === 'tokens'
+                ? 'Compute (Tokens / Game) vs Action-Efficiency Frontier'
+                : 'Cost (USD / Game) vs Action-Efficiency Frontier'
+            }
             actions={
-              <Button
-                mono
-                active={frontierMode === 'table'}
-                onClick={() => setFrontierMode((m) => (m === 'chart' ? 'table' : 'chart'))}
-              >
-                {frontierMode === 'chart' ? 'Show Table' : 'Show Plot'}
-              </Button>
+              <div className="page-actions">
+                <Button
+                  mono
+                  active={effectiveAxis === 'tokens'}
+                  onClick={() => setFrontierAxis('tokens')}
+                >
+                  Tokens / Game
+                </Button>
+                <Button
+                  mono
+                  active={effectiveAxis === 'usd'}
+                  onClick={() => setFrontierAxis('usd')}
+                >
+                  USD / Game
+                </Button>
+                <Button
+                  mono
+                  active={frontierMode === 'table'}
+                  onClick={() => setFrontierMode((m) => (m === 'chart' ? 'table' : 'chart'))}
+                >
+                  {frontierMode === 'chart' ? 'Show Table' : 'Show Plot'}
+                </Button>
+              </div>
             }
           >
             {frontierMode === 'table' ? (
@@ -380,6 +442,7 @@ export function LeaderboardPage() {
                     <tr>
                       <th>Player</th>
                       <th>Kind</th>
+                      <th>Input</th>
                       <th className="num">Cost / Game</th>
                       <th className="num">Cost / Solved Lvl</th>
                       <th className="num">Eff. Score</th>
@@ -389,7 +452,7 @@ export function LeaderboardPage() {
                   </thead>
                   <tbody>
                     {collectionRows.map((r, i) => (
-                      <tr key={`${r.player_id}-${r.effort ?? 'none'}-${i}`}>
+                      <tr key={`${r.player_id}-${r.effort ?? 'none'}-${r.collection}-${i}`}>
                         <td>
                           <span className="lb-player-cell">
                             <Swatch color={seriesColorFor(r, i)} />
@@ -397,6 +460,7 @@ export function LeaderboardPage() {
                           </span>
                         </td>
                         <td className="mono">{r.kind}</td>
+                        <td className="mono">{rowModes(r)}</td>
                         <td className="num">{fmtUsd(r.cost_per_game)}</td>
                         <td className="num">{fmtUsd(r.cost_per_solved_level)}</td>
                         <td className="num">{fmtFloat(r.score, 3)}</td>
@@ -407,42 +471,76 @@ export function LeaderboardPage() {
                   </tbody>
                 </table>
               </div>
-            ) : costPoints.length === 0 ? (
-              <Empty>No positive-cost model runs available for the log-cost frontier.</Empty>
+            ) : frontierPoints.length === 0 ? (
+              <Empty>No model compute/cost runs available for the log frontier.</Empty>
             ) : (
               <>
                 <div className="lb-plot-box">
                   <PlotFigure
-                    deps={[costPoints, kpi.optScore, kpi.humanScore, kpi.randomScore]}
+                    deps={[frontierPoints, effectiveAxis, kpi.optScore, kpi.humanScore, kpi.randomScore, kpi.noopScore, collectionRows]}
                     make={(width) => {
-                      const costs = costPoints.map((p) => p.cost)
-                      const minCost = Math.min(...costs)
-                      const maxCost = Math.max(...costs)
-                      const xMin = minCost * 0.5
-                      const xMax = maxCost * 2.0
+                      const xs = frontierPoints.map((p) => p.xVal)
+                      const minX = Math.min(...xs)
+                      const maxX = Math.max(...xs)
+                      const xMin = minX * 0.55
+                      const xMax = maxX * 1.85
 
-                      const refLines: Array<{ y: number; label: string }> = [
-                        { y: kpi.optScore, label: `optimal (${kpi.optScore.toFixed(3)})` },
+                      const rawRefs: Array<{ y: number; name: string }> = [
+                        { y: kpi.optScore, name: 'optimal' },
                       ]
                       if (kpi.humanScore != null) {
-                        refLines.push({ y: kpi.humanScore, label: `human (${kpi.humanScore.toFixed(3)})` })
+                        rawRefs.push({ y: kpi.humanScore, name: 'human' })
                       }
                       if (kpi.randomScore != null) {
-                        refLines.push({ y: kpi.randomScore, label: `random (${kpi.randomScore.toFixed(3)})` })
+                        rawRefs.push({ y: kpi.randomScore, name: 'random' })
                       }
+                      if (kpi.noopScore != null) {
+                        rawRefs.push({ y: kpi.noopScore, name: 'noop' })
+                      }
+                      if (effectiveAxis === 'usd') {
+                        for (const r of collectionRows) {
+                          if (r.kind === 'model' && (r.cost_per_game == null || r.cost_per_game <= 0) && r.score > 0) {
+                            rawRefs.push({ y: r.score, name: `${rowLabel(r)} [credits]` })
+                          }
+                        }
+                      }
+
+                      // Merge reference lines within 0.035 efficiency units so right-edge labels never collide
+                      rawRefs.sort((a, b) => b.y - a.y)
+                      const refLines: Array<{ y: number; label: string }> = []
+                      for (const item of rawRefs) {
+                        const prev = refLines[refLines.length - 1]
+                        if (prev && Math.abs(prev.y - item.y) < 0.035) {
+                          const baseNames = prev.label.replace(/\s*\([0-9.]+\)$/, '')
+                          prev.label = `${baseNames} / ${item.name} (${prev.y.toFixed(3)})`
+                        } else {
+                          refLines.push({ y: item.y, label: `${item.name} (${item.y.toFixed(3)})` })
+                        }
+                      }
+
+                      // Stagger vertical offsets if two plotted dots share y === 0
+                      const primaryLabelPoints = frontierPoints.filter((_, idx) => !(idx % 2 === 1 && frontierPoints[idx]?.score === 0))
+                      const staggeredLabelPoints = frontierPoints.filter((_, idx) => idx % 2 === 1 && frontierPoints[idx]?.score === 0)
 
                       return {
                         width,
-                        height: 290,
-                        marginRight: 96,
+                        height: 295,
+                        marginRight: 152,
                         marginBottom: 40,
                         x: {
                           type: 'log',
                           domain: [xMin, xMax],
-                          label: 'Cost per game (USD, log scale)',
+                          label:
+                            effectiveAxis === 'usd'
+                              ? 'Cost per game (USD, log scale)'
+                              : 'Total tokens per game (in + out, log scale)',
+                          tickFormat: (d: number) =>
+                            effectiveAxis === 'usd'
+                              ? `$${d < 0.01 ? d.toFixed(3) : d.toFixed(2)}`
+                              : fmtTokensCompact(d),
                         },
                         y: {
-                          domain: [0, 1.04],
+                          domain: [0, 1.06],
                           label: 'Action-efficiency score',
                         },
                         marks: [
@@ -459,22 +557,29 @@ export function LeaderboardPage() {
                             dx: 6,
                             fill: cssVar('--text-2'),
                           }),
-                          Plot.dot(costPoints, {
-                            x: 'cost',
+                          Plot.dot(frontierPoints, {
+                            x: 'xVal',
                             y: 'score',
-                            fill: (d: (typeof costPoints)[number]) => d.color,
+                            fill: (d: (typeof frontierPoints)[number]) => d.color,
                             stroke: cssVar('--bg'),
                             strokeWidth: 1.5,
                             r: 6,
                             tip: true,
-                            title: (d: (typeof costPoints)[number]) =>
-                              `${d.label}\nScore: ${d.score.toFixed(3)}\nCost/game: $${d.cost.toFixed(4)}\nSolve rate: ${(d.row.level_solve_rate * 100).toFixed(1)}%`,
+                            title: (d: (typeof frontierPoints)[number]) =>
+                              `${d.label} [${rowModes(d.row)}]\nScore: ${d.score.toFixed(3)}\nSolve rate: ${(d.row.level_solve_rate * 100).toFixed(1)}%\nTokens/game: ${fmtTokensCompact(d.tokensPerGame)}${d.cost != null ? `\nCost/game: $${d.cost.toFixed(4)}` : '\nCost/game: sponsored GPU credits'}`,
                           }),
-                          Plot.text(costPoints, {
-                            x: 'cost',
+                          Plot.text(primaryLabelPoints, {
+                            x: 'xVal',
                             y: 'score',
                             text: 'label',
-                            dy: -12,
+                            dy: -11,
+                            fill: cssVar('--text-1'),
+                          }),
+                          Plot.text(staggeredLabelPoints, {
+                            x: 'xVal',
+                            y: 'score',
+                            text: 'label',
+                            dy: -23,
                             fill: cssVar('--text-1'),
                           }),
                         ],
@@ -503,6 +608,7 @@ export function LeaderboardPage() {
                   <tr>
                     <th>Player</th>
                     <th>Kind</th>
+                    <th>Input</th>
                     <th>Harness</th>
                     <th className="num">Games</th>
                     <th className="num">
@@ -510,6 +616,9 @@ export function LeaderboardPage() {
                         Score{sortArrow('score')}
                       </button>
                     </th>
+                    {hasHoldout && <th className="num">Seen</th>}
+                    {hasHoldout && <th className="num">Unseen Pair</th>}
+                    {hasHoldout && <th className="num">Unseen Skin</th>}
                     <th className="num">
                       <button className={cx('lb-sort-btn', sortKey === 'level_solve_rate' && 'active')} onClick={() => handleSort('level_solve_rate')}>
                         Lvl Solve{sortArrow('level_solve_rate')}
@@ -601,6 +710,7 @@ export function LeaderboardPage() {
                           </div>
                         </td>
                         <td className="mono">{row.tier || row.kind}</td>
+                        <td className="mono">{rowModes(row)}</td>
                         <td className="mono">{row.harness_version || '—'}</td>
                         <td className="num">{row.games}</td>
                         <td className={cx('num', bestScore && 'lb-best')}>
@@ -614,6 +724,9 @@ export function LeaderboardPage() {
                             <span>{fmtFloat(row.score, 3)}</span>
                           </div>
                         </td>
+                        {hasHoldout && <td className="num">{fmtFloat(row.seen_score, 3)}</td>}
+                        {hasHoldout && <td className="num">{fmtFloat(row.unseen_pair_score, 3)}</td>}
+                        {hasHoldout && <td className="num">{fmtFloat(row.unseen_skin_score, 3)}</td>}
                         <td className={cx('num', bestSolve && 'lb-best')}>
                           {fmtPct(row.level_solve_rate)}
                         </td>
@@ -644,15 +757,18 @@ export function LeaderboardPage() {
                 </tbody>
               </table>
             </div>
-            {sortedRows.some((r) => r.subset_note) && (
-              <div className="lb-subset-note mono">
-                Subset evaluations:{' '}
-                {sortedRows
-                  .filter((r) => r.subset_note)
-                  .map((r) => `${rowLabel(r)}: ${r.subset_note}`)
-                  .join(' · ')}
-              </div>
-            )}
+            <div className="lb-subset-note mono">
+              Modality note: harness h1 sends lossless 64×64 run-length grids (rle) to all models plus PNG frames (image+rle) to vision-capable models.
+              {sortedRows.some((r) => r.subset_note) && (
+                <>
+                  {' · '}Subset evaluations:{' '}
+                  {sortedRows
+                    .filter((r) => r.subset_note)
+                    .map((r) => `${rowLabel(r)}: ${r.subset_note}`)
+                    .join(' · ')}
+                </>
+              )}
+            </div>
           </Panel>
 
           <div className="lb-two-col">
@@ -749,13 +865,19 @@ export function LeaderboardPage() {
                         <div className="lb-model-meta mono">
                           <span>id: {row.player_id}</span>
                           <span>provider: {card?.provider || row.provider || '—'}</span>
+                          <span>input: {rowModes(row)}</span>
                           <span>effort: {row.effort || card?.default_effort || '—'}</span>
                         </div>
                         <div className="lb-model-meta mono">
                           <span>solved: {row.levels_solved}/{row.levels_attempted}</span>
                           <span>rhae vs human: {row.rhae_vs_human != null ? fmtFloat(row.rhae_vs_human, 3) : 'pending human'}</span>
+                          {row.seen_score != null && <span>seen: {fmtFloat(row.seen_score, 3)}</span>}
+                          {row.unseen_pair_score != null && <span>unseen pair: {fmtFloat(row.unseen_pair_score, 3)}</span>}
+                          {row.unseen_skin_score != null && <span>unseen skin: {fmtFloat(row.unseen_skin_score, 3)}</span>}
                         </div>
-                        {card?.notes && <span className="muted">{card.notes}</span>}
+                        {(card?.params || card?.notes) && (
+                          <span className="muted">{[card?.params, card?.notes].filter(Boolean).join(' · ')}</span>
+                        )}
                       </div>
                     )
                   })}

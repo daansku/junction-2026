@@ -22,10 +22,12 @@ from analysis.cli import main as cli_main  # noqa: E402
 from analysis.compare import build_comparisons  # noqa: E402
 from analysis.loader import (  # noqa: E402
     extract_level_segments,
+    filter_benchmark_runs,
     load_collections,
     load_models,
     load_runs,
 )
+from analysis.rule_discovery import analyze_rules  # noqa: E402
 from analysis.sync import _safe_extract_tar_bytes  # noqa: E402
 
 
@@ -252,6 +254,70 @@ class AnalysisPipelineTests(unittest.TestCase):
                     row["score"] = 0.25
             lb_path.write_text(json.dumps(lb_data, indent=2), encoding="utf-8")
             self.assertEqual(cli_main(["check-claims", "--derived", str(out_dir)]), 1)
+
+    def test_run_hygiene_filtering(self) -> None:
+        dev_games = json.loads((REPO_ROOT / "data" / "collections" / "dev.json").read_text(encoding="utf-8"))["games"]
+        valid_gid = dev_games[0]["game_id"]
+
+        def _custom_run(run_id: str, pid: str, kind: str, gid: str, outcome: str, end_reason: str | None = None) -> dict:
+            r = _make_run(run_id, pid, kind, [_make_step(0, None)])
+            r["meta"]["game_id"] = gid
+            r["meta"]["outcome"] = outcome
+            if end_reason:
+                r["meta"]["end_reason"] = end_reason
+            return r
+
+        corpus = [
+            _custom_run("r-anon", "anonymous", "human", valid_gid, "BUDGET"),
+            _custom_run("r-smoke", "smoke-optimal", "baseline", valid_gid, "WIN"),
+            _custom_run("r-idle", "nemotron-3-5-super-vl", "model", valid_gid, "ABORTED", "idle_timeout"),
+            _custom_run("r-abort", "verda-kimi-k3-1-pro", "model", valid_gid, "ABORTED"),
+            _custom_run("r-stale", "optimal", "baseline", "gridworld-s1000-d1-l6-stale020", "WIN"),
+            _custom_run("r-noop", "baseline:noop", "baseline", valid_gid, "ABORTED"),
+            _custom_run("r-stop", "baseline:stop_early", "baseline", valid_gid, "ABORTED"),
+            _custom_run("r-valid-model", "verda-kimi-k3-1-pro", "model", valid_gid, "BUDGET"),
+            _custom_run("r-valid-human", "judge-1", "human", valid_gid, "WIN"),
+        ]
+        cleaned = filter_benchmark_runs(corpus, REPO_ROOT)
+        kept_ids = [r["meta"]["run_id"] for r in cleaned]
+        self.assertEqual(kept_ids, ["r-noop", "r-stop", "r-valid-model", "r-valid-human"])
+
+    def test_tier2_tier3_events_and_holdout_splits(self) -> None:
+        steps = [_make_step(0, None, optimal_moves=2)]
+        steps[0]["truth"]["active_rules"] = ["walls", "goal", "collect_all", "conveyors"]
+        steps[0]["truth"]["new_rule"] = "collect_all"
+        s1 = _make_step(1, "ACTION4", events=["collected", "conveyor:right"], optimal_moves=2, frame_row6="1" + "0" * 63)
+        s1["truth"]["active_rules"] = ["walls", "goal", "collect_all", "conveyors"]
+        s1["truth"]["new_rule"] = "collect_all"
+        s2 = _make_step(2, "ACTION4", state="WIN", events=["level_complete", "game_won"], optimal_moves=2, frame_row6="2" + "0" * 63)
+        s2["truth"]["active_rules"] = ["walls", "goal", "collect_all", "conveyors"]
+        s2["truth"]["new_rule"] = "collect_all"
+        steps.extend([s1, s2])
+
+        run_seen = _make_run("r-seen", "verda-kimi-k3-1-pro", "model", steps)
+        run_seen["meta"]["collection"] = "eval-v1"
+        run_seen["meta"]["game_id"] = "eval-seen"
+
+        run_unseen = _make_run("r-unseen", "verda-kimi-k3-1-pro", "model", [_make_step(0, None, optimal_moves=2)])
+        run_unseen["meta"]["collection"] = "eval-v1"
+        run_unseen["meta"]["game_id"] = "eval-unseen"
+        run_unseen["meta"]["outcome"] = "BUDGET"
+
+        game_descs = {
+            "eval-seen": {"game_id": "eval-seen", "levels": [{"optimal_moves": 2}], "holdout": {"levels": [], "skin": False}},
+            "eval-unseen": {"game_id": "eval-unseen", "levels": [{"optimal_moves": 2}], "holdout": {"levels": [1], "skin": True}},
+        }
+        lb = aggregate_runs([run_seen, run_unseen], models_registry=load_models(REPO_ROOT), game_descs=game_descs)
+        row = lb["rows"][0]
+        self.assertEqual(row["input_modes"], ["image", "rle"])
+        self.assertEqual(row["seen_score"], 1.0)
+        self.assertEqual(row["unseen_pair_score"], 0.0)
+        self.assertEqual(row["unseen_skin_score"], 0.0)
+
+        rules_doc = analyze_rules([run_seen], models_registry=load_models(REPO_ROOT), game_descs=game_descs)
+        collect_cell = next(c for c in rules_doc["cells"] if c["rule"] == "collect_all")
+        self.assertEqual(collect_cell["actions_to_first_use"], 1.0)
+        self.assertEqual(collect_cell["intro_solve_rate"], 1.0)
 
 
 if __name__ == "__main__":

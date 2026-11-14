@@ -22,8 +22,8 @@ Then they spend 15 minutes hunting reward exploits. They must be able to run the
 | 3 | **Docker build + full `harbor run`** with oracle / nop / stop-early on `dev` (needs Docker: A4's machine has it) | A4 | done (see Results) |
 | 4 | **OpenCode agent run** through Harbor, using the organisers' Nemotron opencode config (`NVIDIA_VERDA_INFERENCE_KEY`, see `coordination/KEYS.md`) | A4 | done once (see Results); 3 attempts in OVERNIGHT.md |
 | 5 | Export the frozen `eval-v1` after the 11:00 freeze and rerun oracle once | A3 | after 11:00 |
-| 6 | README one-command eval + fix SUBMISSION / QA_PREP / DEMO_SCRIPT / PITCH to use the Harbor commands | A5 | todo |
-| 7 | Reward integrity check: do-nothing = 0, stop-early earns only the solved levels, oracle = 1.0, reported in the deck | A5 (numbers from A4's runs) | todo |
+| 6 | README one-command eval + fix SUBMISSION / QA_PREP / DEMO_SCRIPT / PITCH to use the Harbor commands | A5 | done (`README.md`, `docs/{SUBMISSION,QA_PREP,DEMO_SCRIPT,PITCH}.md`) |
+| 7 | Reward integrity check: do-nothing = 0, stop-early earns only the solved levels, oracle = 1.0, reported in the deck | A5 (numbers from A4's runs) | done (`docs/deck/SLIDES.md`, `docs/deck/index.html`) |
 
 Update the Status column when you finish a row.
 Results of the runs go under "Results" below, with the exact commands.

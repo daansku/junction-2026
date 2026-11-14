@@ -4,8 +4,16 @@ Exact mathematical definitions for every derived table in `data/derived/` and `d
 
 ---
 
-## 1. Trace Attribution (`steps.jsonl` → Per-Level Segments)
+## 1. Run Hygiene & Trace Attribution (`steps.jsonl` → Per-Level Segments)
 
+### Benchmark Run Hygiene (`filter_benchmark_runs`)
+Before aggregation, `load_runs(..., clean=True)` removes non-benchmark noise from shared server exports (`PLAN.md §3.2`, `coordination/OVERNIGHT.md`):
+1. **Unlabelled practice humans:** `player.kind == "human"` with `name/id` in `{"anonymous", "test"}` (intentional labelled human baseline runs use `--player human:<label>`).
+2. **Smoke checks:** `player.id` starting with `"smoke-"`.
+3. **Infrastructure / timeout aborts:** runs with `end_reason == "idle_timeout"`, or `player.kind == "model"` with `outcome == "ABORTED"` (provider disconnects, 530 tunnel drops, or interrupted batch pools), while preserving intentional reward-integrity baselines (`noop`, `stop_early`, `random`) whose `outcome` may be `"ABORTED"`.
+4. **Superseded collection game IDs:** runs tagged with a collection (`dev`, `eval-v1`, `smoke`, `showcase`) whose `game_id` is no longer in the active `data/collections/<collection>.json` (e.g., `engine 0.2.0` game hashes replaced when `dev.json` upgraded to `engine 0.5.0`).
+
+### Per-Level Trace Attribution
 Each finished run consists of `meta.json` and `steps.jsonl`:
 
 - **Initial frame (`i = 0`, `action = null`):** records the initial `truth` of Level 1 (`level = 1`, `optimal_moves`, `active_rules`, `new_rule`).
@@ -51,6 +59,8 @@ $$
 - **`cost_per_game`:** $\dfrac{\sum \text{cost\_usd}}{\text{games}}$ (`null` if pricing is unknown).
 - **`cost_per_solved_level`:** $\dfrac{\sum \text{cost\_usd}}{\sum \text{levels\_solved}}$ (`null` if 0 levels solved or pricing unknown).
 - **`latency_ms_median`:** Median `step.latency_ms` across action steps with non-null latency.
+- **`input_modes`:** Observation modalities supplied by `h1` (`["image", "rle"]` for multimodal VLMs; `["rle"]` for text-only models, ensuring identical lossless 64×64 grid information).
+- **`seen_score`, `unseen_pair_score`, `unseen_skin_score`:** Hold-out split sub-scores on `eval-v1` (`game_desc.holdout.levels` lists 1-based levels containing held-out rule pairs and `game_desc.holdout.skin` flags held-out palette/glyph skins; `null` on collections without hold-out annotations).
 - **`rhae_vs_human`:** Ratio `score / human_score` when a `human` row exists in the same collection (`null` otherwise).
 
 ---
@@ -72,14 +82,10 @@ For each `(rule, player_id, effort)` across all level segments where `prev_truth
 - **`intro_levels`:** Count of introducing level attempts for `rule`.
 - **`intro_solve_rate`:** Fraction of introducing levels solved.
 - **`actions_to_first_use`:** Median step index (1-based within the introducing level attempt) at which the player first triggers an interaction event associated with `rule`:
-  - `keys_doors`: `picked_key`, `opened_door`
-  - `plates_gates`: `pressed_plate`
-  - `teleporters`: `teleport`
-  - `hazards`: `hurt` (or avoiding hazard to `level_complete`)
-  - `push_blocks`: `pushed`
-  - `ice`: `slid:*`
-  - `one_way`: `bump` (or directional pass reflected by `level_complete`)
-  - `walls` / `goal` / `move_budget`: `bump`, `reset`, or `level_complete`
+  - Tier 1 (`engine 0.2.0`): `keys_doors` (`picked_key`, `opened_door`), `plates_gates` (`pressed_plate`), `teleporters` (`teleport`), `hazards` (`hurt`, `level_complete`), `push_blocks` (`pushed`), `ice` (`slid:*`), `one_way` (`bump`, `level_complete`)
+  - Tier 2 (`engine 0.5.0`): `collect_all` (`collected`, `goal_locked`), `phase_walls` (`phased`, `wait`), `rotation` (`rotated:*`), `remap` (`level_complete`), `twin` (`bump`, `level_complete`), `stamina` (`wait`, `exhausted`), `cracked_floor` (`floor_collapsed`), `beacon_goal` (`decoy`)
+  - Tier 3 (`engine 0.5.0` opt-in `eval-v2`): `conveyors` (`conveyor:*`), `enemies` (`enemy_hit`), `gravity` (`fell:*`)
+  - Tier 0 (`walls`, `goal`, `move_budget`): `bump`, `reset`, or `level_complete`
   - If the level is solved without emitting an explicit named event (e.g. `one_way` traversed purely along arrows), falls back to the optimal/completion step count on solved levels (`null` if never triggered or solved).
 - **`wasted_actions`:** Mean excess actions on introducing levels: $\max(0, \text{actions\_used}(L) - \text{optimal\_moves}(L))$ if solved, else $\text{actions\_used}(L)$.
 - **`repeated_no_effect_actions`:** Mean count of steps on introducing levels where `"bump" in curr_truth.events` OR (when `action != "RESET"` and the playfield rows `6..63` are byte-identical between `prev_frame` and `curr_frame`).
