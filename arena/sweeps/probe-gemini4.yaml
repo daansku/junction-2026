@@ -1,0 +1,14 @@
+# Gemini 4 probe (A4, human request Sat 16:45): one eval-v1 game per model to measure cost per action and how
+# far each gets, before deciding on a larger subset. Game 1 (s900000 d1) is the one Opus also played.
+# Same harness h1 and budgets as the main sweep, except a higher per-run cost cap so cost never cuts a run.
+name: probe-gemini4
+collection: eval-v1
+games: {first: 1}
+attempts: 1
+concurrency: 3
+est_steps_per_game: 400
+models:
+  - {id: gemini-4-carbon, effort: medium}
+  - {id: gemini-4-argon, effort: medium}
+  - {id: gemini-4-hydrogen, effort: medium}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 12.00, max_wall_s: 10800}
