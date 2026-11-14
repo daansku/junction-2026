@@ -148,3 +148,51 @@ def test_blocked_moves_matches_engine():
         if d["meta"]["blocked"]:
             assert reward(d, "ANSWER: NONE") == 0.0
             assert reward(d, "ANSWER: ACTION1 ACTION2 ACTION3 ACTION4") == (1.0 if len(d["meta"]["blocked"]) == 4 else 0.0)
+
+
+# ---- rejection sampling driver ------------------------------------------------------------
+def _fake_run(tmp, game_raw, detour_level=None, run_id="r1", game_id=None):
+    """A model-like run: optimal play, with 3 wasted moves on `detour_level` and one level left unsolved."""
+    import random
+    from engine.core.game import Game
+    g = Game.from_dict(game_raw)
+    steps = [{"i": 0, "t_ms": 0, "action": None, "frame": g.frame(), "truth": g.truth()}]
+    rng = random.Random(0)
+    for li, lv in enumerate(g.levels[:3]):
+        acts = list(lv.optimal_path)
+        if li == detour_level:
+            acts = [rng.choice(["ACTION1", "ACTION2", "ACTION3", "ACTION4"]) for _ in range(3 * len(acts) + 5)]
+        for a in acts:
+            g.step(a)
+            steps.append({"i": len(steps), "t_ms": 0, "action": a, "frame": g.frame(), "truth": g.truth(),
+                          "reasoning": f"notes after {a}", "hypothesis": "reach the ring", "belief": "playing"})
+            if g.truth()["level"] != li + 1:
+                break
+        if g.truth()["level"] == li + 1:
+            break   # unsolved: stop the run here
+    meta = {"run_id": run_id, "game_id": game_id or g.game_id, "harness_version": "h1",
+            "player": {"kind": "model", "name": "m", "model_id": "m"}}
+    d = tmp / run_id
+    d.mkdir()
+    (d / "meta.json").write_text(json.dumps(meta))
+    (d / "steps.jsonl").write_text("\n".join(json.dumps(s) for s in steps))
+    return steps
+
+
+def test_rejection_keeps_only_efficient_solved_levels(tmp_path):
+    from engine.tasks.rejection import convert, pick_games
+    raw = _games("train-v1")[0]
+    steps = _fake_run(tmp_path, raw, detour_level=1)
+    _fake_run(tmp_path, _games("train-v1")[1], run_id="r2", game_id="gridworld-s900000-d1-l6-33a57ce4")  # eval id
+    out = tmp_path / "rs.jsonl"
+    st = convert(tmp_path, out)
+    rows = [json.loads(l) for l in out.read_text().splitlines()]
+    assert st["runs_skipped_not_train"] == 1
+    assert rows and {r["meta"]["level"] for r in rows} == {1}            # level 2 wasteful/unsolved -> dropped
+    assert len(rows) == raw["levels"][0]["optimal_moves"]
+    first = rows[0]["messages"]
+    assert "Turn 1." in first[1]["content"] and "(none yet)" in first[1]["content"]
+    assert json.loads(first[2]["content"])["action"] == steps[1]["action"]
+    assert "notes after" in rows[1]["messages"][1]["content"]           # previous notes carried into prompt
+    ids = pick_games(30)
+    assert len(ids) == len(set(ids)) == 30 and pick_games(30) == ids

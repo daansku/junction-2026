@@ -87,6 +87,20 @@ def cmd_tasks(a) -> int:
     return 0
 
 
+def cmd_rs(a) -> int:
+    """Rejection sampling: pick train-v1 games for the sweep, or convert recorded runs to SFT JSONL."""
+    from .tasks import rejection
+    if a.rs_cmd == "games":
+        ids = rejection.pick_games(a.n, a.seed)
+        nl = chr(10)
+        print(nl.join(ids) if a.format == "ids" else "games:" + nl + nl.join(f"  - {i}" for i in ids))
+        return 0
+    st = rejection.convert(a.runs, a.out, a.min_eff, a.models.split(",") if a.models else None,
+                           drop_bumps=not a.keep_bumps)
+    print(f"wrote {a.out}: {dict(st)}", file=sys.stderr)
+    return 0
+
+
 def cmd_probe(a) -> int:
     """A1-23: transfer-probe collection. Fresh seeds (eval range, never trained) whose levels
     use rule combinations that appear in no level of train-v1 or eval-v1. Tiers 1-2 only, so it
@@ -334,6 +348,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--n", type=int, default=1000, help="samples per task")
     p.add_argument("--seed", type=int, default=0); p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_tasks)
+    p = sub.add_parser("rs", help="rejection sampling: pick train games / convert runs to SFT data")
+    rs = p.add_subparsers(dest="rs_cmd", required=True)
+    q = rs.add_parser("games", help="train-v1 game ids for the sampling sweep")
+    q.add_argument("--n", type=int, default=60); q.add_argument("--seed", type=int, default=0)
+    q.add_argument("--format", choices=["ids", "yaml"], default="yaml")
+    q = rs.add_parser("convert", help="runs dir or /api/runs/export tar.gz -> h1 SFT JSONL")
+    q.add_argument("--runs", required=True); q.add_argument("--out", required=True)
+    q.add_argument("--min-eff", type=float, default=0.5, help="keep solved levels with optimal/actions >= this")
+    q.add_argument("--models", help="comma list of model_ids to keep (default: all models)")
+    q.add_argument("--keep-bumps", action="store_true", help="keep turns whose move bumped (default: drop)")
+    p.set_defaults(fn=cmd_rs)
     p = sub.add_parser("probe", help="transfer-probe collection (novel rule combinations)")
     p.add_argument("--name", default="probe-v1"); p.add_argument("--n", type=int, default=30)
     p.add_argument("--seed-start", type=int, default=980000)
