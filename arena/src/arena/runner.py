@@ -150,7 +150,13 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
                          f"with --approve-cost {total:.0f}")
 
     budgets = Budgets(**sw["budgets"])
-    sems = {mid: threading.Semaphore(models[mid].get("max_concurrency", 4)) for mid in models}
+    # per-model parallelism: registry default, overridable per sweep entry ({id: x, max_concurrency: n}),
+    # e.g. to share one provider account's concurrency between sweeps
+    conc = {mid: models[mid].get("max_concurrency", 4) for mid in models}
+    for spec in sw["models"]:
+        if isinstance(spec, dict) and spec.get("max_concurrency") and spec["id"] in conc:
+            conc[spec["id"]] = int(spec["max_concurrency"])
+    sems = {mid: threading.Semaphore(n) for mid, n in conc.items()}
     out_dir.mkdir(parents=True, exist_ok=True)
     results_path = out_dir / f"{sw['name']}-{time.strftime('%Y%m%d-%H%M%S')}.jsonl"
     lock = threading.Lock()
