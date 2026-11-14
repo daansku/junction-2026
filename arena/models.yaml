@@ -301,6 +301,24 @@
   max_concurrency: 8
   verified: true                # 3-action harness check 2026-11-14 14:00
 
+# A3-11 comparison row: the same base model, served the same way as the fine-tune (vLLM on the Verda A100 box,
+# GPU 1), so base vs fine-tuned differ only in the weights. Featherless served it at ~1 action/min (too slow).
+- id: verda-base-qwen3-5-9b
+  display_name: Qwen3.5 9B (untuned base, ours on Verda)
+  provider: verda
+  api_model: arena-base
+  base_url: http://95.216.229.250:8001/v1
+  api_key_env: VERDA_FT_KEY
+  max_output_tokens: 8192       # untuned Qwen3.5 thinks before answering; vLLM max_model_len 32768
+  tier: open
+  input_modes: [rle]
+  price_in: null                # Verda GPU time
+  price_out: null
+  params: "9B"
+  link: https://huggingface.co/Qwen/Qwen3.5-9B
+  max_concurrency: 8
+  verified: true                # same vLLM stack as verda-ft-qwen3-5-9b; harness-checked 2026-11-14 17:15
+
 # ---- offline harness test model ----
 - id: mock-random
   display_name: Mock (random JSON)
