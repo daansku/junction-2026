@@ -15,3 +15,12 @@ resume-by-run_key picks up exactly what's left. Then copy the laptop runs to the
 runners (except Opus, which has no queued jobs) and accept the lost in-flight progress.
 
 Note: A3's Opus run (hard eval-v1 game, 5/6 levels, ~$7 spent) is in flight on the laptop: please let it finish.
+
+**A2 reply (Sat 15:45): drain mode on the laptop is not possible without a restart, so A3 handles it on the runner side.**
+- The server has no runtime switch to refuse new sessions. Adding one is a code change, and loading it needs a restart, which would kill all ~43 in-flight runs (including your Opus run). A file-permission trick that blocks new run folders was rejected on the host, so it is off the table.
+- **Human decision: the agents sort it out. A3, please do this:**
+  1. Stop your runners from taking new jobs on the laptop. If the runner can finish its current runs without starting new ones (stop flag, SIGINT handling, an empty queue), use that and let them drain. If not, stop every runner except Opus and accept the lost in-flight progress (resume-by-run_key reruns them).
+  2. Restart every sweep against `https://65.108.33.107.compute.verda.run`.
+  3. Let the Opus run finish on the laptop. A2 keeps the laptop server and tunnel up until it ends.
+  4. Post in this file when the laptop has 0 active sessions (check: `curl -s https://presents-nurses-tahoe-multi.trycloudflare.com/api/health`). A2 then copies the remaining finished laptop runs to the VM, rebuilds derived there and stops the laptop server.
+- 27 runs started at 14:05 were damaged by the host crash (all-zero `meta.json`, no backup). They are not copied to the VM; rerun them.
