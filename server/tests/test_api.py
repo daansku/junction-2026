@@ -148,3 +148,25 @@ def test_player_extras_kept(client):
     meta = client.get(f"/api/runs/{r.json()['run_id']}").json()
     assert meta["player"]["input_modes"] == ["text"] and meta["harness_version"] == "h1"
     validate(meta, "meta")
+
+
+def test_published_mode(tmp_path, monkeypatch):
+    from server import config
+    pub = tmp_path / "published"
+    (pub / "runs").mkdir(parents=True)
+    import shutil
+    shutil.copytree(ROOT / "data" / "fixtures" / "runs" / "fixture-run-0001", pub / "runs" / "fixture-run-0001")
+    monkeypatch.setattr(config, "PUBLISHED_MODE", True)
+    monkeypatch.setattr(config, "PUBLISHED_DIR", pub)
+    monkeypatch.setattr(config, "ADMIN_TOKEN", "t")
+    with TestClient(create_app(tmp_path / "runs")) as c:
+        assert [r["run_id"] for r in c.get("/api/runs").json()] == ["fixture-run-0001"]
+        assert len(c.get("/api/runs/fixture-run-0001/steps").json()) == 31
+        gid = first_game(c)
+        assert c.post("/api/sessions", json={"game_id": gid, "player": {"kind": "model", "name": "m"}}).status_code == 403
+        s = c.post("/api/sessions", json={"game_id": gid, "player": {"kind": "human", "name": "visitor"}})
+        assert s.status_code == 200
+        assert c.post(f"/api/sessions/{s.json()['session_id']}/act", json={"action": "ACTION1"}).status_code == 200
+        # visitor play never enters the published listing
+        assert len(c.get("/api/runs").json()) == 1
+        assert c.post("/api/admin/rebuild", headers={"Authorization": "Bearer t"}).status_code == 403

@@ -91,6 +91,8 @@ class EndIn(BaseModel):
 def create_app(runs_dir=None) -> FastAPI:
     recorder = Recorder(runs_dir)
     sessions = SessionManager(recorder)
+    # published mode: /runs reads the committed snapshot; visitor plays are recorded to DATA_DIR only
+    runs_view = Recorder(config.PUBLISHED_DIR / "runs", readonly=True) if config.PUBLISHED_MODE else recorder
     hub = LiveHub()
     recorder.listeners.append(hub.publish)
 
@@ -161,6 +163,8 @@ def create_app(runs_dir=None) -> FastAPI:
     @api.post("/sessions")
     def start(body: StartIn):
         player = body.player.model_dump()
+        if config.PUBLISHED_MODE and player["kind"] != "human":
+            raise HTTPException(403, "published mode: only human play")
         return sessions.start(body.game_id, player, body.collection, body.run_key,
                               body.harness_version or player.get("harness_version"))
 
@@ -187,19 +191,19 @@ def create_app(runs_dir=None) -> FastAPI:
     @api.get("/runs")
     def runs(game_id: Optional[str] = None, model_id: Optional[str] = None, kind: Optional[str] = None,
              collection: Optional[str] = None, run_key: Optional[str] = None, limit: int = Query(500, ge=1, le=100000)):
-        return recorder.list(game_id=game_id, model_id=model_id, kind=kind, collection=collection,
+        return runs_view.list(game_id=game_id, model_id=model_id, kind=kind, collection=collection,
                              run_key=run_key, limit=limit)
 
     @api.get("/runs/export")
     def export(since: Optional[str] = None):
         try:
-            metas = recorder.finished_since(since)
+            metas = runs_view.finished_since(since)
         except ValueError:
             raise HTTPException(422, "since must be an ISO 8601 time") from None
         buf = io.BytesIO()
         with tarfile.open(fileobj=buf, mode="w:gz") as tar:
             for m in metas:
-                d = recorder.run_dir(m["run_id"])
+                d = runs_view.run_dir(m["run_id"])
                 for name in ("meta.json", "steps.jsonl"):
                     p = d / name
                     if p.exists():
@@ -210,7 +214,7 @@ def create_app(runs_dir=None) -> FastAPI:
 
     @api.get("/runs/{run_id}")
     def run_meta(run_id: str):
-        m = recorder.get(run_id)
+        m = runs_view.get(run_id)
         if m is None:
             raise HTTPException(404, "unknown run")
         return m
@@ -218,7 +222,7 @@ def create_app(runs_dir=None) -> FastAPI:
     @api.get("/runs/{run_id}/steps")
     def run_steps(run_id: str):
         try:
-            return recorder.steps(run_id)
+            return runs_view.steps(run_id)
         except KeyError:
             raise HTTPException(404, "unknown run") from None
 
@@ -237,6 +241,8 @@ def create_app(runs_dir=None) -> FastAPI:
 
     @api.post("/admin/rebuild")
     def rebuild(authorization: str = Header(default="")):
+        if config.PUBLISHED_MODE:
+            raise HTTPException(403, "published mode is read-only")
         if not config.ADMIN_TOKEN or authorization != f"Bearer {config.ADMIN_TOKEN}":
             raise HTTPException(401, "bad token")
         proc = subprocess.run([sys.executable, "-m", "analysis", "build", "--runs", str(recorder.runs_dir),

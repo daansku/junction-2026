@@ -31,9 +31,11 @@ def _atomic_write_json(path: Path, obj: Any) -> None:
 
 
 class Recorder:
-    def __init__(self, runs_dir: Optional[Path] = None):
+    def __init__(self, runs_dir: Optional[Path] = None, readonly: bool = False):
         self.runs_dir = Path(runs_dir or config.RUNS_DIR)
-        self.runs_dir.mkdir(parents=True, exist_ok=True)
+        self.readonly = readonly
+        if not readonly:
+            self.runs_dir.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
         self._run_locks: dict[str, threading.Lock] = {}
         self._metas: dict[str, dict] = {}
@@ -47,7 +49,7 @@ class Recorder:
                 meta = json.loads(meta_path.read_text(encoding="utf-8"))
             except Exception:  # noqa: BLE001 - half-written or corrupt; skip
                 continue
-            if meta.get("outcome") == "IN_PROGRESS":
+            if meta.get("outcome") == "IN_PROGRESS" and not self.readonly:
                 # server restarted mid-run: the session is gone, close the run as aborted
                 meta.update(outcome="ABORTED", end_reason="server_restart", ended_at=meta.get("ended_at") or now_iso())
                 _atomic_write_json(meta_path, meta)
