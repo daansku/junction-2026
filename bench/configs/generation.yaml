@@ -1,0 +1,28 @@
+# Generation settings, identical for every model the bench scores (base, ctrl, SFT, RL checkpoints).
+# Changing anything here after bench/PROTOCOL.md is approved invalidates every earlier row: bump `version` and rerun all.
+version: 1
+
+# Qwen3.5 model card, "thinking mode for general tasks" (checked Sat 14.11 17:15 in the downloaded README):
+#   temperature=1.0, top_p=0.95, top_k=20, min_p=0.0, presence_penalty=1.5, repetition_penalty=1.0
+sampling:
+  temperature: 1.0
+  top_p: 0.95
+  top_k: 20
+  min_p: 0.0
+  presence_penalty: 1.5
+  repetition_penalty: 1.0
+
+thinking: true                # the model's default chat template mode; the answer is graded after </think>
+think_end_token: "</think>"
+max_gen_toks: 8192            # thinking + answer; a reply cut off here is graded as is (usually wrong) and counted
+max_model_len: 12288
+seed: 1234                    # vLLM + lm-eval seed; reasoning-gym datasets use dataset_seed
+dataset_seed: 20261114
+
+# reasoning-gym prompt: the library's own default system prompt, answer between <answer></answer>
+reasoning_gym_system_prompt: default
+
+vllm:
+  dtype: bfloat16
+  gpu_memory_utilization: 0.88
+  language_model_only: true   # Qwen3.5 is a VL checkpoint; benchmarks are text only

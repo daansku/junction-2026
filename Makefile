@@ -9,7 +9,7 @@ PY := $(VENV_BIN)/python
 PORT ?= 8000
 # DATA_DIR defaults to ~/junction-data (server/src/server/config.py); export DATA_DIR=... to override
 
-.PHONY: help setup dev server web web-build test smoke fixtures mcp share
+.PHONY: help setup dev server web web-build test smoke fixtures mcp share bench
 
 help:
 	@echo "make setup      venv + all python packages (editable) + web deps"
@@ -27,7 +27,7 @@ $(PY):
 	$(PY) -m pip install -q --upgrade pip
 
 setup: $(PY)
-	$(PY) -m pip install -q -e ./engine -e ./server[test] -e ./arena -e ./analysis pytest
+	$(PY) -m pip install -q -e ./engine -e ./server[test] -e ./arena -e ./analysis -e ./bench $(if $(wildcard posttrain/pyproject.toml),-e ./posttrain) pytest
 	@if [ -f web/package.json ]; then (cd web && npm install); fi
 
 server:
@@ -45,10 +45,15 @@ web-build:
 	cd web && npm run build
 
 test:
-	$(PY) -m pytest -q server/tests $(wildcard engine/tests) $(wildcard arena/tests) $(wildcard analysis/tests)
+	$(PY) -m pytest -q server/tests $(wildcard engine/tests) $(wildcard arena/tests) $(wildcard analysis/tests) $(wildcard bench/tests)
 
 smoke:
 	bash scripts/smoke.sh
+
+# Reasoning-benchmark run (PLAN.md 3.2). GPU box only: needs `pip install -e ./bench[gpu]`. See bench/PROTOCOL.md.
+#   make bench MODEL=Qwen/Qwen3.5-9B OUT=data/derived/bench/base [LORA=<adapter dir>] [ARGS=--dev-slice]
+bench:
+	$(PY) -m bench run --model $(MODEL) --out $(OUT) $(if $(LORA),--lora $(LORA)) $(ARGS)
 
 fixtures:
 	$(PY) scripts/make_fixtures.py
