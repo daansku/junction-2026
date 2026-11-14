@@ -42,3 +42,4 @@
 - **Avoid-type rules (hazards, beacon_goal):** "forced" means the rule-blind shortest plan must fail on the real level, so the player has to notice the rule and detour; no near-optimal rule-blind route.
 - **Targets before the 07:00 lock:** a new frozen `eval-v3` collection (fresh seeds; any model sweep on it is a separate human cost decision) and training data (A1/A3). Not the web "New game" switch for now.
 - Opt-in only: `dev`, `train-v1`, `eval-v1`, `eval-v2` stay byte-identical.
+- **Second RL run (Sat 20:05, ignacio):** grpo-2 on a second Modal H100 in parallel (~$16), game_turn only, 80 steps, from the SFT v2 `games` adapter; grpo-1 (70% game_turn + 30% aux, 150 steps) continues. Both runs' checkpoints are finalist candidates under the pre-registered rule.
