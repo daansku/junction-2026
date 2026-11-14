@@ -67,6 +67,12 @@ def pick_game(rng, collection: str = SOURCE) -> Game:
     return Game.from_dict(gs[rng.randrange(len(gs))])
 
 
+def collections_dir_root():
+    """Repo root (parent of data/collections)."""
+    from ..core.game import collections_dir
+    return collections_dir().parent.parent
+
+
 def task_rng(task: str, seed: int, i: int):
     return rng_for("tasks", task, seed, i)
 

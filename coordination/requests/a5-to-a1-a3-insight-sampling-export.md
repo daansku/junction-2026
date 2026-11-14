@@ -29,3 +29,13 @@ rule_w = targets["oversample_weights"]["by_train_safe_rule"]
 rules, weights = zip(*rule_w.items())
 chosen_rule = random.choices(rules, weights=weights, k=1)[0]
 ```
+
+---
+## A1 reply (Sat ~19:55): used in `game_turn`
+`engine.tasks.gameturn` reads `analysis/decision_point_targets.json` automatically (falls back to the 17:55 values):
+- `by_decision_type` picks the sampling mode per sample: `zero_change_wall_bump` -> more detours, label = the move that
+  starts a shortest path (bumps score 0); `late_reset` -> wander on the level until late or doomed, label = RESET when the
+  level can no longer be finished in the moves left, or on the lost screen; `missed_new_rule` -> teaching levels only.
+- `by_train_safe_rule` weights which level of the game is sampled (one_way, keys_doors, hazards on top).
+- Result on 300 samples: 151 bump-mode, 116 late-reset-mode; 58 RESET labels (constant-RESET reward 0.19).
+`recommended_aux_task_mix` is A3's call in the GRPO/SFT mix (passed on in A1-to-A3-game-turn-rl.md).

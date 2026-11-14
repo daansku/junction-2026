@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import replace
+from functools import lru_cache
 
 from ..core.actions import Action, MOVE_ACTIONS
 from ..core.level import Level, State
@@ -61,18 +62,50 @@ def optimal_first_actions(level: Level, state: State, cap: int = BFS_CAP) -> tup
     return None
 
 
+# ---- A5-21 failure targets: what to oversample ------------------------------------------------
+_DEFAULT_MODES = {"zero_change_wall_bump": 0.47, "late_reset": 0.42, "missed_new_rule": 0.06,
+                  "premature_hypothesis": 0.05}
+
+
+@lru_cache(maxsize=1)
+def targets() -> dict:
+    """A5's `analysis/decision_point_targets.json` (oversample weights from real model failures on
+    hold-out-safe runs). Falls back to its 17:55 values if the file is missing."""
+    from .common import collections_dir_root
+    p = collections_dir_root() / "analysis" / "decision_point_targets.json"
+    try:
+        w = json.loads(p.read_text(encoding="utf-8"))["oversample_weights"]
+        return {"modes": w.get("by_decision_type") or _DEFAULT_MODES, "rules": w.get("by_train_safe_rule") or {}}
+    except (OSError, ValueError, KeyError):
+        return {"modes": _DEFAULT_MODES, "rules": {}}
+
+
+def _pick_level(rng, g, rule_w: dict, teaching_only: bool) -> int | None:
+    idx = [k for k, lv in enumerate(g.levels) if not teaching_only or lv.new_rule]
+    if not idx:
+        return None
+    w = [1e-3 + (sum(rule_w.get(r, 0.0) for r in g.levels[k].rules) if rule_w else 1.0) for k in idx]
+    return rng.choices(idx, weights=w, k=1)[0]
+
+
 def make_game_turn(seed: int, i: int) -> Sample | None:
     from arena.agent_loop import SYSTEM, build_parts       # A3's harness: train == inference
     from arena.dataset import MODES, parts_to_text
 
     rng = task_rng("game_turn", seed, i)
+    tw = targets()
+    modes, mw = zip(*sorted(tw["modes"].items()))
+    mode = rng.choices(modes, weights=mw, k=1)[0]
     g = pick_game(rng)
-    target = rng.randrange(len(g.levels))
+    target = _pick_level(rng, g, tw["rules"], teaching_only=(mode == "missed_new_rule"))
+    if target is None:
+        return None
     nar = Narrator(g)
     notes, history, turn = "", [], 0
-    detour_p = 0.2 if rng.random() < 0.5 else 0.0
+    detour_p = {"zero_change_wall_bump": 0.3, "late_reset": 0.0}.get(mode, 0.1)
+    wander_to = None                           # late_reset: wander until this many moves are used
     path: list[str] = []
-    for _ in range(800):
+    for _ in range(1000):
         t = g.truth()
         lvl = t["level"] - 1
         if t["state"] == "WIN" or lvl > target:
@@ -81,30 +114,42 @@ def make_game_turn(seed: int, i: int) -> Sample | None:
             if not path:
                 path = list(g.level.optimal_path)
             a = path.pop(0)
-        else:                                   # target level: exact BFS label at every state
-            if t["state"] == "GAME_OVER":
-                opt: tuple[set[str], int] | None = ({"RESET"}, 0)
-            else:
-                opt = optimal_first_actions(g.level, g.state)
-                if opt is None or opt[1] > t["move_budget"] - t["moves_used"]:
-                    return None                 # stuck or doomed: not a clean label
-            if rng.random() < 0.3 or t["state"] == "GAME_OVER":
-                allowed = [x.value for x in g.available_actions()]
-                prompt = parts_to_text(build_parts(g.frame(), notes, history, allowed, MODES, turn + 1))
-                best = sorted(opt[0])[0]
-                n_notes, hyp = nar.before([] if best == "RESET" else [best], None)
-                gold = json.dumps({"notes": n_notes, "hypothesis": hyp, "belief": "playing", "action": best})
-                return Sample("game_turn", f"game_turn-{seed}-{i}", prompt, gold,
-                              {"game_id": g.game_id, "level": t["level"], "turn": turn + 1,
-                               "optimal_actions": sorted(opt[0]), "dist": opt[1], "allowed": allowed,
-                               "state": t["state"], "after_detour": bool(history and history[-1][0] == "*")},
-                              system=SYSTEM, raw_answer=True)
-            if t["state"] == "GAME_OVER":
-                a = "RESET"
-            elif detour_p and rng.random() < detour_p:
+        else:
+            if mode == "late_reset" and wander_to is None:
+                lo = max(1, t["move_budget"] - 2 * g.level.optimal_moves)
+                wander_to = rng.randint(lo, t["move_budget"])   # == budget -> sample the lost screen
+            wandering = wander_to is not None and t["state"] != "GAME_OVER" and t["moves_used"] < wander_to
+            if wandering:
                 a = rng.choice([m.value for m in MOVE_ACTIONS])
             else:
-                a = sorted(opt[0])[rng.randrange(len(opt[0]))]
+                if t["state"] == "GAME_OVER":
+                    opt: tuple[set[str], int] | None = ({"RESET"}, 0)
+                else:
+                    opt = optimal_first_actions(g.level, g.state)
+                    if opt is None:
+                        return None
+                    if opt[1] > t["move_budget"] - t["moves_used"]:
+                        opt = ({"RESET"}, opt[1])    # can't finish in the moves left: restart now
+                if mode == "late_reset" or rng.random() < 0.3 or opt[0] == {"RESET"}:
+                    allowed = [x.value for x in g.available_actions()]
+                    prompt = parts_to_text(build_parts(g.frame(), notes, history, allowed, MODES, turn + 1))
+                    best = sorted(opt[0])[0]
+                    n_notes, hyp = nar.before([] if best == "RESET" else [best], None)
+                    if best == "RESET" and t["state"] != "GAME_OVER":
+                        n_notes += " Not enough moves left to finish this level from here: restart it."
+                        hyp = "this attempt cannot finish in the moves left; restarting is cheaper than wandering on"
+                    gold = json.dumps({"notes": n_notes, "hypothesis": hyp, "belief": "playing", "action": best})
+                    return Sample("game_turn", f"game_turn-{seed}-{i}", prompt, gold,
+                                  {"game_id": g.game_id, "level": t["level"], "turn": turn + 1, "mode": mode,
+                                   "optimal_actions": sorted(opt[0]), "dist": opt[1], "allowed": allowed,
+                                   "state": t["state"], "moves_left": t["move_budget"] - t["moves_used"]},
+                                  system=SYSTEM, raw_answer=True)
+                if t["state"] == "GAME_OVER":
+                    a = "RESET"
+                elif rng.random() < detour_p:
+                    a = rng.choice([m.value for m in MOVE_ACTIONS])
+                else:
+                    a = sorted(opt[0])[rng.randrange(len(opt[0]))]
         new_notes, _ = nar.before([] if a == "RESET" else [a], None)
         prev = g.frame()
         g.step(a)
