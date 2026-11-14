@@ -42,3 +42,16 @@
 .truth { display: grid; grid-template-columns: 64px 1fr; gap: 4px var(--s2); margin: 0; font-size: 12px; }
 .truth dt { color: var(--text-3); }
 .truth dd { margin: 0; overflow-wrap: anywhere; }
+
+.play-frame-wrap { display: flex; flex-direction: column; gap: var(--s3); }
+.play-done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+  background: var(--surface-1);
+  border: 1px solid var(--good);
+}
+.play-done-stats { display: flex; gap: var(--s6); }
+.play-done-actions { display: flex; gap: var(--s4); align-items: center; }
+.play-note { margin-top: var(--s3); font-size: 12px; }

@@ -424,6 +424,13 @@ export class MockApi implements Api {
   private sessions = new Map<string, { sim: SimState; run: RunMeta; steps: Step[]; t0: number }>()
   private recorded: Record<string, { meta: RunMeta; steps: Step[] }> = {}
 
+  async listCollections() {
+    const fx = await loadFixtures()
+    const set = new Set<string>(['mock'])
+    fx.games.forEach((g) => g.collection && set.add(g.collection))
+    return delay([...set])
+  }
+
   async listGames(collection?: string) {
     const fx = await loadFixtures()
     const all = [...fx.games, ...MOCK_GAMES.map((g) => g.meta)]

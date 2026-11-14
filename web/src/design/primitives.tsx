@@ -54,12 +54,15 @@ const OUTCOME_CLASS: Record<string, string> = {
   BUDGET: 'chip-warn',
   ABORTED: 'chip-muted',
   NOT_FINISHED: 'chip-muted',
+  IN_PROGRESS: 'chip-live',
 }
+
+const OUTCOME_LABEL: Record<string, string> = { IN_PROGRESS: 'LIVE', GAME_OVER: 'GAME OVER', NOT_FINISHED: 'PLAYING' }
 
 export function Chip({ outcome, children }: { outcome?: Outcome; children?: ReactNode }) {
   return (
     <span className={cx('chip', outcome ? OUTCOME_CLASS[outcome] ?? 'chip-muted' : 'chip-muted')}>
-      {children ?? outcome?.replace('_', ' ')}
+      {children ?? (outcome ? OUTCOME_LABEL[outcome] ?? outcome.replace('_', ' ') : null)}
     </span>
   )
 }

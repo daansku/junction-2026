@@ -15,7 +15,7 @@ export type ActionName =
   | 'ACTION7'
 
 export type GameState = 'NOT_FINISHED' | 'WIN' | 'GAME_OVER'
-export type RunOutcome = 'WIN' | 'GAME_OVER' | 'BUDGET' | 'ABORTED'
+export type RunOutcome = 'WIN' | 'GAME_OVER' | 'BUDGET' | 'ABORTED' | 'IN_PROGRESS'
 
 export interface Truth {
   state: GameState
@@ -51,6 +51,9 @@ export interface GameMeta {
   rules?: string[]
   rules_per_level?: string[][]
   optimal_moves_total?: number
+  new_rules?: Array<string | null>
+  optimal_moves?: number[]
+  move_budgets?: number[]
   thumbnail_url?: string
   // legacy/mock convenience
   family?: string
@@ -66,6 +69,14 @@ export interface LevelDescribe {
   move_budget: number
   optimal_moves: number
   optimal_path?: ActionName[]
+  /** logical grid size; frame mapping mirrors engine/render/canvas.py */
+  w?: number
+  h?: number
+  layout?: string
+  /** requested from A1 (coordination/requests/A4-to-A1-describe-path-positions.md) */
+  start?: [number, number]
+  goal?: [number, number]
+  optimal_positions?: Array<[number, number]>
   [k: string]: unknown
 }
 
@@ -115,6 +126,7 @@ export interface RunMeta {
   started_at?: string
   ended_at?: string | null
   outcome?: RunOutcome | null
+  end_reason?: string | null
   levels_completed?: number
   levels_total?: number
   actions?: number
@@ -145,4 +157,5 @@ export interface RunsQuery {
   game_id?: string
   model_id?: string
   kind?: string
+  collection?: string
 }

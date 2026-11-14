@@ -15,6 +15,7 @@ import type {
 
 /** Every page talks to the backend only through this interface (PLAN.md §4.4). */
 export interface Api {
+  listCollections(): Promise<string[]>
   listGames(collection?: string): Promise<GameMeta[]>
   getGame(gameId: string): Promise<GameDescribe>
   thumbnailUrl(game: GameMeta): string | null
@@ -56,6 +57,9 @@ class HttpApi implements Api {
     return this.req<T>(path, { method: 'POST', body: JSON.stringify(body) })
   }
 
+  async listCollections() {
+    return unwrapList<string>(await this.req('/collections'), 'collections')
+  }
   async listGames(collection?: string) {
     const q = collection ? `?collection=${encodeURIComponent(collection)}` : ''
     return unwrapList<GameMeta>(await this.req(`/games${q}`), 'games')
@@ -81,10 +85,11 @@ class HttpApi implements Api {
     return this.req<Truth>(`/sessions/${id}/truth`)
   }
   async endSession(id: string, reason: string) {
-    await this.post(`/sessions/${id}/end`, { reason })
+    // keepalive so the run is closed even when the tab is closing
+    await this.req(`/sessions/${id}/end`, { method: 'POST', body: JSON.stringify({ reason }), keepalive: true })
   }
   async listRuns(q: RunsQuery = {}) {
-    const p = new URLSearchParams()
+    const p = new URLSearchParams({ limit: '500' })
     Object.entries(q).forEach(([k, v]) => v && p.set(k, v))
     const qs = p.toString()
     return unwrapList<RunMeta>(await this.req(`/runs${qs ? `?${qs}` : ''}`), 'runs')

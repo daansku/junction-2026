@@ -1,11 +1,32 @@
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(194px, 1fr));
-  gap: var(--s4);
+  gap: var(--s5) var(--s4);
 }
 .game-card { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
+.thumb-link { display: block; width: fit-content; }
+.thumb-link:hover .thumb, .thumb-link:hover canvas { outline-color: var(--text-2); }
 .thumb { display: block; width: 192px; height: 192px; image-rendering: pixelated; outline: 1px solid var(--line); }
 .thumb-empty { background: var(--surface-1); }
 .game-card-meta { display: flex; flex-direction: column; gap: 2px; font-size: 12px; min-width: 0; }
 .game-id { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.game-rules { color: var(--text-2); font-size: 11px; line-height: 1.4; }
 .game-card-links { display: flex; gap: var(--s3); }
+
+/* detail */
+.levels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: var(--s3);
+  margin-bottom: var(--s5);
+}
+.level-card .panel-body { display: flex; flex-direction: column; gap: var(--s3); }
+.level-thumb { position: relative; width: 256px; height: 256px; outline: 1px solid var(--line); }
+.level-thumb img { display: block; width: 256px; height: 256px; image-rendering: pixelated; }
+.level-thumb-overlay { position: absolute; inset: 0; pointer-events: none; }
+.new-rule { color: var(--accent); font-size: 12px; }
+.level-facts { display: grid; grid-template-columns: 64px 1fr; gap: 3px var(--s2); margin: 0; font-size: 12px; }
+.level-facts dt { color: var(--text-3); }
+.level-facts dd { margin: 0; overflow-wrap: anywhere; }
+.path-arrows { letter-spacing: 0.05em; color: var(--text-2); }
+.results-panel { margin-top: var(--s2); }
