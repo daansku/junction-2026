@@ -42,7 +42,7 @@ Each run stops at $1 (`max_cost_usd`), so the worst case is $16, under the $20 c
 | 03:45–03:53 | Smoke, 1 game per model on the local test server: all 5 models play through the harness | done |
 | 03:55–08:01 | **overnight-dev** → `localhost:8100`: 56 runs (32 model + 24 baseline) | done (Results below) |
 | after sweep | Harbor OpenCode + Nemotron, 3 attempts on 1 dev game (rubric: 3 agent runs on the judges' harness): `harbor run ... -k 3`, exact command in JUDGING.md | done 09:12: 0.020 / 0.094 / 0.087, mean 0.067 (JUDGING.md) |
-| 09:00 | **Morning copy** to the shared server (below), then A5 rebuilds derived data | todo, humans + A2 |
+| 09:00 | **Morning copy** to the shared server (below), then A5 rebuilds derived data | done ~12:15: 61/61 runs on the shared server (165 total), `leaderboard.json` rebuilt 12:18 |
 
 Rerun after a crash: the same command resumes by `run_key`.
 ```bash
@@ -90,6 +90,7 @@ Alternative if the copy is awkward: A5 runs `python -m analysis sync` against th
 - Anthropic and Gemini models: no Anthropic key; `gemini-flash` has no `api_model` yet (A3: pick from the live list, e.g. `models/gemini-flash-latest`, with its price from the docs).
 
 ## Log
+- 12:21 Morning copy done: shared server (engine 0.5.0, new tunnel) lists all 61 overnight run ids; derived data rebuilt at 12:18 (dev only: Kimi 0.272, Gemini Flash 0.077, Nemotron 0.062, Featherless 0).
 - 09:12 Harbor OpenCode + Nemotron rubric set done: 3 scored attempts, mean reward 0.067, each solved 1/6 levels.
 - 08:02 Harbor OpenCode + Nemotron, 3 attempts in parallel, 30-min agent cap, started.
 - 08:01 Sweep finished, all 56 runs. Packed `~/overnight-runs.tgz`. Results above.
