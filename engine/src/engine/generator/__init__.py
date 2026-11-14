@@ -17,7 +17,7 @@ from ..core.rng import rng_for
 from dataclasses import replace
 
 from ..solver import compute_budget, random_walk_win_rate, replay_wins, solve
-from . import curriculum
+from . import curriculum, interaction
 from .layout import STYLES, make_layout
 from .placement import Draft
 
@@ -84,6 +84,8 @@ def try_level(seed: int, family: str, difficulty: int, level_idx: int, rules: tu
                                     INTRO_ALLOWANCE if teaching else 0)
     if random_walk_win_rate(lv, tries=200, seed=(seed, level_idx, attempt)) >= RANDOM_WALK_MAX:
         return None
+    if interaction.forcing(family) and not interaction.level_ok(lv, attempt):  # A7, gridforce only
+        return None
     lv.data["attempt"] = attempt
     return lv
 
@@ -115,8 +117,8 @@ def generate_levels(seed: int, family: str, difficulty: int, n_levels: int,
                     rules: list[str] | None = None) -> list[Level]:
     levels: list[Level] = []
     used: set[frozenset] = set()
-    for i, (primary, new, fallbacks) in enumerate(
-            curriculum.plan(seed, family, difficulty, n_levels, rules)):
+    planner = interaction.plan if interaction.forcing(family) else curriculum.plan  # A7, gridforce only
+    for i, (primary, new, fallbacks) in enumerate(planner(seed, family, difficulty, n_levels, rules)):
         lv = None
         for cand in [primary, *fallbacks]:
             if frozenset(cand) in used:
