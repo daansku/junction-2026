@@ -204,7 +204,7 @@ def make_callbacks(a, tok):
 
 DEFAULTS = dict(  # overridden by --config yaml, then by explicit CLI flags
     base="Qwen/Qwen3.5-9B", sft_lora=None, tasks=None, out=None, steps=300, save_every=25,
-    task_filter=None, limit=None, seed=0, lora_r=16, max_prompt_tokens=3072,
+    task_filter=None, limit=None, seed=0, lora_r=16, max_prompt_tokens=3072, note="",
     lr=1e-5, warmup_ratio=0.03, per_device_batch=8, grad_accum=4, num_generations=8,
     max_completion=1024, temperature=1.0, top_p=1.0, beta=0.04, epsilon=0.2, epsilon_high=0.28,
     loss_type="dapo", scale_rewards="group", num_iterations=1, mask_truncated=True,
@@ -232,6 +232,7 @@ def parse_args(argv=None):
     ap.add_argument("--max-completion", type=int)
     ap.add_argument("--beta", type=float, help="KL coefficient to the SFT policy")
     ap.add_argument("--vllm-gpu-mem", type=float)
+    ap.add_argument("--note", help="free text stored in grpo_args.json (decisions, provenance)")
     ap.add_argument("--max-prompt-tokens", type=int, help="drop longer prompts (rule_effect has 12k-token outliers)")
     ap.add_argument("--vllm-max-len", type=int, help="vLLM context: >= longest prompt + max completion")
     ap.add_argument("--no-vllm",dest="use_vllm", action="store_false", default=None)
