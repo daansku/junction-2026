@@ -347,25 +347,38 @@ export function PostTrainingBenchView(props: {
 }) {
   const { bench, decisionPoints, isLoading } = props
   const [selectedCand, setSelectedCand] = useState<string>('auto')
+  const [showCheckpoints, setShowCheckpoints] = useState<boolean>(false)
 
   const runs = bench?.runs ?? []
+  const hasCheckpoints = useMemo(() => runs.some((r) => r.is_checkpoint), [runs])
   const candidates = useMemo(
-    () => runs.filter((r) => !r.dev_slice && r.row_id !== 'base'),
-    [runs],
+    () =>
+      runs.filter(
+        (r) =>
+          (showCheckpoints || !r.is_checkpoint) &&
+          !['base', 'base-dev', 'ctrl', 'think-ctrl'].includes(r.row_id),
+      ),
+    [runs, showCheckpoints],
   )
 
   const activeCand = useMemo(() => {
     if (selectedCand !== 'auto' && candidates.some((c) => c.row_id === selectedCand)) {
       return selectedCand
     }
-    if (bench?.claim_evaluation.winning_candidate) {
+    if (
+      bench?.claim_evaluation.winning_candidate &&
+      candidates.some((c) => c.row_id === bench.claim_evaluation.winning_candidate)
+    ) {
       return bench.claim_evaluation.winning_candidate
     }
     return (
+      candidates.find((c) => c.row_id === 'think-games')?.row_id ??
+      candidates.find((c) => c.row_id === 'finalist')?.row_id ??
       candidates.find((c) => c.row_id === 'mix')?.row_id ??
       candidates.find((c) => c.row_id === 'games')?.row_id ??
+      candidates.find((c) => c.row_id === 'rl-nothink')?.row_id ??
       candidates[0]?.row_id ??
-      'mix'
+      'think-games'
     )
   }, [selectedCand, candidates, bench])
 
@@ -374,11 +387,20 @@ export function PostTrainingBenchView(props: {
   }
 
   const claim = bench?.claim_evaluation
-  const baseRun = runs.find((r) => r.row_id === 'base' && !r.dev_slice)
-  const ctrlRun = runs.find((r) => r.row_id === 'ctrl' && !r.dev_slice)
-  const candRun = runs.find((r) => r.row_id === activeCand && !r.dev_slice)
+  const baseRun =
+    runs.find((r) => r.row_id === 'base' && !r.dev_slice) ??
+    runs.find((r) => r.row_id === 'base') ??
+    runs.find((r) => r.row_id === 'base-dev')
+  const candRun = runs.find((r) => r.row_id === activeCand)
   const vsCtrl = findComp(bench?.comparisons_vs_ctrl ?? [], activeCand)
   const vsBase = findComp(bench?.comparisons_vs_base ?? [], activeCand)
+  const isThinkCand =
+    activeCand === 'think-games' || (candRun?.raw_name ?? '').toLowerCase().startsWith('rl-think-games')
+  const ctrlRun =
+    (vsCtrl ? runs.find((r) => r.row_id === vsCtrl.ref) : undefined) ??
+    (isThinkCand
+      ? runs.find((r) => r.row_id === 'think-ctrl') ?? runs.find((r) => r.row_id === 'ctrl')
+      : runs.find((r) => r.row_id === 'ctrl') ?? runs.find((r) => r.row_id === 'think-ctrl'))
 
   const claimChipOutcome =
     claim?.status === 'transfer_supported'
@@ -479,10 +501,15 @@ export function PostTrainingBenchView(props: {
       </Panel>
 
       <Panel
-        label="Outside Reasoning Transfer Suite (FT_BENCHMARKS.md · Qwen3.5-9B)"
+        label="Outside Reasoning Transfer Suite (FT_BENCHMARKS.md · PROTOCOL v3 · Qwen3.5-9B)"
         actions={
-          candidates.length > 0 ? (
+          candidates.length > 0 || hasCheckpoints ? (
             <div className="lb-filter-group">
+              {candRun?.scoring_mode === 'v3' && (
+                <span className="lb-tag" title="Canonical PROTOCOL v3 rescorer (accepts ANSWER: X on [invalid] extractions; 0 base items changed)">
+                  v3 rescored
+                </span>
+              )}
               <span className="kicker lb-filter-label">Candidate</span>
               {candidates.map((c) => (
                 <Button
@@ -492,8 +519,18 @@ export function PostTrainingBenchView(props: {
                   onClick={() => setSelectedCand(c.row_id)}
                 >
                   {c.row_id}
+                  {c.dev_slice ? ' · dev' : ''}
                 </Button>
               ))}
+              {hasCheckpoints && (
+                <Button
+                  mono
+                  active={showCheckpoints}
+                  onClick={() => setShowCheckpoints((prev) => !prev)}
+                >
+                  {showCheckpoints ? 'hide steps' : 'all steps'}
+                </Button>
+              )}
             </div>
           ) : (
             <span className="mono muted">lm-eval 0.4.13 · vLLM 0.33 · max_gen_toks=8192</span>
@@ -507,12 +544,19 @@ export function PostTrainingBenchView(props: {
                 <th>Suite Group</th>
                 <th>Benchmark</th>
                 <th>Setting</th>
-                <th className="num">base</th>
-                <th className="num">ctrl (equal-tok)</th>
-                <th className="num">{candRun ? candRun.row_id : 'games / mix'}</th>
+                <th className="num">
+                  base{candRun?.dev_slice && baseRun && !baseRun.dev_slice ? ' (shared)' : ''}
+                </th>
+                <th className="num">
+                  {ctrlRun ? `${ctrlRun.row_id} (ctrl)` : 'ctrl / think-ctrl'}
+                </th>
+                <th className="num">
+                  {candRun ? candRun.row_id : 'think-games / mix'}
+                  {candRun?.dev_slice ? ' [dev]' : ''}
+                </th>
                 <th className="num">Paired Δ vs ctrl [95% CI]</th>
                 <th className="num">Paired Δ vs base [95% CI]</th>
-                <th className="num">Truncated</th>
+                <th className="num">Truncated / Shared</th>
               </tr>
             </thead>
             <tbody>
@@ -522,6 +566,24 @@ export function PostTrainingBenchView(props: {
                 const mCell = candRun?.benchmarks?.[item.id]
                 const dCtrl: BenchDeltaCell | undefined = vsCtrl?.benchmarks?.[item.id]
                 const dBase: BenchDeltaCell | undefined = vsBase?.benchmarks?.[item.id]
+                const useSharedBase = Boolean(
+                  candRun?.dev_slice && baseRun && !baseRun.dev_slice && dBase?.mean_ref != null,
+                )
+                const useSharedCtrl = Boolean(
+                  candRun?.dev_slice && ctrlRun && !ctrlRun.dev_slice && dCtrl?.mean_ref != null,
+                )
+                const bVal = useSharedBase ? dBase?.mean_ref : bCell?.mean
+                const cVal = useSharedCtrl ? dCtrl?.mean_ref : cCell?.mean
+                const mVal = mCell?.mean
+                const showCtrlRaw =
+                  !useSharedCtrl &&
+                  cCell?.official_mean != null &&
+                  cCell?.mean != null &&
+                  Math.abs(cCell.mean - cCell.official_mean) >= 0.0005
+                const showCandRaw =
+                  mCell?.official_mean != null &&
+                  mCell?.mean != null &&
+                  Math.abs(mCell.mean - mCell.official_mean) >= 0.0005
                 return (
                   <tr key={item.id}>
                     <td className="mono muted">{GROUP_LABEL[item.group] ?? item.group}</td>
@@ -530,13 +592,35 @@ export function PostTrainingBenchView(props: {
                     </td>
                     <td className="mono">{item.setting}</td>
                     <td className="num mono">
-                      {bCell?.mean != null ? fmtPct(bCell.mean) : <span className="muted">pending</span>}
+                      {bVal != null ? fmtPct(bVal) : <span className="muted">pending</span>}
                     </td>
                     <td className="num mono">
-                      {cCell?.mean != null ? fmtPct(cCell.mean) : <span className="muted">pending</span>}
+                      {cVal != null ? (
+                        <>
+                          {fmtPct(cVal)}
+                          {showCtrlRaw && (
+                            <span className="muted" style={{ display: 'block', fontSize: '10px' }}>
+                              raw {fmtPct(cCell?.official_mean)}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="muted">pending</span>
+                      )}
                     </td>
                     <td className="num mono">
-                      {mCell?.mean != null ? fmtPct(mCell.mean) : <span className="muted">pending</span>}
+                      {mVal != null ? (
+                        <>
+                          {fmtPct(mVal)}
+                          {showCandRaw && (
+                            <span className="muted" style={{ display: 'block', fontSize: '10px' }}>
+                              raw {fmtPct(mCell?.official_mean)}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="muted">pending</span>
+                      )}
                     </td>
                     <td className={cx('num mono', dCtrl?.excludes_zero && 'lb-best')}>
                       {dCtrl?.delta != null ? (
@@ -567,15 +651,25 @@ export function PostTrainingBenchView(props: {
                       )}
                     </td>
                     <td className="num mono">
-                      {mCell != null || bCell != null
-                        ? `${bCell?.truncated ?? 0} / ${mCell?.truncated ?? 0}`
-                        : item.items ?? 'full'}
+                      {mCell != null || bCell != null ? (
+                        <>
+                          {`${bCell?.truncated ?? 0} / ${mCell?.truncated ?? 0}`}
+                          {candRun?.dev_slice && dBase?.n_shared ? (
+                            <span className="muted"> ({dBase.n_shared})</span>
+                          ) : null}
+                        </>
+                      ) : (
+                        item.items ?? 'full'
+                      )}
                     </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
+        </div>
+        <div className="lb-subset-note mono">
+          PROTOCOL v3 (bench/PROTOCOL.md · DECISIONS.md Sat 21:15): canonical rescorer accepts &quot;ANSWER: X&quot; on [invalid] lm-eval extractions (0 base items changed; raw lm-eval scores shown inline where rescored). Line 1 answer-only SFT v2 suppressed &lt;think&gt; chains and dropped Qwen3.5-9B primary headline (~75.8% → ~44.1% negative result); Line 2 runs Thinking-On GRPO directly from base (think-games vs matched think-ctrl on shared items).
         </div>
       </Panel>
 

@@ -93,6 +93,8 @@ export interface BenchMetricCell {
   tier: string
   n: number
   mean: number | null
+  official_mean?: number | null
+  rescored_count?: number
   ci_low: number | null
   ci_high: number | null
   truncated: number
@@ -104,10 +106,14 @@ export interface BenchRunSummary {
   model?: string | null
   lora?: string | null
   dev_slice: boolean
+  is_checkpoint?: boolean
+  scoring_mode?: 'v3' | 'official' | string
+  rescored_total?: number
   config_hash?: string | null
   created_at?: string | null
   benchmarks: Record<string, BenchMetricCell>
   tier_means: Record<string, { benchmarks: number; mean: number }>
+  official_tier_means?: Record<string, { benchmarks: number; mean: number }>
 }
 
 export interface BenchDeltaCell {

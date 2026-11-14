@@ -1,9 +1,15 @@
 """Post-training & reasoning-benchmark aggregation (`data/derived/bench_summary.json`, PLAN.md §3.2 & §3.3, A5-20).
 
-Reads per-run outputs written by `bench/` (`<bench_dir>/<run>/{summary.json,items.jsonl}`),
-computes paired item-level bootstrap 95% CIs vs `base` and vs `ctrl` (matching `bench/PROTOCOL.md` §5
-and `FT_BENCHMARKS.md`), merges in-domain Qwen3.5-9B game evaluation rows (`eval-v1`, `eval-v2`, `probe-v1`),
-and evaluates the pre-registered Honesty Claim Rule automatically.
+Implements `bench/PROTOCOL.md` v3 + `FT_BENCHMARKS.md` + `DECISIONS.md` (Sat 20:50 & 21:15):
+- Reads `<bench_dir>/<run>/{summary.json,items.jsonl}` and automatically prefers canonical PROTOCOL v3
+  rescored files (`items_v3.jsonl`, `summary_v3.json` from `python -m posttrain.rescore_answer`, which
+  accepts `"ANSWER: X"` on `[invalid]` lm-eval extractions while changing 0 items on `base`), keeping
+  official lm-eval means alongside v3 means (`official_mean`, `rescored_count`) for full transparency.
+- Supports both Line 1 (no-thinking SFT v2 `ctrl`/`games`/`mix` + `rl-grpo-*`, documented negative result
+  showing CoT suppression drops Qwen3.5-9B from ~0.76 to ~0.44) and Line 2 (`DECISIONS.md` Sat 21:15
+  Thinking-On GRPO from base: `think-games` vs `think-ctrl` on shared dev-slice items).
+- Computes paired item-level bootstrap 95% CIs (`10,000` resamples, seed `20261114`) over exact shared item IDs,
+  merges in-domain Qwen3.5-9B game evaluation rows, and evaluates the pre-registered Honesty Claim Rule.
 """
 from __future__ import annotations
 
@@ -17,19 +23,29 @@ from .loader import now_iso
 DEFAULT_RESAMPLES = 10_000
 DEFAULT_SEED = 20261114
 
-# Canonical row ordering from bench/PROTOCOL.md §2 & FT_BENCHMARKS.md
+# Canonical row ordering across PROTOCOL v3 + Thinking-On RL re-plan
 ROW_ORDER: dict[str, int] = {
     "base": 0,
-    "sft-v1": 1,
-    "ctrl": 2,
-    "sft-ctrl": 2,
-    "games": 3,
-    "sft-games": 3,
-    "mix": 4,
-    "sft-mix": 4,
-    "finalist": 5,
-    "final": 5,
+    "think-ctrl": 1,
+    "think-games": 2,
+    "finalist": 3,
+    "final": 3,
+    "ctrl": 4,
+    "sft-ctrl": 4,
+    "games": 5,
+    "sft-games": 5,
+    "mix": 6,
+    "sft-mix": 6,
+    "rl-nothink": 7,
+    "sft-v1": 8,
+    "games-dev": 9,
 }
+
+RL_FAMILY_PREFIXES: tuple[tuple[str, str], ...] = (
+    ("think-games", "rl-think-games-"),
+    ("think-ctrl", "rl-think-ctrl-"),
+    ("rl-nothink", "rl-grpo-"),
+)
 
 FT_BENCHMARKS_SUITE: list[dict[str, Any]] = [
     {"id": "bbh", "label": "BIG-Bench Hard (27 tasks)", "group": "primary", "setting": "3-shot CoT", "items": 1350},
@@ -42,7 +58,7 @@ FT_BENCHMARKS_SUITE: list[dict[str, Any]] = [
     {"id": "bbh_tracking_shuffled_objects", "label": "BBH: Tracking Shuffled Objects", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
     {"id": "bbh_navigate", "label": "BBH: Navigate", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
     {"id": "bbh_logical_deduction", "label": "BBH: Logical Deduction", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
-    {"id": "bbh_web_of_lies", "label": "BBH: Web of Lies", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
+    {"id": "bbh_web_of_lies", "label": "BBH: Web of Lies", "group": "bbh_logic_secondary", "items": 50, "setting": "3-shot CoT"},
     {"id": "bbh_temporal_sequences", "label": "BBH: Temporal Sequences", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
 ]
 
@@ -62,6 +78,28 @@ def _quantile(sorted_vals: list[float], q: float) -> float:
     lo = int(pos)
     hi = min(lo + 1, len(sorted_vals) - 1)
     return sorted_vals[lo] + (sorted_vals[hi] - sorted_vals[lo]) * (pos - lo)
+
+
+def mean_bootstrap_ci(
+    values: list[float],
+    resamples: int = 2_000,
+    seed: int = DEFAULT_SEED,
+    alpha: float = 0.05,
+) -> tuple[float | None, float | None, float | None]:
+    """Deterministic item-level bootstrap mean and 95% CI."""
+    n = len(values)
+    if n == 0:
+        return None, None, None
+    mean_v = sum(values) / n
+    if n == 1 or resamples <= 0:
+        return round(mean_v, 6), round(mean_v, 6), round(mean_v, 6)
+    rng = random.Random(seed)
+    boots = sorted(sum(values[rng.randrange(n)] for _ in range(n)) / n for _ in range(resamples))
+    return (
+        round(mean_v, 6),
+        round(_quantile(boots, alpha / 2), 6),
+        round(_quantile(boots, 1 - alpha / 2), 6),
+    )
 
 
 def paired_delta_ci(
@@ -99,7 +137,7 @@ def paired_delta_ci(
 
 
 def _classify_benchmark_tier(bench_id: str, raw_tier: str | None) -> str:
-    """Normalize benchmark tier across FT_BENCHMARKS.md and bench/PROTOCOL.md v1/v2."""
+    """Normalize benchmark tier across FT_BENCHMARKS.md and bench/PROTOCOL.md v1-v3."""
     bid = bench_id.lower()
     if "history" in bid or raw_tier == "negative_control":
         return "negative_control"
@@ -123,101 +161,239 @@ def _normalize_row_id(name: str) -> str:
         "control": "ctrl",
         "sft-games": "games",
         "sft_games": "games",
+        "sft-games-dev-merged": "games-dev",
         "sft-mix": "mix",
         "sft_mix": "mix",
         "sft_v1": "sft-v1",
         "sftv1": "sft-v1",
+        "think_games": "think-games",
+        "think_ctrl": "think-ctrl",
         "base-dev": "base-dev",
     }
     return aliases.get(n, n)
 
 
-def _load_bench_run_dir(run_dir: Path) -> dict[str, Any] | None:
-    summary_path = run_dir / "summary.json"
-    if not summary_path.exists():
-        return None
-    try:
-        summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-
+def _parse_items_jsonl(path: Path) -> dict[str, dict[str, float]]:
     items_by_bench: dict[str, dict[str, float]] = {}
-    items_path = run_dir / "items.jsonl"
-    if items_path.exists():
-        for line in items_path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                it = json.loads(line)
-                b = "medqa" if str(it["bench"]) == "medqa_4options" else str(it["bench"])
-                item_id = str(it["item"])
-                sc = float(it["score"])
-                items_by_bench.setdefault(b, {})[item_id] = sc
-                if b == "bbh":
-                    subtask = str(it.get("subtask") or item_id)
-                    for sub_name in BBH_SUBSET_NAMES:
-                        if sub_name in subtask:
-                            items_by_bench.setdefault(f"bbh_{sub_name}", {})[item_id] = sc
-            except (KeyError, ValueError, json.JSONDecodeError):
-                continue
-
-    raw_name = str(summary.get("name") or run_dir.name)
-    row_id = _normalize_row_id(raw_name)
-    benches_out: dict[str, dict[str, Any]] = {}
-    for raw_b_id, b_info in (summary.get("benchmarks") or {}).items():
-        if not isinstance(b_info, dict):
+    if not path.exists():
+        return items_by_bench
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
             continue
-        b_id = "medqa" if raw_b_id == "medqa_4options" else raw_b_id
-        tier = _classify_benchmark_tier(b_id, b_info.get("tier"))
-        benches_out[b_id] = {
-            "tier": tier,
-            "n": int(b_info.get("n") or 0),
-            "mean": round(float(b_info["mean"]), 6) if b_info.get("mean") is not None else None,
-            "ci_low": round(float(b_info["ci_low"]), 6) if b_info.get("ci_low") is not None else None,
-            "ci_high": round(float(b_info["ci_high"]), 6) if b_info.get("ci_high") is not None else None,
-            "truncated": int(b_info.get("truncated") or 0),
-        }
-
-    # Include pre-declared BBH subsets written by bench/run.py under summary["subsets"]["bbh_subset"]
-    bbh_subsets = (summary.get("subsets") or {}).get("bbh_subset") or {}
-    for sub_name, sub_info in bbh_subsets.items():
-        if not isinstance(sub_info, dict):
+        try:
+            it = json.loads(line)
+            b = "medqa" if str(it["bench"]) == "medqa_4options" else str(it["bench"])
+            item_id = str(it["item"])
+            sc = float(it["score"])
+            items_by_bench.setdefault(b, {})[item_id] = sc
+            if b == "bbh":
+                subtask = str(it.get("subtask") or item_id)
+                for sub_name in BBH_SUBSET_NAMES:
+                    if sub_name in subtask:
+                        items_by_bench.setdefault(f"bbh_{sub_name}", {})[item_id] = sc
+        except (KeyError, ValueError, json.JSONDecodeError):
             continue
-        sub_id = sub_name if sub_name.startswith("bbh_") else f"bbh_{sub_name}"
-        if sub_id not in benches_out:
-            benches_out[sub_id] = {
-                "tier": "bbh_logic_secondary",
-                "n": int(sub_info.get("n") or 0),
-                "mean": round(float(sub_info["mean"]), 6) if sub_info.get("mean") is not None else None,
-                "ci_low": round(float(sub_info["ci_low"]), 6) if sub_info.get("ci_low") is not None else None,
-                "ci_high": round(float(sub_info["ci_high"]), 6) if sub_info.get("ci_high") is not None else None,
-                "truncated": 0,
-            }
+    return items_by_bench
 
-    # Unweighted tier means
+
+def _compute_tier_means(benches: Mapping[str, Mapping[str, Any]], field: str = "mean") -> dict[str, dict[str, Any]]:
     tiers_map: dict[str, list[float]] = {}
-    for b_info in benches_out.values():
-        if b_info["mean"] is not None:
-            tiers_map.setdefault(b_info["tier"], []).append(float(b_info["mean"]))
-    tier_means = {
+    for b_info in benches.values():
+        val = b_info.get(field)
+        if val is not None:
+            tiers_map.setdefault(str(b_info["tier"]), []).append(float(val))
+    return {
         t: {"benchmarks": len(vals), "mean": round(sum(vals) / len(vals), 6)}
         for t, vals in sorted(tiers_map.items())
         if vals
     }
 
+
+def _load_bench_run_dir(run_dir: Path, ci_resamples: int = 2_000) -> dict[str, Any] | None:
+    summary_path = run_dir / "summary.json"
+    summary_v3_path = run_dir / "summary_v3.json"
+    if not summary_path.exists() and not summary_v3_path.exists():
+        return None
+
+    summary: dict[str, Any] = {}
+    if summary_path.exists():
+        try:
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            if not summary_v3_path.exists():
+                return None
+
+    summary_v3: dict[str, Any] | None = None
+    if summary_v3_path.exists():
+        try:
+            summary_v3 = json.loads(summary_v3_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            summary_v3 = None
+
+    items_v3_path = run_dir / "items_v3.jsonl"
+    items_orig_path = run_dir / "items.jsonl"
+    use_v3 = items_v3_path.exists() or summary_v3 is not None
+    scoring_mode = "v3" if use_v3 else "official"
+
+    items_by_bench = _parse_items_jsonl(items_v3_path if items_v3_path.exists() else items_orig_path)
+    orig_items_by_bench = _parse_items_jsonl(items_orig_path) if (use_v3 and items_orig_path.exists()) else items_by_bench
+    changed_items = (summary_v3 or {}).get("changed_items") or {}
+
+    raw_name = str(summary.get("name") or (summary_v3 or {}).get("run") or run_dir.name)
+    row_id = _normalize_row_id(raw_name)
+
+    orig_benches_raw = summary.get("benchmarks") or {}
+    v3_benches_raw = (summary_v3 or {}).get("benchmarks") or {}
+    all_raw_keys = sorted(set(orig_benches_raw) | set(v3_benches_raw) | set(items_by_bench))
+
+    benches_out: dict[str, dict[str, Any]] = {}
+    for raw_b_id in all_raw_keys:
+        b_id = "medqa" if raw_b_id == "medqa_4options" else raw_b_id
+        orig_info = orig_benches_raw.get(raw_b_id) or orig_benches_raw.get(b_id) or {}
+        v3_info = v3_benches_raw.get(raw_b_id) or v3_benches_raw.get(b_id) or {}
+        if not isinstance(orig_info, dict):
+            orig_info = {}
+        if not isinstance(v3_info, dict):
+            v3_info = {}
+
+        tier = _classify_benchmark_tier(b_id, orig_info.get("tier"))
+        official_mean: float | None = None
+        if orig_info.get("mean") is not None:
+            official_mean = round(float(orig_info["mean"]), 6)
+        elif b_id in orig_items_by_bench and orig_items_by_bench[b_id]:
+            vals_orig = list(orig_items_by_bench[b_id].values())
+            official_mean = round(sum(vals_orig) / len(vals_orig), 6)
+
+        if use_v3 and b_id in items_by_bench and items_by_bench[b_id]:
+            vals_v3 = list(items_by_bench[b_id].values())
+            mean_v, lo_v, hi_v = mean_bootstrap_ci(vals_v3, resamples=ci_resamples)
+            n_items = len(vals_v3)
+        elif use_v3 and v3_info.get("mean") is not None:
+            mean_v = round(float(v3_info["mean"]), 6)
+            lo_v = round(float(v3_info["ci_low"]), 6) if v3_info.get("ci_low") is not None else None
+            hi_v = round(float(v3_info["ci_high"]), 6) if v3_info.get("ci_high") is not None else None
+            n_items = int(v3_info.get("n") or orig_info.get("n") or 0)
+        elif orig_info:
+            mean_v = official_mean
+            lo_v = round(float(orig_info["ci_low"]), 6) if orig_info.get("ci_low") is not None else None
+            hi_v = round(float(orig_info["ci_high"]), 6) if orig_info.get("ci_high") is not None else None
+            n_items = int(orig_info.get("n") or 0)
+        elif b_id in items_by_bench and items_by_bench[b_id]:
+            vals = list(items_by_bench[b_id].values())
+            mean_v, lo_v, hi_v = mean_bootstrap_ci(vals, resamples=ci_resamples)
+            n_items = len(vals)
+            official_mean = mean_v
+        else:
+            continue
+
+        benches_out[b_id] = {
+            "tier": tier,
+            "n": n_items,
+            "mean": mean_v,
+            "official_mean": official_mean,
+            "rescored_count": int(changed_items.get(b_id) or changed_items.get(raw_b_id) or 0),
+            "ci_low": lo_v,
+            "ci_high": hi_v,
+            "truncated": int(orig_info.get("truncated") or 0),
+        }
+
+    # Include pre-declared BBH subsets from summary["subsets"]["bbh_subset"] if not already sliced from items
+    bbh_subsets = (summary.get("subsets") or {}).get("bbh_subset") or {}
+    for sub_name, sub_info in bbh_subsets.items():
+        if not isinstance(sub_info, dict):
+            continue
+        sub_id = sub_name if sub_name.startswith("bbh_") else f"bbh_{sub_name}"
+        off_sub_mean = round(float(sub_info["mean"]), 6) if sub_info.get("mean") is not None else None
+        if sub_id in benches_out:
+            if benches_out[sub_id].get("official_mean") is None:
+                benches_out[sub_id]["official_mean"] = off_sub_mean
+            continue
+        benches_out[sub_id] = {
+            "tier": "bbh_logic_secondary",
+            "n": int(sub_info.get("n") or 0),
+            "mean": off_sub_mean,
+            "official_mean": off_sub_mean,
+            "rescored_count": 0,
+            "ci_low": round(float(sub_info["ci_low"]), 6) if sub_info.get("ci_low") is not None else None,
+            "ci_high": round(float(sub_info["ci_high"]), 6) if sub_info.get("ci_high") is not None else None,
+            "truncated": 0,
+        }
+
+    tier_means = _compute_tier_means(benches_out, field="mean")
+    official_tier_means = _compute_tier_means(benches_out, field="official_mean")
+
+    # Detect dev_slice either from summary flag, directory naming, or BBH item count (dev slice = 25*27 = 675 vs full 1350)
+    bbh_n = (benches_out.get("bbh") or {}).get("n", 0)
+    inferred_dev_slice = bool(
+        summary.get("dev_slice", False)
+        or "dev" in raw_name.lower()
+        or raw_name.lower().startswith("rl-")
+        or (0 < bbh_n <= 700 and sum(x.get("n", 0) for x in benches_out.values() if x["tier"] == "primary") <= 1100)
+    )
+
     return {
         "row_id": row_id,
         "raw_name": raw_name,
-        "model": summary.get("model"),
+        "model": summary.get("model") or "Qwen/Qwen3.5-9B",
         "lora": summary.get("lora"),
-        "dev_slice": bool(summary.get("dev_slice", False)),
+        "dev_slice": inferred_dev_slice,
+        "is_checkpoint": False,
+        "scoring_mode": scoring_mode,
+        "rescored_total": int(sum(int(v) for v in changed_items.values())) if changed_items else 0,
         "config_hash": summary.get("config_hash"),
         "created_at": summary.get("started_at") or summary.get("created_at") or summary.get("finished_at"),
         "benchmarks": benches_out,
         "tier_means": tier_means,
+        "official_tier_means": official_tier_means,
         "_items": items_by_bench,
     }
+
+
+def _primary_headline(run: Mapping[str, Any]) -> float:
+    p = (run.get("tier_means") or {}).get("primary") or {}
+    if p.get("mean") is not None:
+        return float(p["mean"])
+    l = (run.get("tier_means") or {}).get("logical") or {}
+    if l.get("mean") is not None:
+        return float(l["mean"])
+    return -1.0
+
+
+def _promote_canonical_families(loaded_runs: list[dict[str, Any]]) -> None:
+    """Promote best checkpoint per RL family (`think-games`, `think-ctrl`, `rl-nothink`) and resolve `games-dev`."""
+    existing_ids = {r["row_id"] for r in loaded_runs}
+
+    # If `sft-games-dev-merged` (`games-dev`) is present and full `games` is NOT yet present, promote it to `games`
+    if "games" not in existing_ids:
+        for r in loaded_runs:
+            if r["row_id"] == "games-dev":
+                r["row_id"] = "games"
+                existing_ids.add("games")
+                break
+    else:
+        for r in loaded_runs:
+            if r["row_id"] == "games-dev":
+                r["is_checkpoint"] = True
+
+    # For each RL family prefix, promote the highest-headline checkpoint to the family's canonical `row_id`
+    for canonical_id, prefix in RL_FAMILY_PREFIXES:
+        family_runs = [r for r in loaded_runs if r["raw_name"].lower().startswith(prefix)]
+        if not family_runs:
+            continue
+        if canonical_id in existing_ids:
+            for r in family_runs:
+                if r["row_id"] != canonical_id:
+                    r["is_checkpoint"] = True
+            continue
+        best = max(family_runs, key=lambda r: (_primary_headline(r), r["raw_name"]))
+        for r in family_runs:
+            if r is best:
+                r["row_id"] = canonical_id
+                r["is_checkpoint"] = False
+            else:
+                r["is_checkpoint"] = True
+        existing_ids.add(canonical_id)
 
 
 def _compute_comparison(ref_run: dict[str, Any], cand_run: dict[str, Any], resamples: int) -> dict[str, Any]:
@@ -232,11 +408,11 @@ def _compute_comparison(ref_run: dict[str, Any], cand_run: dict[str, Any], resam
         tier = c_meta.get("tier") or r_meta.get("tier") or _classify_benchmark_tier(b, None)
         if b in ref_items and b in cand_items and ref_items[b] and cand_items[b]:
             d = paired_delta_ci(ref_items[b], cand_items[b], resamples=resamples)
-        elif r_meta.get("mean") is not None and c_meta.get("mean") is not None:
-            # Summary-only fallback when items.jsonl was not copied
+        elif r_meta.get("mean") is not None and c_meta.get("mean") is not None and r_meta.get("n") == c_meta.get("n"):
+            # Summary-only fallback ONLY when both runs evaluated the same item count
             diff = round(float(c_meta["mean"]) - float(r_meta["mean"]), 6)
             d = {
-                "n_shared": min(int(r_meta.get("n") or 0), int(c_meta.get("n") or 0)),
+                "n_shared": int(c_meta.get("n") or 0),
                 "n_only_ref": 0,
                 "n_only_cand": 0,
                 "delta": diff,
@@ -249,8 +425,8 @@ def _compute_comparison(ref_run: dict[str, Any], cand_run: dict[str, Any], resam
         else:
             d = {
                 "n_shared": 0,
-                "n_only_ref": 0,
-                "n_only_cand": 0,
+                "n_only_ref": int(r_meta.get("n") or 0),
+                "n_only_cand": int(c_meta.get("n") or 0),
                 "delta": None,
                 "ci_low": None,
                 "ci_high": None,
@@ -287,7 +463,10 @@ def _compute_comparison(ref_run: dict[str, Any], cand_run: dict[str, Any], resam
     return {
         "ref": ref_run["row_id"],
         "cand": cand_run["row_id"],
-        "config_hash_match": ref_run.get("config_hash") == cand_run.get("config_hash"),
+        "config_hash_match": bool(
+            ref_run.get("config_hash") is not None
+            and ref_run.get("config_hash") == cand_run.get("config_hash")
+        ),
         "benchmarks": per_bench,
         "tiers": tier_deltas,
     }
@@ -336,36 +515,55 @@ def _evaluate_honesty_rule(
     comparisons_vs_base: list[dict[str, Any]],
     in_domain_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Evaluate PLAN.md §3.3 + bench/PROTOCOL.md §6 + FT_BENCHMARKS.md honesty claim rule."""
-    if not runs_by_id or ("ctrl" not in runs_by_id and len(comparisons_vs_base) == 0):
+    """Evaluate PLAN.md §3.3 + bench/PROTOCOL.md §6 + FT_BENCHMARKS.md + DECISIONS.md Sat 21:15 honesty rule."""
+    non_control_ctrl_comps = [
+        c for c in comparisons_vs_ctrl
+        if c["cand"] not in ("base", "sft-v1", "ctrl", "think-ctrl")
+        and not (runs_by_id.get(c["cand"]) or {}).get("is_checkpoint", False)
+    ]
+
+    if not runs_by_id or len(non_control_ctrl_comps) == 0:
         sft_v1_eval = next(
             (r for r in in_domain_rows if r["role"] == "sft-v1" and r["collection"] == "eval-v1"),
             None,
         )
-        in_dom_note = (
-            f"SFT v1 (`{sft_v1_eval['player_id']}`, pure optimal-action cloning on train-v1) solved "
-            f"{sft_v1_eval['levels_solved']}/{sft_v1_eval['levels_attempted']} levels on held-out eval-v1 "
-            f"(score {sft_v1_eval['score']:.3f}), confirming PLAN §3.3 Step 0: action-only SFT learns output syntax, not causal discovery."
-            if sft_v1_eval
-            else "SFT v1 action-cloning baseline evaluated; awaiting SFT v2 (`ctrl` / `games` / `mix`) + `FT_BENCHMARKS.md` runs."
-        )
+        base_h = _primary_headline(runs_by_id["base"]) if "base" in runs_by_id else -1.0
+        games_h = _primary_headline(runs_by_id["games"]) if "games" in runs_by_id else -1.0
+
+        notes: list[str] = []
+        if sft_v1_eval:
+            notes.append(
+                f"Step 0 (`{sft_v1_eval['player_id']}`, action-only SFT) solved {sft_v1_eval['levels_solved']}/"
+                f"{sft_v1_eval['levels_attempted']} levels on eval-v1 ({sft_v1_eval['score']:.3f})."
+            )
+        if base_h > 0 and games_h > 0 and (games_h - base_h) < -0.15:
+            notes.append(
+                f"Line 1 negative result (PROTOCOL v3): answer-only SFT suppressed `<think>` and dropped Qwen3.5-9B "
+                f"primary headline from {base_h:.3f} to {games_h:.3f}. Line 2 (`think-games` vs `think-ctrl`, GRPO with `<think>` ON from base) is running."
+            )
+        elif base_h > 0:
+            notes.append(
+                f"Qwen3.5-9B `base` primary headline = {base_h:.3f}; awaiting matched control (`think-ctrl` / `ctrl`) benches."
+            )
+        else:
+            notes.append(
+                "Pre-registered PROTOCOL v3 (`ANSWER: X` rescorer + paired item-level bootstrap) locked; awaiting GPU bench outputs."
+            )
+
         return {
             "status": "pending_bench_runs",
             "transfer_shown": False,
             "winning_candidate": None,
-            "headline": "Pre-registered benchmark protocol locked; outside-benchmark GPU runs in flight.",
-            "detail": in_dom_note,
+            "headline": "Pre-registered PROTOCOL v3 active; Thinking-On GRPO (`think-games` vs `think-ctrl`) & control benches in flight.",
+            "detail": " ".join(notes),
         }
 
-    # Check candidates (`games`, `mix`, `finalist`, `rl-*`) against `ctrl`
     vs_base_by_cand = {c["cand"]: c for c in comparisons_vs_base}
     best_winner: dict[str, Any] | None = None
 
-    for comp in comparisons_vs_ctrl:
+    for comp in non_control_ctrl_comps:
         cand = comp["cand"]
-        if cand in ("base", "sft-v1", "ctrl"):
-            continue
-        # Target tier: `primary` (FT_BENCHMARKS.md) if present, else `logical` (PROTOCOL.md v1)
+        ctrl_ref = comp["ref"]
         target_tier = "primary" if "primary" in comp["tiers"] else ("logical" if "logical" in comp["tiers"] else None)
         if not target_tier:
             continue
@@ -393,6 +591,7 @@ def _evaluate_honesty_rule(
             if best_winner is None or mean_d > best_winner["mean_delta"]:
                 best_winner = {
                     "cand": cand,
+                    "ctrl_ref": ctrl_ref,
                     "target_tier": target_tier,
                     "mean_delta": mean_d,
                     "sig_positive": sig_pos,
@@ -405,21 +604,21 @@ def _evaluate_honesty_rule(
             "transfer_shown": True,
             "winning_candidate": best_winner["cand"],
             "headline": (
-                f"Transfer supported: `{best_winner['cand']}` beats equal-token `ctrl` by "
+                f"Transfer supported: `{best_winner['cand']}` beats matched `{best_winner['ctrl_ref']}` by "
                 f"{best_winner['mean_delta']:+.3f} across `{best_winner['target_tier']}` "
                 f"({best_winner['sig_positive']} benchmarks with 95% CI > 0; negative control & guard passed)."
             ),
-            "detail": "Satisfies the pre-registered PLAN.md §3.3 / bench/PROTOCOL.md §6 claim rule.",
+            "detail": "Satisfies the pre-registered PLAN.md §3.3 / bench/PROTOCOL.md v3 §6 claim rule.",
         }
 
     return {
         "status": "null_transfer_in_domain_only",
         "transfer_shown": False,
         "winning_candidate": None,
-        "headline": "Honesty rule: outside-benchmark gain over equal-token `ctrl` did not clear the 95% CI threshold.",
+        "headline": "Honesty rule: outside-benchmark gain over matched control did not clear the 95% CI threshold.",
         "detail": (
-            "Per PLAN.md §3.3, no trained candidate beat `ctrl` on >=2 target reasoning benchmarks with 95% CIs "
-            "excluding zero without formatting/guard regressions. Reporting exact deltas and in-domain game results plainly."
+            "Per PLAN.md §3.3 & bench/PROTOCOL.md v3, no trained candidate beat its matched control (`think-ctrl` / `ctrl`) "
+            "on >=2 primary reasoning benchmarks with 95% CIs excluding zero. Reporting exact PROTOCOL v3 & official deltas plainly."
         ),
     }
 
@@ -436,26 +635,38 @@ def build_bench_summary(
     if bench_dir is not None and bench_dir.exists():
         for child in sorted(bench_dir.iterdir()):
             if child.is_dir():
-                parsed = _load_bench_run_dir(child)
+                parsed = _load_bench_run_dir(child, ci_resamples=min(2_000, resamples))
                 if parsed is not None:
                     loaded_runs.append(parsed)
 
-    loaded_runs.sort(key=lambda r: (ROW_ORDER.get(r["row_id"], 50), r["row_id"]))
-    runs_by_id = {r["row_id"]: r for r in loaded_runs if not r["dev_slice"]}
+    _promote_canonical_families(loaded_runs)
+    loaded_runs.sort(key=lambda r: (1 if r["is_checkpoint"] else 0, ROW_ORDER.get(r["row_id"], 50), r["row_id"]))
+
+    # Map row_id -> run (if duplicate row_id ever exists, prefer non-dev_slice then later run)
+    runs_by_id: dict[str, dict[str, Any]] = {}
+    for r in loaded_runs:
+        prev = runs_by_id.get(r["row_id"])
+        if prev is None or (prev["dev_slice"] and not r["dev_slice"]):
+            runs_by_id[r["row_id"]] = r
 
     comparisons_vs_base: list[dict[str, Any]] = []
     comparisons_vs_ctrl: list[dict[str, Any]] = []
 
-    base_run = runs_by_id.get("base")
-    ctrl_run = runs_by_id.get("ctrl")
+    base_run = runs_by_id.get("base") or runs_by_id.get("base-dev")
+    sft_ctrl_run = runs_by_id.get("ctrl")
+    think_ctrl_run = runs_by_id.get("think-ctrl")
 
     for r in loaded_runs:
-        if r["dev_slice"]:
-            continue
-        if base_run is not None and r["row_id"] != "base":
+        rid = r["row_id"]
+        if base_run is not None and r is not base_run and rid != "base":
             comparisons_vs_base.append(_compute_comparison(base_run, r, resamples=resamples))
-        if ctrl_run is not None and r["row_id"] not in ("base", "ctrl"):
-            comparisons_vs_ctrl.append(_compute_comparison(ctrl_run, r, resamples=resamples))
+
+        if rid in ("base", "base-dev", "ctrl", "think-ctrl"):
+            continue
+        is_think_rl = rid == "think-games" or r["raw_name"].lower().startswith("rl-think-games-")
+        matched_ctrl = (think_ctrl_run or sft_ctrl_run) if is_think_rl else sft_ctrl_run
+        if matched_ctrl is not None and r is not matched_ctrl:
+            comparisons_vs_ctrl.append(_compute_comparison(matched_ctrl, r, resamples=resamples))
 
     in_domain_rows = _extract_in_domain_game_rows(lb_h1, lb_h2)
     claim_eval = _evaluate_honesty_rule(runs_by_id, comparisons_vs_ctrl, comparisons_vs_base, in_domain_rows)

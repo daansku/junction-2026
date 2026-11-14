@@ -138,7 +138,9 @@ For every attempted failed level (`actions_used > 0` and `solved == False`) on a
 - `leaderboard_h2.json` aggregates **only** `h2` model runs (`harness_filter == "h2"`, multi-turn conversation + preserved reasoning blocks + native `act(action, hypothesis, belief)` tool + `high`/`max` effort + `64k`/`32k` output cap + last-5 image frames with prompt caching) plus reference `Optimal` and `Human` rows matched to the `h2` game subset per collection.
 - **Additional Phase 2 Run Hygiene (`loader.py`):**
   - Visitor kiosk runs from `/challenge` (`player.mode == "challenge"` or `player.purpose == "challenge"`) and assisted `/play` runs (`assisted == True`) are excluded from benchmark tables.
+  - Unfinished/aborted runs (`is_finished() == False`: missing `result`, `outcome == "IN_PROGRESS"`, or `end_reason in INFRA_REASONS` such as `error`, `aborted`, `timeout`, `rate_limited`, `provider_error`, `disconnected`) are excluded so aborted runs never drag scores down.
   - Pre-`2026-11-14T15:35:00Z` `h2` runs ending with `end_reason == "budget_tokens"` (3M cached-context token counter bug) are dropped.
+  - Cost-capped model runs (`end_reason == "budget_cost"`, e.g. early `$2`/`$4`/`$18` per-game safety caps) remain visible as lower bounds while uncapped reruns are in flight, and are automatically superseded per `(player_id, effort, harness_version, game_id)` as soon as at least one uncapped finished replacement run lands (`DECISIONS.md` lines 36–37).
   - Pre-`2026-11-14T15:15:00Z` Gemini `h1` rows are flagged with `cost_underreported = true` and `cost_note` (`~3.6x` undercount before `billed_tokens` included thinking tokens).
 
 ### Bootstrap 95% Confidence Intervals
@@ -151,19 +153,23 @@ For any row with $G \ge 2$ game runs and per-game scores $s_1, \dots, s_G$:
 
 ## 8. Post-Training & Outside-Benchmark Transfer (`bench_summary.json`, Phase 2 `A5-20`)
 
-Built by `analysis/src/analysis/bench_agg.py` from `data/derived/bench/<run>/{summary.json,items.jsonl}` (`bench/PROTOCOL.md` v2 & `FT_BENCHMARKS.md`):
+Built by `analysis/src/analysis/bench_agg.py` from `data/derived/bench/<run>/{summary.json,items.jsonl,summary_v3.json,items_v3.jsonl}` (`bench/PROTOCOL.md` v3, `FT_BENCHMARKS.md`, & `DECISIONS.md` Sat 20:50 / 21:15):
 
+- **Canonical `PROTOCOL v3` Rescoring (`items_v3.jsonl` / `summary_v3.json`):** Automatically prefers `items_v3.jsonl` / `summary_v3.json` written by `python -m posttrain.rescore_answer` (which accepts `"ANSWER: X"` when lm-eval's strict filter returned `[invalid]`, changing `0` items on `base`), while preserving official raw lm-eval means (`official_mean`, `rescored_count`, `official_tier_means`) alongside `v3` means for full transparency.
+- **Two-Line Candidate Promotion & Matched Controls:**
+  - Line 1 (no-thinking SFT v2 / RL): `ctrl`, `games` (promoting `sft-games-dev-merged` when full `games` is absent), `mix`, and `rl-nothink` (`rl-grpo-*`), paired against `ctrl`.
+  - Line 2 (`DECISIONS.md` Sat 21:15 Thinking-On GRPO from base): promotes best checkpoint of `rl-think-games-*` → `think-games` and `rl-think-ctrl-*` → `think-ctrl`, pairing `think-games` directly against matched `think-ctrl` (and shared-item `base`).
 - **Primary Far-Transfer Suite (6 benchmarks, unweighted mean = headline):**
-  1. `bbh` (`bbh_cot_fewshot`, all 27 tasks, 3-shot CoT, ~6,511 items)
-  2. `math` (`minerva_math`, 0-shot CoT, 5,000 items)
-  3. `gsm8k` (`gsm8k_cot`, 8-shot CoT, 1,319 items)
-  4. `medqa` (`medqa_4options`, 0-shot 4-option loglikelihood, 1,273 items)
-  5. `mmlu_pro_health` (5-shot CoT)
-  6. `mmlu_pro_law` (5-shot CoT)
+  1. `bbh` (`bbh_cot_fewshot`, all 27 tasks, 3-shot CoT, 1,350 full / 675 dev-slice items)
+  2. `math` (`minerva_math`, 0-shot CoT, 350 full / 140 dev-slice items)
+  3. `gsm8k` (`gsm8k_cot`, 8-shot CoT, 250 full / 50 dev-slice items)
+  4. `medqa` (`medqa_4options`, 0-shot, 1,273 full / 50 dev-slice items)
+  5. `mmlu_pro_health` (5-shot CoT, 100 full / 20 dev-slice items)
+  6. `mmlu_pro_law` (5-shot CoT, 100 full / 20 dev-slice items)
 - **Negative Control (`negative_control`):** `mmlu_pro_history` (5-shot CoT, knowledge recall — must not rise like the primary suite).
 - **Pre-Declared BBH Logic Subset (`bbh_logic_secondary`):** `tracking_shuffled_objects`, `navigate`, `logical_deduction`, `web_of_lies`, `temporal_sequences` (sliced directly from `bbh` items).
-- **Paired Item-Level Bootstrap (`paired_delta_ci`):** For candidate $C$ vs reference $R \in \{\text{base}, \text{ctrl}\}$ over shared items $I = I_C \cap I_R$ ($n = |I|$), bootstrap $d_k = c_k - r_k$ $10{,}000$ times (seed `20261114`); `excludes_zero = (ci_low > 0) or (ci_high < 0)`. Unshared items are dropped and counted (`n_only_ref`, `n_only_cand`), never imputed.
-- **Pre-Registered Honesty Claim Rule (`_evaluate_honesty_rule`):** Sets `transfer_shown = true` (`status = "transfer_supported"`) **if and only if** a trained candidate (`games`, `mix`, or `rl-*` finalist) beats equal-token `ctrl` on the primary suite mean **and** on $\ge 2$ primary benchmarks with 95% CIs excluding zero, **and** its `mmlu_pro_history` delta vs `ctrl` is strictly smaller than its primary headline delta (with no $>2$ pp significant guard drop vs `base`). Otherwise reports `null_transfer_in_domain_only` or `pending_bench_runs` plainly.
+- **Paired Item-Level Bootstrap (`paired_delta_ci`):** For candidate $C$ vs reference $R \in \{\text{base}, \text{ctrl}, \text{think-ctrl}\}$ over exact shared item IDs $I = I_C \cap I_R$ ($n = |I|$, handling dev-slice vs full-suite `base` cleanly without imputation), bootstrap $d_k = c_k - r_k$ $10{,}000$ times (seed `20261114`); `excludes_zero = (ci_low > 0) or (ci_high < 0)`.
+- **Pre-Registered Honesty Claim Rule (`_evaluate_honesty_rule`):** Sets `transfer_shown = true` (`status = "transfer_supported"`) **if and only if** a non-checkpoint trained candidate (`think-games`, `mix`, `games`, or `finalist`) beats its matched control (`think-ctrl` or `ctrl`) on the primary suite mean **and** on $\ge 2$ primary benchmarks with 95% CIs excluding zero, **and** its `mmlu_pro_history` delta vs control is strictly smaller than its primary headline delta (with no $>2$ pp significant guard drop vs `base`). Otherwise reports `null_transfer_in_domain_only` or `pending_bench_runs` (including the Line 1 `<think>`-suppression negative result when applicable) plainly.
 
 ---
 

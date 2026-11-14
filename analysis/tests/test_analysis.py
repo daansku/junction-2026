@@ -603,6 +603,162 @@ class AnalysisPipelineTests(unittest.TestCase):
             self.assertEqual(merged_doc["explanations"][0]["evidence_quote"], "both avatars moved right in lockstep!")
             self.assertEqual(merged_doc["explanations"][0]["quote_source"], "reasoning")
 
+    def test_cli_help_budget_cost_supersede_and_protocol_v3_bench(self) -> None:
+        import contextlib
+        import io
+        from analysis.bench_agg import build_bench_summary
+        from analysis.cli import main as cli_main
+        import test_finished_only
+
+        # 0) Ensure A1's finished-only tests also run under `unittest discover`
+        test_finished_only.test_is_finished_rules()
+        test_finished_only.test_filter_drops_abandoned_attempts()
+
+        # 1) Regression test for Python 3.14 `argparse` `%` formatting on root & all subparsers
+        for help_argv in (
+            ["--help"],
+            ["sync", "--help"],
+            ["aggregate", "--help"],
+            ["h2", "--help"],
+            ["bench", "--help"],
+            ["export-targets", "--help"],
+            ["rules", "--help"],
+            ["insights", "--help"],
+            ["explain", "--help"],
+            ["build", "--help"],
+            ["check-claims", "--help"],
+        ):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf), self.assertRaises(SystemExit) as cm:
+                cli_main(help_argv)
+            self.assertEqual(cm.exception.code, 0)
+            self.assertTrue(len(buf.getvalue()) > 20)
+
+        # 2) Cost-capped (`budget_cost`) run kept when alone, dropped once uncapped finished replacement exists
+        valid_gid = json.loads((REPO_ROOT / "data" / "collections" / "eval-v1.json").read_text(encoding="utf-8"))["games"][0]["game_id"]
+        r_capped = _make_run(
+            "r-capped",
+            "gemini-4-argon",
+            "model",
+            [_make_step(0, None, optimal_moves=2), _make_step(1, "ACTION1", events=[], optimal_moves=2)],
+        )
+        r_capped["meta"]["game_id"] = valid_gid
+        r_capped["meta"]["outcome"] = "BUDGET"
+        r_capped["meta"]["end_reason"] = "budget_cost"
+        r_capped["meta"]["harness_version"] = "h1"
+
+        solo = filter_benchmark_runs([r_capped], REPO_ROOT)
+        self.assertEqual([r["meta"]["run_id"] for r in solo], ["r-capped"])
+
+        r_uncapped = _make_run(
+            "r-uncapped",
+            "gemini-4-argon",
+            "model",
+            [_make_step(0, None, optimal_moves=1), _make_step(1, "ACTION1", state="WIN", events=["level_complete", "game_won"], optimal_moves=1)],
+        )
+        r_uncapped["meta"]["game_id"] = valid_gid
+        r_uncapped["meta"]["outcome"] = "WIN"
+        r_uncapped["meta"]["end_reason"] = "won"
+        r_uncapped["meta"]["harness_version"] = "h1"
+
+        superseded = filter_benchmark_runs([r_capped, r_uncapped], REPO_ROOT)
+        self.assertEqual([r["meta"]["run_id"] for r in superseded], ["r-uncapped"])
+
+        # 3) PROTOCOL v3 (`items_v3.jsonl` / `summary_v3.json` + `official_mean` preserved) & `think-games` vs `think-ctrl` dev-slice pairing
+        with tempfile.TemporaryDirectory() as td:
+            bdir = Path(td) / "bench"
+            # Full-suite `base` (60 items/bench; first 30 are shared dev-slice items)
+            base_dir = bdir / "base"
+            base_dir.mkdir(parents=True)
+            base_lines = []
+            for idx in range(60):
+                # On shared 0..29, base scores 0.50 (15/30); on unshared 30..59, base scores 0.80 (24/30) -> full mean 0.65
+                b_sc = (1.0 if idx < 15 else 0.0) if idx < 30 else (1.0 if idx < 54 else 0.0)
+                base_lines.append(json.dumps({"bench": "bbh", "subtask": "bbh_cot_fewshot_navigate", "item": f"q{idx}", "score": b_sc}))
+                base_lines.append(json.dumps({"bench": "gsm8k", "item": f"m{idx}", "score": b_sc}))
+                base_lines.append(json.dumps({"bench": "mmlu_pro_history", "item": f"h{idx}", "score": 0.50 if idx % 2 == 0 else 0.0}))
+            (base_dir / "items.jsonl").write_text("\n".join(base_lines) + "\n", encoding="utf-8")
+            (base_dir / "items_v3.jsonl").write_text("\n".join(base_lines) + "\n", encoding="utf-8")
+            (base_dir / "summary.json").write_text(json.dumps({
+                "name": "base",
+                "model": "Qwen/Qwen3.5-9B",
+                "dev_slice": False,
+                "config_hash": "h-full",
+                "benchmarks": {
+                    "bbh": {"tier": "primary", "n": 60, "mean": 0.65, "truncated": 1},
+                    "gsm8k": {"tier": "primary", "n": 60, "mean": 0.65, "truncated": 0},
+                    "mmlu_pro_history": {"tier": "negative_control", "n": 60, "mean": 0.25, "truncated": 0},
+                },
+            }), encoding="utf-8")
+            (base_dir / "summary_v3.json").write_text(json.dumps({
+                "rule": "protocol_v3_answer_line_fallback",
+                "run": "base",
+                "changed_items": {"bbh": 0, "gsm8k": 0, "mmlu_pro_history": 0},
+                "benchmarks": {"bbh": {"n": 60, "mean": 0.65}, "gsm8k": {"n": 60, "mean": 0.65}, "mmlu_pro_history": {"n": 60, "mean": 0.25}},
+            }), encoding="utf-8")
+
+            # Dev-slice `rl-think-ctrl-step-50` & `rl-think-games-step-50` + weaker checkpoint `rl-think-games-step-25`
+            for name, raw_sc, v3_sc, hist_sc in (
+                ("rl-think-ctrl-step-50", 0.40, 0.50, 0.25),
+                ("rl-think-games-step-25", 0.50, 0.60, 0.25),
+                ("rl-think-games-step-50", 0.60, 0.80, 0.25),
+            ):
+                rdir = bdir / name
+                rdir.mkdir(parents=True)
+                raw_lines, v3_lines = [], []
+                for idx in range(30):
+                    raw_lines.append(json.dumps({"bench": "bbh", "subtask": "bbh_cot_fewshot_navigate", "item": f"q{idx}", "score": 1.0 if idx < int(30 * raw_sc) else 0.0}))
+                    raw_lines.append(json.dumps({"bench": "gsm8k", "item": f"m{idx}", "score": 1.0 if idx < int(30 * raw_sc) else 0.0}))
+                    raw_lines.append(json.dumps({"bench": "mmlu_pro_history", "item": f"h{idx}", "score": 0.50 if idx % 2 == 0 else 0.0}))
+
+                    v3_lines.append(json.dumps({"bench": "bbh", "subtask": "bbh_cot_fewshot_navigate", "item": f"q{idx}", "score": 1.0 if idx < int(30 * v3_sc) else 0.0}))
+                    v3_lines.append(json.dumps({"bench": "gsm8k", "item": f"m{idx}", "score": 1.0 if idx < int(30 * v3_sc) else 0.0}))
+                    v3_lines.append(json.dumps({"bench": "mmlu_pro_history", "item": f"h{idx}", "score": 0.50 if idx % 2 == 0 else 0.0}))
+                (rdir / "items.jsonl").write_text("\n".join(raw_lines) + "\n", encoding="utf-8")
+                (rdir / "items_v3.jsonl").write_text("\n".join(v3_lines) + "\n", encoding="utf-8")
+                (rdir / "summary.json").write_text(json.dumps({
+                    "name": name,
+                    "model": "Qwen/Qwen3.5-9B",
+                    "dev_slice": True,
+                    "config_hash": "h-dev",
+                    "benchmarks": {
+                        "bbh": {"tier": "primary", "n": 30, "mean": raw_sc, "truncated": 0},
+                        "gsm8k": {"tier": "primary", "n": 30, "mean": raw_sc, "truncated": 0},
+                        "mmlu_pro_history": {"tier": "negative_control", "n": 30, "mean": hist_sc, "truncated": 0},
+                    },
+                }), encoding="utf-8")
+                rescored_n = int(round(30 * (v3_sc - raw_sc)))
+                (rdir / "summary_v3.json").write_text(json.dumps({
+                    "rule": "protocol_v3_answer_line_fallback",
+                    "run": name,
+                    "changed_items": {"bbh": rescored_n, "gsm8k": rescored_n, "mmlu_pro_history": 0},
+                    "benchmarks": {"bbh": {"n": 30, "mean": v3_sc}, "gsm8k": {"n": 30, "mean": v3_sc}, "mmlu_pro_history": {"n": 30, "mean": hist_sc}},
+                }), encoding="utf-8")
+
+            bs_v3 = build_bench_summary(bdir, lb_h1={"rows": []}, lb_h2={"rows": []}, resamples=400)
+            self.assertEqual(bs_v3["protocol_version"], "ft-benchmarks-v3")
+            self.assertEqual(bs_v3["claim_evaluation"]["status"], "transfer_supported")
+            self.assertEqual(bs_v3["claim_evaluation"]["winning_candidate"], "think-games")
+
+            runs_map = {r["row_id"]: r for r in bs_v3["runs"]}
+            self.assertIn("think-games", runs_map)
+            self.assertIn("think-ctrl", runs_map)
+            tg = runs_map["think-games"]
+            self.assertEqual(tg["raw_name"], "rl-think-games-step-50")
+            self.assertEqual(tg["scoring_mode"], "v3")
+            self.assertAlmostEqual(tg["benchmarks"]["bbh"]["mean"], 0.80, places=4)
+            self.assertAlmostEqual(tg["benchmarks"]["bbh"]["official_mean"], 0.60, places=4)
+            self.assertEqual(tg["benchmarks"]["bbh"]["rescored_count"], 6)
+            # Verify BBH logic secondary slice (`bbh_navigate`) was sliced from `items_v3.jsonl`
+            self.assertAlmostEqual(tg["benchmarks"]["bbh_navigate"]["mean"], 0.80, places=4)
+
+            # Verify dev-slice `think-games` vs full-suite `base` compares ONLY the 30 shared items (base=0.50, cand=0.80 -> delta=+0.30)
+            vs_base_tg = next(c for c in bs_v3["comparisons_vs_base"] if c["cand"] == "think-games")
+            self.assertEqual(vs_base_tg["benchmarks"]["bbh"]["n_shared"], 30)
+            self.assertEqual(vs_base_tg["benchmarks"]["bbh"]["n_only_ref"], 30)
+            self.assertAlmostEqual(vs_base_tg["benchmarks"]["bbh"]["mean_ref"], 0.50, places=4)
+            self.assertAlmostEqual(vs_base_tg["benchmarks"]["bbh"]["delta"], 0.30, places=4)
+
 
 if __name__ == "__main__":
     unittest.main()
