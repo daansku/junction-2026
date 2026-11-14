@@ -31,5 +31,5 @@ enable_thinking: false      # SFT v2 targets are "ANSWER: ..." without <think>; 
 use_vllm: true
 vllm_mode: colocate         # one vLLM engine per training GPU, LoRA merged + pushed each step
 vllm_gpu_mem: 0.35          # 80 GB GPU: ~28 GB vLLM (18 GB weights + KV), rest for training
-vllm_max_len: 6144          # prompts are <= ~2k tokens (RLE frames) + 1024 completion
+vllm_max_len: 6144          # >= max_prompt_tokens (3072, drops ~1-2% long rule_effect prompts) + 1024 completion
 vllm_sleep: false           # true frees vLLM memory during the backward pass (slower; use if OOM)

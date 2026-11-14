@@ -37,6 +37,15 @@ score the same; drop or rebalance that task with `--task-filter`); `kl` > 0.1 = 
 If OOM: `--per-device-batch 4 --grad-accum 8` (same batch) or `vllm_sleep: true`. Plan B if vLLM + Qwen3.5
 weight sync breaks: `--no-vllm` (HF generate, several times slower).
 
+**One GPU (H100, or any free 80 GB card): self-serve, no hand-offs.**
+```bash
+SFT_LORA=/root/ckpt/games/lora GPU=0 bash posttrain/run_grpo.sh          # configs/grpo-1-h100.yaml, own /root/rl-venv
+GPU=1 RUN=/root/ckpt/grpo-1 EVERY=50 BASE_RUN=<base dev-slice run dir>   nohup bash posttrain/tools/bench_watch.sh > /root/bench-watch.log 2>&1 &   # benches step-50/100/150 + final itself
+```
+`run_grpo.sh` refuses a GPU with < 70 GB free (stop the vLLM server on it first). `bench_watch.sh` needs a whole
+GPU (bench's vLLM takes 88%) and a python with `bench[gpu]` (`BENCH_PY`); newest unbenched checkpoint first.
+Prompts over `max_prompt_tokens` (3072) are dropped: `rule_effect` has 12k-token outliers (~3% of all prompts).
+
 CPU smoke test (proves loop, reward plumbing, ref-adapter KL, saving; 2-3 steps, tiny model):
 ```bash
 PYTHONPATH=engine/src python -m engine tasks --task all --n 4 --seed 0 --out /tmp/t.jsonl

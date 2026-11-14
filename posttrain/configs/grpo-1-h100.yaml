@@ -1,0 +1,31 @@
+# grpo-1 on ONE 80 GB GPU (the H100, 31.22.104.125): same recipe as grpo-1.yaml, batch kept at
+# 64 completions/step = 8 prompts x G=8 via 8 per micro-step x 8 accumulation on 1 process.
+# Launch: posttrain/run_grpo.sh (checks the GPU is free first). Expected ~55-65 GB peak, ~60-90 s/step.
+base: Qwen/Qwen3.5-9B
+steps: 150                  # ~3 h; bench every 50 (posttrain/tools/bench_watch.sh EVERY=50)
+save_every: 25
+seed: 0
+task_filter: null
+
+lr: 1.0e-5
+warmup_ratio: 0.03
+per_device_batch: 8
+grad_accum: 8
+num_generations: 8
+num_iterations: 1
+beta: 0.04
+epsilon: 0.2
+epsilon_high: 0.28
+loss_type: dapo
+scale_rewards: group
+mask_truncated: true
+
+max_completion: 1024
+temperature: 1.0
+top_p: 1.0
+enable_thinking: false
+use_vllm: true
+vllm_mode: colocate
+vllm_gpu_mem: 0.30          # ~24 GB for vLLM (18 GB weights + ~6 GB KV: 32 seqs x ~3k tokens fits)
+vllm_max_len: 4608          # max_prompt_tokens 3072 (drops ~1-2% long prompts) + 1024 completion + margin
+vllm_sleep: false           # OOM in backward -> set true (vLLM releases its memory while training)
