@@ -1,0 +1,13 @@
+# eval-v2 Gemini Flash, uncapped (human 19:25: Gemini credits are unlimited, so no cost cap may cut a run short).
+# Replaces the Gemini part of eval-v2-frontier.yaml, whose $2/run cap stopped runs at 105-215 actions.
+# attempt 0 = the real run for every game EXCEPT the 7 games whose attempt 0 finished capped (eval-v2-gemini-redo.yaml
+# runs those as attempt 1). Analysis: use the uncapped run per game; capped runs have reason budget_cost at ~$2.
+name: eval-v2-gemini-redo
+collection: eval-v2
+games: [gridworld-s910000-d4-l8-f71ee29e, gridworld-s910001-d4-l8-eb750fbb, gridworld-s910002-d4-l8-654b6dd3, gridworld-s910003-d4-l8-6ea22e03, gridworld-s910004-d4-l8-35604680, gridworld-s910005-d4-l8-3ae7d141, gridworld-s910006-d4-l8-d0fd746b]
+attempts: 2
+concurrency: 12
+est_steps_per_game: 300
+models:
+  - {id: gemini-flash, effort: medium, max_concurrency: 12}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 15.00, max_wall_s: 10800}
