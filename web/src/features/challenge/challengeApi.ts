@@ -7,13 +7,14 @@ import { API } from '@/lib/config'
 
 /**
  * Challenge set (human decision Sat ~19:30, "for now"): eval-v1 games a person has beaten, with the most models
- * recorded on them; first 3 levels each. A: s900000 (d1, 8+ models finished). B: s900002 (d3, models still running).
+ * recorded on them; first 3 levels each. A (default, human decision ~19:40): s900002 (d3, the person beat every finished
+ * model). B: s900000 (d1, 9 models finished, most beat the person).
  * The eval-v2 set (s910000 / s910019 / s910021, games people finished) is kept below for when its model runs land.
  * `?game=<id>` opens any game.
  */
 export const CHALLENGE_GAMES: Array<{ id: string; label: string }> = [
-  { id: 'gridworld-s900000-d1-l6-33a57ce4', label: 'A' },
-  { id: 'gridworld-s900002-d3-l6-f09d6348', label: 'B' },
+  { id: 'gridworld-s900002-d3-l6-f09d6348', label: 'A' },
+  { id: 'gridworld-s900000-d1-l6-33a57ce4', label: 'B' },
 ]
 export const EVAL_V2_GAMES = ['gridworld-s910000-d4-l8-f71ee29e', 'gridworld-s910019-d4-l8-50cff9f4', 'gridworld-s910021-d4-l8-404033da']
 export const DEFAULT_GAME = CHALLENGE_GAMES[0].id
