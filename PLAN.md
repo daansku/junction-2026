@@ -148,6 +148,7 @@ PLAN-v1 §3.1–3.3 apply (write only where you own, requests in `coordination/r
 | `web/src/features/challenge/` | **A4** | demo page; server endpoints for the visitor board via request to A2 |
 | `analysis/` bench + h2 aggregation, `docs/BUSINESS.md`, deck | A5 | |
 | `video/` (new) | **A6** | video presentation (Manim); instructions in `video/A6_INSTRUCTIONS.md` |
+| `engine/src/engine/generator/interaction.py`, `engine/tests/test_interaction.py`, interaction audit tool (new) | **A7** | flag-gated call in `generator/__init__.py` only; rest of `engine/` stays A1's. Split to be confirmed with A1. Instructions in `coordination/A7_INSTRUCTIONS.md` |
 | `data/derived/bench/` | written only by `bench` | gitignored like the rest of `data/derived/`; published snapshot by A2 |
 | `PLAN.md` | humans | |
 
@@ -167,6 +168,8 @@ Times are Helsinki. Task ids continue for status files. If your task is blocked 
 | **Q3** 05:00–09:30 | on call | final snapshot 07:00, keep stack up | final full bench; GPU cleanup | on call, published build | claim check, final deck |
 
 **A6 REEL** (added Sat 18:40, human request): Q0 storyboard approved by Anssi · Q1 scenes in Manim · **H2 23:30 full draft render** (placeholders marked) · Q2 polish, real numbers as they lock · **H4 07:00 re-render with locked numbers** · **H5 08:30 final MP4**.
+
+**A7 WARDEN** (added Sat 21:05, human request): first hour: audit of current levels (how close an avoider gets to optimal) · **H2 23:30 flag-gated stricter generator** + tests, frozen collections unchanged, audit after-numbers · Q2 wire into the targets the humans pick · **H4 07:00 no generator changes after the lock**.
 
 ### A1 — FORGE
 - **A1-20** `engine/src/engine/tasks/`: generators for next-frame prediction, rule-effect induction (before/after pair, multiple choice), plan length / solvable-in-k, full-plan-from-text-grid. Each sample: prompt, answer, verifier function. Seeds disjoint from all eval collections; respect hold-outs. Determinism test.
@@ -210,6 +213,15 @@ Full instructions: **`video/A6_INSTRUCTIONS.md`** (read it first; ask Anssi the 
 - **A6-04** Draft render by H2; final 1080p MP4 (+ captions) by H5, delivered where Anssi says; A5 links it from the submission.
 - Writes only in `video/`; requests to A4 (screen recordings), A5 (deck/claims), A2 (server/API) through `coordination/requests/`.
 
+### A7 — WARDEN (mechanic-forcing level generation)
+Full instructions: **`coordination/A7_INSTRUCTIONS.md`** (read it first; ask Anssi and A1 the questions in its §7 before building).
+Why: today a rule "matters" if ignoring it changes the optimal length by any amount, so many levels can be solved near-optimally while avoiding the new mechanic; that does not measure rule discovery.
+- **A7-01** Audit current levels (dev, train-v1, sample of eval-v1): optimal vs avoid-optimal length, whether the optimal path triggers the new rule, the score an avoider would get. Commit the numbers.
+- **A7-02** Opt-in stricter generator (new generator version, default off): the optimal path must trigger the new rule's effect, and the best rule-avoiding plan must be impossible or ≥ `k ×` optimal and over the move budget. Solvable, random walk < 2%, deterministic, ~0.5–2 s per game still hold.
+- **A7-03** Frozen collections (`eval-v1`, `eval-v2`, `train-v1`, `dev`) regenerate byte-identical: `python -m engine verify` stays green.
+- **A7-04** Wire into the targets the humans choose: web "New game" (request to A2), training data (A1/A3), an optional new `eval-v3` (humans decide on sweeps), before/after numbers for the deck (A5).
+- Engine is A1's: new files plus one flag-gated hook only, agreed with A1 through `coordination/requests/A7-to-A1-*.md`.
+
 ---
 
 ## 6. Humans — decisions and tasks
@@ -221,6 +233,7 @@ Full instructions: **`video/A6_INSTRUCTIONS.md`** (read it first; ask Anssi the 
 | **by 19:00** | Approve `bench/PROTOCOL.md` (benchmark list, checkpoint rule). After this nobody changes the list. | keeps the result honest |
 | **Q1** | Playtest `/challenge`; pick the demo game if the data-driven pick is not fun. | taste |
 | **H2 23:30** | Review SFT v2 results; decide whether RL continues overnight. | risk call |
+| **Q0** | Start A7 and answer its questions (definition of "must interact", `k`, which targets: web generator, training data, `eval-v3`, pitch numbers). | judgment |
 | **Q0** | Start A6 and answer its questions (length, voice, Manim flavour, where the video goes); approve its storyboard. | taste |
 | **Q2** | Read `docs/BUSINESS.md`, pick the 2–3 ideas for the deck; rewrite the deck in your own words; record demo video + backup screen recording; record A6's voice-over if narrated. | your voice |
 | **07:00** | Numbers lock. | |
