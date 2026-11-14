@@ -1,18 +1,139 @@
 {
-  "generated_at": "2026-11-14T16:55:12Z",
-  "judge_model": "trace-auditor-v1",
+  "generated_at": "2026-11-14T17:48:16Z",
+  "judge_model": "reasoning-auditor-v2",
+  "summary": {
+    "total_failed_levels": 1,
+    "non_tier0_failed_levels": 0,
+    "knowing_doing_gap_count": 0,
+    "knowing_doing_gap_rate": 0.0,
+    "by_cognitive_stage": [
+      {
+        "stage": "perception",
+        "label": "1 \u00b7 Perception",
+        "count": 0,
+        "share": 0.0,
+        "h1_count": 0,
+        "h1_share": 0.0,
+        "h2_count": 0,
+        "h2_share": 0.0,
+        "top_root_cause": null
+      },
+      {
+        "stage": "rule_induction",
+        "label": "2 \u00b7 Rule Induction",
+        "count": 0,
+        "share": 0.0,
+        "h1_count": 0,
+        "h1_share": 0.0,
+        "h2_count": 0,
+        "h2_share": 0.0,
+        "top_root_cause": null
+      },
+      {
+        "stage": "belief_updating",
+        "label": "3 \u00b7 Belief Updating",
+        "count": 0,
+        "share": 0.0,
+        "h1_count": 0,
+        "h1_share": 0.0,
+        "h2_count": 0,
+        "h2_share": 0.0,
+        "top_root_cause": null
+      },
+      {
+        "stage": "spatial_planning",
+        "label": "4 \u00b7 Spatial Planning",
+        "count": 1,
+        "share": 1.0,
+        "h1_count": 1,
+        "h1_share": 1.0,
+        "h2_count": 0,
+        "h2_share": 0.0,
+        "top_root_cause": "knew_rule_failed_rollout"
+      },
+      {
+        "stage": "budget_management",
+        "label": "5 \u00b7 Budget Management",
+        "count": 0,
+        "share": 0.0,
+        "h1_count": 0,
+        "h1_share": 0.0,
+        "h2_count": 0,
+        "h2_share": 0.0,
+        "top_root_cause": null
+      }
+    ],
+    "by_reasoning_source": {
+      "notes": 1
+    },
+    "by_harness": {
+      "h1": {
+        "total": 1,
+        "non_tier0_total": 0,
+        "knowing_doing_gap_count": 0,
+        "knowing_doing_gap_rate": 0.0,
+        "stages": {
+          "perception": 0,
+          "rule_induction": 0,
+          "belief_updating": 0,
+          "spatial_planning": 1,
+          "budget_management": 0
+        }
+      },
+      "h2": {
+        "total": 0,
+        "non_tier0_total": 0,
+        "knowing_doing_gap_count": 0,
+        "knowing_doing_gap_rate": 0.0,
+        "stages": {
+          "perception": 0,
+          "rule_induction": 0,
+          "belief_updating": 0,
+          "spatial_planning": 0,
+          "budget_management": 0
+        }
+      }
+    },
+    "by_model": [
+      {
+        "player_id": "mock-model:medium",
+        "harness_version": "h1",
+        "reasoning_source": "notes",
+        "total": 1,
+        "knowing_doing_gap_count": 0,
+        "knowing_doing_gap_rate": 0.0,
+        "primary_bottleneck": "spatial_planning",
+        "stages": {
+          "perception": 0,
+          "rule_induction": 0,
+          "belief_updating": 0,
+          "spatial_planning": 1,
+          "budget_management": 0
+        }
+      }
+    ]
+  },
   "explanations": [
     {
       "run_id": "fixture-run-0001",
       "game_id": "gridworld-s2-d2-l6-f978fc99",
+      "collection": "dev",
+      "harness_version": "h1",
       "player_id": "mock-model:medium",
       "level": 3,
       "step": 30,
       "rule": "walls",
       "verdict": "ran_out_of_budget",
+      "cognitive_stage": "spatial_planning",
+      "root_cause": "knew_rule_failed_rollout",
+      "reasoning_source": "notes",
+      "deduced_rule_in_cot": false,
+      "deduced_rule_step": null,
+      "truth_contrast": "Model recognized basic walls/goal but wandered for 3 moves without dead-end pruning (engine optimal path: 19 moves (\u2191\u2192\u2192\u2193\u2192\u2192\u2192\u2191\u2191\u2191 \u2026)).",
       "explanation": "Run ended at step 30 on Level 3 after 3 moves (budget 38, outcome `BUDGET`) while navigating `walls`. Optimal play finishes in 19 moves (\u2191\u2192\u2192\u2193\u2192\u2192\u2192\u2191\u2191\u2191 \u2026): navigate around solid wall cells instead of repeating blocked moves.",
-      "evidence_quote": "reach the green square to finish the level; yellow bar = moves left",
-      "judge_model": "trace-auditor-v1"
+      "evidence_quote": "Heading right toward the green square along the open corridor.",
+      "quote_source": "reasoning",
+      "judge_model": "reasoning-auditor-v2"
     }
   ]
 }

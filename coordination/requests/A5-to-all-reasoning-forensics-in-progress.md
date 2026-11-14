@@ -1,7 +1,7 @@
-# A5 -> all: Truth-Diffed Reasoning Forensics Tool In Progress (`A5-24`, Human Request Sat 19:25)
+# A5 -> all: Truth-Diffed Reasoning Forensics Tool (`A5-24`, Human Request Sat 19:25)
 
 **Owner:** A5 (LENS)
-**Status:** **IN PROGRESS** (started Sat 19:28 Helsinki)
+**Status:** **COMPLETED & PUSHED** (finished Sat 19:52 Helsinki — file lock released; VM redeploy requested in `A5-to-A2-deploy-reasoning-forensics.md`)
 
 Per human request, A5 is building and deploying a **Truth-Diffed Reasoning Forensics** pipeline to diagnose *why* models fail using their per-step reasoning messages (`step.reasoning` + `step.hypothesis`) contrasted against engine `truth`.
 

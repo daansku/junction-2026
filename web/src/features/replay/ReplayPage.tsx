@@ -250,6 +250,21 @@ function Timeline({
   )
 }
 
+function highlightEvidenceSubstring(text: string, quote?: string | null) {
+  if (!quote) return text
+  const q = quote.trim()
+  if (!q) return text
+  const hit = text.indexOf(q)
+  if (hit < 0) return text
+  return (
+    <>
+      {text.slice(0, hit)}
+      <mark className="forensic-mark">{text.slice(hit, hit + q.length)}</mark>
+      {text.slice(hit + q.length)}
+    </>
+  )
+}
+
 export function ReplayPage() {
   const { run = '' } = useParams()
   const [params, setParams] = useSearchParams()
@@ -283,8 +298,14 @@ export function ReplayPage() {
   const [follow, setFollow] = useState(() => !params.get('step'))
   const [showRulers, setShowRulers] = useState(true)
   const [showGrid, setShowGrid] = useState(false)
-  const [xraySplit, setXraySplit] = useState<number | null>(null)
+  const [xraySplit, setXraySplit] = useState<number | null>(() => {
+    const raw = params.get('xray')
+    if (raw == null || raw === '') return null
+    const v = Number(raw)
+    return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : null
+  })
   const [showRuleStrip, setShowRuleStrip] = useState(false)
+  const [selectedExpLevel, setSelectedExpLevel] = useState<number | null>(null)
   const listRef = useRef<HTMLOListElement>(null)
 
   const cur = Math.max(0, Math.min(idx, n - 1))
@@ -370,15 +391,26 @@ export function ReplayPage() {
     return out
   }, [steps.data, cur, curLevel])
 
-  // Failure explanations for this run (prioritizing current level, else first failure of run)
+  // Failure explanations for this run (user-selected level, else current level, else first failure of run)
   const runExplanations = useMemo(
     () => (explanationsQ.data?.explanations ?? []).filter((e) => e.run_id === run),
     [explanationsQ.data, run],
   )
-  const activeExplanation = useMemo(
-    () => runExplanations.find((e) => e.level === curLevel) ?? runExplanations[0] ?? null,
-    [runExplanations, curLevel],
-  )
+  const activeExplanation = useMemo(() => {
+    if (selectedExpLevel != null) {
+      const picked = runExplanations.find((e) => e.level === selectedExpLevel)
+      if (picked) return picked
+    }
+    return runExplanations.find((e) => e.level === curLevel) ?? runExplanations[0] ?? null
+  }, [runExplanations, curLevel, selectedExpLevel])
+
+  const seekStepId = (stepId: number, withXray = false) => {
+    const arr = steps.data ?? []
+    const found = arr.findIndex((s) => s.i === stepId)
+    const target = found >= 0 ? found : Math.min(Math.max(0, stepId), Math.max(0, n - 1))
+    seek(target)
+    if (withXray) setXraySplit((v) => (v == null ? 50 : v))
+  }
 
   if (meta.error) return <ErrorState error={meta.error} retry={() => meta.refetch()} />
   const realState = t?.state === 'WIN' ? 'won' : t?.state === 'GAME_OVER' ? 'lost' : 'playing'
@@ -538,18 +570,43 @@ export function ReplayPage() {
           <aside className="replay-side">
             {activeExplanation && (
               <Panel
-                label={`failure diagnosis · L${activeExplanation.level}`}
+                label={`reasoning forensics · L${activeExplanation.level}`}
                 className="replay-exp-panel"
                 actions={
                   <div className="replay-exp-actions">
-                    <Chip outcome="GAME_OVER">{activeExplanation.verdict}</Chip>
+                    {runExplanations.length > 1 &&
+                      runExplanations.map((re) => (
+                        <Button
+                          key={re.level}
+                          variant="ghost"
+                          mono
+                          active={activeExplanation.level === re.level}
+                          onClick={() => {
+                            setSelectedExpLevel(re.level)
+                            if (re.step != null) seekStepId(re.step, true)
+                          }}
+                        >
+                          L{re.level}
+                        </Button>
+                      ))}
+                    <Chip
+                      outcome={
+                        activeExplanation.cognitive_stage === 'spatial_planning' ||
+                        activeExplanation.cognitive_stage === 'budget_management'
+                          ? 'BUDGET'
+                          : 'GAME_OVER'
+                      }
+                    >
+                      {activeExplanation.cognitive_stage ?? activeExplanation.verdict}
+                    </Chip>
                     {activeExplanation.step != null && (
                       <Button
-                        variant="ghost"
+                        variant="primary"
                         mono
-                        onClick={() => seek(Math.min(n - 1, Math.max(0, activeExplanation.step!)))}
+                        onClick={() => seekStepId(activeExplanation.step!, true)}
+                        title="Seek to divergence step and open 50% X-Ray truth curtain"
                       >
-                        @step {activeExplanation.step}
+                        [ @STEP {activeExplanation.step} + X-RAY ]
                       </Button>
                     )}
                   </div>
@@ -557,21 +614,54 @@ export function ReplayPage() {
               >
                 <div className="replay-exp-body">
                   <div className="replay-exp-meta mono">
-                    {activeExplanation.rule && (
-                      <span className="replay-rule-chip">
-                        <RuleSprite rule={activeExplanation.rule} size={16} />
-                        <strong>{activeExplanation.rule}</strong>
-                      </span>
-                    )}
-                    {activeExplanation.judge_model && (
-                      <span className="muted">auditor: {activeExplanation.judge_model}</span>
-                    )}
+                    <span className="replay-exp-badges">
+                      {activeExplanation.rule && (
+                        <span className="replay-rule-chip">
+                          <RuleSprite rule={activeExplanation.rule} size={16} />
+                          <strong>{activeExplanation.rule}</strong>
+                        </span>
+                      )}
+                      {activeExplanation.root_cause && (
+                        <span className="muted">cause: {activeExplanation.root_cause}</span>
+                      )}
+                      {activeExplanation.deduced_rule_in_cot && (
+                        <button
+                          type="button"
+                          className="replay-kd-pill mono"
+                          onClick={() => {
+                            if (activeExplanation.deduced_rule_step != null) {
+                              seekStepId(activeExplanation.deduced_rule_step, false)
+                            }
+                          }}
+                          title="Jump to step where model articulated the hidden rule in CoT/notes"
+                        >
+                          KNEW RULE{activeExplanation.deduced_rule_step != null ? ` @${activeExplanation.deduced_rule_step}` : ''}
+                        </button>
+                      )}
+                    </span>
+                    <span className="muted">
+                      {activeExplanation.reasoning_source
+                        ? `${activeExplanation.reasoning_source === 'cot' ? 'h2 CoT' : activeExplanation.reasoning_source === 'hypothesis_only' ? 'hyp-only' : 'h1 notes'} · `
+                        : ''}
+                      {activeExplanation.judge_model ?? 'reasoning-auditor-v2'}
+                    </span>
                   </div>
+                  {activeExplanation.truth_contrast && (
+                    <div className="replay-truth-contrast">
+                      <span className="mono replay-truth-kicker">TRUTH DIFF</span>{' '}
+                      {activeExplanation.truth_contrast}
+                    </div>
+                  )}
                   {activeExplanation.explanation && (
                     <p className="replay-exp-text">{activeExplanation.explanation}</p>
                   )}
                   {activeExplanation.evidence_quote && (
                     <blockquote className="replay-exp-quote mono">
+                      {activeExplanation.quote_source && (
+                        <span className="muted">
+                          [{activeExplanation.quote_source === 'reasoning' ? (m?.harness_version === 'h2' ? 'CoT' : 'notes') : 'hyp'}]{' '}
+                        </span>
+                      )}
                       “{activeExplanation.evidence_quote}”
                     </blockquote>
                   )}
@@ -593,14 +683,20 @@ export function ReplayPage() {
               <div className="step-fields">
                 {step?.reasoning && (
                   <div>
-                    <span className="kicker">reasoning</span>
-                    <p className="mono model-text">{step.reasoning}</p>
+                    <span className="kicker">
+                      {m?.harness_version === 'h2' ? 'reasoning · h2 CoT' : 'reasoning · notes'}
+                    </span>
+                    <p className="mono model-text">
+                      {highlightEvidenceSubstring(step.reasoning, activeExplanation?.evidence_quote)}
+                    </p>
                   </div>
                 )}
                 {step?.hypothesis && (
                   <div>
                     <span className="kicker">hypothesis</span>
-                    <p className="mono model-text">{step.hypothesis}</p>
+                    <p className="mono model-text">
+                      {highlightEvidenceSubstring(step.hypothesis, activeExplanation?.evidence_quote)}
+                    </p>
                   </div>
                 )}
                 {step?.belief && (

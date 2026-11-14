@@ -480,6 +480,129 @@ class AnalysisPipelineTests(unittest.TestCase):
         self.assertNotIn("conveyors", dp["oversample_weights"]["by_train_safe_rule"])
         self.assertNotIn("checkpoints", dp["oversample_weights"]["by_train_safe_rule"])
 
+    def test_truth_diffed_reasoning_forensics(self) -> None:
+        from analysis.explain import (
+            build_judge_prompt,
+            export_judge_prompts_jsonl,
+            load_judge_replies_jsonl,
+        )
+
+        # Case 1: h2 CoT Knowing-Doing Gap (deduces `twin` at step 1, fails spatial rollout at step 3)
+        t0 = _make_step(0, None, optimal_moves=4)
+        t1 = _make_step(1, "ACTION4", events=[], optimal_moves=4, frame_row6="1" + "0" * 63)
+        t1["reasoning"] = "Wait — both avatars moved right in lockstep! This is the twin coupled movement rule."
+        t1["hypothesis"] = "Moving right advances toward the corridor."
+        t2 = _make_step(2, "ACTION2", events=[], optimal_moves=4, frame_row6="2" + "0" * 63)
+        t2["reasoning"] = "Trying to route the upper twin around the central wall."
+        t2["hypothesis"] = "Twin avatars move together."
+        t3 = _make_step(3, "ACTION2", events=["out_of_moves"], optimal_moves=4, frame_row6="3" + "0" * 63)
+        t3["reasoning"] = "Lower twin was misaligned by 2 cells so we ran out of moves."
+        t3["hypothesis"] = "Twin avatars move together."
+        for st in (t0, t1, t2, t3):
+            st["truth"]["active_rules"] = ["walls", "goal", "twin"]
+            st["truth"]["new_rule"] = "twin"
+
+        r_h2_kd = _make_run("r-h2-kd", "verda-kimi-k3-1-pro", "model", [t0, t1, t2, t3])
+        r_h2_kd["meta"]["harness_version"] = "h2"
+        r_h2_kd["meta"]["outcome"] = "BUDGET"
+        r_h2_kd["meta"]["levels_completed"] = 0
+
+        # Case 2: Gemini Pro h2 encrypted thoughts (`reasoning=None`, `hypothesis` present -> `hypothesis_only`)
+        g0 = _make_step(0, None, optimal_moves=5)
+        g1 = _make_step(1, "ACTION1", events=[], optimal_moves=5, frame_row6="4" + "0" * 63)
+        g1["hypothesis"] = "Exploring northern passage toward green ring."
+        g2 = _make_step(2, "ACTION3", events=[], optimal_moves=5, frame_row6="5" + "0" * 63)
+        g2["hypothesis"] = "Path seems blocked by a colored barrier."
+        for st in (g0, g1, g2):
+            st["truth"]["active_rules"] = ["walls", "goal", "plates_gates"]
+            st["truth"]["new_rule"] = "plates_gates"
+
+        r_h2_enc = _make_run("r-h2-enc", "gemini-pro", "model", [g0, g1, g2])
+        r_h2_enc["meta"]["harness_version"] = "h2"
+        r_h2_enc["meta"]["outcome"] = "BUDGET"
+        r_h2_enc["meta"]["levels_completed"] = 0
+
+        # Case 3: h1 pure Tier-0 coordinate misread (`perception`)
+        p0 = _make_step(0, None, optimal_moves=3)
+        p1 = _make_step(1, "ACTION1", events=["bump"], optimal_moves=3)
+        p1["reasoning"] = "Row 12 looks like a clear horizontal corridor."
+        p1["hypothesis"] = "Move up to corridor."
+        p2 = _make_step(2, "ACTION1", events=["bump"], optimal_moves=3)
+        p2["reasoning"] = "Moved up into corridor; continuing north."
+        p2["hypothesis"] = "Move up to corridor."
+        for st in (p0, p1, p2):
+            st["truth"]["active_rules"] = ["walls", "goal", "move_budget"]
+            st["truth"]["new_rule"] = None
+
+        r_h1_perc = _make_run("r-h1-perc", "featherless-gpt-oss-120b", "model", [p0, p1, p2])
+        r_h1_perc["meta"]["harness_version"] = "h1"
+        r_h1_perc["meta"]["outcome"] = "BUDGET"
+        r_h1_perc["meta"]["levels_completed"] = 0
+
+        pkts = build_failure_packets([r_h2_kd, r_h2_enc, r_h1_perc], repo_root=REPO_ROOT)
+        self.assertEqual(len(pkts), 3)
+        # Verify bug fix: judge prompt now includes BOTH `rsn=` AND `hyp=` when both exist!
+        prompt_txt = build_judge_prompt(pkts[0])
+        self.assertIn('rsn="Wait — both avatars moved right in lockstep!', prompt_txt)
+        self.assertIn('hyp="Moving right advances toward the corridor."', prompt_txt)
+
+        exp_doc = build_explanations([r_h2_kd, r_h2_enc, r_h1_perc], repo_root=REPO_ROOT)
+        validate_against_schema(exp_doc, REPO_ROOT / "contracts" / "derived.schema.json")
+        by_run = {e["run_id"]: e for e in exp_doc["explanations"]}
+
+        self.assertEqual(by_run["r-h2-kd"]["reasoning_source"], "cot")
+        self.assertTrue(by_run["r-h2-kd"]["deduced_rule_in_cot"])
+        self.assertEqual(by_run["r-h2-kd"]["deduced_rule_step"], 1)
+        self.assertEqual(by_run["r-h2-kd"]["cognitive_stage"], "spatial_planning")
+        self.assertEqual(by_run["r-h2-kd"]["root_cause"], "knew_rule_failed_rollout")
+        self.assertEqual(by_run["r-h2-kd"]["quote_source"], "reasoning")
+
+        self.assertEqual(by_run["r-h2-enc"]["reasoning_source"], "hypothesis_only")
+        self.assertFalse(by_run["r-h2-enc"]["deduced_rule_in_cot"])
+        self.assertEqual(by_run["r-h2-enc"]["cognitive_stage"], "rule_induction")
+        self.assertEqual(by_run["r-h2-enc"]["root_cause"], "unprobed_new_rule")
+
+        self.assertEqual(by_run["r-h1-perc"]["reasoning_source"], "notes")
+        self.assertEqual(by_run["r-h1-perc"]["cognitive_stage"], "perception")
+        self.assertEqual(by_run["r-h1-perc"]["root_cause"], "coordinate_misread")
+
+        summary = exp_doc["summary"]
+        self.assertEqual(summary["total_failed_levels"], 3)
+        self.assertEqual(summary["non_tier0_failed_levels"], 2)
+        self.assertEqual(summary["knowing_doing_gap_count"], 1)
+        self.assertEqual(summary["knowing_doing_gap_rate"], 0.5)
+
+        # Verify JSONL prompt export + reply import round-trip for `arena judge`
+        with tempfile.TemporaryDirectory() as td:
+            p_jsonl = Path(td) / "prompts.jsonl"
+            r_jsonl = Path(td) / "replies.jsonl"
+            self.assertEqual(export_judge_prompts_jsonl(pkts, p_jsonl), 3)
+            r_jsonl.write_text(
+                json.dumps({
+                    "id": "r-h2-kd:1",
+                    "model": "gemini-flash",
+                    "text": json.dumps({
+                        "step": 3,
+                        "rule": "twin",
+                        "verdict": "ran_out_of_budget",
+                        "cognitive_stage": "spatial_planning",
+                        "root_cause": "knew_rule_failed_rollout",
+                        "deduced_rule_in_cot": True,
+                        "truth_contrast": "CoT identified twin coupling at step 1, but lower twin missed corridor alignment.",
+                        "explanation": "Induced twin rule early, failed 2-avatar rollout.",
+                        "evidence_quote": "both avatars moved right in lockstep!",
+                    }),
+                    "error": None,
+                }) + "\n",
+                encoding="utf-8",
+            )
+            replies = load_judge_replies_jsonl(r_jsonl)
+            merged_doc = build_explanations([r_h2_kd], repo_root=REPO_ROOT, preloaded_replies=replies)
+            validate_against_schema(merged_doc, REPO_ROOT / "contracts" / "derived.schema.json")
+            self.assertEqual(merged_doc["explanations"][0]["judge_model"], "gemini-flash")
+            self.assertEqual(merged_doc["explanations"][0]["evidence_quote"], "both avatars moved right in lockstep!")
+            self.assertEqual(merged_doc["explanations"][0]["quote_source"], "reasoning")
+
 
 if __name__ == "__main__":
     unittest.main()
