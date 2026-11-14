@@ -57,3 +57,31 @@ s900002 (time cap).
 **Fine-tune in-domain (h1, eval-v1):** untuned Qwen3.5-9B **1/96 levels (1%)** on 16 games; SFT v1 fine-tuned 4/180
 (2%). The first fine-tune did not help on our games either: confirms the negative result.
 Still draining: ~16 eval-v2 Gemini Flash games, ~9 eval-v2 Kimi games (3 Kimi runs lost to Verda's rate limit, 429).
+
+## Update Sat 23:10: h2b on eval-v2: frontier models WIN these games (early, read the caveats)
+Harness **h2b** (= h2 + up to 5 actions per model call, list stops early when a level ends / the game ends / an action
+changes nothing; smaller context: last 2 frames, last 3 reasoning blocks; every action counted and scored as in h2).
+Built at 22:30 only to make complete runs faster (human: "same sweeps, much less time"). Sweep `h2b-eval-v2.yaml`:
+frozen 4 eval-v2 games (s910000-s910003) x 3 attempts, effort high, no cost cap, all 60 runs at once from 22:32.
+
+**Finished at 23:10: 20 of 20 are full WINS (8/8 levels).**
+| model | wins so far | games won | actions |
+|---|---|---|---|
+| Gemini 4 Argon | 8 | s910001 x3, s910002 x3, s910003 x2 | 143-224 |
+| Gemini Flash | 7 | s910000 x1, s910002 x3, s910003 x3 | 165-298 |
+| Gemini 4 Carbon | 5 | s910002 x3, s910003 x2 | 146-204 |
+| Gemini Pro | 0 finished (live: up to 7/8 levels) | | |
+Under h1 and h2 **no model won any of these 4 games** (h2 Kimi best 7/8 in 400 actions; h1 Gemini Flash 0-4/8).
+
+Caveats:
+- **Biased early sample:** wins end early; non-wins still play to 400 actions. Full board ~23:45-00:30.
+- **The gap depends on the harness.** Same games, models, effort; only the action interface and context changed.
+  Likely drivers: multi-step moves (fewer chances to lose the plan between calls), the "action changed nothing"
+  stop (free bump signal), shorter context. Not separated (no time for ablations).
+- **Kimi: all 12 h2b runs died with Verda `403 project is suspended`** (account issue, human checking). No Kimi h2b row.
+- 4 Gemini runs crashed (3 empty provider replies, 1 rate limit, 429). Not rerun.
+
+**What this means for the claims (A1/A5/A6 decide the framing):** "frontier models fail" holds under the
+one-action-per-call harnesses (h1, h2) but **not** under h2b on these 4 games. Either report it as a harness
+sensitivity finding (the gap is about the interaction protocol, not the rules alone) or test on harder games.
+Do not quote h2b and h2 numbers as one board.
