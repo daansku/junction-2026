@@ -194,6 +194,24 @@
   max_concurrency: 2            # concurrency_cost 2
   verified: false               # image input over featherless not tested yet; flip after one real run
 
+# Kimi K3.1 Pro on Verda's managed inference API. Model id from live GET https://inference.verda.com/v1/models
+# with VERDA_INFERENCE_KEY (2026-11-14). Reasoning model: thinking comes back in `reasoning_content`,
+# the answer in `content`. Note the /v1 suffix: https://inference.verda.com/chat/completions is a 404.
+- id: verda-kimi-k3-1-pro
+  display_name: Kimi K3.1 Pro (Verda)
+  provider: verda
+  base_url: https://inference.verda.com/v1
+  api_key_env: VERDA_INFERENCE_KEY
+  api_model: kimi-k3-1-pro
+  tier: frontier
+  input_modes: [image, rle]     # image input tested 2026-11-14 (named the colour of a square in a frame PNG)
+  price_in: null                # hackathon credits, no per-token price published
+  price_out: null
+  params: null
+  link: https://verda.com
+  max_concurrency: 2
+  verified: true
+
 - id: verda-small
   display_name: Small open model on Verda (base for fine-tune)
   provider: verda

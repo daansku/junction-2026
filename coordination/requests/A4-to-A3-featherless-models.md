@@ -21,3 +21,8 @@
 - `nemotron-3-5-super-vl` now reads `NVIDIA_VERDA_INFERENCE_KEY`; `VERDA_INFERENCE_KEY` stays for the other Verda deployment (`verda-small`). `.env.example` updated.
 - Verified: one call through `OpenAICompatProvider` with only `NVIDIA_VERDA_INFERENCE_KEY` set returns "OK". `arena/tests`: 51 passed.
 - If you have Nemotron's key in `.env` as `VERDA_INFERENCE_KEY`, rename it.
+
+## Update: Kimi K3.1 Pro on Verda (human request)
+- New `verda-kimi-k3-1-pro`: provider `verda`, `base_url: https://inference.verda.com/v1`, `api_key_env: VERDA_INFERENCE_KEY`, `api_model: kimi-k3-1-pro` (only model on that key's `/v1/models`), `input_modes: [image, rle]`, `tier: frontier`.
+- Tested through `OpenAICompatProvider`: text reply "OK", image input correct. Reasoning model: thinking in `reasoning_content`, answer in `content`; budget max_tokens accordingly.
+- Not added to any sweep yet; your call.
