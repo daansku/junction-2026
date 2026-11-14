@@ -42,6 +42,10 @@
   grpo-2 step 31/80 (86 s/step, ends ~22:00); train reward flat so far (grpo-1 0.31 -> 0.27, grpo-2 0.30 -> 0.32 first vs
   last quarter of steps; KL 0.021 / 0.013, so the policy moves). Next checkpoints: grpo-1 s50 ~21:05, grpo-2 s40 ~21:15.
   My `rescore_answer.py` (21:10 note above) is withdrawn in favour of `rescore_v3.py`, one rule for all rows.
+- **20:52 BOTH RL RUNS STOPPED (human order):** grpo-1 at step 42/150, grpo-2 at step 34/80. Reason: they trained
+  with thinking off from the no-think SFT, i.e. they teach answering without reasoning; the goal is a model that thinks
+  better. Kept: grpo-1 step-25, grpo-2 step-20 (benched, v3). Watcher and pull loops stopped; no Modal app running.
+  Modal spend so far ~$10-12. New approach (RL with thinking on, from base) pending from A3 main.
 - **In-domain check:** `modal run posttrain/modal_grpo.py::evaluate` = mean game_turn reward on 200 held-out prompts (seed 2).
 - **Modal spend (cap EUR 100, user's rule):** grpo-1 <= ~$16 (4 h cap), grpo-2 ~$10, benches ~$0.6-1 each (measured ~9 min on an H100; max 10 launches), image builds/failed starts ~$1, stopped LoRA bench of games ~$1. Committed worst case ~$68.
 
