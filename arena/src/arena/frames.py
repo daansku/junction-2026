@@ -16,6 +16,9 @@ _DEFAULT_PALETTE = [
 
 
 def _repo_root() -> Path:
+    import os
+    if os.environ.get("ARENA_REPO_ROOT"):  # containers (Harbor sidecar) have no PLAN.md
+        return Path(os.environ["ARENA_REPO_ROOT"])
     here = Path(__file__).resolve()
     for p in here.parents:
         if (p / "PLAN.md").exists():

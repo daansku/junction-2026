@@ -1,0 +1,10 @@
+# A3-06 (free part): reference baselines on all of dev through the shared server.
+#   python -m arena run arena/sweeps/baselines-dev.yaml --api shared
+name: baselines-dev
+collection: dev
+games: all
+attempts: 3            # random / stop_early get 3 seeds; optimal and noop are deterministic (1)
+concurrency: 4
+baselines: [optimal, random, noop, stop_early]
+budgets:
+  max_actions: 400

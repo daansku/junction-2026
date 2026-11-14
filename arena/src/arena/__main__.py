@@ -25,7 +25,19 @@ def load_dotenv() -> None:
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
+def use_os_trust_store() -> None:
+    """Verify TLS with the OS certificate store (Windows/macOS) instead of certifi. Venue networks,
+    antivirus TLS inspection and some tunnels otherwise fail with CERTIFICATE_VERIFY_FAILED in
+    httpx / anthropic / openai while curl works. Verification stays on."""
+    try:
+        import truststore
+        truststore.inject_into_ssl()
+    except ImportError:
+        pass
+
+
 def main(argv=None):
+    use_os_trust_store()
     load_dotenv()
     ap = argparse.ArgumentParser(prog="arena")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -49,7 +61,17 @@ def main(argv=None):
     d.add_argument("--recover", type=int, default=2, help="recover-from-mistake trajectories per game")
     d.add_argument("--gameover", type=int, default=1, help="blow-a-level-then-RESET trajectories per game")
     d.add_argument("--out", required=True)
+    h = sub.add_parser("harbor-export", help="export games as Harbor tasks (AfterQuery judging harness)")
+    h.add_argument("--collection", required=True)
+    h.add_argument("--out", required=True)
+    h.add_argument("--first", type=int)
+    h.add_argument("--agent-timeout", type=int, default=3600)
     a = ap.parse_args(argv)
+
+    if a.cmd == "harbor-export":
+        from .harbor.export import export
+        export(a.collection, Path(a.out), first=a.first, agent_timeout=a.agent_timeout)
+        return
 
     if a.cmd == "dataset":
         from .dataset import build, games_from
