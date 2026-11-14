@@ -30,3 +30,19 @@ def test_filter_drops_abandoned_attempts():
     kept = {r["meta"]["run_id"] for r in filter_benchmark_runs(runs)}
     assert kept == {"human-WIN-won", "human-GAME_OVER-game_over", "model-BUDGET-budget_actions",
                     "baseline-ABORTED-stop_early"}
+
+
+def test_h1_board_excludes_every_other_harness():
+    from analysis.aggregate import aggregate_runs
+
+    def run(rid, harness):
+        r = _run("model", "WIN", "win")
+        r["meta"]["run_id"] = rid
+        r["meta"]["harness_version"] = harness
+        r["meta"]["player"]["model_id"] = f"m-{harness}"
+        return r
+
+    board = aggregate_runs([run("a", "h1"), run("b", "h2"), run("c", "h2b"), run("d", None)], harness_filter="h1",
+                           models_registry={}, game_descs={})
+    ids = {row["player_id"] for row in board["rows"]}
+    assert "m-h2" not in ids and "m-h2b" not in ids

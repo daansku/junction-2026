@@ -86,7 +86,9 @@ def aggregate_runs(
     filtered_runs: list[dict[str, Any]] = []
     for run in runs:
         rh = _run_harness(run["meta"])
-        if harness_filter == "h1" and rh == "h2":
+        # h1 board = h1 runs only (or runs with no harness tag: humans, baselines, older traces). Every other
+        # harness (h2, and variants such as h2b) has its own board and is never mixed into h1.
+        if harness_filter == "h1" and rh not in (None, "h1"):
             continue
         if harness_filter == "h2" and rh != "h2" and (run["meta"].get("player") or {}).get("kind") == "model":
             continue

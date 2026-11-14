@@ -127,8 +127,14 @@ export function OverviewPage() {
     [runs.data],
   )
   const humans = useMemo(() => (runs.data ?? []).filter((r) => r.player?.kind === 'human').length, [runs.data])
+  // Front-page ranking shows real players only (models and humans). Baselines (optimal, random,
+  // do-nothing, stop-early) are reference lines, not entries; they stay on the full leaderboard.
   const rows: LeaderboardRow[] = useMemo(
-    () => [...(lb.data?.rows ?? [])].sort((a, b) => b.score - a.score).slice(0, 6),
+    () =>
+      [...(lb.data?.rows ?? [])]
+        .filter((r) => r.kind !== 'baseline')
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 6),
     [lb.data],
   )
   const firstGame = games.data?.[0]?.game_id
@@ -246,6 +252,7 @@ export function OverviewPage() {
                               {r.display_name ?? r.model?.display_name ?? r.player_id}
                               {r.effort && <span className="muted"> · {r.effort}</span>}
                               {r.kind !== 'model' && <span className="muted"> · {r.kind}</span>}
+                              {r.collection && <span className="muted"> · {r.collection}</span>}
                             </span>
                           </span>
                         </td>
