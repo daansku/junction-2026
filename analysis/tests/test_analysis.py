@@ -374,6 +374,24 @@ class AnalysisPipelineTests(unittest.TestCase):
         self.assertEqual(exp_llm["explanations"][0]["judge_model"], "mock-judge-v1")
         self.assertEqual(exp_llm["explanations"][0]["evidence_quote"], "Stepped on the second ring and HUD pips cleared.")
 
+        # A3 arena.judge.complete wrapper (`make_arena_judge`) parses fenced JSON replies cleanly
+        from analysis.explain import make_arena_judge
+
+        def _fake_arena_complete(prompt: str, system: str = "", max_tokens: int = 350) -> dict:
+            self.assertIsInstance(prompt, str)
+            self.assertIn("checkpoints", prompt)
+            return {
+                "reply": '```json\n{"step": 1, "rule": "checkpoints", "verdict": "wrong_hypothesis", "explanation": "Mistook checkpoint 2 ring for goal.", "evidence_quote": "Blue hollow ring looks like the immediate exit."}\n```',
+                "model": "gemini-pro",
+                "cost_usd": 0.004,
+            }
+
+        exp_arena = build_explanations([failed_run], repo_root=REPO_ROOT, judge_fn=make_arena_judge(_fake_arena_complete))
+        validate_against_schema(exp_arena, REPO_ROOT / "contracts" / "derived.schema.json")
+        self.assertEqual(exp_arena["judge_model"], "gemini-pro")
+        self.assertEqual(exp_arena["explanations"][0]["step"], 1)
+        self.assertEqual(exp_arena["explanations"][0]["evidence_quote"], "Blue hollow ring looks like the immediate exit.")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,3 +7,7 @@
 A2 adds the endpoints you need (ghost slices, take-over sessions, rule images); ask through a request file if you need more.
 **Why:** humans want the gap between human intuition and model blindness to be visible in the UI, and a clear reason for every failure.
 **By when:** X-ray curtain and explanations by G3 (Sat 20:00); the rest before the Sun 00:00 freeze. Cut order if late: ghost race, then X-ray curtain, then heatmap polish.
+
+
+---
+**A5 status (DONE, Sat 15:21):** Both deliverables are shipped, tested (`8/8` analysis unit tests, `check-claims` `0` errors on fixtures + derived, `cd web && npm run typecheck && npm run build` `0` errors), and pushed to `main` with zero cuts.

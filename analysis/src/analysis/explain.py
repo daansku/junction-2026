@@ -229,16 +229,20 @@ def estimate_judge_cost(packets: list[dict[str, Any]]) -> dict[str, Any]:
     chars_in = sum(len(p) + len(JUDGE_SYSTEM_PROMPT) for p in prompts)
     est_tokens_in = max(0, (chars_in + 3) // 4)
     est_tokens_out = len(packets) * 140
-    # Reference rates ($/1M tokens): fast judge (Haiku / Flash) vs frontier judge (Sonnet)
+    # Gemini 3.1 Pro counts hidden thinking against output tokens (~1200 avg tokens/call)
+    est_tokens_out_gemini = len(packets) * 1200
+    # Reference rates ($/1M tokens): fast judge ($0.80/$4), Gemini 3.1 Pro ($2/$12), Sonnet ($3/$15)
     cost_fast_usd = round((est_tokens_in * 0.80 + est_tokens_out * 4.00) / 1_000_000, 4)
+    cost_gemini_pro_usd = round((est_tokens_in * 2.00 + est_tokens_out_gemini * 12.00) / 1_000_000, 4)
     cost_sonnet_usd = round((est_tokens_in * 3.00 + est_tokens_out * 15.00) / 1_000_000, 4)
     return {
         "failed_levels": len(packets),
         "est_tokens_in": est_tokens_in,
         "est_tokens_out": est_tokens_out,
         "est_cost_fast_judge_usd": cost_fast_usd,
+        "est_cost_gemini_pro_usd": cost_gemini_pro_usd,
         "est_cost_sonnet_judge_usd": cost_sonnet_usd,
-        "within_decisions_sweep_cap": cost_sonnet_usd <= 20.0,
+        "within_decisions_sweep_cap": max(cost_gemini_pro_usd, cost_sonnet_usd) <= 20.0,
     }
 
 
@@ -385,6 +389,36 @@ def synthesize_deterministic_explanation(packet: dict[str, Any]) -> dict[str, An
     }
 
 
+def _parse_judge_reply_dict(parsed: dict[str, Any], fallback_model: str) -> dict[str, Any]:
+    if isinstance(parsed.get("reply"), str):
+        reply_text = parsed["reply"].strip()
+        if reply_text.startswith("```"):
+            lines = reply_text.splitlines()
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            reply_text = "\n".join(lines).strip()
+        inner = json.loads(reply_text)
+        inner.setdefault("judge_model", parsed.get("model") or fallback_model)
+        return inner
+    return parsed
+
+
+def make_arena_judge(complete_fn: Callable[..., dict[str, Any]]) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Wrap `arena.judge.complete(prompt, system=..., max_tokens=...)` into a packet -> dict callable."""
+
+    def _call(packet: dict[str, Any]) -> dict[str, Any]:
+        res = complete_fn(
+            build_judge_prompt(packet),
+            system=JUDGE_SYSTEM_PROMPT,
+            max_tokens=350,
+        )
+        return _parse_judge_reply_dict(res, "gemini-pro")
+
+    return _call
+
+
 def _make_cmd_judge(cmd_str: str) -> Callable[[dict[str, Any]], dict[str, Any]]:
     argv = shlex.split(cmd_str)
 
@@ -405,14 +439,7 @@ def _make_cmd_judge(cmd_str: str) -> Callable[[dict[str, Any]], dict[str, Any]]:
         )
         out = proc.stdout.strip()
         parsed = json.loads(out)
-        if isinstance(parsed, dict) and isinstance(parsed.get("reply"), str):
-            reply_text = parsed["reply"].strip()
-            if reply_text.startswith("```"):
-                reply_text = reply_text.strip("`").removeprefix("json").strip()
-            inner = json.loads(reply_text)
-            inner.setdefault("judge_model", parsed.get("model") or cmd_str)
-            return inner
-        return parsed
+        return _parse_judge_reply_dict(parsed, cmd_str)
 
     return _call
 

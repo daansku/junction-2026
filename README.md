@@ -10,14 +10,22 @@
 
 Judges evaluate agents through **Harbor** (`harbor==0.26.0`) with Docker Compose sidecar isolation: the game server runs inside a separate `game-server` container exposing **only** `observe()` and `act()` over Streamable-HTTP MCP (`http://game-server:8000/mcp`), and the reward file (`/evidence/score.json`) is graded in a separate verifier container after the agent container stops.
 
-### 1. One-Command Export & Reward-Integrity Baselines (`oracle`, `nop`, `stop-early`)
+### 0. Fresh-Clone Setup (Python 3.11+ & Docker)
 
 ```bash
-# Export Harbor tasks (use --collection eval-v1 for held-out eval, or --collection dev)
-python -m arena harbor-export --collection eval-v1 --out /tmp/junction-harbor --first 3
-harbor lint /tmp/junction-harbor/gridworld-*
+git clone <repo> junction-2026 && cd junction-2026
+make setup && . .venv/bin/activate      # creates .venv with engine, server, arena, analysis
+uv tool install harbor==0.26.0          # Harbor CLI (or: pipx install harbor==0.26.0); Docker must be running
+```
 
-TASK=$(ls -d /tmp/junction-harbor/gridworld-* | head -1)
+### 1. One-Command Eval & Reward-Integrity Baselines (`oracle`, `nop`, `stop-early`)
+
+The frozen evaluation tasks are already committed at `harbor/eval-v1/` (`30` tasks, `harbor lint` clean) and `harbor/eval-v2/` (`30` tasks, difficulty 4), so judges can run directly without re-exporting:
+
+```bash
+# Run directly on committed frozen eval-v1 task 1 (or re-export via: python -m arena harbor-export --collection eval-v1 --out /tmp/junction-harbor --first 3)
+TASK=harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4
+harbor lint "$TASK"
 
 # 1) Reference ceiling (BFS optimal_path -> reward 1.000)
 harbor run -p "$TASK" -a oracle
