@@ -241,6 +241,22 @@
   max_concurrency: 8
   verified: false
 
+# A3-11: Qwen3.5-9B + LoRA on 8k train-v1 examples (arena/finetune/remote_run.sh), served by vLLM on our
+# Verda GPU at VERDA_BASE_URL. Untuned comparison row = featherless-qwen3-5-9b (same base, same harness).
+- id: verda-ft-qwen3-5-9b
+  display_name: Qwen3.5 9B fine-tuned on train-v1 (ours)
+  provider: verda
+  api_model: arena-ft
+  api_key_env: VERDA_FT_KEY
+  tier: finetuned
+  input_modes: [rle]
+  price_in: null                # paid by GPU time (Verda credits)
+  price_out: null
+  params: "9B + LoRA r16"
+  link: https://huggingface.co/Qwen/Qwen3.5-9B
+  max_concurrency: 8
+  verified: false
+
 # ---- offline harness test model ----
 - id: mock-random
   display_name: Mock (random JSON)

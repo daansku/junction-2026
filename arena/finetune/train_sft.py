@@ -47,21 +47,40 @@ def encode(tok, messages: list[dict], max_len: int):
     return full_ids, labels
 
 
+def load_model(base: str, **kw):
+    """Text-only models load as CausalLM; vision-language ones (e.g. Qwen3.5, `...ForConditionalGeneration`)
+    load with the image-text class. We train on text only either way."""
+    from transformers import AutoModelForCausalLM
+    try:
+        return AutoModelForCausalLM.from_pretrained(base, **kw)
+    except (ValueError, KeyError):
+        from transformers import AutoModelForImageTextToText
+        return AutoModelForImageTextToText.from_pretrained(base, **kw)
+
+
+def lora_targets(model) -> list[str]:
+    """Every Linear in the language model; never the vision tower or lm_head."""
+    import torch
+    skip = ("visual", "vision", "lm_head", "multi_modal_projector", "mm_projector")
+    return [n for n, m in model.named_modules()
+            if isinstance(m, torch.nn.Linear) and not any(k in n for k in skip)]
+
+
 def train(a):
     import torch
     from peft import LoraConfig, get_peft_model
-    from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
+    from transformers import AutoTokenizer, get_cosine_schedule_with_warmup
 
     torch.manual_seed(a.seed)
     random.seed(a.seed)
     tok = AutoTokenizer.from_pretrained(a.base)
     if tok.pad_token_id is None:
         tok.pad_token = tok.eos_token
-    model = AutoModelForCausalLM.from_pretrained(a.base, torch_dtype=torch.bfloat16, device_map="auto")
+    model = load_model(a.base, torch_dtype=torch.bfloat16, device_map="auto")
     model.gradient_checkpointing_enable()
     model.enable_input_require_grads()
     model = get_peft_model(model, LoraConfig(r=a.lora_r, lora_alpha=2 * a.lora_r, lora_dropout=0.05,
-                                             target_modules="all-linear", task_type="CAUSAL_LM"))
+                                             target_modules=lora_targets(model), task_type="CAUSAL_LM"))
     model.print_trainable_parameters()
 
     data = [encode(tok, m, a.max_len) for m in load_examples(a.data, a.limit)]
@@ -120,9 +139,9 @@ def train(a):
 def merge(a):
     import torch
     from peft import PeftModel
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from transformers import AutoTokenizer
 
-    base = AutoModelForCausalLM.from_pretrained(a.base, torch_dtype=torch.bfloat16)
+    base = load_model(a.base, torch_dtype=torch.bfloat16)
     m = PeftModel.from_pretrained(base, a.out).merge_and_unload()
     m.save_pretrained(a.merged)
     AutoTokenizer.from_pretrained(a.out).save_pretrained(a.merged)
