@@ -31,3 +31,69 @@ POST /api/games/generate  {seed?: int, difficulty: 1-4 (default 2), n_levels: 3-
 - Show the seed in the HUD/sidebar so people can share "try seed 4217 d3".
 - Optional: same control on the gallery, opening the game detail page.
 - **A4 status (Sat 14:15): UI done on main.** `/play` sidebar "new game" panel (difficulty 1-4, levels 3-8, seed box, Generate / Random), calls `POST /api/games/generate` with `{seed?, difficulty, n_levels}`, needs `game_id` in the response, then starts the run. Seed shown in a "this game" panel with a copy-link button. Works in mock mode; on a server without the endpoint it says so (404/405) and starts nothing; 403 shows "seed range reserved". A2's endpoint is live (14:03); A4 tested UI + endpoint end to end at 14:10 (seed 4217 d3, run started, moves work). **Left: A2 rebuilds `web/dist` on the host** so the live site has the panel. Gallery control not done.
+- **A2 (Sat 14:20): `web/dist` rebuilt on the host; the panel is live.**
+
+## OPEN: improvement plan (humans, Sat 14:10): new mechanics, failure explanations, UI upgrade
+
+Requested by Anssi. Split by owner below; each agent also has a request file
+(`coordination/requests/human-plan-to-A<n>-*.md`). **Human decision: A5 leads the UI upgrade** (see `DECISIONS.md`).
+Respect the freezes: `eval-v1` stays frozen (new rules never change it), harness `h1` is frozen, feature freeze
+Sun 00:00. Cut order if late: board flip, then ghost race, then X-ray curtain, then heatmap polish.
+
+### 1. Game mechanics (A1, engine)
+Already live, so only extend: teleporters (add variants: one-way, colour-linked), mirror twin (`twin.py`),
+push blocks / ice / gravity (physics basics). New work:
+- **Force interaction with each new mechanic:** the teaching level must be unsolvable without using the new rule
+  (stronger than the current "rule matters" check: the rule-ignorant plan must be impossible, not just longer).
+- **More practice between introductions:** after each teaching level, at least one consolidation level that reuses
+  the rules seen so far with no new rule (more levels per game, or fewer new rules per game; A1 decides and documents
+  it in `rules/CATALOG.md`). New collections only (e.g. `eval-v3`); never regenerate `eval-v1`.
+- **Physics puzzles:** e.g. momentum (keep moving until blocked, off ice), falling or rolling boulders, push chains,
+  blocks that slide on ice. One component file each, with a teaching level and a test.
+- **Shadow player:** a follower that repeats the player's moves k steps later (distinct from the mirror twin, which
+  moves at the same time). Touching it loses the level, or a rule needs it (e.g. the shadow must hold a plate).
+- **Board flip (late game, very advanced, tier 3 / d4 only):** a flip tile turns the board over; the player moves on
+  the reverse side, which has its own layout, and must remember their position and the hazards of the side not shown.
+  Fairness check: both sides must have been visible before the player needs that memory.
+- Every new rule: swatch + GIF in `rules/img/`, a row in `CATALOG.md`, solver / necessity / random-walk checks.
+
+### 2. Why models fail: LLM failure explanations (A5 leads, A3 runs the model calls, A2 serves)
+- **A5:** an `analysis` command that, per failed level, packs the level's rules, optimal path, the model's
+  step-aligned `reasoning` / `hypothesis` (from `steps.jsonl`) and the truth events, asks a judge LLM which mechanic
+  the model misunderstood, at which step, and what it should have done, and writes `data/derived/explanations.json`
+  (fields: run_id, level, step, rule, verdict, evidence quote; claim-checked). Prompt and output defined in
+  `analysis/METRICS.md`; schema addition to `contracts/derived.schema.json` through A2.
+- **A3:** the judge-model call (keys are on A3's machine): a small CLI or function A5 can call, with a cost estimate
+  first and within the `DECISIONS.md` budget. The judge sees the truth; playing models never do.
+- **A2:** add the schema; `/api/derived/explanations.json` is served automatically once the file exists.
+- **Web (A5):** show the explanation next to the failure in Replay and Insights.
+
+### 3. UI upgrade "Epistemic Arena" (A5 leads, A4 supports, A2 adds endpoints)
+Keep `web/DESIGN.md` strictly: flat dark tabular look (#0e0e0f surface, 1px `--line` hairlines, IBM Plex Mono,
+#ffdc00 accent), no gradients, no glass.
+- **Cartridge bezel + physics X-ray curtain** (`lib/FrameCanvas.tsx`, `features/play/PlayPage.tsx`,
+  `features/replay/ReplayPage.tsx`): recessed #080809 bezel; toggleable 0..63 mono coordinate rulers (the (x, y)
+  models cite in their reasoning); draggable #ffdc00 split divider: left = raw pixels ("what the model sees"),
+  right = SVG ground-truth overlay ("engine truth, hidden from the agent") from `describe()` (`start_pixel`,
+  `optimal_pixels` BFS path), last-5-step ghost trail, rule sprites from `rules/img/<rule>.png`, bump / slid / reset
+  markers from each step's `truth.events`.
+- **Live world generation + ghost race + take over** (`/play`, `/replay`, `/insights`): the New game panel already
+  calls `POST /api/games/generate` (A4, done). Add a ghost-race HUD that steps recorded runs of the top models (and
+  optimal BFS) on the same level in lockstep with each human keypress, streaming their step-aligned hypothesis text
+  beside the board; and a `[ TAKE OVER FROM STEP N ]` button on Replay and on Insights failure clips.
+- **Data pages fit 1080p above the fold** (Overview, Leaderboard, Insights). Insights: 8-col square-cell
+  Rule x Player heatmap + 4-col sticky cell inspector (rule swatches, diagonal-hatched n/a cells, 4px failure-mode
+  bars, `#runId · @step` replay pills). Leaderboard: full-width 4px series-coloured score underlines
+  (`seriesColorFor`), grouped column headers (OUTCOME / EFFICIENCY / BEHAVIOUR), baseline line styles (solid optimal,
+  long-dash human, dotted random/noop), click-to-replay scatter points.
+- **Ownership for this work:** A5 keeps `features/leaderboard` and `features/insights` and, for this upgrade, takes
+  `lib/FrameCanvas.tsx`, `features/play/PlayPage.tsx`, `features/replay/ReplayPage.tsx`,
+  `features/overview/OverviewPage.tsx`. A4 hands over any in-flight change to those four files and stops editing them
+  once A5 claims them in its status file. A4 keeps the rest of `web/` (router, design tokens, primitives, API client,
+  gallery, compare, live wall), adds shared primitives A5 needs, and reviews A5's pages against `DESIGN.md`.
+- **A2 endpoints for the UI:**
+  - `GET /api/games/{id}/ghosts?level=N&limit=K`: the K best recorded runs on that level as step slices only
+    (action, frame, hypothesis, events), so the browser never downloads multi-MB `steps.jsonl` files.
+  - `POST /api/sessions` with optional `start_level` (engine `goto_level`) for take-over; such runs carry
+    `start_level` and `takeover_of: {run_id, step}` in `meta.json` so analysis keeps them out of the human baseline.
+  - `GET /api/rules/img/{rule}.png` (and `.gif`) serving `rules/img/`.
