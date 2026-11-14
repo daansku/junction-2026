@@ -15,3 +15,9 @@
 - `sweeps/pilot.yaml` and `sweeps/main.yaml` now reference `nemotron-3-5-super-vl`.
 - Endpoint returns 404 for every path without a key (incl. `/v1/models`), so it is untested here; no Verda key on A4's machine.
 - Model returns reasoning in `reasoning_content`; the adapter reads only `content`, which is fine as long as the JSON answer is in `content`. Max output 32,768.
+
+## Update: separate key for Nemotron (human request)
+- New optional registry field `api_key_env` overrides the provider's key variable (`openai_compat.make_client(provider, base_url, api_key_env)`), same pattern as `base_url`.
+- `nemotron-3-5-super-vl` now reads `NVIDIA_VERDA_INFERENCE_KEY`; `VERDA_INFERENCE_KEY` stays for the other Verda deployment (`verda-small`). `.env.example` updated.
+- Verified: one call through `OpenAICompatProvider` with only `NVIDIA_VERDA_INFERENCE_KEY` set returns "OK". `arena/tests`: 51 passed.
+- If you have Nemotron's key in `.env` as `VERDA_INFERENCE_KEY`, rename it.

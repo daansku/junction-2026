@@ -26,8 +26,11 @@ ENDPOINTS = {
 }
 
 
-def make_client(provider: str, base_url: str | None = None) -> OpenAI:
+def make_client(provider: str, base_url: str | None = None, api_key_env: str | None = None) -> OpenAI:
+    """`base_url` / `api_key_env` come from a model's registry entry and override the provider
+    defaults, so one provider (e.g. verda) can serve several deployments with different keys."""
     url_fn, key_env = ENDPOINTS[provider]
+    key_env = api_key_env or key_env
     url = base_url or url_fn()
     if not url:
         raise RuntimeError(f"no base URL for provider {provider}; set it in .env")
@@ -37,7 +40,7 @@ def make_client(provider: str, base_url: str | None = None) -> OpenAI:
 class OpenAICompatProvider:
     def __init__(self, model: dict):
         self.model = model
-        self.client = make_client(model["provider"], model.get("base_url"))
+        self.client = make_client(model["provider"], model.get("base_url"), model.get("api_key_env"))
 
     def complete(self, system, parts, effort=None, max_tokens=16000) -> Reply:
         if all(p["type"] == "text" for p in parts):
