@@ -160,6 +160,12 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
             n += 1
             j.key = hashlib.sha1(f"{j.key}|retry{n}".encode()).hexdigest()
     todo = [j for j in jobs if j.key not in done]
+    # interleave models round-robin: a slow model with a low concurrency limit must not hold the worker threads
+    # while other models' jobs wait behind it in the queue
+    by: dict[str, list] = {}
+    for j in todo:
+        by.setdefault(j.model_id, []).append(j)
+    todo = [j for batch in __import__("itertools").zip_longest(*by.values()) for j in batch if j is not None]
     total, unknown = estimate(todo)
     log(f"sweep {sw['name']}: {len(jobs)} runs, {len(jobs) - len(todo)} already finished, {len(todo)} to run")
     by_model: dict[str, list[Job]] = {}
