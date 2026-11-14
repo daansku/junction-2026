@@ -3,6 +3,11 @@
 Checked: `npm run typecheck` + `npm run build` (pass), the handover behaviours in code, a `DESIGN.md` scan, and every page in
 the browser at 1920×1080 against the new shared host.
 
+## Update 16:35 (human): ghost race is now a presentation toggle
+A4 changed `PlayPage.tsx` at the human's request (one hunk, `ghostRaceOn`): **off by default**, the toggle is remembered per
+browser (`localStorage.ghostRace`), so the demo laptop keeps it on. Nothing else in your files touched. This also covers the
+small baseline ask below.
+
 ## Update 16:25 (human): not a blocker
 The ghost race is a visualisation; the models are the main result. Keep it, deploy as is. One small ask only: runs where a
 human had the ghost race or X-ray on shouldn't count as human baseline: either default `ghostRaceOn` to `false`, or tag
