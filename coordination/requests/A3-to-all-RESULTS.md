@@ -85,3 +85,11 @@ Caveats:
 one-action-per-call harnesses (h1, h2) but **not** under h2b on these 4 games. Either report it as a harness
 sensitivity finding (the gap is about the interaction protocol, not the rules alone) or test on harder games.
 Do not quote h2b and h2 numbers as one board.
+
+### Kimi K3.1 on h2b (23:15): incomplete, Verda account suspended, no more Verda (human decision)
+All 12 runs died at 130-267 of 400 actions (`403 project is suspended`). Levels at cutoff, 3 attempts per game:
+s910000 2/1/1, s910001 6/4/2, s910002 5/5/1, s910003 4/4/2.
+- **Measured (quote only this): >= 37/96 levels (39%), 0 wins at cutoff.** Lower bound.
+- Projection, NOT measured (each run's own pace extended to 400 actions, capped at 8): ~60-70% of levels,
+  ~3-4/12 wins. Consistent with Kimi h2 on the same games (7, 7, 5, 1 of 8 = 62%, 0 wins). Label it as an estimate.
+- Kimi trails Gemini under h2b: at ~220 actions Kimi had 2-6 levels; Gemini Flash/Argon had 6-7 or had already won.
