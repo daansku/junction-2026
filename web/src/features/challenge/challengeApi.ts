@@ -6,15 +6,16 @@
 import { API } from '@/lib/config'
 
 /**
- * Challenge set (human decision Sat ~19:00): eval-v2 games that a person played to the end (all 8 levels),
- * first 3 levels each. Difficulty 4, rules unseen in training. `?game=<id>` still overrides (e.g. the dev game
- * gridworld-s1000-d1-l6-9b1065f8 that had the most playtests).
+ * Challenge set (human decision Sat ~19:30, "for now"): eval-v1 games a person has beaten, with the most models
+ * recorded on them; first 3 levels each. A: s900000 (d1, 8+ models finished). B: s900002 (d3, models still running).
+ * The eval-v2 set (s910000 / s910019 / s910021, games people finished) is kept below for when its model runs land.
+ * `?game=<id>` opens any game.
  */
 export const CHALLENGE_GAMES: Array<{ id: string; label: string }> = [
-  { id: 'gridworld-s910000-d4-l8-f71ee29e', label: 'A' },
-  { id: 'gridworld-s910019-d4-l8-50cff9f4', label: 'B' },
-  { id: 'gridworld-s910021-d4-l8-404033da', label: 'C' },
+  { id: 'gridworld-s900000-d1-l6-33a57ce4', label: 'A' },
+  { id: 'gridworld-s900002-d3-l6-f09d6348', label: 'B' },
 ]
+export const EVAL_V2_GAMES = ['gridworld-s910000-d4-l8-f71ee29e', 'gridworld-s910019-d4-l8-50cff9f4', 'gridworld-s910021-d4-l8-404033da']
 export const DEFAULT_GAME = CHALLENGE_GAMES[0].id
 export const DEFAULT_LEVELS = 3
 export const NAME_MAX = 20

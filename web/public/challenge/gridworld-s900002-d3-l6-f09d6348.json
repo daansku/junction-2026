@@ -1,0 +1,193 @@
+{
+ "game_id": "gridworld-s900002-d3-l6-f09d6348",
+ "levels": 3,
+ "start_level": 1,
+ "optimal_moves": [
+  12,
+  10,
+  12
+ ],
+ "generated_at": "2026-11-14T16:01:49+00:00",
+ "source": "https://65.108.33.107.compute.verda.run",
+ "score_rule": "per level min(1, optimal/actions) if solved else 0; mean x 100",
+ "players": [
+  {
+   "id": "human",
+   "kind": "human",
+   "name": "People (first attempts)",
+   "model_id": null,
+   "attempts": 1,
+   "mean_score": 82.7,
+   "best_score": 82.7,
+   "cleared_all_rate": 1.0,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T124614-bae11967",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 21
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 11
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 12
+      }
+     ],
+     "score": 82.7,
+     "cleared": 3
+    }
+   ]
+  },
+  {
+   "id": "verda-kimi-k3-1-pro@h2",
+   "kind": "model",
+   "name": "Kimi K3.1 Pro (Verda) \u00b7 h2",
+   "model_id": "verda-kimi-k3-1-pro@h2",
+   "attempts": 1,
+   "mean_score": 62.5,
+   "best_score": 62.5,
+   "cleared_all_rate": 1.0,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T151224-b07762c5",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 14
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 32
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 17
+      }
+     ],
+     "score": 62.5,
+     "cleared": 3
+    }
+   ]
+  },
+  {
+   "id": "gemini-flash",
+   "kind": "model",
+   "name": "Gemini 3.8 Flash",
+   "model_id": "gemini-flash",
+   "attempts": 2,
+   "mean_score": 39.5,
+   "best_score": 42.8,
+   "cleared_all_rate": 1.0,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T142744-3449c73d",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 90
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 50
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 16
+      }
+     ],
+     "score": 36.1,
+     "cleared": 3
+    },
+    {
+     "run_id": "20261114T142744-8a5dfb0c",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 66
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 41
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 14
+      }
+     ],
+     "score": 42.8,
+     "cleared": 3
+    }
+   ]
+  },
+  {
+   "id": "verda-ft-qwen3-5-9b",
+   "kind": "model",
+   "name": "Qwen3.5 9B fine-tuned on train-v1 (ours)",
+   "model_id": "verda-ft-qwen3-5-9b",
+   "attempts": 1,
+   "mean_score": 0.0,
+   "best_score": 0.0,
+   "cleared_all_rate": 0.0,
+   "per_level_solve_rate": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T123417-b3918dfd",
+     "levels": [
+      {
+       "level": 1,
+       "solved": false,
+       "actions": 74
+      },
+      {
+       "level": 2,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 0.0,
+     "cleared": 0
+    }
+   ]
+  }
+ ]
+}
