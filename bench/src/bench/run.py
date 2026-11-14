@@ -86,7 +86,10 @@ def run_lm_eval(model: str, lora: str | None, benches: list[dict], g: dict, out:
                "--model_args", ",".join(f"{k}={v}" for k, v in margs.items()),
                "--tasks", ",".join(b["task"] for b in group), "--apply_chat_template",
                "--gen_kwargs", ",".join(f"{k}={v}" for k, v in gen.items()),
-               "--log_samples", "--output_path", str(raw), "--seed", str(g["seed"])]
+               "--log_samples", "--output_path", str(raw), "--seed", str(g["seed"]),
+               # lm-eval defaults to batch_size 1, which hands vLLM one request at a time (~25 s/item here);
+               # "auto" passes the whole task so vLLM batches it. Results are unchanged (per-request seeds).
+               "--batch_size", "auto"]
         if limit:
             cmd += ["--limit", str(limit)]
         print("+", " ".join(cmd), flush=True)
