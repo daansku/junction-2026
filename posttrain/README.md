@@ -8,11 +8,15 @@ PLAN.md phase 2 §3.3. Status and GPU log: `coordination/status/A3.md`.
 | sft-ctrl | general reasoning SFT only | waiting for data choice (PROTOCOL.md) |
 | sft-games | A1 data v2 + aux tasks | waiting for A1-20/21 |
 | sft-mix | general + games | waiting |
-| grpo-1 | A1-22 rewards, `grpo.py` + `configs/grpo-1.yaml` | code ready, CPU smoke test passed; waiting for best SFT v2 |
+| grpo-1 | 70% A1 `game_turn` (h1 map turns) + 30% aux (blocked_moves, full_plan, rule_effect), 4,290 prompts; start = SFT v2 `games` | running on a Modal H100 (`modal_grpo.py`, volume `junction-grpo`), 150 steps, step-<k> every 25 |
 
 Compute: one Verda 2x A100 80 GB box (`root@95.216.229.250`, ~$4.77/h), the only GPU instance available.
 
 ## grpo-1: RL with verifiable rewards (A3-25)
+
+**Start checkpoint = SFT v2 `games`, an A3 decision taken Sat 19:35 before any bench result, to save ~3 h** (the
+`games` and `mix` val losses are on different data and not comparable; `games` is trained on the h1 map-turn
+distribution that `game_turn` RL optimises). Recorded in the run's `grpo_args.json` (`note`).
 
 `src/posttrain/grpo.py` + `configs/grpo-1.yaml`. TRL 1.18 `GRPOTrainer` (pinned in the `gpu` extra): the SFT v2
 LoRA is loaded as a trainable `PeftModel`; TRL copies it to a frozen `ref` adapter, so `beta` is the KL to the
