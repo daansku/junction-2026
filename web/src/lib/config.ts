@@ -47,9 +47,26 @@ export interface ApiConfig {
   label: string
 }
 
+/**
+ * Accept only values the resolver understands. Anything else is ignored, so a mangled build
+ * variable can't break the site: Git Bash on Windows rewrites VITE_API=/api to
+ * "C:/Program Files/Git/api", which shipped once and left new visitors with no server.
+ */
+function validPick(v: string | null | undefined): string | null {
+  if (!v) return null
+  const s = v.trim()
+  if (s === 'mock' || s === 'local' || s === 'shared') return s
+  if (s.startsWith('/') && !s.startsWith('//')) return s
+  if (/^https?:\/\/[^/\s]+/.test(s)) return s
+  console.warn(`[api] ignoring invalid API setting ${JSON.stringify(v)}`)
+  return null
+}
+
 export function resolveApi(): ApiConfig {
   const pick =
-    readStored() ?? (import.meta.env.VITE_API as string | undefined) ?? (import.meta.env.DEV ? 'mock' : '/api')
+    validPick(readStored()) ??
+    validPick(import.meta.env.VITE_API as string | undefined) ??
+    (import.meta.env.DEV ? 'mock' : '/api')
   if (pick === 'mock') return { mode: 'mock', base: null, label: 'mock' }
   if (pick === 'local') return { mode: 'local', base: 'http://localhost:8000/api', label: 'localhost' }
   if (pick === 'shared') {
