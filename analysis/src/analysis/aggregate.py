@@ -82,6 +82,13 @@ def aggregate_runs(
             display_name = pid.replace("_", " ").title()
             provider = "baseline"
 
+        seen_scores: list[float] = []
+        unseen_pair_scores: list[float] = []
+        unseen_skin_scores: list[float] = []
+        observed_input_modes: list[str] | None = (
+            list(model_card["input_modes"]) if model_card and model_card.get("input_modes") else None
+        )
+
         for run in group_runs:
             meta = run["meta"]
             gid = str(meta.get("game_id") or "")
@@ -91,12 +98,27 @@ def aggregate_runs(
             if not model_card and kind == "model":
                 display_name = str(player.get("name") or pid)
                 provider = player.get("provider")
+            if observed_input_modes is None and isinstance(player.get("input_modes"), list):
+                observed_input_modes = [str(m) for m in player["input_modes"]]
 
-            seg_info = extract_level_segments(run, game_descs.get(gid))
+            gdesc = game_descs.get(gid)
+            holdout = (gdesc or {}).get("holdout")
+            holdout_levels = set(int(x) for x in (holdout or {}).get("levels", [])) if isinstance(holdout, dict) else set()
+            is_holdout_skin = bool((holdout or {}).get("skin")) if isinstance(holdout, dict) else False
+
+            seg_info = extract_level_segments(run, gdesc)
             levels_attempted += seg_info["levels_total"]
             levels_solved += seg_info["levels_solved"]
-            for seg in seg_info["segments"].values():
-                level_scores.append(seg["level_score"])
+            for lv_num, seg in seg_info["segments"].items():
+                lscore = seg["level_score"]
+                level_scores.append(lscore)
+                if isinstance(holdout, dict):
+                    if lv_num in holdout_levels:
+                        unseen_pair_scores.append(lscore)
+                    elif not is_holdout_skin:
+                        seen_scores.append(lscore)
+                    if is_holdout_skin:
+                        unseen_skin_scores.append(lscore)
 
             if meta.get("outcome") == "WIN" or (
                 seg_info["levels_total"] > 0 and seg_info["levels_solved"] >= seg_info["levels_total"]
@@ -170,20 +192,30 @@ def aggregate_runs(
             "display_name": display_name,
             "provider": provider,
             "tier": model_card["tier"] if model_card else kind,
+            "input_modes": observed_input_modes if kind == "model" else (["image"] if kind == "human" else None),
             "model_order": model_order,
             "resets_total": resets_total,
             "belief_accuracy": round(belief_correct / belief_total, 4) if belief_total > 0 else None,
             "no_effect_rate": round(no_effect_total / total_actions, 4) if total_actions > 0 else None,
+            "seen_score": round(statistics.fmean(seen_scores), 6) if seen_scores else None,
+            "unseen_pair_score": round(statistics.fmean(unseen_pair_scores), 6) if unseen_pair_scores else None,
+            "unseen_skin_score": round(statistics.fmean(unseen_skin_scores), 6) if unseen_skin_scores else None,
             "rhae_vs_human": None,
         }
         pre_rows.append(row)
         if kind == "human" and score > 0:
             human_score_by_collection[collection] = score
 
+    cols_per_player: dict[tuple[str, str | None], set[str]] = defaultdict(set)
+    for row in pre_rows:
+        cols_per_player[(row["player_id"], row["effort"])].add(row["collection"])
+
     for row in pre_rows:
         h_score = human_score_by_collection.get(row["collection"])
         if h_score and h_score > 0:
             row["rhae_vs_human"] = round(row["score"] / h_score, 4)
+        if len(cols_per_player[(row["player_id"], row["effort"])]) > 1:
+            row["display_name"] = f"{row['display_name']} [{row['collection']}]"
 
     pre_rows.sort(
         key=lambda r: (

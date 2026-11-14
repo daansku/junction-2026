@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-11-14T00:07:25Z",
+  "generated_at": "2026-11-14T11:05:42Z",
   "insights": [
     {
       "id": "efficiency-gap",
       "title": "Action-Efficiency Gap Against Optimal and Human Play",
-      "summary": "Evaluated model (Mock Model) achieved 0.252 action-efficiency score, leaving a 0.748 gap behind BFS optimal (1.000) due to exploration overhead and budget exhaustion.",
+      "summary": "Best evaluated model (Mock Model) achieved 0.252 action-efficiency score (33.3% levels solved), leaving a 0.748 gap behind BFS optimal (1.000) due to exploration overhead and budget exhaustion.",
       "category": "gap",
       "severity": "high",
       "evidence": [
@@ -85,7 +85,7 @@
     {
       "id": "reward-integrity-verified",
       "title": "Reward Integrity: Zero-Effort Baselines Score Strictly Zero",
-      "summary": "Action-efficiency scoring (`min(1, optimal_moves / actions_used)` per solved level) assigns 0.000 to `noop` and `stop_early`, penalizes reset farming, and rewards only genuine level completion.",
+      "summary": "Action-efficiency scoring (min(1, optimal_moves / actions_used) per solved level) assigns 0.000 to noop and stop_early, penalizes reset farming, and rewards only genuine level completion.",
       "category": "reward_integrity",
       "severity": "info",
       "evidence": [

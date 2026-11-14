@@ -76,7 +76,9 @@ def build_comparisons(leaderboard: dict[str, Any]) -> dict[str, Any]:
         "best_model": {
             "player_id": best_model["player_id"],
             "display_name": best_model.get("display_name", best_model["player_id"]),
+            "collection": best_model.get("collection"),
             "score": best_model["score"],
+            "level_solve_rate": best_model["level_solve_rate"],
             "effort": best_model.get("effort"),
         }
         if best_model

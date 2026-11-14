@@ -10,7 +10,7 @@ from typing import Any
 
 import yaml
 
-# Canonical rule events emitted by engine 0.2.0 and fake_engine
+# Canonical rule events emitted by engine 0.5.0 (Tiers 0-3) and fake_engine
 RULE_EVENTS: dict[str, tuple[str, ...]] = {
     "walls": ("bump", "level_complete"),
     "goal": ("level_complete", "game_won"),
@@ -22,6 +22,17 @@ RULE_EVENTS: dict[str, tuple[str, ...]] = {
     "push_blocks": ("pushed",),
     "ice": ("slid:",),
     "one_way": ("bump", "level_complete"),
+    "collect_all": ("collected",),
+    "phase_walls": ("walls_closed", "walls_opened", "bump"),
+    "rotation": ("rotated",),
+    "remap": ("controls_changed",),
+    "twin": ("bump", "level_complete", "game_won"),
+    "stamina": ("refilled",),
+    "cracked_floor": ("floor_collapsed",),
+    "beacon_goal": ("decoy", "level_complete", "game_won"),
+    "conveyors": ("carried:", "level_complete"),
+    "enemies": ("caught", "level_complete"),
+    "gravity": ("gravity_on", "gravity_off"),
 }
 
 RULE_KEYWORDS: dict[str, tuple[str, ...]] = {
@@ -35,7 +46,21 @@ RULE_KEYWORDS: dict[str, tuple[str, ...]] = {
     "push_blocks": ("push", "block", "box", "crate", "shove", "move block", "sokoban"),
     "ice": ("ice", "slid", "slip", "glide", "momentum"),
     "one_way": ("one-way", "one way", "arrow", "direction"),
+    "collect_all": ("gem", "diamond", "token", "shard", "collect all", "collect", "unlock goal"),
+    "phase_walls": ("phase", "periodic", "cycle", "alternat", "open", "close", "every"),
+    "rotation": ("rotat", "90", "clockwise", "turn", "orient", "triangle"),
+    "remap": ("remap", "invert", "reverse", "mirror", "swap", "scramble", "control"),
+    "twin": ("twin", "mirror", "copy", "second", "both", "coupled", "partner"),
+    "stamina": ("stamina", "energy", "refill", "recharge", "meter", "pad"),
+    "cracked_floor": ("crack", "collapse", "hole", "pit", "brittle", "once", "bridge"),
+    "beacon_goal": ("beacon", "decoy", "fake goal", "real goal", "match", "hud"),
+    "conveyors": ("conveyor", "belt", "carry", "drift", "current"),
+    "enemies": ("enemy", "patrol", "guard", "moving", "caught", "avoid"),
+    "gravity": ("gravity", "fall", "drop", "downward"),
 }
+
+TIER_0_RULES = frozenset({"walls", "goal", "move_budget"})
+PRACTICE_HUMAN_NAMES = frozenset({"", "anonymous", "anon", "test", "practice", "debug"})
 
 TIER_ORDER = ("optimal", "human", "finetuned", "frontier", "open", "baseline")
 
@@ -128,7 +153,107 @@ def normalize_player(player: dict[str, Any]) -> tuple[str, str, str | None, str]
     return raw_id, "model", str(effort) if effort else None, name
 
 
-def load_runs(runs_dir: Path, include_in_progress: bool = False) -> list[dict[str, Any]]:
+def load_collection_game_ids(repo_root: Path | None = None) -> tuple[dict[str, set[str]], set[str]]:
+    """Return ({collection_name: {game_id, ...}}, fixture_game_ids)."""
+    root = repo_root or find_repo_root()
+    by_col: dict[str, set[str]] = {}
+    col_dir = root / "data" / "collections"
+    if col_dir.exists():
+        for path in sorted(col_dir.glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                continue
+            cname = str(data.get("name") or path.stem)
+            by_col[cname] = {
+                str(g["game_id"])
+                for g in data.get("games", [])
+                if isinstance(g, dict) and g.get("game_id")
+            }
+    fx_ids: set[str] = set()
+    fx_games = root / "data" / "fixtures" / "games"
+    if fx_games.exists():
+        for path in sorted(fx_games.glob("*.json")):
+            try:
+                g = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                continue
+            if isinstance(g, dict) and g.get("game_id"):
+                fx_ids.add(str(g["game_id"]))
+    return by_col, fx_ids
+
+
+def filter_benchmark_runs(
+    runs: list[dict[str, Any]],
+    repo_root: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Filter out practice human sessions, smoke diagnostics, infra timeouts, and superseded collection IDs."""
+    by_col, fx_ids = load_collection_game_ids(repo_root)
+    gid_to_col: dict[str, str] = {}
+    for cname, gids in by_col.items():
+        for gid in gids:
+            gid_to_col[gid] = cname
+
+    # First pass: drop practice humans, smoke/showcase demo runs, 0-step UI switches, and infra aborts
+    stage1: list[dict[str, Any]] = []
+    has_current_col_games: set[str] = set()
+    for run in runs:
+        meta = run.get("meta") or {}
+        player = meta.get("player") or {}
+        kind = str(player.get("kind") or "baseline")
+        name = str(player.get("name") or "").strip().lower()
+        mid = str(player.get("model_id") or "").strip().lower()
+        outcome = str(meta.get("outcome") or "").strip()
+        end_reason = str(meta.get("end_reason") or "").strip().lower()
+        gid = str(meta.get("game_id") or "")
+
+        if kind == "human" and name in PRACTICE_HUMAN_NAMES:
+            continue
+        if kind == "baseline" and (name.startswith("smoke") or mid.startswith("smoke")):
+            continue
+        if end_reason in ("idle_timeout", "server_shutdown", "error"):
+            continue
+        if kind == "model" and outcome == "ABORTED":
+            continue
+        actions_taken = int(meta.get("actions") if meta.get("actions") is not None else max(0, len(run.get("steps") or []) - 1))
+        if kind == "human" and outcome == "ABORTED" and end_reason in ("switched_game", "left_page") and actions_taken == 0:
+            continue
+
+        raw_col = meta.get("collection")
+        col = str(raw_col) if raw_col else gid_to_col.get(gid, "dev")
+        if not raw_col:
+            meta["collection"] = col
+        if col in ("smoke", "showcase", "train-v1"):
+            continue
+
+        if col in by_col and gid in by_col[col]:
+            has_current_col_games.add(col)
+        stage1.append(run)
+
+    # Second pass: when a collection has runs against its current engine game_ids,
+    # exclude stale runs from superseded engine generations on that same collection name.
+    cleaned: list[dict[str, Any]] = []
+    for run in stage1:
+        meta = run.get("meta") or {}
+        col = str(meta.get("collection") or "dev")
+        gid = str(meta.get("game_id") or "")
+        if (
+            col in has_current_col_games
+            and gid.startswith("gridworld-")
+            and gid not in by_col.get(col, set())
+            and gid not in fx_ids
+        ):
+            continue
+        cleaned.append(run)
+    return cleaned
+
+
+def load_runs(
+    runs_dir: Path,
+    include_in_progress: bool = False,
+    clean: bool = True,
+    repo_root: Path | None = None,
+) -> list[dict[str, Any]]:
     if not runs_dir.exists():
         return []
     runs: list[dict[str, Any]] = []
@@ -153,6 +278,8 @@ def load_runs(runs_dir: Path, include_in_progress: bool = False) -> list[dict[st
                     continue
         steps.sort(key=lambda s: int(s.get("i", 0)))
         runs.append({"meta": meta, "steps": steps})
+    if clean:
+        return filter_benchmark_runs(runs, repo_root=repo_root)
     return runs
 
 

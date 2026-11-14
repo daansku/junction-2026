@@ -2,7 +2,14 @@ export interface ModelCard {
   id: string
   display_name: string
   provider: string
+  api_model?: string
   tier: 'frontier' | 'open' | 'finetuned' | 'baseline'
+  input_modes?: string[]
+  efforts?: string[]
+  price_in?: number | null
+  price_out?: number | null
+  params?: string | null
+  link?: string | null
   release_date?: string | null
   knowledge_cutoff?: string | null
   params_b?: number | null
@@ -39,10 +46,14 @@ export interface LeaderboardRow {
   display_name?: string
   provider?: string
   tier?: string
+  input_modes?: string[] | null
   model_order?: number
   resets_total?: number
   belief_accuracy?: number | null
   no_effect_rate?: number | null
+  seen_score?: number | null
+  unseen_pair_score?: number | null
+  unseen_skin_score?: number | null
   rhae_vs_human?: number | null
 }
 

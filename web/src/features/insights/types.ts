@@ -67,6 +67,7 @@ export interface RulesDocument {
   rules?: string[]
   players?: string[]
   cells: RuleCell[]
+  level_curve?: LevelCurvePoint[]
   level_learning_curve?: LevelCurvePoint[]
   failure_modes?: FailureModeEntry[]
 }

@@ -105,7 +105,7 @@ export function InsightsPage() {
 
   const insights = insightsQ.data?.insights ?? []
   const cells = rulesQ.data?.cells ?? []
-  const learningCurve = rulesQ.data?.level_learning_curve ?? []
+  const learningCurve = rulesQ.data?.level_curve ?? rulesQ.data?.level_learning_curve ?? []
   const failureModes = rulesQ.data?.failure_modes ?? []
 
   const totalFailureEvents = useMemo(
@@ -138,8 +138,22 @@ export function InsightsPage() {
   const curvePlayers = useMemo(() => {
     const unique = Array.from(new Set(learningCurve.map((p) => p.player_id)))
     if (unique.length <= 4) return learningCurve
-    // Fold beyond top 4 categorical series per DESIGN.md §3
-    const keep = new Set(unique.slice(0, 4))
+    // Fold beyond top 4 categorical series per DESIGN.md §3, ranking by mean efficiency score
+    const scoreByPlayer = new Map<string, number>()
+    const countByPlayer = new Map<string, number>()
+    for (const pt of learningCurve) {
+      scoreByPlayer.set(pt.player_id, (scoreByPlayer.get(pt.player_id) ?? 0) + pt.mean_score)
+      countByPlayer.set(pt.player_id, (countByPlayer.get(pt.player_id) ?? 0) + 1)
+    }
+    const ranked = [...unique].sort((a, b) => {
+      const ma = (scoreByPlayer.get(a) ?? 0) / Math.max(1, countByPlayer.get(a) ?? 1)
+      const mb = (scoreByPlayer.get(b) ?? 0) / Math.max(1, countByPlayer.get(b) ?? 1)
+      if (Math.abs(mb - ma) > 1e-6) return mb - ma
+      const aBase = a === 'noop' || a === 'stop_early' || a === 'random' ? 1 : 0
+      const bBase = b === 'noop' || b === 'stop_early' || b === 'random' ? 1 : 0
+      return aBase - bBase
+    })
+    const keep = new Set(ranked.slice(0, 4))
     return learningCurve.filter((p) => keep.has(p.player_id))
   }, [learningCurve])
 

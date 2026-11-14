@@ -1,65 +1,66 @@
 # Judge Q&A & 15-Minute Exploit Hunt Defense (`docs/QA_PREP.md`)
 
 > Prepared for the AfterQuery 10-minute demo + 15-minute interactive exploit hunt + Harbor/OpenCode MCP rerun.
-> **Rule:** Never overclaim. Cite only verified formulas, schema guards, test suites, and inspected trace metrics.
+> **Rule:** Never overclaim. Cite only verified formulas, Docker sidecar boundaries, schema guards, test suites, and inspected trace metrics.
 
 ---
 
 ## Part A: Reward Exploit Hunt — Anticipated Attacks & Defenses
 
-### Attack 1: *"Can an agent score points by solving only Level 1 quickly and aborting early before harder levels?"*
-- **Why it fails:**
-  1. `leaderboard.score` ALWAYS averages `level_score(L)` over all `levels_total` levels (`1..levels_total`), NOT just levels attempted (`analysis/METRICS.md §2`, `analysis/src/analysis/loader.py:332-354`).
-  2. Solving only Level 1 of a 6-level game caps maximum possible score at `1 / 6 = 0.1667` (`Optimal` = `1.000`).
-  3. Solving zero levels (`noop` or `stop_early`) yields strictly `0.000`, enforced automatically by `check_claims` (`analysis/src/analysis/claim_check.py:51-52`) and tested in `analysis/tests/test_analysis.py`.
+### Attack 1: *"Inside the Harbor agent container, can OpenCode read `optimal_path`, engine source, or write `1.0` directly to the reward file?"*
+- **Why it fails (`arena/HARBOR.md`, `arena/src/arena/harbor.py`):**
+  1. **Separate containers:** The agent runs in `main` (node + OpenCode + bash, **no engine code, no game JSON, no `/evidence` volume**). The game runs in a separate `game-server` sidecar container on an internal Compose network.
+  2. **Minimal network surface:** `game-server` exposes **only** `/healthz` and `/mcp` with two tools: `observe()` and `act(action)` returning `frame_rle`, `image/png`, `available_actions`, `state`, and `level`. There is no `/truth`, no `/describe`, and no score endpoint on the sidecar.
+  3. **Post-termination grading:** `/evidence/score.json` is written inside `game-server`, copied out by Harbor **after** the agent container stops, and graded inside a fresh verifier container (`/logs/verifier/reward.txt`).
 
-### Attack 2: *"What if an agent explores noisily for 40 steps, sees how the puzzle works, hits `RESET`, and replays only the optimal path to fake a `1.000` efficiency ratio?"*
+### Attack 2: *"Can an agent score high by solving only Level 1 quickly and stopping early before harder levels?"*
 - **Why it fails:**
-  - `actions_used(L)` counts **all** actions taken while in Level `L`, including steps prior to `RESET` and the `RESET` call itself (`analysis/src/analysis/loader.py:270-273, 338-346`).
-  - Proven in `test_reward_integrity_and_reset_penalty`: a clean optimal solve in `4` moves scores `1.0`, whereas taking `2` exploration/reset steps followed by `4` optimal moves consumes `actions_used = 6`, capping score at `4/6 = 0.6667`.
+  1. `game_score` ALWAYS averages `level_score(L)` over all `levels_total` levels (`1..levels_total`), never just attempted levels (`analysis/METRICS.md §2`).
+  2. Verified directly in Harbor (`coordination/JUDGING.md` on 6-level `gridworld-s1000-d1-l6-9b1065f8`):
+     - `harbor run -p "$TASK" -a nop` (`0` actions, `0/6` levels) → **`0.000`**
+     - `harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1` (`13` actions, `1/6` levels) → **`0.167`** (`1/6`)
+     - `harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=3` (`45` actions, `3/6` levels) → **`0.500`** (`3/6`)
+     - `harbor run -p "$TASK" -a oracle` (`92` actions, `6/6` levels) → **`1.000`**
 
-### Attack 3: *"Can an agent farm partial credit by toggling switches, collecting keys, or bumping walls repeatedly?"*
+### Attack 3: *"What if an agent explores noisily for 40 steps, learns the layout, hits `RESET`, and replays only the optimal path to fake `1.000` efficiency?"*
 - **Why it fails:**
-  - Zero intermediate shaping reward is added to `level_score(L)`. Keys (`picked_key`), plates (`pressed_plate`), pushes (`pushed`), and teleports emit diagnostic events in `Truth` for post-hoc `rule_discovery.py` analysis ONLY — never score points.
-  - Extra toggling/bumping increases `actions_used(L)` in the denominator and strictly hurts efficiency (`min(1.0, optimal_moves / actions_used)`). No-effect steps (`bump` or byte-identical playfield `rows 6..63`) are explicitly flagged in `no_effect_rate` and `no_effect_loop`.
+  - Both the Harbor sidecar scorer and `analysis/src/analysis/loader.py` count **every** step spent on Level `L` in `actions_used(L)`, including pre-reset exploration and the `RESET` call itself.
+  - Verified in `test_reward_integrity_and_reset_penalty`: a clean `4`-step solve scores `1.000`, while `2` exploratory/reset steps + `4` optimal moves consumes `6` actions and scores `4/6 = 0.6667`.
 
-### Attack 4: *"Can the agent inspect `Truth`, `optimal_path`, or hidden JSON state via MCP or REST responses?"*
+### Attack 4: *"Can an agent farm partial credit by collecting gems/keys, toggling plates, or bumping walls?"*
 - **Why it fails:**
-  - Agent turns receive ONLY `frame` (or PNG) and `available_actions` (`contracts/openapi.yaml`, `server/src/server/app.py`, `arena/src/arena/agent_loop.py`).
-  - The `/sessions/{id}/truth` endpoint is polling-only for the **harness/evaluator** to detect `WIN`/`GAME_OVER` transitions and log offline `steps.jsonl`; `arena/tests/test_arena.py` explicitly verifies `Truth` is never injected into agent prompts, and `server` MCP tools (`list_games`, `start_game`, `act`, `reset`) return only visual frames and allowed actions.
+  - Zero intermediate shaping reward exists. Sub-goals (`collected`, `picked_key`, `pressed_plate`) are required causal prerequisites to unlock the goal, not point sources; extra actions increase `actions_used(L)` and strictly lower `min(1, optimal_moves / actions_used)`.
 
-### Attack 5: *"Can an agent hardcode pixel colors (`yellow = key`, `green = goal`, `red = hazard`) across games?"*
+### Attack 5: *"Can an agent hardcode RGB colors (`yellow = key`, `green = goal`, `red = hazard`) or memorize training rule pairs?"*
 - **Why it fails:**
-  - Every generated game enables `skin_shuffle: true` (`data/fixtures/games.json`, `rules/CATALOG.md`), permuting the 16-color indexed palette per seed. An agent must identify mechanics by **geometry and dynamic affordances** (sprite shape + step transitions), not RGB memorization.
+  - Every generated game enables `skin_shuffle: true`, permuting the 16-color indexed palette and non-directional glyphs per seed (`rules/CATALOG.md`).
+  - Furthermore, `eval-v1` holds out **6 unseen rule pairs** (e.g. `(ice, teleporters)`, `(phase_walls, plates_gates)`, `(beacon_goal, twin)`) and **held-out visual skins** disjoint from `dev` and `train-v1` (`engine/src/engine/splits.py`), tracked separately as `seen_score`, `unseen_pair_score`, and `unseen_skin_score` in `leaderboard.json`.
 
-### Attack 6: *"What if the agent uses `ACTION1..4` out of bounds or spams invalid tool payloads?"*
+### Attack 6: *"Could `PUBLISHED_MODE` on the public demo URL allow visitors to pollute the leaderboard or trigger `/api/admin/rebuild`?"*
 - **Why it fails:**
-  - Invalid/unrecognized actions either count against turn/step budgets or leave playfield `rows 6..63` unchanged (counted as wasted `no_effect` actions), while the top move-budget bar still decrements on valid moves. `GAME_OVER` locks every move except `RESET`.
-
-### Attack 7: *"Could `analysis` tar sync be exploited with path traversal (`../`) from an untrusted export bundle?"*
-- **Why it passes audit:**
-  - `_safe_extract_tar_bytes` in `analysis/src/analysis/sync.py:29-50` resolves every member path against `runs_dir.resolve()`, rejects absolute paths, `".."`, single-segment files, and non-regular files, and is explicitly unit-tested in `test_sync_tar_extraction_and_traversal_guard`.
+  - When `PUBLISHED_MODE=1` (`server/src/server/app.py`), model/baseline session creation and `/api/admin/rebuild` return `HTTP 403`, `/api/runs` serves only frozen `data/published/runs`, and visitor `/play` games run isolated in memory without entering benchmark tables.
 
 ---
 
 ## Part B: Judge Methodology & Design Q&A
 
-### Q1: *"Why choose a pixel-grid curriculum instead of a terminal / SWE / bash environment?"*
-- Code/bash benchmarks heavily conflate **tool fluency on seen libraries** with genuine **zero-shot rule induction**. A 64×64 indexed pixel world with shuffled colors strips away pretrained natural-language hints while retaining fast, deterministic ground-truth verification (exact BFS `optimal_moves`, exact `random`-walk ceiling `< 2%`, sub-millisecond simulation). And critically, the *cognitive loop* — probe -> inspect state diff -> revise hypothesis -> manage scarce budget -> reset dead ends — transfers directly to unfamiliar debugging and tool-use environments.
-
-### Q2: *"How do we know failures aren't caused by unfair ambiguity or impossible timing?"*
-- Every level satisfies 4 engine invariants before it enters a collection (`rules/CATALOG.md`): BFS-solvable (`optimal_moves`), rule-necessary (ablation test proves every active rule changes the optimal path or solvability), bounded slack (`ceil(optimal_moves × slack)`), and visible affordances in the 64×64 grid (distinct shapes for arrows, X teleporters, checker plates, slotted doors, plus-sign hazards, HUD key/health pips, and top move-budget bar). If a frontier model fails, `/replay/<run_id>?step=<step>` lets you inspect exact pixels + model `hypothesis` + `belief` side by side.
-
-### Q3: *"Why aren't frontier sweep results hardcoded in git if live API keys ran late?"*
-- By design (`PLAN.md §3.4 & §4.6`), `data/derived/` is **never committed cleanly with stale claims** — only verified deterministic fixtures (`data/fixtures/derived/`) live in git as the CI baseline, while live sweeps on the shared server export via `python -m analysis sync && python -m analysis build` and must pass `python -m analysis check-claims`. That guarantees zero fabricated numbers anywhere in the repo or UI.
-
-### Q4: *"How does the `eval-v2` proposal loop actually work?"*
-- `python -m analysis insights --write-proposals` inspects `rules.json` (excluding passive Tier-0 rules with `intro_levels == 0`) to identify lowest `intro_solve_rate`, highest `wasted_actions`, and `repeated_no_effect_actions`, then writes grounded Markdown specifications into `rules/proposals/auto-*.md` (`auto-01-wall-bump-cooldown.md`, `auto-02-false-goal-indicator.md`, `auto-03-commitment-corridor.md`) citing exact observed metrics and replay failure counts for A1 to implement in the next benchmark revision.
-
-### Q5: *"How do judges reproduce our setup using Harbor + OpenCode over MCP?"*
-- Start the MCP stdio bridge against either a local server or the shared deployment URL:
+### Q1: *"How do judges reproduce our Harbor + OpenCode evaluation in one command?"*
+- Run `arena harbor-export` + `harbor run` (`arena/HARBOR.md` — **not** `python -m server mcp`, which is dev/demo-only):
   ```bash
-  make server PORT=8000
-  python -m server mcp --api http://localhost:8000
+  python -m arena harbor-export --collection eval-v1 --out /tmp/junction-harbor --first 3
+  TASK=$(ls -d /tmp/junction-harbor/gridworld-* | head -1)
+  harbor run -p "$TASK" -a oracle                                      # -> 1.000
+  harbor run -p "$TASK" -a nop                                         # -> 0.000
+  harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1      # -> 0.167
+  set -a; . ./.env; set +a
+  harbor run -p "$TASK" -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
+    --ak "opencode_config=$(python3 -c 'import json;print(json.dumps(json.load(open("arena/opencode-nemotron.json"))))')" \
+    --ae 'NVIDIA_VERDA_INFERENCE_KEY=${NVIDIA_VERDA_INFERENCE_KEY}' -k 3 -n 1
   ```
-  It exposes `list_games`, `start_game`, `act`, and `reset` matching AfterQuery's MCP flow so Harbor + OpenCode can evaluate `optimal` (or human reference), `3 × frontier agent`, `noop`, and `stop_early` identically.
+- On `dev` task `gridworld-s1000-d1-l6-9b1065f8`, OpenCode + Nemotron `k=3` scored `0.020`, `0.094`, `0.087` (**mean `0.067`**) vs reference `1.000`.
+
+### Q2: *"Why did vision+RLE models (`Kimi K3.1 Pro`: 52.1% levels, `0.374`) beat text-only RLE models (`DeepSeek V3.2`, `gpt-oss-120b`: `0%`) when RLE is lossless?"*
+- Every model under `h1` receives the exact lossless 64×64 run-length encoded grid (`rle`), and vision models additionally receive the rendered PNG (`[image, rle]`). While RLE contains 100% of the state information, text-only models fail 2D spatial alignment across 4×4 multi-pixel glyphs (`arrow_up`, `ring`, `checker`), spending `55%–66%` of their move budget on zero-effect wall bumps (`insights.json` finding `modality-gap`).
+
+### Q3: *"How does the closed-loop `eval-v2` rule evolution work?"*
+- `python -m analysis build --write-proposals` ranks mechanics with the lowest non-Tier-0 `intro_solve_rate` and highest `wasted_actions` across model traces. Our first round (`auto-01..03`: `cracked_floor`, `collect_all`, `twin`) was implemented directly into Engine `0.4.0/0.5.0` (`twin` currently has `0.0` model intro solve rate!), and `auto-04-eval-v2-tier3-drift-and-timing.md` promotes A1's verified Tier-3 post-move mechanics (`conveyors`, `enemies`, `gravity`) into `eval-v2`.
