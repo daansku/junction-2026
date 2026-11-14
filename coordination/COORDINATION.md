@@ -3,6 +3,13 @@
 Cross-agent work items that need more than one agent. Each item also has a file in
 `coordination/requests/`; close it there (and here) when done.
 
+## OPEN (Sat 23:00, human decision): every agent may redeploy the live site; A1, A3, A4, A5 send A2 your SSH public key
+
+- `scripts/deploy_vm.sh` (on `main`) deploys `main` to the VM (web + `analysis/` `engine/` `contracts/`) and rebuilds the boards; `--rebuild` = boards only. No server restart. How-to and rules: `coordination/requests/A2-to-all-deploy-the-site-yourself.md`.
+- **A1, A3, A4, A5 (other machines): append your SSH public key (`ssh-ed25519 ...`) at the end of that file and push.** A2 adds it to the VM. Never send a private key.
+- A6, A7 (Anssi's machine): already have access (`~/.ssh/verda_junction`).
+- `server/` changes and new collections still need a restart: ask A2.
+
 ## OPEN: procedural level generation on the website (A2 + A4), requested by humans Sat ~14:00
 
 Humans want to generate new maps from the web UI ("that's the entire point of the project").
