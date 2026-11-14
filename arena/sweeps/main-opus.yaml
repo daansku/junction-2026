@@ -1,9 +1,11 @@
 # A3-10 subset: Claude Opus 5.5 (medium) on 2 eval-v1 games, 1 attempt. Human decision Sat 14:10: the Anthropic key
 # has ~EUR 20, so Opus on an easy (d1) and a hard (d3) game, the ones Kimi and Gemini also played in the pilot.
 # $9 hard cap per run (~250 actions at ~$0.036/action, >= 2x the optimal path); worst case $18.
+# 14:16 the shared tunnel died mid-run (both Opus runs lost at 3/6 in 72 and 4/6 in 75 actions, ~$4 spent).
+# Human decision 14:45: rerun the hard (d3) game only, $9 cap; ~$17 left on the key.
 name: main-opus
 collection: eval-v1
-games: [gridworld-s900000-d1-l6-33a57ce4, gridworld-s900002-d3-l6-f09d6348]
+games: [gridworld-s900002-d3-l6-f09d6348]
 attempts: 1
 concurrency: 2
 est_steps_per_game: 250
