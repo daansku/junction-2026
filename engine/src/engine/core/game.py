@@ -77,6 +77,14 @@ class Game:
         self.state = initial_state(self.levels[0])
         return self.frame()
 
+    def goto_level(self, level: int) -> Frame:
+        """Jump to the start of level `level` (1-based). UI/gallery/debug only, never for
+        scored play."""
+        self.reset()
+        self.idx = max(0, min(len(self.levels) - 1, level - 1))
+        self.state = initial_state(self.level)
+        return self.frame()
+
     def available_actions(self) -> list[Action]:
         """Action is a str enum, so members serialise as "ACTION1" etc."""
         if self.status == WIN:
@@ -165,7 +173,9 @@ class Game:
         return {"game_id": self.game_id, "spec": asdict(self.spec),
                 "engine_version": self.engine_version, "levels_total": len(self.levels),
                 "difficulty": self.spec.difficulty,
-                "rules": [list(lv.rules) for lv in self.levels],
+                "rules": sorted({r for lv in self.levels for r in lv.rules}),
+                "rules_per_level": [list(lv.rules) for lv in self.levels],
+                "optimal_moves_total": sum(lv.optimal_moves for lv in self.levels),
                 "new_rules": [lv.new_rule for lv in self.levels],
                 "optimal_moves": [lv.optimal_moves for lv in self.levels],
                 "move_budgets": [lv.move_budget for lv in self.levels]}
