@@ -1,8 +1,8 @@
-import os
 """Claude via the Anthropic SDK. No server-side model fallback: a leaderboard row must be one model."""
 from __future__ import annotations
 
 import base64
+import os
 import time
 
 import anthropic
