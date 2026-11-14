@@ -5,8 +5,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { FrameCanvas } from '@/lib/FrameCanvas'
 import { PALETTE } from '@/lib/palette'
-import { PlotFigure, seriesColors, cssVar } from '@/lib/PlotFigure'
+import { PlotFigure, cssVar } from '@/lib/PlotFigure'
 import type { Frame, RunMeta } from '@/lib/types'
+import { buildRowColorMap } from '@/features/leaderboard/LeaderboardPage'
 import type { LeaderboardDocument, LeaderboardRow } from '@/features/leaderboard/types'
 import { completionCompare } from '@/features/leaderboard/ranking'
 import { XrayOverlay } from '@/features/play/XrayOverlay'
@@ -22,13 +23,6 @@ function pickShowcase(runs: RunMeta[]): RunMeta | undefined {
     (r.outcome === 'WIN' ? 1e6 : 0) + (r.levels_completed ?? 0) * 1e4 - (r.outcome === 'ABORTED' ? 1e5 : 0) - (r.actions ?? 0)
   const models = done.filter((r) => r.player?.kind === 'model').sort((a, b) => score(b) - score(a))
   return models[0] ?? done.find((r) => /optimal/.test(r.player?.name ?? '')) ?? done[0]
-}
-
-function rowSeriesColor(row: LeaderboardRow, idx: number): string {
-  if (row.kind === 'baseline') return cssVar('--text-3') || '#76756f'
-  const palette = seriesColors()
-  const k = row.model_order != null && row.model_order < 900 ? Math.abs(row.model_order) % palette.length : idx % palette.length
-  return palette[k] || cssVar('--accent') || '#ffdc00'
 }
 
 function fmtUsd(v: number | null | undefined): string {
@@ -164,6 +158,8 @@ export function OverviewPage() {
     [collectionRows],
   )
 
+  const getRowColor = useMemo(() => buildRowColorMap(collectionRows), [collectionRows])
+
   const refScores = useMemo(() => {
     const optRow = collectionRows.find((r) => r.player_id === 'optimal')
     const humanRow = collectionRows.find((r) => r.kind === 'human' || r.player_id === 'human')
@@ -194,7 +190,7 @@ export function OverviewPage() {
   const frontierPoints = useMemo(
     () =>
       collectionRows
-        .map((row, idx) => {
+        .map((row) => {
           const totalTokens = (row.tokens_in ?? 0) + (row.tokens_out ?? 0)
           const tokensPerGame = row.games > 0 ? totalTokens / row.games : 0
           const xVal = effectiveAxis === 'usd' ? (row.cost_per_game ?? 0) : tokensPerGame
@@ -205,12 +201,12 @@ export function OverviewPage() {
             cost: row.cost_per_game ?? null,
             tokensPerGame,
             score: row.score,
-            color: rowSeriesColor(row, idx),
+            color: getRowColor(row),
             runId: row.best_run_id ?? null,
           }
         })
         .filter((pt) => pt.row.kind === 'model' && pt.xVal > 0),
-    [collectionRows, effectiveAxis, hasEvalV2],
+    [collectionRows, effectiveAxis, hasEvalV2, getRowColor],
   )
 
   const onScatterClick = (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -298,7 +294,7 @@ export function OverviewPage() {
                 </thead>
                 <tbody>
                   {rows.map((r, i) => {
-                    const col = rowSeriesColor(r, i)
+                    const col = getRowColor(r)
                     return (
                       <tr key={`${r.player_id}-${r.effort ?? ''}-${r.collection}`}>
                         <td className="num muted">{i + 1}</td>

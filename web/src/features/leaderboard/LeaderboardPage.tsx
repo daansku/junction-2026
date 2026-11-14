@@ -74,6 +74,25 @@ function rowLabel(row: LeaderboardRow, hideCollection = false): string {
   return row.effort ? `${base} (${row.effort})` : base
 }
 
+export function rowColorKey(row: LeaderboardRow): string {
+  return `${row.player_id}::${row.effort ?? ''}::${row.collection ?? ''}::${row.harness_version ?? 'h1'}`
+}
+
+export function buildRowColorMap(rows: LeaderboardRow[]): (row: LeaderboardRow) => string {
+  const colors = seriesColors()
+  const ranked = [...rows]
+    .filter((r) => r.kind !== 'baseline')
+    .sort((a, b) => completionCompare(a, b) || a.player_id.localeCompare(b.player_id))
+  const map = new Map<string, string>()
+  ranked.forEach((r, idx) => {
+    map.set(rowColorKey(r), colors[idx % colors.length] || cssVar('--accent') || '#ffdc00')
+  })
+  return (row: LeaderboardRow) => {
+    if (row.kind === 'baseline') return cssVar('--text-3') || '#76756f'
+    return map.get(rowColorKey(row)) || colors[0] || cssVar('--accent') || '#ffdc00'
+  }
+}
+
 export function seriesColorFor(row: LeaderboardRow, fallbackIndex: number): string {
   if (row.kind === 'baseline') return cssVar('--text-3') || '#76756f'
   const colors = seriesColors()
@@ -171,6 +190,8 @@ export function LeaderboardPage() {
     return allRows.filter((r) => r.collection === collection)
   }, [allRows, collection])
 
+  const colorForRow = useMemo(() => buildRowColorMap(collectionRows), [collectionRows])
+
   const filteredRows = useMemo(() => {
     if (kindFilter === 'all') return collectionRows
     return collectionRows.filter((r) => r.kind === kindFilter)
@@ -235,7 +256,7 @@ export function LeaderboardPage() {
   const frontierPoints = useMemo(
     () =>
       collectionRows
-        .map((row, idx) => {
+        .map((row) => {
           const totalTokens = (row.tokens_in ?? 0) + (row.tokens_out ?? 0)
           const tokensPerGame = row.games > 0 ? totalTokens / row.games : 0
           const xVal = effectiveAxis === 'usd' ? (row.cost_per_game ?? 0) : tokensPerGame
@@ -246,12 +267,12 @@ export function LeaderboardPage() {
             cost: row.cost_per_game ?? null,
             tokensPerGame,
             score: row.score,
-            color: seriesColorFor(row, idx),
+            color: colorForRow(row),
             runId: bestRunByPlayer.get(`${row.player_id}::${row.effort ?? ''}`) ?? bestRunByPlayer.get(row.player_id) ?? null,
           }
         })
         .filter((pt) => pt.row.kind === 'model' && pt.xVal > 0),
-    [collectionRows, collection, effectiveAxis, bestRunByPlayer],
+    [collectionRows, collection, effectiveAxis, bestRunByPlayer, colorForRow],
   )
 
   const handleSort = (key: SortKey) => {
@@ -409,8 +430,8 @@ export function LeaderboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedRows.map((row, idx) => {
-                    const color = seriesColorFor(row, idx)
+                  {sortedRows.map((row) => {
+                    const color = colorForRow(row)
                     const bestRunId = resolveBestRun(row)
                     const coverage = subsetCoverage(row.subset_note)
                     return (
@@ -739,7 +760,7 @@ export function LeaderboardPage() {
       {cardRow && (
         <ModelCardDialog
           row={cardRow}
-          color={seriesColorFor(cardRow, sortedRows.indexOf(cardRow))}
+          color={colorForRow(cardRow)}
           onClose={() => setCardRow(null)}
         />
       )}
