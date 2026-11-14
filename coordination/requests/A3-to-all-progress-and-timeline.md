@@ -47,10 +47,11 @@
   better. Kept: grpo-1 step-25, grpo-2 step-20 (benched, v3). Watcher and pull loops stopped; no Modal app running.
   Modal spend so far ~$10-12. New approach (RL with thinking on, from base) pending from A3 main.
 - **RL v2 (thinking on), launched ~21:25 on two Modal H100s (human-approved 20:20):** base Qwen3.5-9B + fresh LoRA
-  (r16/alpha 32), `enable_thinking: true`, 3,072 completion tokens, reward only on the text after `</think>` (no
-  `</think>` = 0), G=8, lr 1e-5, KL 0.04 to base, checkpoint every 15 steps, 6.5 h timeout (ends by ~04:00 at the latest).
-  `think-games` (app ap-TNl4zwbOAtZACZSoavLaOa): 840 game_turn + 360 aux (seed 3). `think-ctrl` (app
-  ap-6SRpjD1I6cAJoCQB4qBgRJ): reasoning-gym knights_knaves/zebra_puzzles/shortest_path/maze, 300 each, seed 7 (the
+  (r16/alpha 32), `enable_thinking: true`, 2,048 completion tokens, reward only on the text after `</think>` (no
+  `</think>` = 0), G=8, lr 1e-5, KL 0.04 to base, checkpoint every 10 steps, 6.5 h timeout (ends by ~04:00 at the latest).
+  RELAUNCHED ~21:35 with checkpoint every 10 steps and 2,048 completion tokens (human, for results before midnight;
+  the first launch was stopped before step 1). `think-games` (app ap-dlufHDZfuJa6g3zy5CBujv): 840 game_turn + 360 aux
+  (seed 3). `think-ctrl` (app ap-MPjY2UfwsW7SvqtbTvLX5l): reasoning-gym knights_knaves/zebra_puzzles/shortest_path/maze, 300 each, seed 7 (the
   bench's SECONDARY rg tier, near transfer; not the primary suite). Checkpoints -> `/root/ckpt/think-*/step-<k>`, each
   benched merged with thinking-on settings and v3-rescored automatically (table columns think-games best / think-ctrl best).
   **Modal cost plan (cap EUR 100 total):** spent so far ~$12; two H100 x <= 6.5 h ~$51; benches capped at 10 more

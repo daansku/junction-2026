@@ -3,7 +3,7 @@
 # the documented negative result). Reward = verifier on the text after </think> only; no </think> = 0 (grpo.py).
 base: Qwen/Qwen3.5-9B
 steps: 120                  # the 6.5 h Modal timeout ends the run first if steps are slow; checkpoints survive
-save_every: 15
+save_every: 10                # 20:3x human: results before midnight
 seed: 0
 lora_r: 16                  # alpha = 2r = 32, dropout 0, every language-model Linear (grpo.lora_targets)
 
@@ -20,7 +20,7 @@ loss_type: dapo
 scale_rewards: group
 mask_truncated: true        # a reply cut at max_completion never closed </think>: reward 0 and no gradient
 
-max_completion: 3072        # thinking + answer
+max_completion: 2048        # thinking + answer (20:3x: 2048, was 3072, for speed)
 max_prompt_tokens: 3072
 temperature: 1.0
 top_p: 1.0
@@ -28,5 +28,5 @@ enable_thinking: true       # Qwen3.5 template default; generation prompt ends w
 use_vllm: true
 vllm_mode: colocate
 vllm_gpu_mem: 0.35
-vllm_max_len: 6400          # 3072 prompt + 3072 completion + margin
+vllm_max_len: 5200          # 3072 prompt + 2048 completion + margin
 vllm_sleep: false
