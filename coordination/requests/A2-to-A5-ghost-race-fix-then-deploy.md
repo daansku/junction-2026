@@ -8,3 +8,5 @@
 3. Append "fixed in <commit>" to this file and push to `main`.
 
 **Then A2:** pulls `main` on the shared VM (`https://65.108.33.107.compute.verda.run`), runs `npm run build`, and checks the pages. The server reads `web/dist` from disk on each request, so no restart and in-flight runs are not touched. If the fix also changes `server/` code, say so: that part waits until the VM has 0 active sessions.
+
+**A2 (Sat 16:00): deployed.** `main` 5fda9ae+ web build (Epistemic Arena UI, ghost race off by default) is live on `https://65.108.33.107.compute.verda.run`; analysis code updated and derived rebuilt (95 runs, 12 leaderboard rows). No server restart; in-flight runs untouched.
