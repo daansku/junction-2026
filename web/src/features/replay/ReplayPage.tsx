@@ -4,8 +4,10 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { FrameCanvas } from '@/lib/FrameCanvas'
 import { isTyping } from '@/lib/keys'
-import type { RunMeta, Step } from '@/lib/types'
-import { Button, Chip, Empty, ErrorState, Kbd, Loading, PageHeader, Panel, Stat } from '@/design/primitives'
+import type { Frame, RunMeta, Step } from '@/lib/types'
+import { Button, Chip, Empty, ErrorState, Kbd, Loading, PageHeader, Panel, Stat, cx } from '@/design/primitives'
+import { fetchExplanations } from '@/features/play/epistemicApi'
+import { RuleSprite, XrayOverlay } from '@/features/play/XrayOverlay'
 import './replay.css'
 
 const SPEEDS = [0.5, 1, 2, 4, 8, 16]
@@ -37,6 +39,15 @@ export function playerLabel(m: RunMeta) {
 
 function isLive(m?: RunMeta) {
   return !!m && (m.outcome === 'IN_PROGRESS' || (!m.outcome && !m.ended_at))
+}
+
+function eventBadgeClass(ev: string): string {
+  if (ev === 'bump' || ev === 'hurt' || ev === 'enemy_hit' || ev === 'caught' || ev === 'checkpoints_reset')
+    return 'ev-bad'
+  if (ev === 'reset' || ev === 'out_of_moves') return 'ev-warn'
+  if (ev === 'level_complete' || ev === 'game_won' || ev === 'opened_door' || ev === 'checkpoint' || ev === 'pit_filled')
+    return 'ev-good'
+  return 'ev-neutral'
 }
 
 // ---------------- index ----------------
@@ -253,22 +264,36 @@ export function ReplayPage() {
     queryFn: () => api.getRunSteps(run),
     refetchInterval: live ? 1500 : false,
   })
+  const gameDesc = useQuery({
+    queryKey: ['game', meta.data?.game_id],
+    queryFn: () => api.getGame(meta.data!.game_id),
+    enabled: !!meta.data?.game_id,
+    staleTime: Infinity,
+  })
+  const explanationsQ = useQuery({
+    queryKey: ['derived', 'explanations'],
+    queryFn: fetchExplanations,
+    staleTime: 60_000,
+  })
+
   const n = steps.data?.length ?? 0
   const [idx, setIdx] = useState(() => Number(params.get('step') ?? 0))
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(2)
   const [follow, setFollow] = useState(() => !params.get('step'))
+  const [showRulers, setShowRulers] = useState(true)
+  const [showGrid, setShowGrid] = useState(false)
+  const [xraySplit, setXraySplit] = useState<number | null>(null)
+  const [showRuleStrip, setShowRuleStrip] = useState(false)
   const listRef = useRef<HTMLOListElement>(null)
 
   const cur = Math.max(0, Math.min(idx, n - 1))
   const step = steps.data?.[cur]
 
-  // live: follow the newest step unless the viewer scrubbed away
   useEffect(() => {
     if (live && follow && n) setIdx(n - 1)
   }, [live, follow, n])
 
-  // keep ?step= in the URL so a replay position is shareable
   useEffect(() => {
     if (!n || live) return
     const p = new URLSearchParams(params)
@@ -314,6 +339,7 @@ export function ReplayPage() {
       else if (e.key === 'End') seek(n - 1)
       else if (e.key === ']') setSpeed((s) => SPEEDS[Math.min(SPEEDS.length - 1, SPEEDS.indexOf(s) + 1)])
       else if (e.key === '[') setSpeed((s) => SPEEDS[Math.max(0, SPEEDS.indexOf(s) - 1)])
+      else if (e.key === 'x' || e.key === 'X') setXraySplit((v) => (v == null ? 50 : null))
       else return
       e.preventDefault()
     }
@@ -326,11 +352,41 @@ export function ReplayPage() {
     [steps.data, meta.data?.levels_completed],
   )
 
-  if (meta.error) return <ErrorState error={meta.error} retry={() => meta.refetch()} />
   const m = meta.data
   const t = step?.truth
+  const curLevel = t?.level ?? 1
+  const levelDesc = gameDesc.data?.levels?.find((l) => l.level === curLevel) ?? null
+
+  // Collect up to 6 recent frames on the SAME level ending at `cur` for the ghost trail
+  const recentLevelFrames = useMemo(() => {
+    const all = steps.data
+    if (!all?.length) return []
+    const out: Frame[] = []
+    for (let k = Math.max(0, cur - 5); k <= cur; k++) {
+      if ((all[k]?.truth?.level ?? 1) === curLevel && all[k]?.frame) {
+        out.push(all[k].frame)
+      }
+    }
+    return out
+  }, [steps.data, cur, curLevel])
+
+  // Failure explanations for this run (prioritizing current level, else first failure of run)
+  const runExplanations = useMemo(
+    () => (explanationsQ.data?.explanations ?? []).filter((e) => e.run_id === run),
+    [explanationsQ.data, run],
+  )
+  const activeExplanation = useMemo(
+    () => runExplanations.find((e) => e.level === curLevel) ?? runExplanations[0] ?? null,
+    [runExplanations, curLevel],
+  )
+
+  if (meta.error) return <ErrorState error={meta.error} retry={() => meta.refetch()} />
   const realState = t?.state === 'WIN' ? 'won' : t?.state === 'GAME_OVER' ? 'lost' : 'playing'
   const beliefMismatch = !!step?.belief && !!t?.state && step.belief !== realState
+
+  const takeoverHref = m
+    ? `/play/${encodeURIComponent(m.game_id)}?takeover_run=${encodeURIComponent(run)}&takeover_step=${cur}&takeover_level=${curLevel}&takeover_model=${encodeURIComponent(playerLabel(m))}`
+    : null
 
   return (
     <>
@@ -350,9 +406,16 @@ export function ReplayPage() {
         actions={
           <>
             {m && <Chip outcome={m.outcome ?? 'IN_PROGRESS'} />}
+            {takeoverHref && (
+              <Link to={takeoverHref}>
+                <Button variant="primary" mono title="Jump into a playable session on this level">
+                  [ TAKE OVER FROM STEP {cur + 1} ]
+                </Button>
+              </Link>
+            )}
             {m && (
               <Link to={`/replay?game_id=${encodeURIComponent(m.game_id)}`} className="muted">
-                other runs on this game
+                other runs
               </Link>
             )}
           </>
@@ -380,7 +443,61 @@ export function ReplayPage() {
       ) : (
         <div className="replay-grid">
           <div className="replay-stage">
-            <FrameCanvas frame={step?.frame} scale="fit" maxScale={10} viewportReserve={110} />
+            <div className="replay-cartridge-bar mono">
+              <span className="muted">
+                L{curLevel} · step {cur + 1}/{n}
+                {t?.new_rule ? ` · +${t.new_rule}` : ''}
+              </span>
+              <div className="replay-toggles">
+                <Button
+                  variant="ghost"
+                  mono
+                  active={showRulers}
+                  onClick={() => setShowRulers((v) => !v)}
+                  title="Toggle 0..63 pixel coordinate rulers"
+                >
+                  rulers
+                </Button>
+                <Button
+                  variant="ghost"
+                  mono
+                  active={showGrid}
+                  onClick={() => setShowGrid((v) => !v)}
+                  title="Toggle 64×64 pixel cell grid"
+                >
+                  grid
+                </Button>
+                <Button
+                  variant="ghost"
+                  mono
+                  active={xraySplit != null}
+                  onClick={() => setXraySplit((v) => (v == null ? 50 : null))}
+                  title="Drag the #ffdc00 curtain to contrast raw agent pixels vs hidden engine physics (Key: X)"
+                >
+                  x-ray {xraySplit != null ? `${xraySplit}%` : 'off'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="replay-canvas-holder">
+              <FrameCanvas
+                frame={step?.frame}
+                scale="fit"
+                maxScale={10}
+                viewportReserve={140}
+                bezel
+                rulers={showRulers}
+                grid={showGrid}
+                xraySplit={xraySplit}
+                onXraySplitChange={setXraySplit}
+                xrayOverlay={
+                  xraySplit != null ? (
+                    <XrayOverlay levelDesc={levelDesc} truth={t} recentFrames={recentLevelFrames} />
+                  ) : undefined
+                }
+              />
+            </div>
+
             <div className="scrubber">
               <Button mono onClick={() => setPlaying((p) => !p)} variant="primary">
                 {playing ? 'pause' : 'play'}
@@ -413,12 +530,55 @@ export function ReplayPage() {
             <div className="muted replay-keys">
               <Kbd>←</Kbd>
               <Kbd>→</Kbd> step (<Kbd>Shift</Kbd> ×10) · <Kbd>Space</Kbd> play · <Kbd>[</Kbd>
-              <Kbd>]</Kbd> speed · <span className="tl-legend tl-seg-solved" /> level solved ·{' '}
+              <Kbd>]</Kbd> speed · <Kbd>X</Kbd> x-ray · <span className="tl-legend tl-seg-solved" /> level solved ·{' '}
               <span className="tl-legend tl-reset" /> reset · <span className="tl-legend tl-bad" /> game over
             </div>
           </div>
 
           <aside className="replay-side">
+            {activeExplanation && (
+              <Panel
+                label={`failure diagnosis · L${activeExplanation.level}`}
+                className="replay-exp-panel"
+                actions={
+                  <div className="replay-exp-actions">
+                    <Chip outcome="GAME_OVER">{activeExplanation.verdict}</Chip>
+                    {activeExplanation.step != null && (
+                      <Button
+                        variant="ghost"
+                        mono
+                        onClick={() => seek(Math.min(n - 1, Math.max(0, activeExplanation.step!)))}
+                      >
+                        @step {activeExplanation.step}
+                      </Button>
+                    )}
+                  </div>
+                }
+              >
+                <div className="replay-exp-body">
+                  <div className="replay-exp-meta mono">
+                    {activeExplanation.rule && (
+                      <span className="replay-rule-chip">
+                        <RuleSprite rule={activeExplanation.rule} size={16} />
+                        <strong>{activeExplanation.rule}</strong>
+                      </span>
+                    )}
+                    {activeExplanation.judge_model && (
+                      <span className="muted">auditor: {activeExplanation.judge_model}</span>
+                    )}
+                  </div>
+                  {activeExplanation.explanation && (
+                    <p className="replay-exp-text">{activeExplanation.explanation}</p>
+                  )}
+                  {activeExplanation.evidence_quote && (
+                    <blockquote className="replay-exp-quote mono">
+                      “{activeExplanation.evidence_quote}”
+                    </blockquote>
+                  )}
+                </div>
+              </Panel>
+            )}
+
             <Panel
               label={`step ${cur + 1} · ${step?.action ?? 'start'}`}
               actions={
@@ -462,8 +622,18 @@ export function ReplayPage() {
                 )}
               </div>
             </Panel>
+
             {t && (
-              <Panel label="truth · hidden from the player">
+              <Panel
+                label="truth · hidden from the player"
+                actions={
+                  t.new_rule ? (
+                    <Button variant="ghost" mono active={showRuleStrip} onClick={() => setShowRuleStrip((v) => !v)}>
+                      {showRuleStrip ? 'hide rule strip' : `show ${t.new_rule}`}
+                    </Button>
+                  ) : null
+                }
+              >
                 <dl className="truth mono">
                   <dt>state</dt>
                   <dd>
@@ -479,27 +649,63 @@ export function ReplayPage() {
                     {t.moves_used}/{t.move_budget} · optimal {t.optimal_moves}
                   </dd>
                   <dt>rules</dt>
-                  <dd>{t.active_rules?.join(', ') || '—'}</dd>
+                  <dd className="replay-rules-wrap">
+                    {t.active_rules?.length
+                      ? t.active_rules.map((r) => (
+                          <span key={r} className="replay-rule-chip">
+                            <RuleSprite rule={r} size={14} />
+                            {r}
+                          </span>
+                        ))
+                      : '—'}
+                  </dd>
                   <dt>events</dt>
-                  <dd>{t.events?.join(', ') || '—'}</dd>
+                  <dd className="replay-events-wrap">
+                    {t.events?.length
+                      ? t.events.map((ev, k) => (
+                          <span key={`${ev}-${k}`} className={cx('ev-pill', eventBadgeClass(ev))}>
+                            {ev}
+                          </span>
+                        ))
+                      : '—'}
+                  </dd>
                 </dl>
+                {showRuleStrip && t.new_rule && (
+                  <div className="replay-rule-strip">
+                    <RuleSprite rule={t.new_rule} mode="strip" />
+                  </div>
+                )}
               </Panel>
             )}
-            <Panel label="steps" pad={false}>
+
+            <Panel label="steps · accent bar = new hypothesis" pad={false}>
               <ol className="step-list mono" ref={listRef}>
-                {steps.data!.map((s, i) => (
-                  <li key={i} className={i === cur ? 'cur' : undefined} onClick={() => seek(i)}>
-                    <span className="muted">{String(i + 1).padStart(4, ' ')}</span>{' '}
-                    <span className={s.action === 'RESET' ? 'log-reset' : undefined}>
-                      {s.action ? (ARROW[s.action] ?? s.action) : '·'}
-                    </span>{' '}
-                    <span className="muted">L{s.truth?.level ?? '?'}</span>
-                    {s.truth?.events?.length ? <span className="secondary"> {s.truth.events.join(', ')}</span> : null}
-                    {s.hypothesis && s.hypothesis !== steps.data![i - 1]?.hypothesis ? (
-                      <span className="step-hyp"> “{s.hypothesis}”</span>
-                    ) : null}
-                  </li>
-                ))}
+                {steps.data!.map((s, i) => {
+                  const hypChanged = !!s.hypothesis && s.hypothesis !== steps.data![i - 1]?.hypothesis
+                  return (
+                    <li
+                      key={i}
+                      className={cx(i === cur && 'cur', hypChanged && 'hyp-changed')}
+                      onClick={() => seek(i)}
+                    >
+                      <span className="muted">{String(i + 1).padStart(4, ' ')}</span>{' '}
+                      <span className={s.action === 'RESET' ? 'log-reset' : undefined}>
+                        {s.action ? (ARROW[s.action] ?? s.action) : '·'}
+                      </span>{' '}
+                      <span className="muted">L{s.truth?.level ?? '?'}</span>
+                      {s.truth?.events?.length ? (
+                        <span className="step-ev-inline">
+                          {s.truth.events.slice(0, 2).map((ev, k) => (
+                            <span key={k} className={cx('ev-pill', eventBadgeClass(ev))}>
+                              {ev}
+                            </span>
+                          ))}
+                        </span>
+                      ) : null}
+                      {hypChanged ? <span className="step-hyp"> “{s.hypothesis}”</span> : null}
+                    </li>
+                  )
+                })}
               </ol>
             </Panel>
           </aside>

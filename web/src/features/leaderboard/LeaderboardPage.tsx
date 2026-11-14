@@ -1,7 +1,7 @@
 import * as Plot from '@observablehq/plot'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Button,
   Chip,
@@ -16,6 +16,7 @@ import {
 } from '@/design/primitives'
 import { api } from '@/lib/api'
 import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
+import type { RunMeta } from '@/lib/types'
 import type { LeaderboardDocument, LeaderboardRow } from './types'
 import './leaderboard.css'
 
@@ -84,7 +85,12 @@ function rowLabel(row: LeaderboardRow): string {
   return row.effort ? `${base} (${row.effort})` : base
 }
 
-function seriesColorFor(row: LeaderboardRow, fallbackIndex: number): string {
+function rowProvider(row: LeaderboardRow): string | null {
+  return row.model?.provider || row.provider || null
+}
+
+export function seriesColorFor(row: LeaderboardRow, fallbackIndex: number): string {
+  if (row.kind === 'baseline') return cssVar('--text-3') || '#76756f'
   const colors = seriesColors()
   const paletteIndex =
     row.model_order != null && row.model_order < 900
@@ -93,10 +99,20 @@ function seriesColorFor(row: LeaderboardRow, fallbackIndex: number): string {
   return colors[paletteIndex] || cssVar('--accent')
 }
 
+function runRankScore(r: RunMeta): number {
+  return (r.outcome === 'WIN' ? 1e7 : 0) + (r.levels_completed ?? 0) * 1e4 - (r.actions ?? 0)
+}
+
 export function LeaderboardPage() {
+  const navigate = useNavigate()
   const lb = useQuery({
     queryKey: ['derived', 'leaderboard'],
     queryFn: () => api.derived<LeaderboardDocument>('leaderboard'),
+  })
+  const runsQ = useQuery({
+    queryKey: ['runs', 'lb-best-lookup'],
+    queryFn: () => api.listRuns(),
+    staleTime: 60_000,
   })
 
   const [collection, setCollection] = useState<string>('all')
@@ -108,6 +124,34 @@ export function LeaderboardPage() {
   const [effortMode, setEffortMode] = useState<'chart' | 'table'>('chart')
 
   const allRows = lb.data?.rows ?? []
+
+  // Map each player_id (and effort) to its best finished recorded run for 1-click scatter/ledger replay navigation
+  const bestRunByPlayer = useMemo(() => {
+    const map = new Map<string, string>()
+    const bestScore = new Map<string, number>()
+    for (const r of runsQ.data ?? []) {
+      if (!r.outcome || r.outcome === 'IN_PROGRESS') continue
+      const pid =
+        r.player?.kind === 'human'
+          ? 'human'
+          : r.player?.kind === 'baseline'
+            ? (r.player.model_id ?? r.player.name ?? '').replace(/^baseline:/, '')
+            : (r.player?.model_id ?? r.player?.name ?? '')
+      if (!pid) continue
+      const s = runRankScore(r)
+      const keys = [pid, `${pid}::${r.player?.effort ?? ''}`]
+      for (const k of keys) {
+        if (s > (bestScore.get(k) ?? -Infinity)) {
+          bestScore.set(k, s)
+          map.set(k, r.run_id)
+        }
+      }
+    }
+    return map
+  }, [runsQ.data])
+
+  const resolveBestRun = (row: LeaderboardRow): string | null =>
+    bestRunByPlayer.get(`${row.player_id}::${row.effort ?? ''}`) ?? bestRunByPlayer.get(row.player_id) ?? null
 
   const collections = useMemo(() => {
     const set = new Set<string>()
@@ -222,10 +266,11 @@ export function LeaderboardPage() {
             tokensPerGame,
             score: row.score,
             color: seriesColorFor(row, idx),
+            runId: bestRunByPlayer.get(`${row.player_id}::${row.effort ?? ''}`) ?? bestRunByPlayer.get(row.player_id) ?? null,
           }
         })
         .filter((pt) => pt.row.kind === 'model' && pt.xVal > 0),
-    [collectionRows, effectiveAxis],
+    [collectionRows, effectiveAxis, bestRunByPlayer],
   )
 
   const hasHoldout = useMemo(
@@ -297,11 +342,29 @@ export function LeaderboardPage() {
   const sortArrow = (key: SortKey) =>
     sortKey === key ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''
 
+  // Click-to-replay on Observable Plot SVG scatter dots
+  const onScatterClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const target = e.target as Element | null
+    if (!target) return
+    const circle = target.closest('circle')
+    if (!circle) return
+    const group = circle.parentElement
+    if (!group) return
+    const circles = Array.from(group.querySelectorAll('circle'))
+    const idx = circles.indexOf(circle)
+    const pt = frontierPoints[idx]
+    if (pt?.runId) {
+      navigate(`/replay/${encodeURIComponent(pt.runId)}`)
+    }
+  }
+
+  const holdoutCols = hasHoldout ? 3 : 0
+
   return (
     <div className="lb-stack">
       <PageHeader
         title="Benchmark Leaderboard"
-        sub="Action-efficiency scoring against BFS optimal paths, human sessions, and trivial baselines."
+        sub="Action-efficiency scoring against BFS optimal paths, human sessions, and zero-exploit baselines."
         actions={
           <div className="page-actions">
             {lb.data?.generated_at && (
@@ -356,7 +419,7 @@ export function LeaderboardPage() {
                 label="Evaluated Volume"
                 value={kpi.totalGames}
                 unit="game runs"
-                sub={`${collectionRows.length} leaderboard entries · ${kpi.modelCount} model configs`}
+                sub={`${collectionRows.length} entries · ${kpi.modelCount} model configs`}
               />
             </div>
             <div className="lb-kpi-cell">
@@ -406,8 +469,8 @@ export function LeaderboardPage() {
           <Panel
             label={
               effectiveAxis === 'tokens'
-                ? 'Compute (Tokens / Game) vs Action-Efficiency Frontier'
-                : 'Cost (USD / Game) vs Action-Efficiency Frontier'
+                ? 'Compute (Tokens / Game) vs Action-Efficiency Frontier · Click Dot for Replay'
+                : 'Cost (USD / Game) vs Action-Efficiency Frontier · Click Dot for Replay'
             }
             actions={
               <div className="page-actions">
@@ -475,7 +538,7 @@ export function LeaderboardPage() {
               <Empty>No model compute/cost runs available for the log frontier.</Empty>
             ) : (
               <>
-                <div className="lb-plot-box">
+                <div className="lb-plot-box lb-plot-clickable" onClick={onScatterClick}>
                   <PlotFigure
                     deps={[frontierPoints, effectiveAxis, kpi.optScore, kpi.humanScore, kpi.randomScore, kpi.noopScore, collectionRows]}
                     make={(width) => {
@@ -485,48 +548,55 @@ export function LeaderboardPage() {
                       const xMin = minX * 0.55
                       const xMax = maxX * 1.85
 
-                      const rawRefs: Array<{ y: number; name: string }> = [
-                        { y: kpi.optScore, name: 'optimal' },
+                      type LineStyle = 'solid' | 'long-dash' | 'dotted'
+                      const rawRefs: Array<{ y: number; name: string; style: LineStyle }> = [
+                        { y: kpi.optScore, name: 'optimal', style: 'solid' },
                       ]
                       if (kpi.humanScore != null) {
-                        rawRefs.push({ y: kpi.humanScore, name: 'human' })
+                        rawRefs.push({ y: kpi.humanScore, name: 'human', style: 'long-dash' })
                       }
                       if (kpi.randomScore != null) {
-                        rawRefs.push({ y: kpi.randomScore, name: 'random' })
+                        rawRefs.push({ y: kpi.randomScore, name: 'random', style: 'dotted' })
                       }
                       if (kpi.noopScore != null) {
-                        rawRefs.push({ y: kpi.noopScore, name: 'noop' })
+                        rawRefs.push({ y: kpi.noopScore, name: 'noop', style: 'dotted' })
                       }
                       if (effectiveAxis === 'usd') {
                         for (const r of collectionRows) {
                           if (r.kind === 'model' && (r.cost_per_game == null || r.cost_per_game <= 0) && r.score > 0) {
-                            rawRefs.push({ y: r.score, name: `${rowLabel(r)} [credits]` })
+                            rawRefs.push({ y: r.score, name: `${rowLabel(r)} [credits]`, style: 'long-dash' })
                           }
                         }
                       }
 
-                      // Merge reference lines within 0.035 efficiency units so right-edge labels never collide
                       rawRefs.sort((a, b) => b.y - a.y)
-                      const refLines: Array<{ y: number; label: string }> = []
+                      const refLines: Array<{ y: number; label: string; style: LineStyle }> = []
                       for (const item of rawRefs) {
                         const prev = refLines[refLines.length - 1]
-                        if (prev && Math.abs(prev.y - item.y) < 0.035) {
+                        if (prev && Math.abs(prev.y - item.y) < 0.038) {
                           const baseNames = prev.label.replace(/\s*\([0-9.]+\)$/, '')
                           prev.label = `${baseNames} / ${item.name} (${prev.y.toFixed(3)})`
                         } else {
-                          refLines.push({ y: item.y, label: `${item.name} (${item.y.toFixed(3)})` })
+                          refLines.push({
+                            y: item.y,
+                            label: `${item.name} (${item.y.toFixed(3)})`,
+                            style: item.style,
+                          })
                         }
                       }
 
-                      // Stagger vertical offsets if two plotted dots share y === 0
+                      const solidRefs = refLines.filter((r) => r.style === 'solid')
+                      const dashRefs = refLines.filter((r) => r.style === 'long-dash')
+                      const dotRefs = refLines.filter((r) => r.style === 'dotted')
+
                       const primaryLabelPoints = frontierPoints.filter((_, idx) => !(idx % 2 === 1 && frontierPoints[idx]?.score === 0))
                       const staggeredLabelPoints = frontierPoints.filter((_, idx) => idx % 2 === 1 && frontierPoints[idx]?.score === 0)
 
                       return {
                         width,
-                        height: 295,
-                        marginRight: 152,
-                        marginBottom: 40,
+                        height: 245,
+                        marginRight: 156,
+                        marginBottom: 38,
                         x: {
                           type: 'log',
                           domain: [xMin, xMax],
@@ -544,10 +614,20 @@ export function LeaderboardPage() {
                           label: 'Action-efficiency score',
                         },
                         marks: [
-                          Plot.ruleY(refLines, {
+                          Plot.ruleY(solidRefs, {
                             y: 'y',
                             stroke: cssVar('--text-2'),
-                            strokeDasharray: '4,4',
+                            strokeWidth: 1,
+                          }),
+                          Plot.ruleY(dashRefs, {
+                            y: 'y',
+                            stroke: cssVar('--text-2'),
+                            strokeDasharray: '9,5',
+                          }),
+                          Plot.ruleY(dotRefs, {
+                            y: 'y',
+                            stroke: cssVar('--text-3'),
+                            strokeDasharray: '2,4',
                           }),
                           Plot.text(refLines, {
                             x: xMax,
@@ -561,25 +641,25 @@ export function LeaderboardPage() {
                             x: 'xVal',
                             y: 'score',
                             fill: (d: (typeof frontierPoints)[number]) => d.color,
-                            stroke: cssVar('--bg'),
-                            strokeWidth: 1.5,
-                            r: 6,
+                            stroke: cssVar('--surface-1'),
+                            strokeWidth: 2,
+                            r: 7,
                             tip: true,
                             title: (d: (typeof frontierPoints)[number]) =>
-                              `${d.label} [${rowModes(d.row)}]\nScore: ${d.score.toFixed(3)}\nSolve rate: ${(d.row.level_solve_rate * 100).toFixed(1)}%\nTokens/game: ${fmtTokensCompact(d.tokensPerGame)}${d.cost != null ? `\nCost/game: $${d.cost.toFixed(4)}` : '\nCost/game: sponsored GPU credits'}`,
+                              `${d.label} [${rowModes(d.row)}]\nScore: ${d.score.toFixed(3)}\nSolve rate: ${(d.row.level_solve_rate * 100).toFixed(1)}%\nTokens/game: ${fmtTokensCompact(d.tokensPerGame)}${d.cost != null ? `\nCost/game: $${d.cost.toFixed(4)}` : '\nCost/game: sponsored GPU credits'}${d.runId ? '\nClick dot to open best replay →' : ''}`,
                           }),
                           Plot.text(primaryLabelPoints, {
                             x: 'xVal',
                             y: 'score',
                             text: 'label',
-                            dy: -11,
+                            dy: -12,
                             fill: cssVar('--text-1'),
                           }),
                           Plot.text(staggeredLabelPoints, {
                             x: 'xVal',
                             y: 'score',
                             text: 'label',
-                            dy: -23,
+                            dy: -24,
                             fill: cssVar('--text-1'),
                           }),
                         ],
@@ -588,11 +668,17 @@ export function LeaderboardPage() {
                   />
                 </div>
                 <div className="lb-ref-legend mono">
-                  <span>Dashed horizontal rules: zero-cost reference anchors</span>
-                  <span>Optimal: {fmtFloat(kpi.optScore, 3)}</span>
-                  {kpi.humanScore != null && <span>Human: {fmtFloat(kpi.humanScore, 3)}</span>}
-                  {kpi.randomScore != null && <span>Random: {fmtFloat(kpi.randomScore, 3)}</span>}
-                  <span>Noop / Stop Early: {fmtFloat(kpi.noopScore ?? 0, 3)}</span>
+                  <span>
+                    <span className="lb-line-sample lb-line-solid" /> optimal ({fmtFloat(kpi.optScore, 3)})
+                  </span>
+                  {kpi.humanScore != null && (
+                    <span>
+                      <span className="lb-line-sample lb-line-dash" /> human ({fmtFloat(kpi.humanScore, 3)})
+                    </span>
+                  )}
+                  <span>
+                    <span className="lb-line-sample lb-line-dot" /> random / noop ({fmtFloat(kpi.randomScore ?? 0, 3)} / {fmtFloat(kpi.noopScore ?? 0, 3)})
+                  </span>
                 </div>
               </>
             )}
@@ -600,17 +686,23 @@ export function LeaderboardPage() {
 
           <Panel
             label="Benchmark Ledger"
-            actions={<span className="mono muted">{sortedRows.length} rows · click headers to sort</span>}
+            actions={<span className="mono muted">{sortedRows.length} rows · click column headers to sort</span>}
           >
             <div className="table-wrap">
-              <table className="table">
+              <table className="table lb-ledger-table">
                 <thead>
+                  <tr className="lb-group-row">
+                    <th colSpan={4} className="lb-group-th">ENTITY &amp; MODALITY</th>
+                    <th colSpan={4 + holdoutCols} className="lb-group-th lb-group-sep">OUTCOME</th>
+                    <th colSpan={3} className="lb-group-th lb-group-sep">EFFICIENCY</th>
+                    <th colSpan={4} className="lb-group-th lb-group-sep">BEHAVIOUR</th>
+                  </tr>
                   <tr>
                     <th>Player</th>
                     <th>Kind</th>
                     <th>Input</th>
                     <th>Harness</th>
-                    <th className="num">Games</th>
+                    <th className="num lb-group-sep">Games</th>
                     <th className="num">
                       <button className={cx('lb-sort-btn', sortKey === 'score' && 'active')} onClick={() => handleSort('score')}>
                         Score{sortArrow('score')}
@@ -629,9 +721,9 @@ export function LeaderboardPage() {
                         Game Win{sortArrow('game_win_rate')}
                       </button>
                     </th>
-                    <th className="num">
+                    <th className="num lb-group-sep">
                       <button className={cx('lb-sort-btn', sortKey === 'median_actions' && 'active')} onClick={() => handleSort('median_actions')}>
-                        Med Actions{sortArrow('median_actions')}
+                        Med Act{sortArrow('median_actions')}
                       </button>
                     </th>
                     <th className="num">
@@ -641,10 +733,10 @@ export function LeaderboardPage() {
                     </th>
                     <th className="num">
                       <button className={cx('lb-sort-btn', sortKey === 'latency_ms_median' && 'active')} onClick={() => handleSort('latency_ms_median')}>
-                        Med Latency{sortArrow('latency_ms_median')}
+                        Latency{sortArrow('latency_ms_median')}
                       </button>
                     </th>
-                    <th className="num">
+                    <th className="num lb-group-sep">
                       <button className={cx('lb-sort-btn', sortKey === 'resets_total' && 'active')} onClick={() => handleSort('resets_total')}>
                         Resets{sortArrow('resets_total')}
                       </button>
@@ -656,14 +748,17 @@ export function LeaderboardPage() {
                     </th>
                     <th className="num">
                       <button className={cx('lb-sort-btn', sortKey === 'belief_accuracy' && 'active')} onClick={() => handleSort('belief_accuracy')}>
-                        Belief Acc{sortArrow('belief_accuracy')}
+                        Belief{sortArrow('belief_accuracy')}
                       </button>
                     </th>
+                    <th className="num">Trace</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedRows.map((row, idx) => {
                     const color = seriesColorFor(row, idx)
+                    const prov = rowProvider(row)
+                    const bestRunId = resolveBestRun(row)
                     const bestScore = bestValues.score != null && Math.abs(row.score - bestValues.score) < 1e-6
                     const bestSolve =
                       bestValues.level_solve_rate != null &&
@@ -699,29 +794,35 @@ export function LeaderboardPage() {
                     return (
                       <tr key={`${row.player_id}-${row.effort ?? 'none'}-${row.collection}-${row.harness_version ?? 'h1'}`}>
                         <td>
-                          <div className="lb-player-cell">
-                            <Swatch color={color} />
-                            <span>{rowLabel(row)}</span>
-                            {row.subset_note && (
-                              <span className="lb-tag" title={row.subset_note}>
-                                subset
-                              </span>
-                            )}
+                          <div className="lb-player-stack">
+                            <div className="lb-player-cell">
+                              <Swatch color={color} />
+                              <span>{rowLabel(row)}</span>
+                              {row.subset_note && (
+                                <span className="lb-tag" title={row.subset_note}>
+                                  subset
+                                </span>
+                              )}
+                            </div>
+                            {prov && <span className="lb-provider mono">{prov}</span>}
                           </div>
                         </td>
                         <td className="mono">{row.tier || row.kind}</td>
                         <td className="mono">{rowModes(row)}</td>
                         <td className="mono">{row.harness_version || '—'}</td>
-                        <td className="num">{row.games}</td>
-                        <td className={cx('num', bestScore && 'lb-best')}>
+                        <td className="num lb-group-sep">{row.games}</td>
+                        <td className={cx('num', 'lb-score-td', bestScore && 'lb-best')}>
                           <div className="lb-score-wrap">
+                            <span>{fmtFloat(row.score, 3)}</span>
                             <div className="lb-score-track" aria-hidden="true">
                               <div
-                                className={cx('lb-score-fill', row.kind === 'baseline' && 'baseline')}
-                                style={{ width: `${Math.max(0, Math.min(100, row.score * 100))}%` }}
+                                className="lb-score-fill"
+                                style={{
+                                  width: `${Math.max(0, Math.min(100, row.score * 100))}%`,
+                                  background: color,
+                                }}
                               />
                             </div>
-                            <span>{fmtFloat(row.score, 3)}</span>
                           </div>
                         </td>
                         {hasHoldout && <td className="num">{fmtFloat(row.seen_score, 3)}</td>}
@@ -733,7 +834,7 @@ export function LeaderboardPage() {
                         <td className={cx('num', bestWin && 'lb-best')}>
                           {fmtPct(row.game_win_rate)}
                         </td>
-                        <td className={cx('num', bestMedAct && 'lb-best')}>
+                        <td className={cx('num', 'lb-group-sep', bestMedAct && 'lb-best')}>
                           {fmtInt(row.median_actions)}
                         </td>
                         <td className={cx('num', bestCost && 'lb-best')}>
@@ -742,7 +843,7 @@ export function LeaderboardPage() {
                         <td className={cx('num', bestLat && 'lb-best')}>
                           {row.latency_ms_median != null ? `${Math.round(row.latency_ms_median)} ms` : '—'}
                         </td>
-                        <td className={cx('num', bestResets && 'lb-best')}>
+                        <td className={cx('num', 'lb-group-sep', bestResets && 'lb-best')}>
                           {row.resets_total ?? '—'}
                         </td>
                         <td className={cx('num', bestNoEff && 'lb-best')}>
@@ -750,6 +851,15 @@ export function LeaderboardPage() {
                         </td>
                         <td className={cx('num', bestBelief && 'lb-best')}>
                           {fmtPct(row.belief_accuracy)}
+                        </td>
+                        <td className="num mono">
+                          {bestRunId ? (
+                            <Link to={`/replay/${encodeURIComponent(bestRunId)}`} className="lb-replay-pill">
+                              #{bestRunId.slice(-6)} →
+                            </Link>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
                         </td>
                       </tr>
                     )
@@ -818,8 +928,8 @@ export function LeaderboardPage() {
                   deps={[effortSeries]}
                   make={(width) => ({
                     width,
-                    height: 240,
-                    marginBottom: 36,
+                    height: 220,
+                    marginBottom: 34,
                     x: {
                       label: 'Reasoning effort',
                       domain: ['low', 'medium', 'high', 'xhigh', 'max'].filter((e) =>
@@ -839,7 +949,9 @@ export function LeaderboardPage() {
                         x: 'effort',
                         y: 'score',
                         fill: 'label',
-                        r: 5,
+                        stroke: cssVar('--surface-1'),
+                        strokeWidth: 2,
+                        r: 6,
                         tip: true,
                       }),
                     ],
