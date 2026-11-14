@@ -197,3 +197,49 @@ def test_generate_and_play(client, monkeypatch):
     assert client.post("/api/games/generate", json={"difficulty": 9}).status_code == 422
     assert client.post("/api/games/generate", json={"n_levels": 50}).status_code == 422
     assert client.post("/api/games/generate", json={"seed": -1}).status_code == 422
+
+
+def test_ghosts_takeover_rule_images(client):
+    gid = first_game(client)
+    desc = client.get(f"/api/games/{gid}").json()
+    # a model run: wastes 2 moves then plays optimally through level 1 and into level 2
+    s = client.post("/api/sessions", json={"game_id": gid, "player": {"kind": "model", "name": "m", "model_id": "mx"}}).json()
+    acts = ["RESET", "RESET"] + desc["levels"][0]["optimal_path"] + desc["levels"][1]["optimal_path"][:2]
+    for a in acts:
+        client.post(f"/api/sessions/{s['session_id']}/act", json={"action": a, "hypothesis": "h-" + a})
+    client.post(f"/api/sessions/{s['session_id']}/end", json={"reason": "x"})
+
+    g = client.get(f"/api/games/{gid}/ghosts", params={"level": 1}).json()
+    assert g["optimal"]["actions"] == len(desc["levels"][0]["optimal_path"])
+    assert len(g["optimal"]["steps"][0]["frame"]) == 64
+    gh = g["ghosts"][0]
+    assert gh["run_id"] == s["run_id"] and gh["solved"] is True
+    assert gh["actions"] == 2 + len(desc["levels"][0]["optimal_path"])
+    assert gh["steps"][0]["hypothesis"] == "h-RESET" and len(gh["start_frame"]) == 64
+    g2 = client.get(f"/api/games/{gid}/ghosts", params={"level": 2, "frames": "false"}).json()
+    assert g2["ghosts"][0]["solved"] is False and g2["ghosts"][0]["actions"] == 2
+    assert "frame" not in g2["ghosts"][0]["steps"][0]
+    assert client.get("/api/games/nope/ghosts").status_code == 404
+
+    # take over at a step on level 2 -> new human run starts at level 2, flagged
+    step_on_l2 = len(acts) - 1
+    t = client.post("/api/sessions", json={"player": {"kind": "human", "name": "h"},
+                                           "takeover_of": {"run_id": s["run_id"], "step": step_on_l2}})
+    assert t.status_code == 200, t.text
+    assert client.get(f"/api/sessions/{t.json()['session_id']}/truth").json()["level"] == 2
+    meta = client.get(f"/api/runs/{t.json()['run_id']}").json()
+    assert meta["start_level"] == 2 and meta["takeover_of"]["run_id"] == s["run_id"]
+    validate(meta, "meta")
+    # takeover runs never become ghosts
+    assert all(x["run_id"] != t.json()["run_id"] for x in client.get(f"/api/games/{gid}/ghosts", params={"kind": "human"}).json()["ghosts"])
+    assert client.post("/api/sessions", json={"player": {"kind": "human", "name": "h"},
+                                              "takeover_of": {"run_id": "nope", "step": 1}}).status_code == 404
+    assert client.post("/api/sessions", json={"game_id": gid, "start_level": 99,
+                                              "player": {"kind": "human", "name": "h"}}).status_code == 422
+    assert client.post("/api/sessions", json={"player": {"kind": "human", "name": "h"}}).status_code == 422
+
+    # rule images
+    r = client.get("/api/rules/img/ice.png")
+    assert r.status_code == 200 and r.content[:4] == b"\x89PNG"
+    assert client.get("/api/rules/img/..%2F..%2FREADME.md").status_code == 404
+    assert client.get("/api/rules/img/nope.png").status_code == 404

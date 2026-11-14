@@ -95,6 +95,44 @@ paths:
             application/json:
               schema: {$ref: "#/components/schemas/Description"}
         "404": {description: unknown game}
+  /games/{game_id}/ghosts:
+    get:
+      summary: Ghost race data for one level - best recorded runs as step slices, plus the optimal BFS ghost
+      description: |
+        One ghost per player (its best attempt on the level): solved first, then fewest actions on the level.
+        Take-over runs (meta.start_level) are never ghosts. Responses are gzip-compressed (~20x).
+        A level's slice holds every action taken while on that level, including RESETs; the action that completes
+        the level is the last one (its frame already shows the next level). start_frame = frame when the level began.
+      parameters:
+        - {name: game_id, in: path, required: true, schema: {type: string}}
+        - {name: level, in: query, schema: {type: integer, minimum: 1, default: 1}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 0, maximum: 10, default: 3}}
+        - {name: kind, in: query, schema: {type: string, default: model}, description: "comma list of model,baseline,human"}
+        - {name: optimal, in: query, schema: {type: boolean, default: true}}
+        - {name: frames, in: query, schema: {type: boolean, default: true}}
+        - {name: reasoning, in: query, schema: {type: integer, minimum: 0, maximum: 4000, default: 0}, description: "chars of reasoning per step (0 = omit)"}
+        - {name: collection, in: query, schema: {type: string}}
+      responses:
+        "200":
+          description: ghosts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  game_id: {type: string}
+                  level: {type: integer}
+                  optimal: {$ref: "#/components/schemas/Ghost"}
+                  ghosts: {type: array, items: {$ref: "#/components/schemas/Ghost"}}
+        "404": {description: unknown game}
+  /rules/img/{name}:
+    get:
+      summary: "Rule teaching images from rules/img/ (<rule>.png swatch sheet, <rule>.gif optimal solution)"
+      parameters:
+        - {name: name, in: path, required: true, schema: {type: string, pattern: "^[a-z0-9_]+\\.(png|gif)$"}}
+      responses:
+        "200": {description: image}
+        "404": {description: not found}
   /games/{game_id}/thumbnail.png:
     get:
       summary: PNG of level 1 initial frame
@@ -115,11 +153,19 @@ paths:
           application/json:
             schema:
               type: object
-              required: [game_id, player]
+              required: [player]
               properties:
-                game_id: {type: string}
+                game_id: {type: string, description: "required unless takeover_of is given"}
                 collection: {type: string, nullable: true}
                 player: {$ref: "#/components/schemas/Player"}
+                start_level: {type: integer, minimum: 1, nullable: true, description: "start at this level (take-over / practice); recorded as meta.start_level, excluded from baselines"}
+                takeover_of:
+                  type: object
+                  nullable: true
+                  description: "take over a recorded run: server uses that run's game and the level it was on at `step` (level start, not mid-level state); recorded as meta.takeover_of"
+                  properties:
+                    run_id: {type: string}
+                    step: {type: integer, minimum: 0}
                 run_key: {type: string, nullable: true, description: "idempotency key; an existing finished run with this key returns 409"}
                 harness_version: {type: string, nullable: true}
       responses:
@@ -307,6 +353,29 @@ components:
       $ref: "trace.schema.json#/$defs/meta"
     Step:
       $ref: "trace.schema.json#/$defs/step"
+    Ghost:
+      type: object
+      nullable: true
+      properties:
+        run_id: {type: string, nullable: true, description: "null for the optimal ghost"}
+        player: {$ref: "#/components/schemas/Player"}
+        solved: {type: boolean}
+        actions: {type: integer, description: "actions taken on this level"}
+        first_step: {type: integer, description: "step index i of the first action on this level in the run"}
+        start_frame: {$ref: "#/components/schemas/Frame"}
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              i: {type: integer}
+              action: {$ref: "#/components/schemas/Action"}
+              events: {type: array, items: {type: string}}
+              state: {type: string}
+              hypothesis: {type: string, nullable: true}
+              belief: {type: string, nullable: true}
+              reasoning: {type: string, nullable: true}
+              frame: {$ref: "#/components/schemas/Frame"}
     GameMeta:
       type: object
       required: [game_id, levels_total, thumbnail_url]

@@ -7,91 +7,329 @@
       "type": "object",
       "description": "Copied from arena/models.yaml (PLAN.md 4.7). Null for baselines.",
       "properties": {
-        "id": {"type": "string"},
-        "display_name": {"type": "string"},
-        "provider": {"type": "string"},
-        "api_model": {"type": "string"},
-        "tier": {"enum": ["frontier", "open", "finetuned", "baseline"]},
-        "input_modes": {"type": "array", "items": {"type": "string"}, "description": "image | text | rle (lossless run-length text), extendable"},
-        "efforts": {"type": "array", "items": {"type": "string"}},
-        "price_in": {"type": ["number", "null"]},
-        "price_out": {"type": ["number", "null"]},
-        "params": {"type": ["string", "null"]},
-        "link": {"type": ["string", "null"]}
+        "id": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "api_model": {
+          "type": "string"
+        },
+        "tier": {
+          "enum": [
+            "frontier",
+            "open",
+            "finetuned",
+            "baseline"
+          ]
+        },
+        "input_modes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "image | text | rle (lossless run-length text), extendable"
+        },
+        "efforts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "price_in": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "price_out": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "params": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "link": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "leaderboard_row": {
       "type": "object",
-      "required": ["player_id", "kind", "collection", "games", "levels_attempted", "level_solve_rate", "game_win_rate", "score"],
+      "required": [
+        "player_id",
+        "kind",
+        "collection",
+        "games",
+        "levels_attempted",
+        "level_solve_rate",
+        "game_win_rate",
+        "score"
+      ],
       "properties": {
-        "player_id": {"type": "string", "description": "model id, or random | optimal | human"},
-        "kind": {"enum": ["model", "baseline", "human"]},
-        "effort": {"type": ["string", "null"]},
-        "collection": {"type": "string"},
-        "harness_version": {"type": ["string", "null"]},
-        "games": {"type": "integer", "minimum": 0},
-        "levels_attempted": {"type": "integer", "minimum": 0},
-        "level_solve_rate": {"type": "number", "minimum": 0, "maximum": 1},
-        "game_win_rate": {"type": "number", "minimum": 0, "maximum": 1},
-        "score": {"type": "number", "minimum": 0, "maximum": 1, "description": "mean over levels of min(1, optimal/actions) if solved else 0"},
-        "median_actions": {"type": ["number", "null"]},
-        "tokens_in": {"type": ["integer", "null"]},
-        "tokens_out": {"type": ["integer", "null"]},
-        "cost_per_game": {"type": ["number", "null"]},
-        "cost_per_solved_level": {"type": ["number", "null"]},
-        "latency_ms_median": {"type": ["number", "null"]},
-        "subset_note": {"type": ["string", "null"]},
-        "model": {"anyOf": [{"$ref": "#/$defs/model_card"}, {"type": "null"}]}
+        "player_id": {
+          "type": "string",
+          "description": "model id, or random | optimal | human"
+        },
+        "kind": {
+          "enum": [
+            "model",
+            "baseline",
+            "human"
+          ]
+        },
+        "effort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "collection": {
+          "type": "string"
+        },
+        "harness_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "games": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "levels_attempted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "level_solve_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "game_win_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "mean over levels of min(1, optimal/actions) if solved else 0"
+        },
+        "median_actions": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tokens_in": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "tokens_out": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "cost_per_game": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cost_per_solved_level": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "latency_ms_median": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "subset_note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/model_card"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
     "leaderboard": {
       "type": "object",
-      "required": ["generated_at", "rows"],
+      "required": [
+        "generated_at",
+        "rows"
+      ],
       "properties": {
-        "generated_at": {"type": "string", "format": "date-time"},
-        "rows": {"type": "array", "items": {"$ref": "#/$defs/leaderboard_row"}}
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/leaderboard_row"
+          }
+        }
       }
     },
     "rule_cell": {
       "type": "object",
-      "required": ["rule", "player_id", "intro_levels", "intro_solve_rate"],
+      "required": [
+        "rule",
+        "player_id",
+        "intro_levels",
+        "intro_solve_rate"
+      ],
       "properties": {
-        "rule": {"type": "string"},
-        "player_id": {"type": "string"},
-        "effort": {"type": ["string", "null"]},
-        "intro_levels": {"type": "integer", "minimum": 0},
-        "intro_solve_rate": {"type": "number", "minimum": 0, "maximum": 1},
-        "actions_to_first_use": {"type": ["number", "null"]},
-        "wasted_actions": {"type": ["number", "null"]},
-        "hypothesis_match_rate": {"type": ["number", "null"]}
+        "rule": {
+          "type": "string"
+        },
+        "player_id": {
+          "type": "string"
+        },
+        "effort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "intro_levels": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "intro_solve_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "actions_to_first_use": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "wasted_actions": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "hypothesis_match_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
       }
     },
     "rules": {
       "type": "object",
-      "required": ["generated_at", "rules", "players", "cells"],
+      "required": [
+        "generated_at",
+        "rules",
+        "players",
+        "cells"
+      ],
       "properties": {
-        "generated_at": {"type": "string", "format": "date-time"},
-        "rules": {"type": "array", "items": {"type": "string"}},
-        "players": {"type": "array", "items": {"type": "string"}},
-        "cells": {"type": "array", "items": {"$ref": "#/$defs/rule_cell"}}
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "players": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule_cell"
+          }
+        }
       }
     },
     "insight": {
       "type": "object",
-      "required": ["id", "title", "summary", "evidence"],
+      "required": [
+        "id",
+        "title",
+        "summary",
+        "evidence"
+      ],
       "properties": {
-        "id": {"type": "string"},
-        "title": {"type": "string"},
-        "summary": {"type": "string"},
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
         "evidence": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "label": {"type": "string"},
-              "value": {"type": ["number", "string", "null"]},
-              "run_id": {"type": ["string", "null"]},
-              "step": {"type": ["integer", "null"]}
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "string",
+                  "null"
+                ]
+              },
+              "run_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "step": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
             }
           }
         }
@@ -99,16 +337,128 @@
     },
     "insights": {
       "type": "object",
-      "required": ["generated_at", "insights"],
+      "required": [
+        "generated_at",
+        "insights"
+      ],
       "properties": {
-        "generated_at": {"type": "string", "format": "date-time"},
-        "insights": {"type": "array", "items": {"$ref": "#/$defs/insight"}}
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "insights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/insight"
+          }
+        }
+      }
+    },
+    "explanation": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "level",
+        "verdict"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "game_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "player_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "step": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "step where the misunderstanding shows"
+        },
+        "rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "mechanic the model misunderstood"
+        },
+        "verdict": {
+          "type": "string",
+          "description": "short label, e.g. never_used_rule | wrong_hypothesis | ignored_no_effect | ran_out_of_budget"
+        },
+        "explanation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "judge LLM's explanation: what went wrong and what should have been done"
+        },
+        "evidence_quote": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "verbatim excerpt of the model's reasoning/hypothesis"
+        },
+        "judge_model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "explanations": {
+      "type": "object",
+      "required": [
+        "generated_at",
+        "explanations"
+      ],
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "judge_model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "explanations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/explanation"
+          }
+        }
       }
     }
   },
   "oneOf": [
-    {"$ref": "#/$defs/leaderboard"},
-    {"$ref": "#/$defs/rules"},
-    {"$ref": "#/$defs/insights"}
+    {
+      "$ref": "#/$defs/leaderboard"
+    },
+    {
+      "$ref": "#/$defs/rules"
+    },
+    {
+      "$ref": "#/$defs/insights"
+    },
+    {
+      "$ref": "#/$defs/explanations"
+    }
   ]
 }

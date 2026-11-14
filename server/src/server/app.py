@@ -13,6 +13,7 @@ from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
@@ -51,9 +52,16 @@ class PlayerIn(BaseModel):
     model_config = {"extra": "allow"}  # harness extras (harness_version, input_modes, ...) are kept in meta
 
 
+class TakeoverIn(BaseModel):
+    run_id: str = Field(min_length=1, max_length=100)
+    step: int = Field(ge=0)
+
+
 class StartIn(BaseModel):
-    game_id: str = Field(min_length=1, max_length=200)
+    game_id: Optional[str] = Field(default=None, min_length=1, max_length=200)
     player: PlayerIn
+    start_level: Optional[int] = Field(default=None, ge=1, le=50)
+    takeover_of: Optional[TakeoverIn] = None
     collection: Optional[str] = Field(default=None, max_length=100)
     run_key: Optional[str] = Field(default=None, max_length=200)
     harness_version: Optional[str] = Field(default=None, max_length=50)
@@ -124,6 +132,7 @@ def create_app(runs_dir=None) -> FastAPI:
     app = FastAPI(title="junction-2026 game server", version="1.0.0", lifespan=lifespan)
     app.state.recorder, app.state.sessions, app.state.hub = recorder, sessions, hub
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+    app.add_middleware(GZipMiddleware, minimum_size=2048)  # frames and step lists compress ~20x
 
     @app.exception_handler(SessionError)
     async def _session_error(_: Request, e: SessionError):
@@ -208,8 +217,51 @@ def create_app(runs_dir=None) -> FastAPI:
         player = body.player.model_dump()
         if config.PUBLISHED_MODE and player["kind"] != "human":
             raise HTTPException(403, "published mode: only human play")
-        return sessions.start(body.game_id, player, body.collection, body.run_key,
-                              body.harness_version or player.get("harness_version"))
+        game_id, collection, start_level, takeover = body.game_id, body.collection, body.start_level, None
+        if body.takeover_of is not None:
+            # take over a recorded run at the level it was on at that step (level start, not mid-level state)
+            src = runs_view.get(body.takeover_of.run_id)
+            if src is None:
+                raise HTTPException(404, "unknown run to take over")
+            try:
+                steps = runs_view.steps(src["run_id"])
+            except KeyError:
+                raise HTTPException(404, "unknown run to take over") from None
+            st = next((x for x in steps if x.get("i") == body.takeover_of.step), None)
+            if st is None:
+                raise HTTPException(422, f"run has no step {body.takeover_of.step}")
+            if game_id and game_id != src["game_id"]:
+                raise HTTPException(422, "game_id does not match the run being taken over")
+            game_id, collection = src["game_id"], collection or src.get("collection")
+            start_level = start_level or int((st.get("truth") or {}).get("level", 1))
+            takeover = {"run_id": src["run_id"], "step": body.takeover_of.step,
+                        "player": (src.get("player") or {}).get("model_id") or (src.get("player") or {}).get("name")}
+        if not game_id:
+            raise HTTPException(422, "game_id or takeover_of is required")
+        return sessions.start(game_id, player, collection, body.run_key,
+                              body.harness_version or player.get("harness_version"), start_level, takeover)
+
+    @api.get("/games/{game_id}/ghosts")
+    def game_ghosts(game_id: str, level: int = Query(1, ge=1, le=50), limit: int = Query(3, ge=0, le=10),
+                    kind: str = "model", optimal: bool = True, frames: bool = True,
+                    reasoning: int = Query(0, ge=0, le=4000), collection: Optional[str] = None):
+        from .ghosts import ghosts as build_ghosts
+        kinds = tuple(k for k in kind.split(",") if k in ("model", "baseline", "human")) or ("model",)
+        try:
+            return build_ghosts(runs_view, game_id, level, limit, kinds, optimal, frames, reasoning, collection)
+        except KeyError:
+            raise HTTPException(404, f"unknown game {game_id}") from None
+
+    @api.get("/rules/img/{name}")
+    def rule_image(name: str):
+        import re
+        if not re.fullmatch(r"[a-z0-9_]+\.(png|gif)", name):
+            raise HTTPException(404, "not found")
+        p = config.REPO_ROOT / "rules" / "img" / name
+        if not p.is_file():
+            raise HTTPException(404, "not found")
+        return FileResponse(p, media_type="image/png" if name.endswith(".png") else "image/gif",
+                            headers={"Cache-Control": "public, max-age=3600"})
 
     @api.post("/sessions/{session_id}/act")
     def act(session_id: str, body: ActIn):

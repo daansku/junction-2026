@@ -59,7 +59,8 @@ class SessionManager:
 
     # ---------- lifecycle ----------
     def start(self, game_id: str, player: dict, collection: Optional[str] = None,
-              run_key: Optional[str] = None, harness_version: Optional[str] = None) -> dict:
+              run_key: Optional[str] = None, harness_version: Optional[str] = None,
+              start_level: Optional[int] = None, takeover_of: Optional[dict] = None) -> dict:
         kind = player.get("kind")
         if kind not in ("human", "model", "baseline") or not str(player.get("name", "")).strip():
             raise SessionError(422, "player.kind must be human|model|baseline and player.name non-empty")
@@ -70,6 +71,13 @@ class SessionManager:
         except KeyError:
             raise SessionError(404, f"unknown game {game_id}") from None
         frame = list(game.reset())
+        if start_level is not None:
+            levels_total = int(game.truth().get("levels_total", 1))
+            if not 1 <= int(start_level) <= levels_total:
+                raise SessionError(422, f"start_level must be 1..{levels_total}")
+            if start_level > 1:
+                from .ghosts import jump_to_level
+                frame = jump_to_level(game, int(start_level))
         truth = game.truth()
         extras = {k: v for k, v in player.items()
                   if k not in ("kind", "name") and isinstance(k, str) and len(k) <= 50 and len(repr(v)) <= 500}
@@ -78,7 +86,10 @@ class SessionManager:
         meta = self.recorder.start(
             {"run_key": run_key, "game_id": game_id, "collection": collection, "player": player,
              "harness_version": harness_version, "engine_version": engine_adapter.engine_version(),
-             "levels_total": truth.get("levels_total", 1)},
+             "levels_total": truth.get("levels_total", 1),
+             # take-over / mid-game starts are flagged so analysis keeps them out of baselines
+             **({"start_level": int(start_level)} if start_level and start_level > 1 else {}),
+             **({"takeover_of": takeover_of} if takeover_of else {})},
             {"i": 0, "t_ms": 0, "action": None, "frame": frame, "truth": truth, "reasoning": None,
              "hypothesis": None, "belief": None, "usage": {"in": 0, "out": 0, "cost_usd": 0.0}, "latency_ms": None},
         )

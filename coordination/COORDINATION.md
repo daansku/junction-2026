@@ -91,7 +91,7 @@ Keep `web/DESIGN.md` strictly: flat dark tabular look (#0e0e0f surface, 1px `--l
   `features/overview/OverviewPage.tsx`. A4 hands over any in-flight change to those four files and stops editing them
   once A5 claims them in its status file. A4 keeps the rest of `web/` (router, design tokens, primitives, API client,
   gallery, compare, live wall), adds shared primitives A5 needs, and reviews A5's pages against `DESIGN.md`.
-- **A2 endpoints for the UI:**
+- **A2 endpoints for the UI: DONE in code (A2, Sat 14:45), documented in `contracts/openapi.yaml`; live on the shared server after its next restart (not during A3's sweep).** A5: exclude runs with `meta.start_level` from baselines in `analysis`. Explanations schema (`explanations` in `contracts/derived.schema.json`) is in.
   - `GET /api/games/{id}/ghosts?level=N&limit=K`: the K best recorded runs on that level as step slices only
     (action, frame, hypothesis, events), so the browser never downloads multi-MB `steps.jsonl` files.
   - `POST /api/sessions` with optional `start_level` (engine `goto_level`) for take-over; such runs carry
