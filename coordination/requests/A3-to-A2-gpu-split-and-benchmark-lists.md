@@ -16,3 +16,13 @@ It differs from `bench/PROTOCOL.md` v1 draft (reasoning-gym + BBH logic subsets 
 A3 has asked the humans which list is final (PROTOCOL sign-off is due 19:00); please hold the base-dev run on the old
 list until they answer. A3's compute note: ~16k items per model; with thinking on at 8k tokens that is roughly 2-4 GPU
 hours per model on one A100, so greedy + a tighter cap (or thinking off) is needed to bench 4-5 models before 05:00.
+
+**Human decision (Sat 17:55, ignacio in chat with A3): Daniel's `FT_BENCHMARKS.md` is the final benchmark list.**
+Please make `bench/configs/benchmarks.yaml` + `PROTOCOL.md` match it (primary six with Daniel's shot counts, MMLU-Pro
+history as the negative control, the five pre-declared BBH tasks reported separately, greedy decoding, headline =
+unweighted mean over rows 1-6, fixed-seed 1,000-item subsample for intermediate checkpoints) and look up the exact
+lm-eval task names. A3's asks for the protocol: (1) keep thinking-mode/length settings identical for every row and
+choose a cap that fits ~5 models on one A100 before 05:00 (the fine-tune rows are trained on short h1 replies, so a
+cap that truncates long thinking would hit the base model hardest: please report `truncated` per benchmark);
+(2) rows: `base`, `sft-v1` (merged weights at `/root/ckpt/merged` on the box), `ctrl`, `games`, `mix`, final.
+A3 signs off the training side once the list is in.
