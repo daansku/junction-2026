@@ -115,9 +115,11 @@ def main() -> int:
             continue  # opened the page and left
         scores = [min(1.0, optimal[i] / lv["actions"]) if lv["solved"] and lv["actions"] else 0.0
                   for i, lv in enumerate(levels)]
-        key = "human" if kind == "human" else (p.get("model_id") or p.get("name"))
+        # h2 (lab-style harness) runs are their own row, never merged with the same model on h1
+        hv = r.get("harness_version") or p.get("harness_version") or "h1"
+        key = "human" if kind == "human" else (p.get("model_id") or p.get("name")) + ("" if hv == "h1" else f"@{hv}")
         entry = players[key]
-        entry.update({"kind": kind, "name": "People (first attempts)" if kind == "human" else (p.get("name") or key),
+        entry.update({"kind": kind, "name": "People (first attempts)" if kind == "human" else (p.get("name") or key) + ("" if hv == "h1" else f" · {hv}"),
                       "model_id": None if kind == "human" else key})
         entry["attempts"].append({"run_id": r["run_id"], "levels": levels,
                                   "score": round(100 * sum(scores) / n, 1),

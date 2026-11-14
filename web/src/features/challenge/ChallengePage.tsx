@@ -513,7 +513,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           </div>
           <aside className="ch-side">
             <section className="ch-card">
-              <span className="kicker">pick a game · eval-v2, levels 1–{nLevels}</span>
+              <span className="kicker">pick a game · eval-v1, levels 1–{nLevels}</span>
               <div className="ch-tabs" role="radiogroup" aria-label="Game">
                 {CHALLENGE_GAMES.map((g) => (
                   <Button key={g.id} variant="ghost" mono active={g.id === gameId} onClick={() => pickGame(g.id)} role="radio" aria-checked={g.id === gameId} title={g.id}>
@@ -624,12 +624,18 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
                 <p className="muted">No AI has played this game yet.</p>
               ) : (
                 <ul className="ch-tobeat mono">
-                  {opponentsQ.data.map((o) => (
+                  {opponentsQ.data.slice(0, 8).map((o) => (
                     <li key={o.name}>
                       <span>{o.name}</span>
                       <span className="muted">{o.finished ? 'recorded' : 'still playing'}</span>
                     </li>
                   ))}
+                  {opponentsQ.data.length > 8 && (
+                    <li>
+                      <span className="muted">+{opponentsQ.data.length - 8} more</span>
+                      <span />
+                    </li>
+                  )}
                 </ul>
               )}
             </section>
