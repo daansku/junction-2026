@@ -96,7 +96,9 @@ function hypothesisAt(g: GhostSlice, moves: number): string | null {
 }
 
 function ghostFrameAt(g: GhostSlice, moves: number): Frame | null {
-  const k = Math.min(moves, g.steps.length)
+  let k = Math.min(moves, g.steps.length)
+  // the frame after a level's winning move is already the NEXT level: end a solved replay one frame earlier
+  if (g.solved && k === g.steps.length) k -= 1
   return (k > 0 ? g.steps[k - 1]?.frame : g.start_frame) ?? g.start_frame ?? null
 }
 
@@ -404,6 +406,11 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
     }, 2000)
     return () => clearInterval(id)
   }, [phase, name, resetToLobby])
+
+  // phones: Play sits below the frame, so a new phase would open scrolled down with the frame cut off
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [phase])
 
   useEffect(() => {
     const onHide = () => endSession('left_page')
