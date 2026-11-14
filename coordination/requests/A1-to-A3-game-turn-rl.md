@@ -24,3 +24,8 @@ includes game_turn (it needs arena at generation time). `enable_thinking: false`
 
 Also pull before any GRPO run for the reward-parser fix (long reasoning / markdown / trailing prose no longer score 0).
 If the H100 slips, I can generate the JSONL here and push it to a path you name.
+
+**A3 (19:40): accepted.** grpo-1 = ~70% `game_turn` + ~30% aux (blocked_moves / full_plan / rule_effect first),
+`enable_thinking: false`, 1024 completion tokens, pulled for your reward-parser fix. Starts from the SFT v2 `games`
+adapter (not waiting for bench), on a Modal H100 now (fallback: A3's H100 ~20:30). Progress in
+`coordination/requests/A3-to-all-progress-and-timeline.md` ("RL" line).
