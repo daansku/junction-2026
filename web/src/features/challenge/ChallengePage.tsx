@@ -130,6 +130,24 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
       staleTime: 10 * 60_000,
     })),
   })
+  // Opponents shown during play: names only (results would hint at the solution), any model that played this game.
+  const opponentsQ = useQuery({
+    queryKey: ['challenge-opponents', gameId],
+    queryFn: async () => {
+      const runs = await api.listRuns({ game_id: gameId, kind: 'model' })
+      const by = new Map<string, { name: string; finished: boolean }>()
+      for (const r of runs) {
+        if (r.outcome === 'ABORTED' || (r as Record<string, unknown>).start_level) continue
+        const id = r.player?.model_id || r.player?.name
+        if (!id) continue
+        const prev = by.get(id)
+        const finished = !!r.outcome && r.outcome !== 'IN_PROGRESS'
+        by.set(id, { name: r.player?.name || id, finished: finished || !!prev?.finished })
+      }
+      return [...by.values()].sort((a, b) => Number(b.finished) - Number(a.finished) || a.name.localeCompare(b.name))
+    },
+    staleTime: 60_000,
+  })
   const boardQ = useQuery({ queryKey: ['challenge-board', gameId], queryFn: () => fetchBoard(gameId), refetchInterval: 30_000 })
 
   const [phase, setPhase] = useState<Phase>('lobby')
@@ -598,6 +616,23 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
                 No hints. The AI played these same levels from the same pixels; you see its recorded attempts after the challenge.
               </p>
             </section>
+            <section className="ch-card">
+              <span className="kicker">you are up against</span>
+              {opponentsQ.isLoading ? (
+                <p className="muted">Loading…</p>
+              ) : !opponentsQ.data?.length ? (
+                <p className="muted">No AI has played this game yet.</p>
+              ) : (
+                <ul className="ch-tobeat mono">
+                  {opponentsQ.data.map((o) => (
+                    <li key={o.name}>
+                      <span>{o.name}</span>
+                      <span className="muted">{o.finished ? 'recorded' : 'still playing'}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
             <div className="ch-actions">
               <Button variant="ghost" onClick={giveUp} title="Stop this level">
                 give up
@@ -691,32 +726,38 @@ function LevelReview(props: {
         : `You stopped level ${levelNo} after ${review.actions} moves.`
   const primary =
     review.kind === 'solved' ? (review.last ? 'See results' : `Next level (${levelNo + 1} of ${nLevels})`) : review.kind === 'lost' ? 'Retry level' : 'Keep trying'
-  return (
-    <div className="ch-grid">
-      <div className="ch-stage">
-        {review.kind !== 'solved' && frame && <FrameCanvas frame={frame} scale="fit" maxScale={10} viewportReserve={120} bezel label="Your game" />}
+  const card = (
+    <section className={`ch-verdict ${review.kind === 'solved' ? 'good' : 'bad'}`}>
+      <span className="kicker">{review.kind === 'solved' ? 'level solved' : review.kind === 'lost' ? 'level lost' : 'level stopped'}</span>
+      <h2 className="ch-review-line">{headline}</h2>
+      {review.kind === 'solved' && optimal > 0 && <p className="mono muted">optimal: {optimal} moves</p>}
+      {review.kind === 'lost' && (
+        <p className="muted">Retry restarts this level. Your moves so far still count, the same rule the models play by.</p>
+      )}
+      <div className="ch-end-actions">
+        <Button variant="primary" onClick={onPrimary}>
+          {primary} <Kbd>Enter</Kbd>
+        </Button>
+        {review.kind !== 'solved' && (
+          <Button variant="ghost" onClick={onSecondary}>
+            end challenge
+          </Button>
+        )}
       </div>
-      <aside className="ch-side">
-        <section className={`ch-verdict ${review.kind === 'solved' ? 'good' : 'bad'}`}>
-          <span className="kicker">{review.kind === 'solved' ? 'level solved' : review.kind === 'lost' ? 'level lost' : 'level stopped'}</span>
-          <h2 className="ch-review-line">{headline}</h2>
-          {review.kind === 'solved' && optimal > 0 && <p className="mono muted">optimal: {optimal} moves</p>}
-          {review.kind === 'lost' && (
-            <p className="muted">Retry restarts this level. Your moves so far still count, the same rule the models play by.</p>
-          )}
-          <div className="ch-end-actions">
-            <Button variant="primary" onClick={onPrimary}>
-              {primary} <Kbd>Enter</Kbd>
-            </Button>
-            {review.kind !== 'solved' && (
-              <Button variant="ghost" onClick={onSecondary}>
-                end challenge
-              </Button>
-            )}
-          </div>
-        </section>
-      </aside>
-    </div>
+    </section>
+  )
+  return (
+    review.kind === 'solved' || !frame ? (
+      // nothing to show beside it: the card takes the main column (an empty frame column left it off-screen)
+      <div className="ch-solo">{card}</div>
+    ) : (
+      <div className="ch-grid">
+        <div className="ch-stage">
+          <FrameCanvas frame={frame} scale="fit" maxScale={10} viewportReserve={120} bezel label="Your game" />
+        </div>
+        <aside className="ch-side">{card}</aside>
+      </div>
+    )
   )
 }
 
