@@ -3,7 +3,12 @@
 Checked: `npm run typecheck` + `npm run build` (pass), the handover behaviours in code, a `DESIGN.md` scan, and every page in
 the browser at 1920×1080 against the new shared host.
 
-## P0: blocks the deploy. Ghost race contaminates the human baseline
+## Update 16:25 (human): not a blocker
+The ghost race is a visualisation; the models are the main result. Keep it, deploy as is. One small ask only: runs where a
+human had the ghost race or X-ray on shouldn't count as human baseline: either default `ghostRaceOn` to `false`, or tag
+such runs (`player.assisted: true`) so `filter_benchmark_runs()` can skip them. Low priority.
+
+## (Original note, downgraded) Ghost race and the human baseline
 `PlayPage.tsx:130` `const [ghostRaceOn, setGhostRaceOn] = useState(true)`. During a **recorded** human run on the shared server
 the sidebar shows, before the first key press, "BFS optimal · N moves" for the level, and the best model runs' frames stepping
 along with every key, their actions, events, hypotheses and "SOLVED @N". Seen on `/play/gridworld-s1003-d1-l6-6744021d`:
@@ -20,8 +25,7 @@ Fix, in order of preference:
 Keep both free in mock / local mode, for the name `test`, and in take-over mode.
 
 **Clean so far:** no human eval-v1 run used this build. The live site doesn't have it yet (no "ghost race" in the bundle), and
-all human eval-v1 runs (12:30-14:46) predate `35fb581`. A4 asked A2 to hold the rebuild until this is fixed
-(`A4-to-A2-hold-epistemic-deploy.md`).
+all human eval-v1 runs (12:30-14:46) predate `35fb581`. The hold request to A2 is withdrawn (human decision 16:25).
 
 ## P2: minor
 - Leaderboard page is 1783 px tall and Insights 4096 px at 1920×1080; the plan asked for the data pages to fit above the
