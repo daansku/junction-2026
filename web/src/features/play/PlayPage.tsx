@@ -127,7 +127,25 @@ export function PlayPage() {
   const [showGrid, setShowGrid] = useState(false)
   const [showTruth, setShowTruth] = useState(false)
   const [xraySplit, setXraySplit] = useState<number | null>(null)
-  const [ghostRaceOn, setGhostRaceOn] = useState(true)
+  // Ghost race is a presentation feature: off by default so normal play is unassisted; the toggle is
+  // remembered per browser (localStorage 'ghostRace'), so a demo laptop can keep it on.
+  const [ghostRaceOn, setGhostRaceOnState] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ghostRace') === 'on'
+    } catch {
+      return false
+    }
+  })
+  const setGhostRaceOn = (next: boolean | ((v: boolean) => boolean)) =>
+    setGhostRaceOnState((prev) => {
+      const v = typeof next === 'function' ? next(prev) : next
+      try {
+        localStorage.setItem('ghostRace', v ? 'on' : 'off')
+      } catch {
+        /* storage blocked: toggle still works for this page */
+      }
+      return v
+    })
 
   const [truth, setTruth] = useState<Truth | null>(null)
   const [finished, setFinished] = useState<Truth | null>(null)
@@ -600,7 +618,7 @@ export function PlayPage() {
             }
           >
             {!ghostRaceOn ? (
-              <span className="muted">Paused. Enable to step recorded frontier models alongside each keypress.</span>
+              <span className="muted">Off. Turn on to show recorded model runs and the optimal pace beside your moves (for demos).</span>
             ) : ghostsQ.isLoading ? (
               <span className="muted mono">Loading level L{currentLevel} traces…</span>
             ) : !modelGhosts.length && !optGhost ? (
