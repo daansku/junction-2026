@@ -265,7 +265,13 @@ export function InsightsPage() {
         actions={
           <div className="page-actions">
             <Link to="/leaderboard">
-              <Button mono>← Leaderboard</Button>
+              <Button mono>← h1 Board</Button>
+            </Link>
+            <Link to="/leaderboard?view=h2">
+              <Button mono>h2 Lab Board</Button>
+            </Link>
+            <Link to="/leaderboard?view=bench">
+              <Button mono>Post-Training</Button>
             </Link>
             <Link to="/replay">
               <Button mono>Browse Replays</Button>

@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-11-14T16:48:32Z",
+  "harness_filter": "h2",
+  "rows": [],
+  "harness_version": "h2",
+  "h2_rules": [
+    "Multi-turn conversation: model sees its own full prior turn history (never stateless notes-only).",
+    "Reasoning retained across turns: Anthropic thinking blocks preserved; OpenAI-compat assistant message (reasoning_content / Gemini thought signatures) returned verbatim.",
+    "Native tool calling: structured act(action, hypothesis, belief) tool; invalid calls cost a turn, not an action.",
+    "Leaderboard-standard effort: high / max per model, explicitly labelled per row and never silently mixed.",
+    "Generous output cap: 64k tokens (Anthropic streamed) / 32k tokens (OpenAI-compatible) so thinking never truncates.",
+    "Provider-default sampling: no artificial temperature overrides on reasoning models.",
+    "Fixed context window: full text history + last 5 image frames (older frames cleared) + prompt caching enabled.",
+    "Uncertainty reported: 95% bootstrap CI over game scores; single-attempt rows explicitly badged.",
+    "Zero truth leakage: pixels + RLE only under prompts/system_h2.md; hidden rules never enter prompts."
+  ],
+  "h2_games_by_collection": {}
+}

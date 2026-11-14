@@ -8,12 +8,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .aggregate import aggregate_runs
+from .aggregate import aggregate_h2_runs, aggregate_runs
+from .bench_agg import build_bench_summary
 from .claim_check import check_claims, validate_against_schema
 from .explain import build_explanations, build_failure_packets, estimate_judge_cost, make_arena_judge
 from .insights import generate_auto_proposals, synthesize_insights
 from .loader import default_data_dir, find_repo_root, load_collections, load_models, load_runs
 from .rule_discovery import analyze_rules
+from .sampling_export import build_decision_points_export
 from .sync import sync_runs
 
 
@@ -151,6 +153,7 @@ def build_all(
     repo_root: Path | None = None,
     with_fixture_baselines: bool = False,
     write_proposals: bool = False,
+    bench_dir: Path | None = None,
 ) -> dict[str, Any]:
     root = repo_root or find_repo_root()
     runs = load_runs(runs_dir)
@@ -163,10 +166,15 @@ def build_all(
     models = load_models(root)
     games = load_collections(root)
 
-    leaderboard = aggregate_runs(runs, models_registry=models, game_descs=games)
+    leaderboard = aggregate_runs(runs, models_registry=models, game_descs=games, harness_filter="h1")
+    leaderboard_h2 = aggregate_h2_runs(runs, models_registry=models, game_descs=games)
     rules_data = analyze_rules(runs, models_registry=models, game_descs=games)
     insights = synthesize_insights(leaderboard, rules_data, runs=runs)
     explanations = build_explanations(runs, game_descs=games, repo_root=root)
+
+    resolved_bench_dir = bench_dir if bench_dir is not None else (out_dir / "bench")
+    bench_summary = build_bench_summary(resolved_bench_dir, lb_h1=leaderboard, lb_h2=leaderboard_h2)
+    decision_points = build_decision_points_export(runs, game_descs=games, repo_root=root)
 
     # Preserve any prior LLM-judge entries on incremental rebuilds so `analysis build` never clobbers A3's judge run
     existing_exp_path = out_dir / "explanations.json"
@@ -187,14 +195,17 @@ def build_all(
             pass
 
     schema_path = root / "contracts" / "derived.schema.json"
-    for payload in (leaderboard, rules_data, insights, explanations):
+    for payload in (leaderboard, leaderboard_h2, rules_data, insights, explanations):
         validate_against_schema(payload, schema_path)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "leaderboard.json").write_text(json.dumps(leaderboard, indent=2) + "\n", encoding="utf-8")
+    (out_dir / "leaderboard_h2.json").write_text(json.dumps(leaderboard_h2, indent=2) + "\n", encoding="utf-8")
     (out_dir / "rules.json").write_text(json.dumps(rules_data, indent=2) + "\n", encoding="utf-8")
     (out_dir / "insights.json").write_text(json.dumps(insights, indent=2) + "\n", encoding="utf-8")
     (out_dir / "explanations.json").write_text(json.dumps(explanations, indent=2) + "\n", encoding="utf-8")
+    (out_dir / "bench_summary.json").write_text(json.dumps(bench_summary, indent=2) + "\n", encoding="utf-8")
+    (out_dir / "decision_points.json").write_text(json.dumps(decision_points, indent=2) + "\n", encoding="utf-8")
 
     proposals_written: list[str] = []
     if write_proposals:
@@ -205,9 +216,12 @@ def build_all(
         "runs_loaded": len(runs),
         "out_dir": str(out_dir),
         "leaderboard_rows": len(leaderboard["rows"]),
+        "leaderboard_h2_rows": len(leaderboard_h2["rows"]),
         "rule_cells": len(rules_data["cells"]),
         "insights": len(insights["insights"]),
         "explanations": len(explanations["explanations"]),
+        "bench_runs": len(bench_summary["runs"]),
+        "decision_points": len(decision_points["decision_points"]),
         "proposals_written": proposals_written,
     }
 
@@ -230,8 +244,18 @@ def main(argv: list[str] | None = None) -> int:
     p_sync.add_argument("--data-dir", help="Local data directory (default: DATA_DIR or ~/junction-data)")
     p_sync.add_argument("--since", help="ISO-8601 timestamp to fetch incrementally")
 
-    p_agg = sub.add_parser("aggregate", help="Build leaderboard.json")
+    p_agg = sub.add_parser("aggregate", help="Build h1 leaderboard.json")
     _add_common_io_args(p_agg)
+
+    p_h2 = sub.add_parser("h2", help="Build separate h2 leaderboard_h2.json (PLAN.md §3.1)")
+    _add_common_io_args(p_h2)
+
+    p_bench = sub.add_parser("bench", help="Build post-training bench_summary.json with paired 95% CIs (PLAN.md §3.2)")
+    _add_common_io_args(p_bench)
+    p_bench.add_argument("--bench-dir", help="Directory containing <run>/{summary.json,items.jsonl} (default: <out>/bench)")
+
+    p_targets = sub.add_parser("export-targets", help="Export failure decision points & train-v1 oversampling weights (A5-21)")
+    _add_common_io_args(p_targets)
 
     p_rules = sub.add_parser("rules", help="Build rules.json")
     _add_common_io_args(p_rules)
@@ -246,9 +270,10 @@ def main(argv: list[str] | None = None) -> int:
     p_exp.add_argument("--judge-cmd", help="Shell command accepting JSON {system, prompt, max_tokens} on stdin")
     p_exp.add_argument("--judge-arena", action="store_true", help="Use arena.judge.complete if available")
 
-    p_build = sub.add_parser("build", help="Build leaderboard.json, rules.json, insights.json, and explanations.json")
+    p_build = sub.add_parser("build", help="Build leaderboard (h1 & h2), rules, insights, explanations, bench_summary, and decision_points")
     _add_common_io_args(p_build)
     p_build.add_argument("--write-proposals", action="store_true", help="Write rules/proposals/auto-*.md")
+    p_build.add_argument("--bench-dir", help="Directory containing bench runs (default: <out>/bench)")
 
     p_check = sub.add_parser("check-claims", help="Validate derived JSON files against contracts/derived.schema.json")
     p_check.add_argument("--derived", help="Derived directory to verify (default: data/derived or data/fixtures/derived)")
@@ -275,12 +300,14 @@ def main(argv: list[str] | None = None) -> int:
     with_baselines = bool(args.with_fixture_baselines or (is_fixtures and not args.runs))
 
     if args.cmd == "build":
+        bdir = Path(args.bench_dir).expanduser() if getattr(args, "bench_dir", None) else None
         res = build_all(
             runs_dir,
             out_dir,
             repo_root=root,
             with_fixture_baselines=with_baselines,
             write_proposals=bool(args.write_proposals),
+            bench_dir=bdir,
         )
         print(json.dumps(res, indent=2))
         return 0
@@ -293,10 +320,32 @@ def main(argv: list[str] | None = None) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if args.cmd == "aggregate":
-        lb = aggregate_runs(runs, models_registry=models, game_descs=games)
+        lb = aggregate_runs(runs, models_registry=models, game_descs=games, harness_filter="h1")
         validate_against_schema(lb, root / "contracts" / "derived.schema.json")
         (out_dir / "leaderboard.json").write_text(json.dumps(lb, indent=2) + "\n", encoding="utf-8")
         print(json.dumps({"rows": len(lb["rows"]), "out": str(out_dir / "leaderboard.json")}, indent=2))
+        return 0
+
+    if args.cmd == "h2":
+        lb2 = aggregate_h2_runs(runs, models_registry=models, game_descs=games)
+        validate_against_schema(lb2, root / "contracts" / "derived.schema.json")
+        (out_dir / "leaderboard_h2.json").write_text(json.dumps(lb2, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({"rows": len(lb2["rows"]), "out": str(out_dir / "leaderboard_h2.json")}, indent=2))
+        return 0
+
+    if args.cmd == "bench":
+        lb = aggregate_runs(runs, models_registry=models, game_descs=games, harness_filter="h1")
+        lb2 = aggregate_h2_runs(runs, models_registry=models, game_descs=games)
+        bdir = Path(args.bench_dir).expanduser() if getattr(args, "bench_dir", None) else (out_dir / "bench")
+        bs = build_bench_summary(bdir, lb_h1=lb, lb_h2=lb2)
+        (out_dir / "bench_summary.json").write_text(json.dumps(bs, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({"runs": len(bs["runs"]), "claim": bs["claim_evaluation"]["status"], "out": str(out_dir / "bench_summary.json")}, indent=2))
+        return 0
+
+    if args.cmd == "export-targets":
+        dp = build_decision_points_export(runs, game_descs=games, repo_root=root)
+        (out_dir / "decision_points.json").write_text(json.dumps(dp, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({"decision_points": len(dp["decision_points"]), "weights": dp["oversample_weights"]["by_decision_type"], "out": str(out_dir / "decision_points.json")}, indent=2))
         return 0
 
     if args.cmd == "rules":

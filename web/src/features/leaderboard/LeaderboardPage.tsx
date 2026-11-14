@@ -1,7 +1,7 @@
 import * as Plot from '@observablehq/plot'
 import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Button,
   Chip,
@@ -17,8 +17,12 @@ import {
 import { api } from '@/lib/api'
 import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
 import type { RunMeta } from '@/lib/types'
+import { fetchBenchSummary, fetchDecisionPoints, fetchLeaderboardH2 } from './phase2Api'
+import { LeaderboardH2View, PostTrainingBenchView } from './PostTrainingSection'
 import type { LeaderboardDocument, LeaderboardRow } from './types'
 import './leaderboard.css'
+
+type BoardView = 'h1' | 'h2' | 'bench'
 
 type SortKey =
   | 'score'
@@ -105,9 +109,32 @@ function runRankScore(r: RunMeta): number {
 
 export function LeaderboardPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const rawView = searchParams.get('view')
+  const view: BoardView = rawView === 'h2' || rawView === 'bench' ? rawView : 'h1'
+
+  const setView = (next: BoardView) => {
+    const nextParams = new URLSearchParams(searchParams)
+    if (next === 'h1') nextParams.delete('view')
+    else nextParams.set('view', next)
+    setSearchParams(nextParams, { replace: true })
+  }
+
   const lb = useQuery({
     queryKey: ['derived', 'leaderboard'],
     queryFn: () => api.derived<LeaderboardDocument>('leaderboard'),
+  })
+  const lbH2 = useQuery({
+    queryKey: ['derived', 'leaderboard_h2'],
+    queryFn: fetchLeaderboardH2,
+  })
+  const benchQ = useQuery({
+    queryKey: ['derived', 'bench_summary'],
+    queryFn: fetchBenchSummary,
+  })
+  const decisionPtsQ = useQuery({
+    queryKey: ['derived', 'decision_points'],
+    queryFn: fetchDecisionPoints,
   })
   const runsQ = useQuery({
     queryKey: ['runs', 'lb-best-lookup'],
@@ -151,7 +178,7 @@ export function LeaderboardPage() {
   }, [runsQ.data])
 
   const resolveBestRun = (row: LeaderboardRow): string | null =>
-    bestRunByPlayer.get(`${row.player_id}::${row.effort ?? ''}`) ?? bestRunByPlayer.get(row.player_id) ?? null
+    row.best_run_id ?? bestRunByPlayer.get(`${row.player_id}::${row.effort ?? ''}`) ?? bestRunByPlayer.get(row.player_id) ?? null
 
   const collections = useMemo(() => {
     const set = new Set<string>()
@@ -364,7 +391,7 @@ export function LeaderboardPage() {
     <div className="lb-stack">
       <PageHeader
         title="Benchmark Leaderboard"
-        sub="Action-efficiency scoring against BFS optimal paths, human sessions, and zero-exploit baselines."
+        sub="Action-efficiency scoring across stateless rolling-notes (h1), lab-standard multi-turn (h2), and post-training transfer."
         actions={
           <div className="page-actions">
             {lb.data?.generated_at && (
@@ -372,6 +399,9 @@ export function LeaderboardPage() {
                 built {lb.data.generated_at.replace('T', ' ').replace('Z', ' UTC')}
               </span>
             )}
+            <Link to="/challenge">
+              <Button mono>Beat the AI →</Button>
+            </Link>
             <Link to="/insights">
               <Button mono>Insights &amp; Rules →</Button>
             </Link>
@@ -379,7 +409,52 @@ export function LeaderboardPage() {
         }
       />
 
-      {lb.isLoading ? (
+      <div className="lb-view-tabs" role="tablist" aria-label="Evaluation harness and post-training views">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'h1'}
+          className={cx('lb-view-tab mono', view === 'h1' && 'active')}
+          onClick={() => setView('h1')}
+        >
+          <span>h1 · Stateless Rolling-Notes</span>
+          <span className="lb-tab-count">{allRows.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'h2'}
+          className={cx('lb-view-tab mono', view === 'h2' && 'active')}
+          onClick={() => setView('h2')}
+        >
+          <span>h2 · Lab-Standard Multi-Turn</span>
+          <span className="lb-tab-count">{lbH2.data?.rows.length ?? '—'}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'bench'}
+          className={cx('lb-view-tab mono', view === 'bench' && 'active')}
+          onClick={() => setView('bench')}
+        >
+          <span>Post-Training &amp; Reasoning Transfer</span>
+          <span className="lb-tab-count">Qwen3.5-9B</span>
+        </button>
+      </div>
+
+      {view === 'h2' ? (
+        <LeaderboardH2View
+          doc={lbH2.data}
+          isLoading={lbH2.isLoading}
+          resolveRunFallback={resolveBestRun}
+        />
+      ) : view === 'bench' ? (
+        <PostTrainingBenchView
+          bench={benchQ.data}
+          decisionPoints={decisionPtsQ.data}
+          isLoading={benchQ.isLoading}
+        />
+      ) : lb.isLoading ? (
         <Loading what="Loading leaderboard" />
       ) : lb.error ? (
         <ErrorState error={lb.error} retry={() => lb.refetch()} />
@@ -838,7 +913,20 @@ export function LeaderboardPage() {
                           {fmtInt(row.median_actions)}
                         </td>
                         <td className={cx('num', bestCost && 'lb-best')}>
-                          {fmtUsd(row.cost_per_game)}
+                          <span className="lb-cost-cell">
+                            <span>{fmtUsd(row.cost_per_game)}</span>
+                            {row.cost_underreported && (
+                              <span
+                                className="lb-tag lb-tag-warn"
+                                title={
+                                  row.cost_note ||
+                                  'Pre-17:15 Gemini run: thinking tokens excluded from completion_tokens; true API cost ~3.6x higher.'
+                                }
+                              >
+                                ~3.6× low
+                              </span>
+                            )}
+                          </span>
                         </td>
                         <td className={cx('num', bestLat && 'lb-best')}>
                           {row.latency_ms_median != null ? `${Math.round(row.latency_ms_median)} ms` : '—'}
