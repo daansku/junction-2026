@@ -1,0 +1,14 @@
+# PLAN phase 3 A3-35 (human: Daniel 22:05, ignacio OK 22:15): h2 on the frozen 4-game eval-v2 subset (same games as h2-subset-v2.yaml).
+# Highest supported effort, no cost cap (Gemini credits unlimited), 4 h wall cap so every run ends before 04:00.
+# Gemini Pro: attempt 0 (18:00-21:10, h2-subset-v2) was cut by an $18 cost cap on all 4 games; attempt 1 runs uncapped.
+# Use attempt 1 for the board; attempt 0 stays as a labelled lower bound.
+name: h2-eval-v2-pro
+harness: h2
+collection: eval-v2
+games: [gridworld-s910000-d4-l8-f71ee29e, gridworld-s910001-d4-l8-eb750fbb, gridworld-s910002-d4-l8-654b6dd3, gridworld-s910003-d4-l8-6ea22e03]
+attempts: 2
+concurrency: 4
+est_steps_per_game: 300
+models:
+  - {id: gemini-pro, effort: high, max_concurrency: 4}
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 500.0, max_wall_s: 14400}

@@ -1,0 +1,13 @@
+# PLAN phase 3 A3-35 (human: Daniel 22:05, ignacio OK 22:15): h2 on the frozen 4-game eval-v2 subset (same games as h2-subset-v2.yaml).
+# Highest supported effort, no cost cap (Gemini credits unlimited), 4 h wall cap so every run ends before 04:00.
+# Kimi K3.1: 3 attempts (attempt 0 already ran at 17:20-20:00 under h2-subset-v2); max 4 parallel (Verda 429 limit).
+name: h2-eval-v2-kimi
+harness: h2
+collection: eval-v2
+games: [gridworld-s910000-d4-l8-f71ee29e, gridworld-s910001-d4-l8-eb750fbb, gridworld-s910002-d4-l8-654b6dd3, gridworld-s910003-d4-l8-6ea22e03]
+attempts: 3
+concurrency: 4
+est_steps_per_game: 300
+models:
+  - {id: verda-kimi-k3-1-pro, effort: max, max_concurrency: 4}
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 500.0, max_wall_s: 14400}

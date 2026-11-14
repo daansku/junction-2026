@@ -49,3 +49,12 @@
 - **Post-training re-plan (Sat ~21:15, ignacio, recorded by A3):** the goal is a model that THINKS better. The no-thinking SFT v2 + grpo-1/grpo-2 line is stopped (it trained answer-only replies and dropped the base from 0.758 to ~0.44 on the dev-slice headline; kept as a documented negative result). New: GRPO with thinking ON from the base Qwen3.5-9B (fresh LoRA, no SFT), reward only on the answer after `</think>`: `think-games` (our game_turn + aux tasks) vs `think-ctrl` (generic reasoning-gym puzzles, same budget), two Modal H100s, ~$60, evaluated with thinking ON on the FT_BENCHMARKS dev slice.
 
 - **RL restart on gridbranch (Sat ~22:00, Anssi; recorded by A7):** restart the `think-games` GRPO run on data from the `gridbranch` v2 generator (the eval-v3b one). Training source = new `train-v3b` (gridbranch, train seeds 300000-302999, hold-out filtered, 1,904 games), never eval-v3b itself. Handover to A2: `coordination/requests/A7-to-A2-restart-rl-on-gridbranch.md`.
+
+## Sat 22:25 A3-35: h2 on the frozen 4-game eval-v2 subset (A3; Daniel 22:05, ignacio approved 22:15)
+Games s910000-s910003 (same as `h2-subset-v2.yaml`). Sweeps `h2-eval-v2-{kimi,gemini,pro}.yaml`, launched once from
+ignacio's laptop at 22:25, wall cap 4 h per run (all end by ~02:30), cost cap $500/run (effectively none).
+- Kimi K3.1 (effort max): 3 attempts (attempt 0 = the 17:20 h2-subset-v2 run).
+- Gemini Pro high: attempt 1 is uncapped; attempt 0 (h2-subset-v2) was cut at $18 on all 4 games -> labelled lower bound.
+- Gemini Flash / Gemini 4 Argon / Gemini 4 Carbon, effort high (highest in the registry): 1 attempt each -> labelled single-attempt.
+- Claude: not run (key not topped up).
+No reruns after this; results go into A3-to-all-RESULTS.md when the runs finish.
