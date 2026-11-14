@@ -1,0 +1,3 @@
+# Harbor task files run inside Linux containers: never convert to CRLF on Windows checkouts.
+harbor/** text eol=lf
+*.sh text eol=lf
