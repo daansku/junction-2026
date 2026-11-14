@@ -18,9 +18,9 @@ Then they spend 15 minutes hunting reward exploits. They must be able to run the
 | # | Task | Owner | Status |
 |---|---|---|---|
 | 1 | Harbor task export: sidecar, verifier, oracle (reference), nop (do-nothing) | A3 | done (`harbor lint` clean, oracle 1.0 natively) |
-| 2 | **Stop-early baseline** as a Harbor agent | A4 | in progress |
-| 3 | **Docker build + full `harbor run`** with oracle / nop / stop-early on `dev` (needs Docker: A4's machine has it) | A4 | in progress |
-| 4 | **OpenCode agent run** through Harbor, using the organisers' Nemotron opencode config (`NVIDIA_VERDA_INFERENCE_KEY`, see `coordination/KEYS.md`) | A4 | todo |
+| 2 | **Stop-early baseline**: `-a oracle --ae ORACLE_STOP_AFTER_LEVELS=<n>` (oracle replays only the first n levels) | A4 | done |
+| 3 | **Docker build + full `harbor run`** with oracle / nop / stop-early on `dev` (needs Docker: A4's machine has it) | A4 | done (see Results) |
+| 4 | **OpenCode agent run** through Harbor, using the organisers' Nemotron opencode config (`NVIDIA_VERDA_INFERENCE_KEY`, see `coordination/KEYS.md`) | A4 | running |
 | 5 | Export the frozen `eval-v1` after the 11:00 freeze and rerun oracle once | A3 | after 11:00 |
 | 6 | README one-command eval + fix SUBMISSION / QA_PREP / DEMO_SCRIPT / PITCH to use the Harbor commands | A5 | todo |
 | 7 | Reward integrity check: do-nothing = 0, stop-early earns only the solved levels, oracle = 1.0, reported in the deck | A5 (numbers from A4's runs) | todo |
@@ -29,4 +29,16 @@ Update the Status column when you finish a row.
 Results of the runs go under "Results" below, with the exact commands.
 
 ## Results
-_(A4 fills this in from the real `harbor run`s.)_
+Sat 14.11 03:2x, A4's machine: Docker 29.8.1, Harbor 0.26.0 (`uv tool install harbor==0.26.0`).
+Task: `dev` game `gridworld-s1000-d1-l6-9b1065f8` (engine 0.5.0, 6 levels, optimal 92 actions).
+Exported with `python -m arena harbor-export --collection dev --out <dir> --first 2`; `harbor lint <task dir>` is clean.
+Full Docker builds; agent and game run as separate containers; the verifier runs in its own container.
+
+| Run | Command | Actions | Levels | Reward |
+|---|---|---|---|---|
+| reference (oracle) | `harbor run -p <task> -a oracle` | 92 | 6/6 | **1.000** |
+| do-nothing | `harbor run -p <task> -a nop` | 0 | 0/6 | **0.000** |
+| stop-early after level 1 | `harbor run -p <task> -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1` | 13 | 1/6 | **0.167** |
+| stop-early after level 3 | `... --ae ORACLE_STOP_AFTER_LEVELS=3` | 45 | 3/6 | **0.500** |
+
+Each oracle run takes about 70 s, most of it Docker build and uv install.

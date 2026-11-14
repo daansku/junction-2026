@@ -113,6 +113,8 @@ EOF
 
 SOLVE_SH = """#!/bin/bash
 # Oracle (reference run): replay the engine's optimal path through the game's MCP tools.
+# Stop-early baseline: same script with ORACLE_STOP_AFTER_LEVELS=<n> (harbor run -a oracle
+# --ae ORACLE_STOP_AFTER_LEVELS=1) plays only the first n levels optimally, then stops.
 set -euo pipefail
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
@@ -121,7 +123,11 @@ import asyncio
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
-PATH = __PATH__
+import os
+
+LEVELS = __LEVELS__
+STOP = int(os.environ.get("ORACLE_STOP_AFTER_LEVELS") or len(LEVELS))
+PATH = [a for lv in LEVELS[:STOP] for a in lv]
 
 async def main():
     async with streamablehttp_client("http://game:8000/mcp") as streams:
@@ -129,7 +135,7 @@ async def main():
             await s.initialize()
             for a in PATH:
                 await s.call_tool("act", {"action": a})
-            print(f"replayed {len(PATH)} actions")
+            print(f"replayed {len(PATH)} actions over {min(STOP, len(LEVELS))}/{len(LEVELS)} levels")
 
 asyncio.run(main())
 EOF
@@ -203,7 +209,8 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
     for g in games:
         gid = g["game_id"]
         game = eng.load_game(coll_file, gid)
-        path = [a for lv in game.describe()["levels"] for a in lv["optimal_path"]]
+        levels = [list(lv["optimal_path"]) for lv in game.describe()["levels"]]
+        path = [a for lv in levels for a in lv]
         t = out / _safe_name(gid)
         if t.exists():
             shutil.rmtree(t)
@@ -230,7 +237,7 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         (gd / "collection.json").write_text(json.dumps({**{k: v for k, v in coll.items() if k != "games"},
                                                         "games": [g]}))
         (t / "tests" / "test.sh").write_text(TEST_SH, newline="\n")
-        (t / "solution" / "solve.sh").write_text(SOLVE_SH.replace("__PATH__", json.dumps(path)), newline="\n")
+        (t / "solution" / "solve.sh").write_text(SOLVE_SH.replace("__LEVELS__", json.dumps(levels)), newline="\n")
         made.append(t)
     log(f"exported {len(made)} Harbor tasks from {coll_file.name} -> {out}"
         + (f" (LOCAL ONLY: extra CA {extra_ca.name} baked in; do not hand these to judges)" if extra_ca else ""))

@@ -8,6 +8,7 @@ a do-nothing baseline and a stop-early baseline, then spend 15 minutes hunting r
 python -m arena harbor-export --collection eval-v1 --out harbor/eval-v1
 harbor run -p harbor/eval-v1 -a oracle                          # reference run: optimal play -> reward 1.0
 harbor run -p harbor/eval-v1 -a nop                             # do-nothing baseline -> 0
+harbor run -p harbor/eval-v1 -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1   # stop-early baseline: level 1 only -> 1/6
 harbor run -p harbor/eval-v1 -a opencode -m <provider/model>    # frontier agent (repeat x3)
 ```
 
