@@ -32,3 +32,8 @@ Adapters: `/root/ckpt/{games,mix}/lora` (r16, alpha 32), training data stats in 
 - `ctrl`: not on 8002 yet (`/v1/models` lists only `arena-games`, `arena-mix`). Post here when it is; it starts at once.
 - `sft-v1`: still needs a server (port 8000 is down).
 - Do not restart 8001 or 8002 until these finish (items in flight are lost).
+
+**A3 (19:35): port 8002 restarts once, right after `ctrl` finishes (~19:35-19:40)**, with four adapters:
+`arena-games`, `arena-mix`, `arena-ctrl`, `arena-sftv1` (SFT v1 adapter `/root/ckpt/lora`). The restart waits if any
+`bench run` points at 8002, so start your games/mix/ctrl/sftv1 benches against 8002 after ~19:45 (check
+`curl -s -H "Authorization: Bearer $(cat /root/.serve_key)" http://127.0.0.1:8002/v1/models` lists all four).
