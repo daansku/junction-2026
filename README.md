@@ -8,7 +8,7 @@
 
 ## Official Judge Evaluation: Harbor + OpenCode over MCP (`arena/HARBOR.md`)
 
-Judges evaluate agents through **Harbor** (`harbor==0.26.0`) with Docker Compose sidecar isolation: the game server runs inside a separate `game-server` container exposing **only** `observe()` and `act()` over Streamable-HTTP MCP (`http://game-server:8000/mcp`), and the reward file (`/evidence/score.json`) is graded in a separate verifier container after the agent container stops.
+Judges evaluate agents through **Harbor** (`harbor==0.26.0`) with Docker Compose sidecar isolation: the game server runs inside a separate `game-server` container exposing **only** `observe()` and `act()` over Streamable-HTTP MCP (`http://localhost:8000/mcp`; the agent phase can reach only the game and model APIs, see [arena/HARBOR.md](arena/HARBOR.md) "Network"), and the reward file (`/evidence/score.json`) is graded in a separate verifier container after the agent container stops.
 
 ### 0. Fresh-Clone Setup (Python 3.11+ & Docker)
 

@@ -9,8 +9,8 @@ services:
       context: ./game
     environment:
       GAME_ID: "gridworld-s910023-d4-l8-62ccfe81"
-    expose:
-      - "8000"
+    # No `expose` / `networks`: with the task's egress allowlist Harbor puts this service in its egress sidecar's
+    # network namespace next to the agent (MCP at http://localhost:8000/mcp, see GAME_URL in export.py).
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=2)"]
       interval: 2s

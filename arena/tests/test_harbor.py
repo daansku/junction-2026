@@ -108,7 +108,12 @@ def test_export_layout(tmp_path):
               "environment/game/engine/__init__.py", "tests/test.sh", "solution/solve.sh"]:
         assert (t / f).exists(), f
     toml = (t / "task.toml").read_text()
-    assert '[[environment.mcp_servers]]' in toml and 'url = "http://game:8000/mcp"' in toml
+    assert '[[environment.mcp_servers]]' in toml and 'url = "http://localhost:8000/mcp"' in toml
+    # agent egress allowlist: no open internet while playing (public server / repo would leak optimal paths)
+    assert 'network_mode = "allowlist"' in toml and '"api.anthropic.com"' in toml and '"github.com"' not in toml
+    assert "http://localhost:8000/mcp" in (t / "instruction.md").read_text()
+    assert "http://localhost:8000/mcp" in (t / "solution/solve.sh").read_text()
+    assert "expose:" not in (t / "environment/docker-compose.yaml").read_text()
     # grading runs in a separate container from collected evidence, never over the agent's network
     assert 'environment_mode = "separate"' in toml
     assert '[[artifacts]]' in toml and 'source = "/evidence/score.json"' in toml and 'service = "game"' in toml

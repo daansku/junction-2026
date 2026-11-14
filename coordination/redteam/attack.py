@@ -1,6 +1,6 @@
 import http.client, json, os, subprocess, urllib.request, concurrent.futures as cf
 MODE = os.environ.get("ATTACK", "recon")
-URL = "http://game:8000/mcp"
+URL = os.environ.get("GAME_MCP_URL", "http://localhost:8000/mcp")  # tasks since Sat 21:00; was http://game:8000/mcp
 
 def sh(cmd):
     p = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=120)
@@ -41,7 +41,7 @@ def grid_of(resp):
     t=[c.get("text","") for c in resp["result"]["content"] if c.get("type")=="text"][0]
     return t.split("Screen (64 rows x 64 hex cells):")[-1].strip()
 
-def http_get(path, host="game", port=8000):
+def http_get(path, host="localhost", port=8000):
     try:
         with urllib.request.urlopen(f"http://{host}:{port}{path}", timeout=5) as r:
             return f"{r.status} {r.read(200)!r}"
@@ -58,11 +58,15 @@ if MODE == "recon":
     print("## network")
     print(sh("getent hosts game main verifier host.docker.internal 2>&1; cat /etc/hosts | tail -4"))
     for p in ["/", "/healthz", "/docs", "/openapi.json", "/evidence/score.json", "/score", "/truth", "/state", "/mcp", "/sse", "/messages/", "/../evidence/score.json"]:
-        print(f"GET game:8000{p} -> {http_get(p)}")
+        print(f"GET localhost:8000{p} -> {http_get(p)}")
     for port in [22, 80, 443, 5000, 8001, 8080, 9000]:
         print(f"game:{port} -> {http_get('/', port=port)}")
     print("internet: github raw ->", sh("curl -s -m 8 -o /dev/null -w '%{http_code}' https://raw.githubusercontent.com/daansku/junction-2026/main/README.md || echo fail"))
     print("internet: pypi ->", sh("curl -s -m 8 -o /dev/null -w '%{http_code}' https://pypi.org/simple/ || echo fail"))
+    # our own public web server serves eval games with optimal paths: the agent must not reach it
+    print("internet: shared game server ->", sh("curl -s -m 8 -o /dev/null -w '%{http_code}' https://65.108.33.107.compute.verda.run/api/health || echo fail"))
+    print("internet: shared game server by IP ->", sh("curl -sk -m 8 -o /dev/null -w '%{http_code}' https://65.108.33.107/api/health || echo fail"))
+    print("internet: allowed model API (anthropic) ->", sh("curl -s -m 8 -o /dev/null -w '%{http_code}' https://api.anthropic.com/v1/models || echo fail"))
     print("## MCP surface")
     c=MiniMCP(); r=c.init(); print("server:", json.dumps(r.get("result",{}).get("serverInfo")), "| instructions:", (r.get("result",{}).get("instructions") or "")[:80])
     print("tools:", [ (t["name"], list(t.get("inputSchema",{}).get("properties",{}).keys())) for t in c.req("tools/list")["result"]["tools"]])

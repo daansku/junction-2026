@@ -26,7 +26,23 @@ SIDECAR_FILES = ["__init__.py", "frames.py", "engine_adapter.py", "mock_game.py"
                  "harbor/sidecar.py"]
 
 
+# Agent phase egress allowlist (Harbor >= 0.26 Docker egress control). The agent can reach only the game sidecar and
+# model APIs: not GitHub (committed solution/solve.sh), not PyPI, not our public web server (which serves eval games
+# with their optimal paths and recorded runs). A judge whose model API is not listed adds it with
+# `harbor run ... --allow-agent-host <host>`. Setup (OpenCode install) and verifier phases keep their defaults.
+# With egress control on, Harbor runs `game` inside the egress sidecar's network namespace, next to the agent, so the
+# agent reaches it on localhost. Local traffic skips Harbor's transparent proxy (gost); a separate `game` host on the
+# compose network went through that proxy, which reset idle MCP connections (ECONNRESET on act after slow turns).
+GAME_URL = "http://localhost:8000/mcp"
+AGENT_ALLOWED_HOSTS = [
+    "api.anthropic.com", "generativelanguage.googleapis.com", "api.openai.com", "openrouter.ai",
+    "inference.verda.com", "containers.datacrunch.io", "api.featherless.ai", "integrate.api.nvidia.com",
+    "api.together.xyz", "api.fireworks.ai", "api.deepseek.com", "api.moonshot.ai", "api.x.ai", "api.mistral.ai",
+]
+
+
 def _task_toml(name: str, agent_timeout: int) -> str:
+    hosts = ", ".join(f'"{h}"' for h in AGENT_ALLOWED_HOSTS)
     return f'''schema_version = "1.1"
 
 [task]
@@ -44,6 +60,10 @@ environment_mode = "separate"
 
 [agent]
 timeout_sec = {float(agent_timeout)}
+# Egress allowlist while the agent plays: only the game sidecar and model APIs (arena/HARBOR.md, "Network").
+# Add your model API host with `harbor run ... --allow-agent-host <host>`.
+network_mode = "allowlist"
+allowed_hosts = [{hosts}]
 
 [environment]
 build_timeout_sec = 900.0
@@ -54,7 +74,7 @@ gpus = 0
 [[environment.mcp_servers]]
 name = "game"
 transport = "streamable-http"
-url = "http://game:8000/mcp"
+url = "{GAME_URL}"
 args = []
 
 [verifier.env]
@@ -73,7 +93,7 @@ service = "game"
 
 INSTRUCTION = """# Play an unknown game
 
-An MCP server named `game` (http://game:8000/mcp) runs a video game you have never seen. It has two tools:
+An MCP server named `game` (__GAME_URL__) runs a video game you have never seen. It has two tools:
 
 - `observe()` shows the current screen (free).
 - `act(action, note?)` takes one action and shows the new screen. Actions: `ACTION1` up, `ACTION2` down,
@@ -125,7 +145,7 @@ import os
 LEVELS = __LEVELS__
 STOP = int(os.environ.get("ORACLE_STOP_AFTER_LEVELS") or len(LEVELS))
 PATH_ = [a for lv in LEVELS[:STOP] for a in lv]
-c = MiniMCP("http://game:8000/mcp")
+c = MiniMCP("__GAME_URL__")
 c.initialize()
 for a in PATH_:
     c.call("act", {"action": a})
@@ -169,8 +189,8 @@ services:
       context: ./game
     environment:
       GAME_ID: "__GAME_ID__"
-    expose:
-      - "8000"
+    # No `expose` / `networks`: with the task's egress allowlist Harbor puts this service in its egress sidecar's
+    # network namespace next to the agent (MCP at http://localhost:8000/mcp, see GAME_URL in export.py).
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=2)"]
       interval: 2s
@@ -217,7 +237,7 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         (t / "tests").mkdir()
         (t / "solution").mkdir()
         (t / "task.toml").write_text(_task_toml(_safe_name(gid), agent_timeout))
-        (t / "instruction.md").write_text(INSTRUCTION)
+        (t / "instruction.md").write_text(INSTRUCTION.replace("__GAME_URL__", GAME_URL))
         ca_block = EXTRA_CA_MAIN if extra_ca else ""
         (t / "environment" / "Dockerfile").write_text(MAIN_DOCKERFILE.replace("__EXTRA_CA__", ca_block), newline="\n")
         (t / "environment" / "docker-compose.yaml").write_text(COMPOSE.replace("__GAME_ID__", gid))
@@ -241,7 +261,7 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
                                                         "games": [g]}))
         (t / "tests" / "test.sh").write_text(TEST_SH, newline="\n")
         mini = (Path(__file__).parent / "mcp_mini.py").read_text(encoding="utf-8")
-        solve = SOLVE_SH.replace("__MINI__", mini).replace("__LEVELS__", json.dumps(levels))
+        solve = SOLVE_SH.replace("__MINI__", mini).replace("__LEVELS__", json.dumps(levels)).replace("__GAME_URL__", GAME_URL)
         (t / "solution" / "solve.sh").write_text(solve, newline="\n")
         made.append(t)
     log(f"exported {len(made)} Harbor tasks from {coll_file.name} -> {out}"
