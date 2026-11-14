@@ -30,19 +30,22 @@ Colours below are defaults; skin shuffle permutes object colours per game, so ne
 | conveyor belts | `conveyors.py` | 3 | opt-in | arrows; after your move settles on a belt it carries you along (chains) | belt runs across the path, often against travel | `test_conveyor_carries` |
 | patrolling enemies | `enemies.py` | 3 | opt-in | X; walks back and forth on a 3-5 cell straight track, moves with you; same cell or swap = lost | tracks crossing the path | `test_enemy_*` |
 | gravity switch | `gravity.py` | 3 | opt-in | horizontal bar; toggles gravity: you fall straight down after every action; HUD pip while on | switch on the path + a second one to turn it off | `test_gravity_falls` |
+| no U-turns | `no_reverse.py` | 3 | d4 | moving straight back the way you just came is a bump (costs the action); the cell behind you is marked with a dot | detour into a dead end; **taught only with collect_all, keys_doors or plates_gates** | `test_no_reverse_blocks_u_turn` |
+| ordered checkpoints | `checkpoints.py` | 3 | d4 | rings off the route; next one drawn solid, later ones hollow; goal counts only after all in order; touching a later one out of turn resets progress; HUD pips | 2 (teaching) or 3 off-path, order shuffled | `test_checkpoints_in_order` |
+| pits | `pits.py` | 3 | d4 | checker tile you can't enter; push a block into it and it fills for good | on the route past a block, preferably a chokepoint; **taught only with push_blocks** | `test_pit_filled_by_block` |
 
-Tier 3 is **not** in the default curriculum pool (existing collections unchanged). Use `GameSpec(rules=[...])` or the eval-v2 build.
+Tier 3 is **not** in the d1-d3 pool, so dev, eval-v1 and train-v1 never contain it. **Difficulty 4** (eval-v2) draws from tiers 1-3 and each game introduces exactly 3 tier-3 rules, interleaved early (a rule that `requires` a partner gets the partner taught right before it). d4 also has tighter budgets (slack x1.5 vs x2.0 at d3), larger grids and more objects per rule.
 
 Proposals: `a5-decoy-and-camouflage` -> beacon_goal; `a5-delayed-state-switch` -> phase_walls; `auto-01` -> cracked_floor; `auto-02` -> collect_all; `auto-03` -> twin. `a5-sokoban-deadlock-box`: covered by push_blocks + the necessity check (the rule-ignorant plan must fail); no dedicated deadlock generator yet.
 
 ## Skins (A1-12)
 Per game, by seed: object colours AND shapes are shuffled (distinct within a game). Fixed: floor, wall, budget bar, player = solid square, goal-like rings, arrows, HUD meters.
 
-Difficulty 1 games use tier 1 only; difficulty 2-3 draw from tiers 1-2.
+Difficulty 1 games use tier 1 only; difficulty 2-3 draw from tiers 1-2; difficulty 4 draws from tiers 1-3 (3 unseen tier-3 rules per game).
 
 Every generated level is checked: BFS-solvable, **every active rule matters** (a player who ignores it has a longer/impossible optimum, or their optimal plan fails on the real level), random walk wins < 2%.
 
-## Curriculum (engine 0.5.0)
+## Curriculum (engine 0.6.0)
 Level 1 = movement + goal. Levels 2..n-1 each introduce one new rule (teaching layout: smaller grid, +8 move allowance), alone or with 1-2 seen rules. For games with >= 5 levels the last level is an "exam": 2-3 seen rules, no new rule. No two levels share a rule set. Order and combos come from the seed.
 
 ## Frame layout
@@ -56,7 +59,8 @@ Level 1 = movement + goal. Levels 2..n-1 each introduce one new rule (teaching l
 | File | Games | Seeds | Status |
 |---|---|---|---|
 | `dev.json` | 10 x 6 levels, d1/d2/d3 | 1000-1009 | playtesting; regenerated whenever the engine changes |
-| `eval-v1.json` | 30 x 6 levels, 10 per difficulty | 900000-900029 | **DRAFT** until the 11:00 freeze (`"frozen": true` then) |
+| `eval-v1.json` | 30 x 6 levels, 10 per difficulty | 900000-900029 | **FROZEN** (Sat ~13:00, after human playtest: "levels work, some easy, some harder") |
+| `eval-v2.json` | 30 x 8 levels, all d4 | 910000+ | harder set + 3 never-trained rules per game (humans asked for harder levels and more rules) |
 | `train-v1.json` | >= 2,000 x 6 levels | 100000+ | fine-tune source; hold-outs removed |
 
 Hold-outs (`engine/src/engine/splits.py`): train never contains a level whose rule set includes one of

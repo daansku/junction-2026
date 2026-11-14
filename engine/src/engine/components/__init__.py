@@ -87,3 +87,4 @@ from . import keys_doors, plates_gates, teleporters, hazards, push_blocks, one_w
 from . import collect_all, phase_walls, rotation, remap, twin, stamina  # noqa: E402,F401  tier 2
 from . import cracked_floor, beacon_goal  # noqa: E402,F401  tier 2, from rules/proposals
 from . import conveyors, enemies, gravity  # noqa: E402,F401  tier 3 (not in the default pool)
+from . import no_reverse, checkpoints, pits  # noqa: E402,F401  tier 3, eval-v2 unseen rules
