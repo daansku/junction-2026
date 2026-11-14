@@ -105,16 +105,30 @@ bench_image = (
     # same versions as A2's bench venv on the A100 box (/srv/bench/.venv), so Modal rows match its rows
     .uv_pip_install("vllm==0.33.0", "transformers==5.20.2", "lm-eval[api,ifeval,math]==0.4.13",
                     "reasoning-gym==0.1.25", "datasets==5.2.0", "huggingface_hub", "pyyaml", "math-verify==0.9.0",
-                    "antlr4-python3-runtime==4.11.0")
+                    "antlr4-python3-runtime==4.11.0", "peft==0.21.3", "accelerate")
     .env({"HF_HOME": "/hf", "PYTHONUNBUFFERED": "1", "PYTHONPATH": "/repo/bench/src"})
     .add_local_dir(REPO / "bench" / "src", "/repo/bench/src", ignore=["**/__pycache__"])
     .add_local_dir(REPO / "bench" / "configs", "/repo/bench/configs")
 )
 
 
+MERGE_SCRIPT = """
+import sys, torch
+from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
+ad, dst = sys.argv[1], sys.argv[2]
+base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen3.5-9B", dtype=torch.bfloat16, device_map={"": 0})
+m = PeftModel.from_pretrained(base, ad).merge_and_unload()
+m.save_pretrained(dst, safe_serialization=True)
+AutoTokenizer.from_pretrained(ad).save_pretrained(dst)
+print("[merge] done", type(m).__name__, flush=True)
+"""
+
+
 @app.function(image=bench_image, gpu="H100", timeout=3 * 3600, volumes={"/vol": vol, "/hf": hf_cache})
 def bench_dev(adapter: str, name: str):
-    """Dev-slice bench of one adapter on its own H100, A2's generation.yaml unchanged (vLLM at 0.88).
+    """Dev-slice bench of one adapter on its own H100, A2's generation.yaml unchanged (vLLM at 0.88). The adapter is
+    MERGED into the base first: vLLM 0.33's LoRA path asserts on loglikelihood requests (MedQA), see A3 status.
     `modal run posttrain/modal_grpo.py::bench_dev --adapter runs/grpo-1/step-25 --name rl-grpo-1-step-25`
     -> /vol/bench/<name>/ (pull with `modal volume get junction-grpo /bench/<name> /srv/bench/out/`)."""
     import subprocess
@@ -131,8 +145,12 @@ def bench_dev(adapter: str, name: str):
 
     threading.Thread(target=committer, daemon=True).start()
     out = f"/vol/bench/{name}"
-    cmd = ["python", "-m", "bench", "run", "--model", "Qwen/Qwen3.5-9B", "--lora", f"/vol/{adapter.strip('/')}",
-           "--name", name, "--dev-slice", "--out", out, "--resume"]
+    merged = "/tmp/merged"
+    merge = MERGE_SCRIPT
+    rc = subprocess.run(["python", "-c", merge, f"/vol/{adapter.strip('/')}", merged]).returncode
+    if rc:
+        raise RuntimeError(f"merge exited {rc}")
+    cmd = ["python", "-m", "bench", "run", "--model", merged, "--name", name, "--dev-slice", "--out", out, "--resume"]
     print("[modal] " + " ".join(cmd), flush=True)
     rc = subprocess.run(cmd, cwd="/repo").returncode
     stop.set()
