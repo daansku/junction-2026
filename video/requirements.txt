@@ -1,4 +1,4 @@
 manim==0.22.1
-piper-tts
-qrcode
-fonttools
+piper-tts==1.8.0
+qrcode==8.2
+fonttools==4.68.0
