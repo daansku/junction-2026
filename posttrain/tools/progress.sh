@@ -3,7 +3,7 @@
 . /root/venv/bin/activate 2>/dev/null
 for P in $(pgrep -f "python /root/train_sft.py"); do
   row=$(tr '\0' ' ' < /proc/$P/cmdline | grep -oE "sftv2/[a-z0-9-]+" | cut -d/ -f2)
-  py-spy dump --pid $P --locals 2>/dev/null > /tmp/pd.$P
+  timeout 15 py-spy dump --pid $P --locals 2>/dev/null > /tmp/pd.$P
   L=$(grep -n "train (/root/train_sft.py\|train (train_sft.py" /tmp/pd.$P | head -1 | cut -d: -f1)
   [ -z "$L" ] && { echo "$row: loading / evaluating"; continue; }
   B=$(sed -n "$L,$((L+60))p" /tmp/pd.$P)
@@ -22,3 +22,13 @@ done
 [ -z "$(pgrep -f 'python /root/train_sft.py')" ] && echo "(no training running)"
 for r in /root/ckpt/*/lora/adapter_model.safetensors; do [ -f "$r" ] && echo "done: $(echo $r | cut -d/ -f4)"; done 2>/dev/null
 nvidia-smi --query-gpu=index,name,memory.used,utilization.gpu --format=csv,noheader
+# vLLM servers: model name, port, current load (from each server's log)
+for log in /root/vllm*.log; do
+  [ -f "$log" ] || continue
+  P=$(grep -oE "served_model_name': \['[a-z-]+'\]|lora_modules[^]]*" "$log" | head -1 | grep -oE "arena-[a-z]+" | sort -u | tr '\n' ' ')
+  L=$(grep -oE "Avg generation throughput: [0-9.]+ tokens/s, Running: [0-9]+ reqs, Waiting: [0-9]+ reqs" "$log" | tail -1)
+  T=$(stat -c %Y "$log"); age=$(( $(date +%s) - T ))
+  [ -n "$L" ] && [ $age -lt 120 ] && echo "vllm ${P:-?} | $(echo $L | sed 's/Avg generation throughput: //')"
+done
+pgrep -f "posttrain.grpo|grpo.py" >/dev/null && echo "GRPO running: $(ls -d /root/ckpt/grpo-*/step-* 2>/dev/null | wc -l) checkpoints saved"
+true
