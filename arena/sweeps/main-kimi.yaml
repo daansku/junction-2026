@@ -1,0 +1,11 @@
+# A3-10 subset: Kimi K3.1 Pro on the first 10 eval-v1 games, 1 attempt (approved Sat 13:55). ~24-30 s/action,
+# so a 400-action game takes up to ~3 h: start first. Marked as a subset on the leaderboard.
+name: main-kimi
+collection: eval-v1
+games: {first: 10}
+attempts: 1
+concurrency: 3
+est_steps_per_game: 250
+models:
+  - {id: verda-kimi-k3-1-pro}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 5.00, max_wall_s: 10800}

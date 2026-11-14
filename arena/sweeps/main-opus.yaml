@@ -1,10 +1,12 @@
-# Opus on a subset of eval-v1 (cost). Same harness h1, separate sweep name so the subset is visible.
-name: main-opus-subset
+# A3-10 subset: Claude Opus 5.5 (medium) on 2 eval-v1 games, 1 attempt. Human decision Sat 14:10: the Anthropic key
+# has ~EUR 20, so Opus on an easy (d1) and a hard (d3) game, the ones Kimi and Gemini also played in the pilot.
+# $9 hard cap per run (~250 actions at ~$0.036/action, >= 2x the optimal path); worst case $18.
+name: main-opus
 collection: eval-v1
-games: {first: 10}
-attempts: 3
-concurrency: 4
+games: [gridworld-s900000-d1-l6-33a57ce4, gridworld-s900002-d3-l6-f09d6348]
+attempts: 1
+concurrency: 2
 est_steps_per_game: 250
 models:
   - {id: claude-opus-5-5, effort: medium}
-budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 4.00, max_wall_s: 3600}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 9.00, max_wall_s: 10800}
