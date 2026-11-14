@@ -17,7 +17,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
-from . import config, engine_adapter
+from . import challenge, config, engine_adapter
 from .recorder import Recorder
 from .sessions import SessionError, SessionManager
 
@@ -360,6 +360,9 @@ def create_app(runs_dir=None) -> FastAPI:
             pass
         finally:
             hub.queues.discard(q)
+
+    # ---- visitor scoreboard for /challenge: stored next to runs/, never inside it; allowed in published mode
+    api.include_router(challenge.router(recorder, challenge.Board(recorder.runs_dir.parent / "challenge" / "board.jsonl")))
 
     app.include_router(api)
 

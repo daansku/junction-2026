@@ -47,6 +47,55 @@ paths:
               schema:
                 type: array
                 items: {$ref: "#/components/schemas/GameMeta"}
+  /challenge/score:
+    post:
+      summary: Put a finished human run on the "Can you beat the AI?" visitor board (A2-22). Allowed in published mode.
+      description: |
+        The score is read from the recorded run, never from the client: levels_completed, levels_total, actions, outcome.
+        Only human runs that have ended (not IN_PROGRESS). One board row per run (409 on repeat).
+        `name` is cleaned to <= 24 printable characters; links are rejected (422). 6 posts per client per minute (429).
+        Stored in DATA_DIR/challenge/board.jsonl, apart from research runs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [run_id, name]
+              properties:
+                run_id: {type: string}
+                name: {type: string, maxLength: 64}
+                beat_ai: {type: boolean, default: false, description: "client's verdict vs the model runs it showed; display only"}
+      responses:
+        "200":
+          description: Row as stored, with its rank on that game's board
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ChallengeRow"}
+        "403": {description: not a human run}
+        "404": {description: unknown run}
+        "409": {description: run still in progress, or already on the board}
+        "422": {description: unusable name}
+        "429": {description: rate limited}
+  /challenge/board:
+    get:
+      summary: Visitor board, best first (more levels, then fewer actions, then earlier)
+      parameters:
+        - {name: game_id, in: query, schema: {type: string}, description: "one game's board; omit for all games"}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+      responses:
+        "200":
+          description: Top rows plus totals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  game_id: {type: string, nullable: true}
+                  rows: {type: array, items: {$ref: "#/components/schemas/ChallengeRow"}}
+                  plays: {type: integer}
+                  wins: {type: integer}
+                  beat_ai: {type: integer}
   /games/generate:
     post:
       summary: Generate a new verified game on demand (procedural factory). CPU only, allowed in published mode.
@@ -324,6 +373,19 @@ components:
       type: http
       scheme: bearer
   schemas:
+    ChallengeRow:
+      type: object
+      properties:
+        run_id: {type: string}
+        game_id: {type: string}
+        name: {type: string}
+        levels_completed: {type: integer}
+        levels_total: {type: integer}
+        actions: {type: integer}
+        outcome: {type: string}
+        beat_ai: {type: boolean}
+        at: {type: string, format: date-time}
+        rank: {type: integer}
     Frame:
       type: array
       minItems: 64
