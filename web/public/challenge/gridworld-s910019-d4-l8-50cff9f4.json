@@ -1,0 +1,54 @@
+{
+ "game_id": "gridworld-s910019-d4-l8-50cff9f4",
+ "levels": 3,
+ "start_level": 1,
+ "optimal_moves": [
+  14,
+  13,
+  12
+ ],
+ "generated_at": "2026-11-14T15:36:26+00:00",
+ "source": "https://65.108.33.107.compute.verda.run",
+ "score_rule": "per level min(1, optimal/actions) if solved else 0; mean x 100",
+ "players": [
+  {
+   "id": "human",
+   "kind": "human",
+   "name": "People (first attempts)",
+   "model_id": null,
+   "attempts": 1,
+   "mean_score": 76.2,
+   "best_score": 76.2,
+   "cleared_all_rate": 1.0,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T151703-059f28bb",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 14
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 42
+      }
+     ],
+     "score": 76.2,
+     "cleared": 3
+    }
+   ]
+  }
+ ]
+}

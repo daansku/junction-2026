@@ -5,8 +5,17 @@
 // "challenge" (coordination/requests/A4-to-A5-challenge-runs-filter.md).
 import { API } from '@/lib/config'
 
-/** Default demo game: dev game with the most human playtests; humans clear L1-3 far more often than models. */
-export const DEFAULT_GAME = 'gridworld-s1000-d1-l6-9b1065f8'
+/**
+ * Challenge set (human decision Sat ~19:00): eval-v2 games that a person played to the end (all 8 levels),
+ * first 3 levels each. Difficulty 4, rules unseen in training. `?game=<id>` still overrides (e.g. the dev game
+ * gridworld-s1000-d1-l6-9b1065f8 that had the most playtests).
+ */
+export const CHALLENGE_GAMES: Array<{ id: string; label: string }> = [
+  { id: 'gridworld-s910000-d4-l8-f71ee29e', label: 'A' },
+  { id: 'gridworld-s910019-d4-l8-50cff9f4', label: 'B' },
+  { id: 'gridworld-s910021-d4-l8-404033da', label: 'C' },
+]
+export const DEFAULT_GAME = CHALLENGE_GAMES[0].id
 export const DEFAULT_LEVELS = 3
 export const NAME_MAX = 20
 
