@@ -67,3 +67,10 @@ in h2; the list stops early on level change, game end, or an action that changes
 frames, last 3 reasoning blocks). Test: 15 actions in 3-4 calls, no invalid turns, Kimi 4.8 s/action.
 Sweep `h2b-eval-v2.yaml`: frozen 4 eval-v2 games x 3 attempts x {Kimi K3.1 max, Gemini Pro/Flash/4 Argon/4 Carbon high}
 = 60 runs, all at once, no cost cap, no wall cut (4 h safety only). h2b is its own board, never mixed with h2 rows.
+
+## Sun 00:14 A3-35 completion: h2b on the other 26 eval-v2 games (A3; ignacio 00:12)
+`h2b-eval-v2-rest.yaml`: the 26 eval-v2 games not in h2b-eval-v2 (those 4 x 3 attempts kept, not rerun), 1 attempt,
+104 runs at once, hard end before 01:00 (wall cap ~40 min; runs still going then are labelled wall-capped).
+Effort: Gemini Flash high (= its 4 done games); Gemini 4 Argon, Gemini 4 Carbon, Gemini Pro **medium** (human OK;
+Pro at high = ~14k thinking tokens / 87 s per call). No Kimi (Verda account suspended). Harness fixes in the same
+commit: empty provider reply = invalid turn (was a crash, 4 runs lost); 8 API retries with backoff (429 killed 3 runs).

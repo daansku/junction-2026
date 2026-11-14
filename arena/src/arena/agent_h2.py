@@ -226,8 +226,9 @@ class OpenAICompatH2:
         from openai import OpenAI
         from .providers.openai_compat import make_client
         base = make_client(model["provider"], model.get("base_url"), model.get("api_key_env"))
+        # 8 retries with the SDK's exponential backoff: rate limits (429) no longer kill a run
         self.client: OpenAI = base.with_options(timeout=float(os.environ.get("ARENA_H2_TIMEOUT_S", "900")),
-                                                max_retries=2)
+                                                max_retries=int(os.environ.get("ARENA_H2_RETRIES", "8")))
         self.model, self.effort, self.multi = model, effort, multi
         self.image_turns = H2B_IMAGE_TURNS if multi else IMAGE_TURNS
         self.thinking_turns = H2B_THINKING_TURNS if multi else THINKING_TURNS
@@ -287,6 +288,8 @@ class OpenAICompatH2:
         resp = self.client.chat.completions.create(model=self.model["api_model"], messages=self.messages,
                                                    tools=self.tools, tool_choice="auto", **kw)
         lat = int((time.time() - t0) * 1000)
+        if not resp.choices or resp.choices[0].message is None:  # empty provider reply (seen on Gemini): invalid turn
+            return Turn(invalid="empty reply from provider", latency_ms=lat)
         ch = resp.choices[0]
         msg = ch.message
         # reasoning retained: the assistant message goes back exactly as returned (all provider fields kept)
