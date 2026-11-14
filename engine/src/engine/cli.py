@@ -179,7 +179,7 @@ def _fuzz_one(args: tuple[int, int]) -> str | None:
 
 def cmd_fuzz(a) -> int:
     from concurrent.futures import ProcessPoolExecutor
-    jobs = [(a.seed_start + i, 1 + i % 3) for i in range(a.n)]
+    jobs = [(a.seed_start + i, 1 + i % 4) for i in range(a.n)]
     t0 = time.time()
     with ProcessPoolExecutor(a.workers) as ex:
         res = list(ex.map(_fuzz_one, jobs, chunksize=8))

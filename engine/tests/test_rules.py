@@ -243,3 +243,54 @@ def test_gravity_falls():
 def test_tier3_not_in_default_pool():
     assert not {"conveyors", "enemies", "gravity"} & set(rule_pool(2))
     assert {"conveyors", "enemies", "gravity"} <= set(rule_pool(3))
+
+
+# ---- eval-v2 unseen rules (tier 3) ----------------------------------------------------
+def test_no_reverse_blocks_u_turn():
+    lv = corridor(6, ["no_reverse"], {"no_reverse": {}}, start=(3, 1), rows=1)
+    s, _, ev = run(lv, [R, L])
+    assert s.pos == (4, 1) and "bump" in ev and s.moves == 2
+    s, _, _ = run(lv, [L])                  # first move: no last direction, free
+    assert s.pos == (2, 1)
+    lv2 = corridor(4, ["no_reverse"], {"no_reverse": {}}, start=(2, 2), goal=(4, 3), rows=3)
+    s, _, _ = run(lv2, [R, D, L, U])        # turning is fine, only straight back is blocked
+    assert s.pos == (2, 2)
+
+
+def test_checkpoints_in_order():
+    data = {"checkpoints": {"cps": [[3, 1], [2, 1]]}}
+    lv = corridor(5, ["checkpoints"], data, rows=1)
+    _, out, _ = run(lv, [R, R, R, R])        # touches cp#2 first -> nothing counts
+    assert out == PLAYING
+    # (2,1) entered out of turn -> 0, (3,1) cp1 -> 1, back to (2,1) cp2 -> 2, then the goal
+    _, out, ev = run(lv, [R, R, L, R, R, R])
+    assert "checkpoint" in ev
+    assert out == LEVEL_WON
+
+
+def test_pit_filled_by_block():
+    data = {"push_blocks": {"blocks": [[2, 1]]}, "pits": {"pits": [[3, 1]]}}
+    lv = corridor(5, ["pits", "push_blocks"], data, rows=1)
+    s, out, ev = run(lv, [R])                # block pushed into pit: fills it
+    assert "pit_filled" in ev and s.pos == (2, 1) and not s.c["push_blocks"]
+    s, out, _ = run(lv, [R, R, R, R])
+    assert out == LEVEL_WON
+    lv2 = corridor(5, ["pits", "push_blocks"], {"push_blocks": {"blocks": []}, "pits": {"pits": [[2, 1]]}}, rows=1)
+    s, _, ev = run(lv2, [R])
+    assert s.pos == (1, 1) and "bump" in ev
+
+
+@pytest.mark.parametrize("rules", [("collect_all", "no_reverse"), ("checkpoints",), ("pits", "push_blocks")])
+def test_unseen_rules_generate(rules):
+    from engine import GameSpec, make_game
+    g = make_game(GameSpec(seed=3, n_levels=3, difficulty=2, rules=list(rules)))
+    assert set(rules) <= set(g.levels[-1].rules)
+
+
+def test_d4_games_teach_three_unseen_rules():
+    from engine import GameSpec, make_game
+    from engine.components import tiers
+    t = tiers()
+    g = make_game(GameSpec(seed=950000, n_levels=8, difficulty=4))
+    assert len({r for lv in g.levels for r in lv.rules if t[r] >= 3}) == 3
+    assert {"no_reverse", "checkpoints", "pits"} <= set(rule_pool(3)) and not {"no_reverse", "checkpoints", "pits"} & set(rule_pool(2))

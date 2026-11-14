@@ -11,11 +11,38 @@ from itertools import combinations
 from .. import components as comps
 from ..core.rng import rng_for
 
-MAX_TIER = 2  # raise as tiers land
+MAX_TIER = 2  # default pool for d1-d3 (train/eval-v1); tier 3 only enters at d4
+HARD_DIFFICULTY = 4
+HARD_UNSEEN = 3  # tier-3 (never trained) rules each d4 game introduces
 
 
 def max_tier_for(difficulty: int) -> int:
+    if difficulty >= HARD_DIFFICULTY:
+        return 3
     return 1 if difficulty <= 1 else MAX_TIER
+
+
+def _hard_order(rng, pool: list[str]) -> list[str]:
+    """d4: a few tier-3 rules interleaved early (base, new, base, new, ...). A new rule that
+    `requires` a partner gets that partner placed right before it."""
+    t = comps.tiers()
+    base = [r for r in pool if t[r] < 3]
+    new = [r for r in pool if t[r] >= 3]
+    rng.shuffle(base)
+    rng.shuffle(new)
+    pick, rest = new[:HARD_UNSEEN], new[HARD_UNSEEN:]
+    order: list[str] = []
+    while pick:
+        r = pick.pop(0)
+        req = comps.REGISTRY[r].requires
+        if req and not any(q in order for q in req):
+            partner = next(q for q in base if q in req)
+            base.remove(partner)
+            order.append(partner)
+        elif base:
+            order.append(base.pop(0))
+        order.append(r)
+    return order + base + rest
 
 
 def rule_pool(max_tier: int = MAX_TIER) -> list[str]:
@@ -41,7 +68,10 @@ def plan(seed: int, family: str, difficulty: int, n_levels: int,
         order = list(rules)
     else:
         order = rule_pool(max_tier_for(difficulty))
-        rng.shuffle(order)
+        if difficulty >= HARD_DIFFICULTY:
+            order = _hard_order(rng, order)
+        else:
+            rng.shuffle(order)
     out: list = [((), None, [])]
     used: set[frozenset] = {frozenset()}
     seen: list[str] = []
