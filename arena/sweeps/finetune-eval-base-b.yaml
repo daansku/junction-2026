@@ -1,0 +1,12 @@
+# A3-11 base row, games 9-30: same model, harness and budgets as finetune-eval-base.yaml (same run_keys: the sweep
+# name is not part of the key). Split off at 17:35 to run 16 more games in parallel on GPU 1; the first runner drains
+# (STOP-finetune-eval-base) after its 8 in-flight games (s900000-s900007).
+name: finetune-eval-base-b
+collection: eval-v1
+games: [gridworld-s900008-d3-l6-82467d55, gridworld-s900009-d1-l6-e414c116, gridworld-s900010-d2-l6-4d8f0aaa, gridworld-s900011-d3-l6-0feef556, gridworld-s900012-d1-l6-d0eb4362, gridworld-s900013-d2-l6-fcee479e, gridworld-s900014-d3-l6-363cb740, gridworld-s900015-d1-l6-4fc3c543, gridworld-s900016-d2-l6-52f20532, gridworld-s900017-d3-l6-85a9acb8, gridworld-s900018-d1-l6-d31f156e, gridworld-s900019-d2-l6-7cd9dfca, gridworld-s900020-d3-l6-74e0597f, gridworld-s900021-d1-l6-82dbf064, gridworld-s900022-d2-l6-b7ad9374, gridworld-s900023-d3-l6-9d909bab, gridworld-s900024-d1-l6-25eb953a, gridworld-s900025-d2-l6-52d4bac6, gridworld-s900026-d3-l6-7296ec9e, gridworld-s900027-d1-l6-0b8d2035, gridworld-s900028-d2-l6-21952f6d, gridworld-s900029-d3-l6-85435491]
+attempts: 1
+concurrency: 16
+est_steps_per_game: 250
+models:
+  - {id: verda-base-qwen3-5-9b, max_concurrency: 16}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 2.00, max_wall_s: 10800}
