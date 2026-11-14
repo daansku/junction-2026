@@ -254,6 +254,27 @@
   max_concurrency: 3            # Verda inference API; ~24 s/action measured 03:50
   verified: true
 
+# DeepSeek 4.1 Flash on Verda's managed inference API (human request, Daniel, Sat ~22:35). Model id from live
+# GET https://inference.verda.com/v1/models with VERDA_INFERENCE_KEY (2026-11-14): `deepseek-4-1-flash-1017`.
+# Checked by A1 the same evening: native tool calls work, image input read a red square correctly,
+# `reasoning_effort` is accepted.
+- id: verda-deepseek-4-1-flash
+  display_name: DeepSeek 4.1 Flash (Verda)
+  provider: verda
+  base_url: https://inference.verda.com/v1
+  api_key_env: VERDA_INFERENCE_KEY
+  api_model: deepseek-4-1-flash-1017
+  tier: frontier
+  input_modes: [image, rle]
+  efforts: [low, medium, high]
+  h2_effort: high
+  price_in: null                # hackathon credits, no per-token price published
+  price_out: null
+  params: null
+  link: https://verda.com
+  max_concurrency: 6
+  verified: true
+
 # Small open model on our own Modal endpoint (A4's machine set it up 2026-11-14 ~04:05): SGLang serving
 # google/gemma-4-E4B-it as served-model-name `junction26`, multimodal, reasoning parser gemma4.
 # Auth: Modal proxy token in MODAL_API_KEY (wk-<id>.ws-<secret>); MODAL_BASE_URL ends in /v1.

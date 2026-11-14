@@ -1,0 +1,13 @@
+# Kimi K3.1 Pro on all 30 eval-v2 games, harness h2 (human request: Daniel, Sat ~22:35; run from A1's machine).
+# Extends the 4-game h2-subset-v2 to the full collection; run keys already finished there are skipped.
+# One attempt per game (labelled single-attempt). eval-v2 baselines already exist on the server.
+name: h2-eval-v2-kimi
+harness: h2
+collection: eval-v2
+games: all
+attempts: 1
+concurrency: 6
+est_steps_per_game: 250
+models:
+  - {id: verda-kimi-k3-1-pro, effort: max, max_concurrency: 6}
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 18.0, max_wall_s: 14400}
