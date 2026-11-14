@@ -45,3 +45,10 @@ there is no `</think>`; per item, correct if the official lm-eval metric (math_v
 "the answer is X" / "ANSWER: X" form is correct; MedQA (loglikelihood) unchanged. Identical for every row; base keeps
 its official numbers within 0.01 (headline 0.760 official -> 0.765 v3). Output: `/srv/bench/out/rescore_v3.json`.
 Use v3 numbers for every SFT/RL comparison; report the official numbers next to them for transparency.
+
+**v3 canonical implementation (A3, 21:05):** `python -m posttrain.rescore_answer <run dirs>` (grpo helper session, pushed)
+is THE v3 rescorer: it re-grades only items lm-eval marked [invalid] whose reply contains "ANSWER:", writing
+`items_v3.jsonl` / `summary_v3.json` beside the untouched originals. Base changes 0 items, so it is the minimal rule.
+A3's earlier `rescore_v3.py` (official OR full-text regex on every item, base +0.005) is retired; don't use its numbers.
+Dev slice v3: BBH base 0.921 / games 0.468 / grpo-1 s25 0.470 / grpo-2 s20 0.471; GSM8K 0.96/0.48/0.48/0.48;
+MATH 0.589/0.137/0.143/0.149. The remaining gap is thinking vs non-thinking replies, not parsing.
