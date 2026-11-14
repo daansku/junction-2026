@@ -19,9 +19,11 @@ const FRESH_MS = 30 * 60_000
 /** Ended runs stay on the wall this long so viewers see the outcome. */
 const LINGER_MS = 90_000
 
-export function useLiveRuns(): { runs: LiveRun[]; status: 'connecting' | 'live' | 'polling' } {
+export function useLiveRuns(): { runs: LiveRun[]; status: 'connecting' | 'live' | 'polling'; error: unknown } {
   const [runs, setRuns] = useState<Map<string, LiveRun>>(new Map())
   const [status, setStatus] = useState<'connecting' | 'live' | 'polling'>('connecting')
+  // Last failure to reach the server; null once any request (or the websocket) succeeds.
+  const [error, setError] = useState<unknown>(null)
   const runsRef = useRef(runs)
   runsRef.current = runs
 
@@ -48,6 +50,7 @@ export function useLiveRuns(): { runs: LiveRun[]; status: 'connecting' | 'live' 
     ;(async () => {
       try {
         const metas = await api.listRuns()
+        setError(null)
         const now = Date.now()
         const live = metas.filter(
           (m) => m.outcome === 'IN_PROGRESS' && m.started_at && now - Date.parse(m.started_at) < FRESH_MS,
@@ -63,8 +66,8 @@ export function useLiveRuns(): { runs: LiveRun[]; status: 'connecting' | 'live' 
             })
             .catch(() => {})
         }
-      } catch {
-        /* wall shows empty state */
+      } catch (e) {
+        if (!cancelled) setError(e)
       }
     })()
     return () => {
@@ -87,6 +90,7 @@ export function useLiveRuns(): { runs: LiveRun[]; status: 'connecting' | 'live' 
       pollTimer = setInterval(async () => {
         try {
           const metas = await api.listRuns()
+          setError(null)
           const now = Date.now()
           const msgs: Msg[] = []
           for (const m of metas) {
@@ -101,8 +105,8 @@ export function useLiveRuns(): { runs: LiveRun[]; status: 'connecting' | 'live' 
             const last = steps[steps.length - 1]
             if (last) apply([{ run_id: m.run_id, step: last }])
           }
-        } catch {
-          /* keep polling */
+        } catch (e) {
+          setError(e) // keep polling
         }
       }, 3000)
     }
@@ -113,6 +117,7 @@ export function useLiveRuns(): { runs: LiveRun[]; status: 'connecting' | 'live' 
       ws.onopen = () => {
         retry = 0
         setStatus('live')
+        setError(null)
         if (pollTimer) {
           clearInterval(pollTimer)
           pollTimer = null
@@ -154,5 +159,5 @@ export function useLiveRuns(): { runs: LiveRun[]; status: 'connecting' | 'live' 
       (a.meta.player?.kind === 'model' ? 0 : 1) - (b.meta.player?.kind === 'model' ? 0 : 1) ||
       (a.meta.started_at ?? '').localeCompare(b.meta.started_at ?? ''),
   )
-  return { runs: list, status }
+  return { runs: list, status, error }
 }

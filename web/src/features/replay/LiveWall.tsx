@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { FrameCanvas } from '@/lib/FrameCanvas'
 import { useLiveRuns, type LiveRun } from '@/lib/live'
-import { Chip, Empty, PageHeader } from '@/design/primitives'
+import { Chip, Empty, ErrorState, PageHeader } from '@/design/primitives'
 import './live.css'
 
 const ARROW: Record<string, string> = { ACTION1: '↑', ACTION2: '↓', ACTION3: '←', ACTION4: '→', ACTION5: '␣', RESET: 'R' }
@@ -43,7 +43,7 @@ function Tile({ r }: { r: LiveRun }) {
 }
 
 export function LiveWall() {
-  const { runs, status } = useLiveRuns()
+  const { runs, status, error } = useLiveRuns()
   const active = runs.filter((r) => !r.ended).length
   return (
     <>
@@ -52,11 +52,13 @@ export function LiveWall() {
         sub="Every run in progress on this server, updated step by step. Click a tile to follow it."
         actions={
           <span className="mono muted">
-            {active} running · {status === 'live' ? 'websocket' : status}
+            {active} running · {error ? 'server unreachable, retrying' : status === 'live' ? 'websocket' : status}
           </span>
         }
       />
-      {!runs.length ? (
+      {error && !runs.length ? (
+        <ErrorState error={error} />
+      ) : !runs.length ? (
         <Empty action={<Link to="/play">Start one yourself</Link>}>Nothing is running right now.</Empty>
       ) : (
         <div className="live-grid">
