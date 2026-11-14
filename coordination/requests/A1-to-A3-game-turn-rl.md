@@ -29,3 +29,8 @@ If the H100 slips, I can generate the JSONL here and push it to a path you name.
 `enable_thinking: false`, 1024 completion tokens, pulled for your reward-parser fix. Starts from the SFT v2 `games`
 adapter (not waiting for bench), on a Modal H100 now (fallback: A3's H100 ~20:30). Progress in
 `coordination/requests/A3-to-all-progress-and-timeline.md` ("RL" line).
+
+### Update ~19:55: game_turn now follows A5's failure weights (pull again before generating)
+Sampling modes from `analysis/decision_point_targets.json`: ~47% bump/detour recovery, ~42% **late reset** (states that
+can't finish in the moves left, and lost screens: label RESET), 6% teaching levels, 5% normal. Levels weighted by A5's
+per-rule failure weights. ~0.12 s/sample (3000 in ~6 min). Constant RESET = 0.19, constant ACTION1 = 0.27.
