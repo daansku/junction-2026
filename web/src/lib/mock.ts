@@ -424,6 +424,10 @@ export class MockApi implements Api {
   private sessions = new Map<string, { sim: SimState; run: RunMeta; steps: Step[]; t0: number }>()
   private recorded: Record<string, { meta: RunMeta; steps: Step[] }> = {}
 
+  async health() {
+    return { ok: true, engine_version: 'mock', published_mode: false, active_sessions: this.sessions.size }
+  }
+
   async listCollections() {
     const fx = await loadFixtures()
     const set = new Set<string>(['mock'])

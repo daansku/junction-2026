@@ -14,7 +14,16 @@ import type {
 } from './types'
 
 /** Every page talks to the backend only through this interface (PLAN.md §4.4). */
+export interface ServerInfo {
+  ok?: boolean
+  engine_version?: string
+  published_mode?: boolean
+  active_sessions?: number
+  [k: string]: unknown
+}
+
 export interface Api {
+  health(): Promise<ServerInfo>
   listCollections(): Promise<string[]>
   listGames(collection?: string): Promise<GameMeta[]>
   getGame(gameId: string): Promise<GameDescribe>
@@ -57,6 +66,9 @@ class HttpApi implements Api {
     return this.req<T>(path, { method: 'POST', body: JSON.stringify(body) })
   }
 
+  health() {
+    return this.req<ServerInfo>('/health')
+  }
   async listCollections() {
     return unwrapList<string>(await this.req('/collections'), 'collections')
   }

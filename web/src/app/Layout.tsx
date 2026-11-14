@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { API, setApiMode, SHARED_URL } from '@/lib/config'
 import { PALETTE_SOURCE } from '@/lib/palette'
+import { useServerInfo } from '@/lib/server'
 import { Wordmark } from './Wordmark'
 import { ThemeToggle } from './ThemeToggle'
 import './layout.css'
@@ -16,6 +17,8 @@ const NAV = [
 ]
 
 export function Layout() {
+  const server = useServerInfo()
+  const nav = NAV.filter((n) => !(server.published && n.to === '/live'))
   return (
     <div className="app">
       <header className="topbar">
@@ -23,7 +26,7 @@ export function Layout() {
           <Wordmark />
         </NavLink>
         <nav className="nav" aria-label="Main">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
               {n.label}
             </NavLink>
@@ -46,6 +49,11 @@ export function Layout() {
         <div className="mock-banner mono">
           MOCK DATA — fixtures + in-browser fake engine. Not results.
           {PALETTE_SOURCE === 'fallback' && ' Palette: built-in fallback (contracts/palette.json missing).'}
+        </div>
+      )}
+      {server.published && (
+        <div className="published-banner mono">
+          Published snapshot: results are frozen. You can play every game; your plays are not added to the results.
         </div>
       )}
       <main className="main">

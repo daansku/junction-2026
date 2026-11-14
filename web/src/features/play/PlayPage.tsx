@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { API } from '@/lib/config'
+import { useServerInfo } from '@/lib/server'
 import { FrameCanvas } from '@/lib/FrameCanvas'
 import { isTyping } from '@/lib/keys'
 import type { ActionName, Frame, GameMeta, Truth } from '@/lib/types'
@@ -65,6 +66,7 @@ export function PlayPage() {
   const { gameId: routeGame } = useParams()
   const [params] = useSearchParams()
   const navigate = useNavigate()
+  const server = useServerInfo()
 
   const collections = useQuery({ queryKey: ['collections'], queryFn: () => api.listCollections() })
   const collection = params.get('collection') ?? (collections.data?.includes('dev') ? 'dev' : collections.data?.[0])
@@ -270,9 +272,10 @@ export function PlayPage() {
                     <Stat label="levels" value={finished.levels_total} />
                   </div>
                   <div className="play-done-actions">
-                    {session && (
+                    {session && !server.published && (
                       <Link to={`/replay/${encodeURIComponent(session.runId)}`}>Watch your replay</Link>
                     )}
+                    {server.published && <Link to="/replay">Watch how the models did</Link>}
                     <span className="muted">
                       <Kbd>Enter</Kbd> play again
                     </span>
@@ -310,7 +313,7 @@ export function PlayPage() {
                 <Kbd>R</Kbd> restart level (counts as an action)
               </span>
             </div>
-            {isShared && (
+            {isShared && !server.published && (
               <p className="muted play-note">
                 Runs on this server are recorded as the human baseline under your name. Practising? Use name{' '}
                 <span className="mono">test</span>.
@@ -333,7 +336,7 @@ export function PlayPage() {
             ) : (
               <span className="muted">No actions yet.</span>
             )}
-            {session && log.length > 0 && (
+            {session && log.length > 0 && !server.published && (
               <div style={{ marginTop: 8 }}>
                 <Link to={`/replay/${encodeURIComponent(session.runId)}`}>Open this run in replay</Link>
               </div>

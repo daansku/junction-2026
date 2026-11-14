@@ -36,6 +36,13 @@
   border-bottom: 1px solid var(--line);
 }
 
+.published-banner {
+  font-size: 11px;
+  color: var(--text-2);
+  padding: 2px var(--gutter);
+  border-bottom: 1px solid var(--line);
+}
+
 .main {
   flex: 1;
   width: 100%;

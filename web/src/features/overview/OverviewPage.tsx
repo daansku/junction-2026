@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { FrameCanvas } from '@/lib/FrameCanvas'
 import type { RunMeta } from '@/lib/types'
+import { useServerInfo } from '@/lib/server'
 import type { LeaderboardDocument, LeaderboardRow } from '@/features/leaderboard/types'
 import { Button, Chip, Kbd, Panel, Stat } from '@/design/primitives'
 import './overview.css'
@@ -44,6 +45,7 @@ function Showcase({ run }: { run: RunMeta }) {
 const pct = (v?: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%`)
 
 export function OverviewPage() {
+  const server = useServerInfo()
   const games = useQuery({ queryKey: ['games', undefined], queryFn: () => api.listGames() })
   const runs = useQuery({ queryKey: ['runs', undefined, undefined], queryFn: () => api.listRuns() })
   const lb = useQuery({
@@ -103,7 +105,7 @@ export function OverviewPage() {
             </Link>
             <Link to="/leaderboard">Leaderboard</Link>
             <Link to="/gallery">Gallery</Link>
-            <Link to="/live">Live</Link>
+            {!server.published && <Link to="/live">Live</Link>}
             <span className="muted ov-keys">
               <Kbd>←</Kbd>
               <Kbd>↑</Kbd>
