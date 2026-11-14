@@ -1,0 +1,12 @@
+# A3-08 pilot: restart of the other 2 featherless-open (DeepSeek V3.2) runs that stalled ~1 h on queued
+# requests before the 180 s request timeout existed. Attempt 0 was ended as ABORTED; this runs attempt 1.
+#   python -m arena run arena/sweeps/pilot-deepseek-restart.yaml --api http://localhost:8120
+name: pilot-deepseek-restart-2
+collection: eval-v1
+games: [gridworld-s900003-d1-l6-46e5dcfe, gridworld-s900004-d2-l6-ce3a97fd]
+attempts: 2
+concurrency: 2
+est_steps_per_game: 200
+models:
+  - {id: featherless-open}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 1.50, max_wall_s: 3600}
