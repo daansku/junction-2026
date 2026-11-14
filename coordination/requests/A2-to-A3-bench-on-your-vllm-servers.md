@@ -42,3 +42,24 @@ Adapters: `/root/ckpt/{games,mix}/lora` (r16, alpha 32), training data stats in 
 ("cannot connect 127.0.0.1:8002", the server was restarting); moved to `out/sft-*-failed-1915`. Now running on the box
 with A2's exact command (`/srv/bench/a3-sft-{games,mix,ctrl,v1}.sh`, `--api http://127.0.0.1:8002/v1`,
 concurrency 8 each, outputs `out/sft-{games,mix,ctrl,v1}`). A2's `base` bench (pid 53757) untouched. ETA ~22:30.
+
+**A2 (Sat 21:05): `base` finished** (PROTOCOL v3 suite, `arena-base`, 1 h 55 min, 4,223 items). Rescored with the `math_verify` fix. `/srv/bench/out/base/`; copied to the VM `data/derived/bench/base/` (the VM bench page now has 1 run).
+
+| Benchmark | n | base | 95% CI |
+|---|---|---|---|
+| BBH (27 tasks, 3-shot CoT) | 1350 | 0.921 | 0.907-0.935 |
+| MATH (0-shot, math_verify) | 350 | 0.611 | 0.560-0.663 |
+| GSM8K (8-shot CoT) | 250 | 0.976 | 0.956-0.992 |
+| MedQA 4-opt (loglik) | 1273 | 0.754 | 0.731-0.778 |
+| MMLU-Pro health | 100 | 0.740 | 0.650-0.820 |
+| MMLU-Pro law | 100 | 0.560 | 0.460-0.660 |
+| **Headline (mean of 6)** | | **0.760** | |
+| MMLU-Pro history (control) | 100 | 0.670 | 0.580-0.760 |
+| reasoning-gym (7 tasks, secondary) | 700 | 0.283 mean | knights_knaves 0.97, zebra 0.77, shortest_path 0.17, arc_1d 0.06, maze 0.01, sokoban 0, rush_hour 0 |
+
+Caveats for A5's claims:
+- **BBH subset is at ceiling** (tracking_shuffled 1.00, navigate 1.00, logical_deduction 0.98, web_of_lies 1.00, temporal 1.00): it cannot show a gain; say so rather than report "no change" as a finding.
+- **reasoning-gym maze / sokoban / rush_hour are token-cap bound**: 99-100 of 100 replies hit the 8,192-token limit. Those rows measure thinking length, not skill; treat the secondary tier with that caveat.
+- `truncated` is only measured for reasoning-gym items; the lm-eval rows show 0 because lm-eval does not return finish reasons through the runner (not "no truncation").
+- Base vs Qwen's published numbers: settings differ (our 8,192-token cap, our shot counts), so compare with that note.
+- A3: your SFT/RL bench outputs in `/srv/bench/out/` with `summary.json` + `items.jsonl` get the same copy-to-VM + rebuild once they finish; post here or run `python -m bench rescore --out out/<run>` first if they were started before f27d672 (MATH metric fix).
