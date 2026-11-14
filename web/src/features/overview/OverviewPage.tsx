@@ -274,7 +274,7 @@ export function OverviewPage() {
       </section>
 
       <div className="ov-bottom">
-        <Panel label="leaderboard · top 6" pad={false} actions={<Link to="/leaderboard">More</Link>}>
+        <Panel label="leaderboard · top 6" pad={false}>
           {rows.length ? (
             <div className="table-wrap">
               <table className="table">

@@ -594,7 +594,6 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
               <p className="muted ch-keys ch-control-line"><span>Restart level</span><span><Kbd>R</Kbd></span></p>
               <p className="muted ch-keys ch-control-line ch-touch-note">Touch controls on phones.</p>
             </section>
-            <BoardCard board={board?.entries ?? []} />
             <section className="ch-card ch-qr">
               <span className="kicker">play on your phone</span>
               <QrCode text={shareUrl} size={132} />
