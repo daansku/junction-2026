@@ -123,3 +123,6 @@
 
 .ch-review-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
 .ch-tabs { display: flex; gap: var(--s1); }
+
+.ch-solo { display: flex; justify-content: center; padding-top: var(--s6); }
+.ch-solo .ch-verdict { width: min(560px, 100%); }
