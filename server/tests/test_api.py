@@ -139,3 +139,12 @@ def test_live_ws(client):
     assert msgs[0]["event"] == "started" and msgs[0]["run_id"] == s["run_id"]
     assert [m.get("step", {}).get("i") for m in msgs[1:3]] == [0, 1]
     assert msgs[3]["event"] == "ended"
+
+
+def test_player_extras_kept(client):
+    gid = first_game(client)
+    r = client.post("/api/sessions", json={"game_id": gid, "player": {
+        "kind": "model", "name": "m", "model_id": "x", "harness_version": "h1", "input_modes": ["text"]}})
+    meta = client.get(f"/api/runs/{r.json()['run_id']}").json()
+    assert meta["player"]["input_modes"] == ["text"] and meta["harness_version"] == "h1"
+    validate(meta, "meta")

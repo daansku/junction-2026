@@ -48,6 +48,8 @@ class PlayerIn(BaseModel):
     provider: Optional[str] = None
     effort: Optional[str] = None
 
+    model_config = {"extra": "allow"}  # harness extras (harness_version, input_modes, ...) are kept in meta
+
 
 class StartIn(BaseModel):
     game_id: str = Field(min_length=1, max_length=200)
@@ -158,8 +160,9 @@ def create_app(runs_dir=None) -> FastAPI:
     # ---- sessions
     @api.post("/sessions")
     def start(body: StartIn):
-        return sessions.start(body.game_id, body.player.model_dump(), body.collection, body.run_key,
-                              body.harness_version)
+        player = body.player.model_dump()
+        return sessions.start(body.game_id, player, body.collection, body.run_key,
+                              body.harness_version or player.get("harness_version"))
 
     @api.post("/sessions/{session_id}/act")
     def act(session_id: str, body: ActIn):

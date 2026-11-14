@@ -71,8 +71,10 @@ class SessionManager:
             raise SessionError(404, f"unknown game {game_id}") from None
         frame = list(game.reset())
         truth = game.truth()
-        player = {"kind": kind, "name": str(player["name"])[:200], "model_id": player.get("model_id"),
-                  "provider": player.get("provider"), "effort": player.get("effort")}
+        extras = {k: v for k, v in player.items()
+                  if k not in ("kind", "name") and isinstance(k, str) and len(k) <= 50 and len(repr(v)) <= 500}
+        player = {"model_id": None, "provider": None, "effort": None, **dict(list(extras.items())[:20]),
+                  "kind": kind, "name": str(player["name"])[:200]}
         meta = self.recorder.start(
             {"run_key": run_key, "game_id": game_id, "collection": collection, "player": player,
              "harness_version": harness_version, "engine_version": engine_adapter.engine_version(),
