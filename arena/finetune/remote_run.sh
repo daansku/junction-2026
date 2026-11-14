@@ -18,9 +18,12 @@ if [ "$MEM" -lt 60000 ]; then BATCH=2; else BATCH=4; fi        # A100 40 GB vs 8
 ACC=$(( 16 / (BATCH * NGPU) )); [ "$ACC" -ge 1 ] || ACC=1        # effective batch 16 regardless of GPU count
 echo "GPUs=$NGPU batch=$BATCH grad_accum=$ACC"
 
-python3 -m venv /root/venv && . /root/venv/bin/activate
-pip install -q --upgrade pip
-pip install -q "torch" "transformers>=4.57" "peft>=0.13" accelerate
+# Python 3.12 via uv: the image's system Python (3.14 on Ubuntu 26.04) may lack torch/vllm wheels.
+command -v uv >/dev/null || { curl -LsSf https://astral.sh/uv/install.sh | sh; }
+export PATH="$HOME/.local/bin:$PATH"
+uv venv -q -p 3.12 /root/venv && . /root/venv/bin/activate
+uv pip install -q "torch" "transformers>=4.57" "peft>=0.13" accelerate
+python -c "import torch; print('torch', torch.__version__, 'cuda', torch.cuda.is_available(), torch.cuda.device_count())"
 
 echo "== train $(date -u +%H:%M)"
 ARGS=(--base "$BASE" --data "$DATA" --out /root/ckpt/lora --epochs 1 --lr 2e-4 --max-len 2048 --lora-r 16)
@@ -36,7 +39,7 @@ echo "== merge $(date -u +%H:%M)"
 python train_sft.py --merge --base "$BASE" --out /root/ckpt/lora --merged /root/ckpt/merged
 
 echo "== serve $(date -u +%H:%M)"
-pip install -q vllm
+uv pip install -q vllm
 # Same chat template as the base; text-only prompts. Port 8000 must be reachable (Verda: public IP).
 exec vllm serve /root/ckpt/merged --served-model-name arena-ft --max-model-len 4096 \
     --api-key "$SERVE_KEY" --host 0.0.0.0 --port 8000
