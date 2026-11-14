@@ -57,7 +57,8 @@ class OpenAICompatProvider:
                 else:
                     url = "data:image/png;base64," + base64.b64encode(p["data"]).decode()
                     content.append({"type": "image_url", "image_url": {"url": url}})
-        kw = {"max_tokens": max_tokens}
+        # registry `max_output_tokens` caps it for small-context deployments (e.g. our vLLM, 4k context)
+        kw = {"max_tokens": min(max_tokens, self.model.get("max_output_tokens") or max_tokens)}
         if effort and effort in (self.model.get("efforts") or []):
             kw["reasoning_effort"] = effort
         t0 = time.time()

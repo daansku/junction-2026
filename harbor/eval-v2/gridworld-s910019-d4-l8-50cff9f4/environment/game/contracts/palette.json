@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "note": "Frame cells are ints 0-15 indexing this list. Semantic names are a convention for the renderer only; per-game skin shuffle may remap component colours. Index 0 is the background.",
+  "colors": [
+    {"index": 0,  "hex": "#000000", "name": "black"},
+    {"index": 1,  "hex": "#1E5BD8", "name": "blue"},
+    {"index": 2,  "hex": "#E5383B", "name": "red"},
+    {"index": 3,  "hex": "#2FB54A", "name": "green"},
+    {"index": 4,  "hex": "#F5C518", "name": "yellow"},
+    {"index": 5,  "hex": "#8A8F98", "name": "grey"},
+    {"index": 6,  "hex": "#D63AAF", "name": "magenta"},
+    {"index": 7,  "hex": "#F2832B", "name": "orange"},
+    {"index": 8,  "hex": "#6FD3F2", "name": "azure"},
+    {"index": 9,  "hex": "#7A1F2B", "name": "maroon"},
+    {"index": 10, "hex": "#FFFFFF", "name": "white"},
+    {"index": 11, "hex": "#3A3F47", "name": "dark_grey"},
+    {"index": 12, "hex": "#8E5CE6", "name": "violet"},
+    {"index": 13, "hex": "#1FA39A", "name": "teal"},
+    {"index": 14, "hex": "#A8D94A", "name": "lime"},
+    {"index": 15, "hex": "#8B5A2B", "name": "brown"}
+  ]
+}
