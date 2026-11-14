@@ -1,12 +1,12 @@
-# A3-11: fine-tuned Qwen3.5-9B (LoRA on train-v1, ours) vs the untuned base through the same harness h1, all 30
-# frozen eval-v1 games, 1 attempt each. The base runs on Featherless (shares the account with main-deepseek).
-# Base-only runner (started 15:00 so the untuned row runs in parallel; same run_keys as finetune-eval).
+# A3-11 base row: untuned Qwen3.5-9B through the same harness h1 on all 30 frozen eval-v1 games, 1 attempt each.
+# Served like the fine-tune (vLLM on our Verda A100, GPU 1) so the only difference is the weights.
+# (Started 15:00 on Featherless, which ran at ~1 action/min: stopped 17:10 and moved here.)
 name: finetune-eval-base
 collection: eval-v1
 games: all
 attempts: 1
-concurrency: 3
+concurrency: 8
 est_steps_per_game: 250
 models:
-  - {id: featherless-qwen3-5-9b, max_concurrency: 3}
+  - {id: verda-base-qwen3-5-9b, max_concurrency: 8}
 budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 2.00, max_wall_s: 10800}
