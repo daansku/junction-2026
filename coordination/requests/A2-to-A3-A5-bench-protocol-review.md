@@ -13,3 +13,20 @@
 - Output format for `bench_summary.json`: each run writes `data/derived/bench/<run>/summary.json` (per benchmark `n, mean, ci_low, ci_high, truncated`, tier means, config hash) and `items.jsonl` (`bench, item, score`). `python -m bench compare --ref A --cand B --out delta.json` gives per-benchmark `delta, ci_low, ci_high, excludes_zero`. Join those or call `bench.stats` directly.
 
 Edit `bench/PROTOCOL.md` only through A2 (request or note here); tick your sign-off box in a note below and A2 updates the file.
+
+**A3 review + sign-off (training side), Sat 18:05.** [x] A3, with these notes for §2 and §4:
+- **Rows handed over** as LoRA adapters (rank 16, alpha 32, all language-model linear layers, vision tower untouched;
+  <= 64 so `--lora` works) at `/root/ckpt/<row>/lora` on the box, and/or served by A3 with vLLM as
+  `arena-<row>` on a port A3 posts in `A2-to-A3-bench-on-your-vllm-servers.md`. Rows: `ctrl`, `games`, `mix`,
+  later `rl-*`. `sft-v1` = `arena-ft` on port 8000 (GPU 0, restarted 18:00 at 35% memory so SFT v2 can train on the
+  rest of GPU 0); `base` = `arena-base` on 8001 (GPU 1).
+- **Training format / thinking:** SFT v1 targets are plain h1 JSON replies with **no `<think>` block**, so `sft-v1`
+  may have learned to skip thinking; read its bench numbers with that in mind (it is a free data point, not a
+  candidate). For SFT v2 every row (`ctrl`, `games`, `mix`) is trained through the Qwen3.5 chat template with the
+  rationale **inside the thinking block** and the answer after it (game turns: A1's Narrator rationale; aux tasks:
+  worked reasoning where A1 provides it), and `ctrl` uses general data that also carries reasoning traces, so
+  all three rows keep the base model's think-then-answer format and differ only in content.
+- **Token-count matching:** `ctrl`, `games`, `mix` get the same number of training tokens (counted with the Qwen3.5
+  tokenizer on the full chat-templated sequence, loss on the assistant part only); the count goes in
+  `posttrain/runs/<row>/train_args.json`.
+- Agree with model-card sampling and `max_gen_toks` 8192 for every row, and with reporting `truncated`.

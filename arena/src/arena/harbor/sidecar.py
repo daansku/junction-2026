@@ -80,6 +80,7 @@ class Episode:
                 return self.frame, self.allowed, "action limit reached"
             if a not in self.allowed:
                 self.invalid += 1
+                self._write()  # keep invalid_actions in score.json current (A4 red team); reward unchanged
                 return self.frame, self.allowed, f"invalid action; available: {', '.join(self.allowed)}"
             lvl = t["level"] - 1
             self.actions_on[lvl] += 1
