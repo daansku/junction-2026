@@ -1,0 +1,146 @@
+// Data for the /challenge demo: precomputed per-level stats (web/scripts/challenge_stats.py) and the
+// visitor board. The board uses A2's endpoints when the server has them (PLAN.md A2-22:
+// POST /challenge/score, GET /challenge/board) and otherwise falls back to this browser only,
+// labelled as such. Visitor plays never go to the research board: sessions carry player.mode
+// "challenge" (coordination/requests/A4-to-A5-challenge-runs-filter.md).
+import { API } from '@/lib/config'
+
+/** Default demo game: dev game with the most human playtests; humans clear L1-3 far more often than models. */
+export const DEFAULT_GAME = 'gridworld-s1000-d1-l6-9b1065f8'
+export const DEFAULT_LEVELS = 3
+export const NAME_MAX = 20
+
+export interface StatsLevel {
+  level: number
+  solved: boolean
+  actions: number
+}
+
+export interface StatsPlayer {
+  id: string
+  kind: 'human' | 'model'
+  name: string
+  model_id: string | null
+  attempts: number
+  mean_score: number
+  best_score: number
+  cleared_all_rate: number
+  per_level_solve_rate: number[]
+  runs: Array<{ run_id: string; levels: StatsLevel[]; score: number; cleared: number }>
+}
+
+export interface ChallengeStats {
+  game_id: string
+  levels: number
+  start_level?: number
+  optimal_moves: number[]
+  generated_at: string
+  score_rule: string
+  players: StatsPlayer[]
+}
+
+export async function loadStats(gameId: string, from: number): Promise<ChallengeStats | null> {
+  const file = from === 1 ? `${gameId}.json` : `${gameId}-from${from}.json`
+  try {
+    const res = await fetch(`${import.meta.env.BASE_URL}challenge/${file}`)
+    if (!res.ok) return null
+    const doc = (await res.json()) as ChallengeStats
+    return Array.isArray(doc.players) ? doc : null
+  } catch {
+    return null
+  }
+}
+
+/** Per level: min(1, optimal / actions) when solved, else 0. Mean x 100. Same rule as the arena score. */
+export function challengeScore(levels: Array<{ solved: boolean; actions: number }>, optimal: number[]): number {
+  if (!optimal.length) return 0
+  const s = optimal.reduce((acc, opt, i) => {
+    const lv = levels[i]
+    return acc + (lv?.solved && lv.actions > 0 ? Math.min(1, opt / lv.actions) : 0)
+  }, 0)
+  return Math.round((1000 * s) / optimal.length) / 10
+}
+
+export function cleanName(raw: string): string {
+  return raw
+    .replace(/[^\p{L}\p{N} _.-]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, NAME_MAX)
+}
+
+export interface BoardEntry {
+  name: string
+  score: number
+  cleared: number
+  moves: number
+  beat_ai: boolean
+  at: string
+  run_id?: string | null
+}
+
+export interface Board {
+  source: 'server' | 'local'
+  entries: BoardEntry[]
+}
+
+const localKey = (gameId: string) => `challengeBoard:${gameId}`
+
+function readLocal(gameId: string): BoardEntry[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(localKey(gameId)) ?? '[]')
+    return Array.isArray(v) ? (v as BoardEntry[]) : []
+  } catch {
+    return []
+  }
+}
+
+function sortBoard(entries: BoardEntry[]): BoardEntry[] {
+  return [...entries].sort((a, b) => b.score - a.score || b.cleared - a.cleared || a.moves - b.moves)
+}
+
+export async function fetchBoard(gameId: string): Promise<Board> {
+  if (API.base) {
+    try {
+      const res = await fetch(`${API.base}/challenge/board?game_id=${encodeURIComponent(gameId)}&limit=10`)
+      if (res.ok) {
+        const doc = (await res.json()) as { entries?: BoardEntry[] } | BoardEntry[]
+        const entries = Array.isArray(doc) ? doc : (doc.entries ?? [])
+        return { source: 'server', entries: sortBoard(entries).slice(0, 10) }
+      }
+    } catch {
+      /* server without the board yet: local fallback */
+    }
+  }
+  return { source: 'local', entries: sortBoard(readLocal(gameId)).slice(0, 10) }
+}
+
+export async function submitScore(gameId: string, e: BoardEntry): Promise<'server' | 'local'> {
+  if (API.base) {
+    try {
+      const res = await fetch(`${API.base}/challenge/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game_id: gameId, ...e }),
+      })
+      if (res.ok) return 'server'
+    } catch {
+      /* fall through */
+    }
+  }
+  try {
+    const all = sortBoard([...readLocal(gameId), e]).slice(0, 50)
+    localStorage.setItem(localKey(gameId), JSON.stringify(all))
+  } catch {
+    /* storage blocked: the score is still on screen */
+  }
+  return 'local'
+}
+
+export function clearLocalBoard(gameId: string) {
+  try {
+    localStorage.removeItem(localKey(gameId))
+  } catch {
+    /* ignore */
+  }
+}

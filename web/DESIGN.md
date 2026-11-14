@@ -162,3 +162,18 @@ Covers scatter, line, heatmap (cell), rule/reference lines and tips.
 - No "hero + three feature cards". The overview page is a table and a frame.
 - No colour fills on table cells, no rainbow scales, no dual axes.
 - No text inside game frames, no anti-aliased frame scaling.
+
+## 10. `/challenge` and `/kiosk` (booth demo)
+
+The one page read from across a room by people who never saw the project.
+Same rules as above, with these exceptions only:
+- One headline at 32px / 600 ("Can you beat the AI?") and the verdict line on the
+  end screen at 32px. Big numbers (`.ch-big`) at 32px mono. Body text 16px.
+- `/kiosk` drops the top bar; the frame may go up to 13× (832px) at 1080p.
+- The QR code is black on white with a quiet zone (scanners need it); it is the
+  only white block on the page.
+- Win/loss on the end screen uses `--good` / `--bad` as a 4px left rule plus the
+  words "result · win" / "result · loss"; never colour alone.
+- The AI side is always recorded runs, labelled as such ("recorded attempts",
+  "average over every recorded attempt"); no live model calls unless an operator
+  enables them.
