@@ -2,6 +2,8 @@
 
 **Status:** structure approved by Anssi (Sat 14.11). All scenes drafted. The spoken lines now live in `video/narration.json` (source for TTS and captions); build with `video/.venv/python.exe video/tools/build.py`.
 
+**Narration rewrite (Sat 14.11, late):** the spoken lines were rewritten around one thread, and `video/narration.json` is now the only source of truth for them. The voice-over column in the tables below is the original storyboard and is kept for the visual notes only. The thread: one broken agent tells you nothing; thousands line up into patterns; to find those patterns at scale "we built a game factory" (end of S0); S1 opens with what the factory makes ("The factory writes games from code. Every new seed is a new game, so the supply never runs out."), then what the agent sees; S2 runs frontier models on fresh games; S3 asks where the gap comes from; S4 opens with "To trust these numbers..."; S5 links back to the endless supply ("the games are also training data"); S6 "That makes the factory useful..."; S7 ends on the name. Each line is tied to its visual beat with `Narration.cue(i)` (`scenes/common.py`): the line starts when its beat starts, and the scene holds if the previous line is still being spoken. `tools/build.py` places every line's audio and caption at its cued time.
+
 ## Decisions (Anssi, Sat 14.11)
 
 | Topic | Decision |

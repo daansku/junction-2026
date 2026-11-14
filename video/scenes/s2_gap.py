@@ -12,7 +12,7 @@ from manim import (
 )
 
 from common import (
-    pad_to_narration,
+    Narration,
     ACCENT, LINE, LINE_STRONG, MONO, PLACEHOLDER, SANS, TEXT_1, TEXT_2, TEXT_3, load_json,
 )
 
@@ -86,6 +86,8 @@ class S2Gap(Scene):
                                      b1_rows, human_row(lb, "eval-v1"))
         all1 = VGroup(g1, *[b for b, _ in bars1], *[n for _, n in bars1], *ref1)
         all1.move_to([0, 0.1, 0])
+        vo = Narration(self, "S2")
+        vo.cue(0, delay=0.3)
         self.play(FadeIn(g1), FadeIn(VGroup(*ref1)), run_time=0.6)
         self.play(LaggedStart(*[GrowFromEdge(b, LEFT) for b, _ in bars1], lag_ratio=0.12, run_time=1.6))
         self.play(LaggedStart(*[FadeIn(n) for _, n in bars1], lag_ratio=0.06), run_time=0.6)
@@ -94,6 +96,7 @@ class S2Gap(Scene):
         self.wait(2.0)
 
         # ---- board 2: run the lab way ----
+        vo.cue(1, delay=0.2)
         self.play(all1.animate.scale(0.62).to_edge(LEFT, buff=0.4), run_time=0.8)
         g2, bars2, ref2 = self.board("Run the way labs benchmark them",
                                      "h2 harness · full conversation · max reasoning effort",
@@ -106,6 +109,7 @@ class S2Gap(Scene):
         self.wait(2.0)
 
         # ---- the gap to the reference: bracket on the best model of board 2 ----
+        vo.cue(2, delay=0.0)
         if bars2:
             best_bar, _ = bars2[0]
             ref_line = ref2[0]
@@ -113,5 +117,5 @@ class S2Gap(Scene):
             gap_lab = Text("gap", font=MONO, font_size=16, color=ACCENT).next_to(gap, UP, buff=0.05)
             self.play(FadeIn(gap), FadeIn(gap_lab), run_time=0.5)
         self.wait(2.0)
-        pad_to_narration(self, "S2", tail=0.5)
+        vo.finish(tail=0.5)
         self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)

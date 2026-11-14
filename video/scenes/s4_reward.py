@@ -12,7 +12,7 @@ from manim import (
 )
 
 from common import (
-    pad_to_narration,
+    Narration,
     ACCENT, BAD, GOOD, LINE_STRONG, MONO, SANS, TEXT_1, TEXT_2, TEXT_3, agent_sprite, PALETTE,
 )
 
@@ -40,9 +40,12 @@ class S4Reward(Scene):
                       Text("0", font=MONO, font_size=34, color=BAD)).arrange(RIGHT, buff=0.35)
         rule = VGroup(row1, row2).arrange(DOWN, aligned_edge=LEFT, buff=0.5).move_to(UP * 0.6)
         avg = Text("game score = mean over all levels", font=MONO, font_size=18, color=TEXT_3).next_to(rule, DOWN, buff=0.5)
+        vo = Narration(self, "S4")
+        vo.cue(0, delay=0.2)
         self.play(FadeIn(title), FadeIn(row1, shift=UP * 0.1), run_time=0.7)
         self.play(FadeIn(row2, shift=UP * 0.1), FadeIn(avg), run_time=0.6)
         self.wait(1.6)
+        vo.cue(1, delay=0.3)
         self.play(FadeOut(VGroup(title, rule, avg)), run_time=0.4)
 
         # ---- shortcuts and their real Harbor scores ----
@@ -62,6 +65,7 @@ class S4Reward(Scene):
         self.play(FadeIn(src), run_time=0.3)
         reset = Text("RESET never erases moves: every action before it still counts", font=SANS, font_size=22, color=TEXT_2)
         reset.next_to(src, DOWN, buff=0.35)
+        vo.cue(2, delay=0.0)
         self.play(FadeIn(reset), run_time=0.4)
         self.wait(1.4)
         self.play(FadeOut(VGroup(cards, src, reset)), run_time=0.4)
@@ -79,11 +83,12 @@ class S4Reward(Scene):
         link = Arrow(agent_box.get_right(), game_box.get_left(), buff=0.05, stroke_color=TEXT_2, stroke_width=3)
         link2 = Arrow(game_box.get_right(), grade_box.get_left(), buff=0.05, stroke_color=ACCENT, stroke_width=3)
         mcp = Text("MCP", font=MONO, font_size=13, color=TEXT_3).next_to(link, UP, buff=0.05)
+        vo.cue(3, delay=0.2)
         self.play(Create(agent_box), Create(game_box), FadeIn(a_lab), FadeIn(g_lab), FadeIn(bot), FadeIn(g_txt), run_time=0.8)
         self.play(FadeIn(link), FadeIn(mcp), run_time=0.4)
         self.play(Create(grade_box), FadeIn(v_lab), FadeIn(v_txt), FadeIn(link2), run_time=0.8)
         no = Text("agent cannot reach the score", font=SANS, font_size=22, color=TEXT_2).to_edge(DOWN, buff=0.8)
         self.play(FadeIn(no), run_time=0.4)
         self.wait(1.6)
-        pad_to_narration(self, "S4", tail=0.5)
+        vo.finish(tail=0.5)
         self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)

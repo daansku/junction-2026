@@ -13,7 +13,7 @@ from manim import (
 )
 
 from common import (
-    pad_to_narration,
+    Narration,
     ACCENT, CACHE, FAILURE_MODES, GOOD, MONO, PALETTE, PLACEHOLDER, ROOT, SANS, TEXT_1, TEXT_2,
     TEXT_3, frame_image, load_json, set_frame,
 )
@@ -91,10 +91,13 @@ class S6S7Close(Scene):
         if items.width > 13:
             items.scale_to_fit_width(13)
         tag = Text("PLACEHOLDER: waiting for docs/BUSINESS.md", font=MONO, font_size=16, color=PLACEHOLDER).to_edge(DOWN, buff=0.5)
+        vo = Narration(self, "S6S7")
+        vo.cue(0, delay=0.2)
         self.play(FadeIn(head), run_time=0.4)
         self.add(tag)
         self.play(LaggedStart(*[FadeIn(i, shift=RIGHT * 0.2) for i in items], lag_ratio=0.4), run_time=1.4)
         self.wait(2.6)
+        vo.cue(1, delay=0.6)
         self.play(FadeOut(VGroup(head, items, tag)), run_time=0.5)
 
         # ---------------- S7 callback grid: a few agents reach the goal ----------------
@@ -132,8 +135,9 @@ class S6S7Close(Scene):
         url = Text(URL.replace("https://", ""), font=MONO, font_size=18, color=ACCENT).next_to(line, DOWN, buff=0.3).align_to(word, LEFT)
         qr = qr_mob(URL, size=2.6).to_edge(RIGHT, buff=1.0).shift(DOWN * 0.2)
         self.play(FadeOut(Group(tiles, *glows)), run_time=0.6)
+        vo.cue(2, delay=0.3)
         self.play(LaggedStart(*[FadeIn(s, scale=0.3) for s in word], lag_ratio=0.004, run_time=1.4))
         self.play(FadeIn(line, shift=UP * 0.1), run_time=0.5)
         self.play(FadeIn(url), FadeIn(qr), run_time=0.6)
-        self.wait(3.0)
-        pad_to_narration(self, "S6S7")
+        self.wait(2.0)
+        vo.finish(extra=2.0)

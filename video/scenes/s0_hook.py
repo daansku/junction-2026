@@ -15,7 +15,7 @@ from manim import (
 )
 
 from common import (
-    pad_to_narration,
+    Narration,
     CACHE, FAILURE_MODES, LINE_STRONG, MONO, PALETTE, SANS, TEXT_1, TEXT_2, TEXT_3,
     agent_sprite, frame_cells, frame_image, framed, load_json, set_frame,
 )
@@ -48,7 +48,7 @@ def two_line(text: str, width: float, size: int) -> Text:
 
 class S0Hook(Scene):
     # ------------------------------------------------------------------ close-up replay
-    def closeup(self, run_id: str, first: int, last: int, mode_i: int, step_time: float, caption_step: int):
+    def closeup(self, run_id: str, first: int, last: int, mode_i: int, line_dur: float, caption_step: int):
         steps = load_json(f"steps/{run_id}.json")
         mode, text, color = FAILURE_MODES[mode_i]
         img = frame_image(steps[first]["frame"], height=5.4).shift(UP * 0.35)
@@ -59,6 +59,8 @@ class S0Hook(Scene):
         counter = Text("", font=MONO, font_size=16, color=TEXT_3)
         self.play(FadeIn(Group(img, border), scale=0.95), run_time=0.5)
         self.play(FadeIn(quote, shift=UP * 0.1), run_time=0.3)
+        # spread the replay over the spoken line (the tint and name land at its end)
+        step_time = min(0.35, max(0.1, (line_dur - 1.4) / (last - first)))
         for k in range(first + 1, last + 1):
             st = steps[k]
             set_frame(img, st["frame"])
@@ -90,6 +92,8 @@ class S0Hook(Scene):
     def construct(self):
         rules = load_json("derived/rules.json")
         counts = {m["mode"]: m["count"] for m in rules["failure_modes"]}
+        vo = Narration(self, "S0")
+        vo.cue(0, delay=0.4)
 
         # ---------------- 0:00 one agent breaks ----------------
         floor = Rectangle(width=9, height=0.06, fill_color=LINE_STRONG, fill_opacity=1, stroke_width=0).shift(DOWN * 0.8)
@@ -114,9 +118,11 @@ class S0Hook(Scene):
         self.play(FadeOut(VGroup(floor, wall, left, right)), run_time=0.4)
 
         # ---------------- two real failures up close ----------------
-        c1, n1 = self.closeup(NEMOTRON, 14, 27, 0, 0.16, 18)
+        vo.cue(1, delay=0.0)
+        c1, n1 = self.closeup(NEMOTRON, 14, 27, 0, vo.dur(1), 18)
         self.play(FadeOut(n1), c1.animate.scale(0.35).to_edge(LEFT, buff=0.6).shift(UP * 2.2), run_time=0.6)
-        c2, n2 = self.closeup(KIMI, 104, 123, 1, 0.11, 115)
+        vo.cue(2, delay=0.0)
+        c2, n2 = self.closeup(KIMI, 104, 123, 1, vo.dur(2), 115)
         self.play(FadeOut(n2), c2.animate.scale(0.35).next_to(c1, RIGHT, buff=0.3), run_time=0.6)
 
         # ---------------- zoom out: many agents moving, then failing ----------------
@@ -163,6 +169,7 @@ class S0Hook(Scene):
                 set_frame(p, p.frames[idx])
 
         tiles.add_updater(step_frames)
+        vo.cue(3, delay=0.2)
         self.play(
             FadeIn(tiles),
             c1.animate.scale_to_fit_height(tile_h * zoom * 0.95).move_to(slot0),
@@ -217,6 +224,7 @@ class S0Hook(Scene):
             labels.add(lab)
             nums.add(Text(f"{counts.get(mode, 0):,}", font=MONO, font_size=20, color=TEXT_1).move_to([x, top + 0.25, 0]))
         axis = Rectangle(width=chart_w + 0.4, height=0.03, fill_color=LINE_STRONG, fill_opacity=1, stroke_width=0).move_to([0, base_y - 0.05, 0])
+        vo.cue(4, delay=0.3)
         self.play(LaggedStart(*moves, lag_ratio=0.0006, run_time=2.4, rate_func=rate_functions.ease_in_out_cubic))
         note = Text("failure-mode counts, all model runs (log scale)", font=MONO, font_size=14, color=TEXT_3).to_corner(UP + LEFT, buff=0.5)
         self.play(FadeIn(axis), LaggedStart(*[FadeIn(l, shift=UP * 0.1) for l in labels], lag_ratio=0.1),
@@ -230,6 +238,7 @@ class S0Hook(Scene):
         shards.sort(key=lambda m: (round(m.get_x(), 2), m.get_y()))
         cells.sort(key=lambda m: (round(m.get_x(), 2), m.get_y()))
         border = framed(Square(side_length=6.4))
+        vo.cue(5, delay=0.0)
         self.play(FadeOut(VGroup(labels, nums, axis, note)), run_time=0.4)
         morphs = []
         for sq, cell in zip(shards, cells):
@@ -239,5 +248,5 @@ class S0Hook(Scene):
                   *[FadeOut(e, scale=0.3) for e in extra])
         missing = VGroup(*cells[len(shards):])
         self.play(FadeIn(border), FadeIn(missing), run_time=0.6)
-        self.wait(1.2)
-        pad_to_narration(self, "S0")
+        self.wait(1.0)
+        vo.finish()

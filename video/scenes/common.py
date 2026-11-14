@@ -144,16 +144,45 @@ def placeholder_tag(mob, text: str = "PLACEHOLDER") -> Text:
     return Text(text, font=MONO, font_size=14, color=PLACEHOLDER).next_to(mob, UP, buff=0.05)
 
 
-def pad_to_narration(scene, key: str, tail: float = 0.0, extra: float = 0.6) -> None:
-    """Wait until the scene is at least as long as its narration (cache/audio/durations.json).
-    `tail` = seconds of animation still to come after this call (e.g. a final fade)."""
-    p = CACHE / "audio" / "durations.json"
-    if not p.exists():
-        return
-    target = json.loads(p.read_text(encoding="utf-8")).get(key)
-    if target is None:
-        return
-    now = scene.renderer.time
-    missing = target + extra - tail - now
-    if missing > 0.05:
-        scene.wait(missing)
+class Narration:
+    """Ties voice-over lines to the animation.
+
+    Call `cue(i)` where the visual beat for line i starts. The line then starts there (plus a
+    short delay), unless line i-1 is still being spoken, in which case the scene holds until it
+    ends. `finish()` holds until the last line ends and writes cache/audio/<key>.cues.json
+    (start time of every line in scene seconds), which tools/build.py uses to place each line's
+    audio and caption. Line lengths come from cache/audio/<key>.lines.json (tools/tts.py).
+    """
+
+    GAP = 0.35          # minimum silence between two lines
+
+    def __init__(self, scene, key: str):
+        self.scene, self.key = scene, key
+        p = CACHE / "audio" / f"{key}.lines.json"
+        self.lines = json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+        self.free_at = 0.0
+        self.starts: list[float] = []
+
+    def dur(self, i: int, default: float = 3.0) -> float:
+        return self.lines[i]["dur"] if i < len(self.lines) else default
+
+    def cue(self, i: int, delay: float = 0.25) -> None:
+        if i != len(self.starts):
+            raise ValueError(f"{self.key}: cue({i}) out of order, expected cue({len(self.starts)})")
+        hold = self.free_at - (self.scene.renderer.time + delay)
+        if hold > 0.07:
+            self.scene.wait(hold)
+        start = max(self.scene.renderer.time + delay, self.free_at)
+        self.starts.append(round(start, 3))
+        self.free_at = start + self.dur(i) + self.GAP
+
+    def finish(self, tail: float = 0.0, extra: float = 0.6) -> None:
+        """`tail` = seconds of animation still to come after this call (e.g. a final fade)."""
+        while len(self.starts) < len(self.lines):
+            self.cue(len(self.starts), delay=0.0)
+        missing = self.free_at - self.GAP + extra - tail - self.scene.renderer.time
+        if missing > 0.05:
+            self.scene.wait(missing)
+        out = CACHE / "audio" / f"{self.key}.cues.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps({"starts": self.starts}), encoding="utf-8")

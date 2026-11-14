@@ -15,7 +15,10 @@ import os
 import pathlib
 import subprocess
 import sys
+import wave
 from concurrent.futures import ThreadPoolExecutor
+
+import numpy as np
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 VIDEO = ROOT / "video"
@@ -47,6 +50,35 @@ def duration(path) -> float:
     return float(out.strip())
 
 
+def mix_scene(key: str, length: float):
+    """Place each line's wav at the start time the scene cued it (cache/audio/<key>.cues.json).
+    Returns (path of the mixed wav or None, [(start, end, text)])."""
+    lines_p, cues_p = AUDIO / f"{key}.lines.json", AUDIO / f"{key}.cues.json"
+    if not (lines_p.exists() and cues_p.exists()):
+        return None, []
+    lines = json.loads(lines_p.read_text(encoding="utf-8"))
+    starts = json.loads(cues_p.read_text(encoding="utf-8"))["starts"]
+    rate = lines[0]["rate"] if lines else 22050
+    buf = np.zeros(int(length * rate) + 1, dtype=np.int32)
+    cues = []
+    for i, (ln, st) in enumerate(zip(lines, starts)):
+        with wave.open(str(AUDIO / f"{key}_{i}.wav"), "rb") as w:
+            pcm = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16)
+        a = int(st * rate)
+        pcm = pcm[: max(0, len(buf) - a)]
+        buf[a:a + len(pcm)] += pcm
+        cues.append((st, min(st + ln["dur"], length), ln["text"]))
+    if len(starts) < len(lines):
+        print(f"WARNING {key}: {len(lines) - len(starts)} line(s) never cued (render is stale?)")
+    out = AUDIO / f"{key}.mix.wav"
+    with wave.open(str(out), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(np.clip(buf, -32768, 32767).astype(np.int16).tobytes())
+    return out, cues
+
+
 def srt_time(t: float) -> str:
     h, rem = divmod(t, 3600)
     m, s = divmod(rem, 60)
@@ -73,12 +105,9 @@ def main() -> int:
     for sc in scenes:
         mp4 = MEDIA / "videos" / sc["file"] / folder / f"{sc['scene']}.mp4"
         d = duration(mp4)
-        wav = AUDIO / f"{sc['key']}.wav"
-        parts.append((mp4, wav if wav.exists() else None, d))
-        lines_p = AUDIO / f"{sc['key']}.lines.json"
-        if lines_p.exists():
-            for ln in json.loads(lines_p.read_text(encoding="utf-8")):
-                cues.append((t0 + ln["start"], t0 + min(ln["end"], d), ln["text"]))
+        wav, scene_cues = mix_scene(sc["key"], d)
+        parts.append((mp4, wav, d))
+        cues += [(t0 + a, t0 + b, txt) for a, b, txt in scene_cues]
         t0 += d
 
     out = MEDIA / f"game_factory_{folder}.mp4"
