@@ -36,7 +36,7 @@ function Tile({ r }: { r: LiveRun }) {
         )}
         <span className="live-last">{r.step?.action ? (ARROW[r.step.action] ?? r.step.action) : ''}</span>
       </div>
-      {r.step?.hypothesis && <p className="live-hyp mono">“{r.step.hypothesis}”</p>}
+      <p className="live-hyp mono" title={r.step?.hypothesis ?? undefined}>{r.step?.hypothesis ? `“${r.step.hypothesis}”` : '\u00a0'}</p>
       <div className="live-game mono muted">{m.game_id}</div>
     </article>
   )

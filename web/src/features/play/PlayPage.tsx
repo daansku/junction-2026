@@ -690,7 +690,7 @@ export function PlayPage() {
                               </>
                             )}
                           </div>
-                          {hyp && <p className="mono ghost-hyp">“{hyp}”</p>}
+                          <p className="mono ghost-hyp" title={hyp ?? undefined}>{hyp ? `“${hyp}”` : '\u00a0'}</p>
                         </div>
                       </div>
                     </div>

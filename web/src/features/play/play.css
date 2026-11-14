@@ -107,6 +107,8 @@
   margin: 2px 0 0;
   font-size: 11px;
   line-height: 1.35;
+  height: calc(2 * 1.35em); /* fixed: changing model text must not move the layout */
+  overflow: hidden;
   color: var(--text-2);
   display: -webkit-box;
   -webkit-line-clamp: 2;

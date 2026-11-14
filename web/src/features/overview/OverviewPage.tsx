@@ -102,7 +102,7 @@ function Showcase({ run }: { run: RunMeta }) {
           {run.player?.name ?? run.player?.model_id}
         </Link>{' '}
         on {run.game_id}
-        {step?.hypothesis ? <span className="ov-hyp"> · “{step.hypothesis}”</span> : null}
+        <span className="ov-hyp" title={step?.hypothesis ?? undefined}>{step?.hypothesis ? `“${step.hypothesis}”` : '\u00a0'}</span>
       </figcaption>
     </figure>
   )

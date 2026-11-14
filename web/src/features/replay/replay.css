@@ -122,3 +122,6 @@
 .step-ev-inline { margin-left: 6px; display: inline-flex; gap: 3px; }
 .step-hyp { color: var(--text-1); }
 .log-reset { color: var(--warn); }
+
+/* Step text panel keeps one height while stepping/playing (reasoning/hypothesis/belief come and go). */
+.step-fields { height: 340px; overflow-y: auto; }

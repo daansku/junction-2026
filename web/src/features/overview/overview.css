@@ -54,7 +54,12 @@
   border: 1px solid var(--line-strong);
 }
 .ov-showcase figcaption { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ov-hyp { color: var(--text-2); }
+.ov-hyp {
+  color: var(--text-2);
+  /* own line, fixed 2 lines: the showcase replay changes it every step */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  line-height: 1.4; height: calc(2 * 1.4em); overflow: hidden;
+}
 
 .ov-stats {
   display: grid;
