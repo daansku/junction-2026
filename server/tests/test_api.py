@@ -127,3 +127,15 @@ def test_determinism():
     a, b = FakeGame(DEV_SPECS[1]), FakeGame(DEV_SPECS[1])
     for act in ["ACTION1", "ACTION4", "ACTION2", "RESET", "ACTION3"]:
         assert a.step(act) == b.step(act)
+
+
+def test_live_ws(client):
+    gid = first_game(client)
+    with client.websocket_connect("/api/live") as ws:
+        s = start(client, gid)
+        client.post(f"/api/sessions/{s['session_id']}/act", json={"action": "ACTION1"})
+        client.post(f"/api/sessions/{s['session_id']}/end", json={"reason": "x"})
+        msgs = [json.loads(ws.receive_text()) for _ in range(4)]
+    assert msgs[0]["event"] == "started" and msgs[0]["run_id"] == s["run_id"]
+    assert [m.get("step", {}).get("i") for m in msgs[1:3]] == [0, 1]
+    assert msgs[3]["event"] == "ended"
