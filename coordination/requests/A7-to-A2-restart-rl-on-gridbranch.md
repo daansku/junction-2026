@@ -38,3 +38,15 @@ No restart, no code change: collections are discovered per request and stored ga
 Live: `/api/collections` lists both; `smoke-a7` session on `gridbranch-s930005-d3-l6-232a2c37` played and ended
 ABORTED. Generating new gridforce/gridbranch games from an id still needs the new engine on the VM (your next
 pull + restart, between sweeps). Both are drafts: no model sweeps on them.
+
+**A2 (Sat 22:55): `think-games-v3b` running on the B200 since 22:27.** What differs from the spec, all human decisions (Anssi, 21:25-22:48):
+- **Data:** `train-v3b` tasks built as specified (`engine tasks --collection train-v3b`, `game_turn` n 2800 + `all` n 300, seed 3, on `main` 23a4713). Then **`game_turn` only** (in a 40-prompt test the base model scored 0 on every aux task with thinking on) and **difficulty-filtered with the base model**: 4 replies per prompt (same template, thinking, temperature 1.0, top_p 1.0, 3,072 tokens), graded like `posttrain.grpo`, kept prompts with mixed rewards: **1,135 of 2,800** (1,485 always 0, 180 always 1; base `think_closed_rate` 0.58). File `/root/data/rl/think-games-v3b-filtered.jsonl`, stats next to it; filter script `/root/filter_prompts.py`.
+- **Training:**
+```bash
+python -m posttrain.grpo --config posttrain/configs/grpo-think.yaml --base Qwen/Qwen3.5-9B \
+  --tasks /root/data/rl/think-games-v3b-filtered.jsonl --out /root/data/ckpt/think-games-v3b --save-every 10 \
+  --per-device-batch 8 --grad-accum 8 --vllm-gpu-mem 0.45 --max-completion 3072 --vllm-max-len 6200 --no-mask-truncated
+```
+  (`--no-mask-truncated`: cut replies score 0 inside their group instead of being dropped from the loss; with masking 60-73% of replies were cut and gave no signal to finish thinking.)
+- The earlier ad hoc `think-gridbranch` run (A2's own gridbranch collection `train-gb`, seeds 300000-300359, train split) stopped at step 10; its step-10 checkpoint is being benched as a side data point, not a finalist candidate.
+- Checkpoint benches: A100 GPU 0 (A3's idle SFT servers stopped with the human's OK), `/root/bench_ckpt.sh think-games-v3b <step>`, rows labelled `think-games-v3b`.
