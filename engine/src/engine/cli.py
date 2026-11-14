@@ -190,6 +190,63 @@ def cmd_fuzz(a) -> int:
     return 1 if bad else 0
 
 
+def cmd_rulesheet(a) -> int:
+    """One teaching level per rule (start frame + frame after the rule first fires)."""
+    from . import components as comps
+    from .generator import generate_level
+    from .generator.skin import make_skin
+    out = Path(a.out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    frames, names = [], []
+    for r in sorted(n for n, c in comps.REGISTRY.items() if not c.always_on):
+        req = comps.REGISTRY[r].requires
+        rules = tuple(sorted({r, req[0]})) if req else (r,)
+        lv = generate_level(a.seed, "gridworld", 2, 1, rules, r)
+        g = Game(GameSpec(seed=a.seed), [lv], make_skin(a.seed, "gridworld", False, list(rules)))
+        seq = [g.frame()]
+        for act in lv.optimal_path:
+            seq.append(g.step(act))
+        frames += [seq[0], seq[len(seq) // 2]]
+        names.append(r)
+        write_png(out / f"{r}.png", contact_sheet([seq[0], seq[len(seq) // 2], seq[-2]], cols=3))
+        if a.gif:
+            _gif(seq, out / f"{r}.gif")
+    write_png(out / "all_rules.png", contact_sheet(frames, cols=6, scale=3))
+    print(f"wrote {len(names)} rule sheets to {out}: {', '.join(names)}")
+    return 0
+
+
+def _gif(frames: list[list[str]], path: Path, scale: int = 6, ms: int = 180) -> None:
+    try:
+        from PIL import Image
+    except ImportError:
+        print("  (pip install pillow for GIFs)", file=sys.stderr)
+        return
+    from .render.palette import load_palette
+    from .render.png import frame_pixels
+    pal = [c for rgb in load_palette() for c in rgb]
+    imgs = []
+    for f in frames:
+        im = Image.new("P", (64, 64))
+        im.putpalette(pal)
+        im.putdata([v for row in frame_pixels(f) for v in row])
+        imgs.append(im.resize((64 * scale, 64 * scale), Image.NEAREST))
+    imgs[0].save(path, save_all=True, append_images=imgs[1:], duration=ms, loop=0)
+
+
+def cmd_gif(a) -> int:
+    """Animated GIF of the optimal play-through of one game (all levels)."""
+    from .core.game import load_game
+    g = load_game(a.collection, a.game_id) if a.game_id else make_game(_spec(a))
+    seq = [g.reset()]
+    for lv in g.levels:
+        for act in lv.optimal_path:
+            seq.append(g.step(act))
+    _gif(seq, Path(a.out))
+    print(f"wrote {a.out} ({len(seq)} frames, {g.game_id})")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m engine")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -213,6 +270,14 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("verify", help="verify a collection"); p.add_argument("collection")
     p.add_argument("--quick", action="store_true", help="skip regenerate-from-spec check")
     p.set_defaults(fn=cmd_verify)
+    p = sub.add_parser("rulesheet", help="PNG (+GIF) of a teaching level per rule")
+    p.add_argument("--out-dir", default="rules/img"); p.add_argument("--seed", type=int, default=7)
+    p.add_argument("--gif", action="store_true")
+    p.set_defaults(fn=cmd_rulesheet)
+    p = sub.add_parser("gif", help="GIF of the optimal play-through"); _game_args(p)
+    p.add_argument("--collection", default="dev"); p.add_argument("--game-id")
+    p.add_argument("--out", default="game.gif")
+    p.set_defaults(fn=cmd_gif)
     p = sub.add_parser("fuzz", help="generate+verify+random-play many seeds")
     p.add_argument("--n", type=int, default=1000); p.add_argument("--seed-start", type=int, default=500000)
     p.add_argument("--workers", type=int, default=8)

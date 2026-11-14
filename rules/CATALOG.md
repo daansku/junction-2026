@@ -1,5 +1,9 @@
 # Rule catalog (A1)
 
+![every rule's teaching level, start and mid-solution](img/all_rules.png)
+
+Per-rule PNG + GIF of the optimal solution: `rules/img/<rule>.png|gif` (regenerate: `python -m engine rulesheet --gif`). Whole-game GIF: `python -m engine gif --collection dev --game-id <id> --out x.gif`.
+
 Every rule = one file in `engine/src/engine/components/`. Status: `live` (in generator), `wip`, `planned`.
 Colours below are defaults; skin shuffle permutes object colours per game, so never rely on them.
 
