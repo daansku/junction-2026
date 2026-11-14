@@ -1,0 +1,14 @@
+# Kimi K3.1 Pro on all of eval-v3b, harness h2 (human request: Daniel, Sat ~22:15; run from A1's machine).
+# eval-v3b is A7's gridbranch draft (30 games, 6 levels, seeds 930000-930029). Verda credits, no $ price.
+# One attempt per game (labelled single-attempt). Baselines give the board its reference rows.
+name: h2-eval-v3b-kimi
+harness: h2
+collection: eval-v3b
+games: all
+attempts: 1
+concurrency: 6
+est_steps_per_game: 200
+models:
+  - {id: verda-kimi-k3-1-pro, effort: max, max_concurrency: 6}
+baselines: [random, optimal, noop, stop_early]
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 18.0, max_wall_s: 14400}
