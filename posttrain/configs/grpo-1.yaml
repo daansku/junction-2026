@@ -1,0 +1,35 @@
+# grpo-1 (A3-25): GRPO from the best SFT v2 LoRA on A1's verifiable tasks. Keys = posttrain.grpo DEFAULTS;
+# CLI flags override. Batch on 2x A100: 8 completions/GPU x 4 accum x 2 GPUs = 64 completions = 8 prompts x G=8.
+base: Qwen/Qwen3.5-9B
+steps: 200                  # ~3-4 h on 2x A100 80 GB (see README); bench every save
+save_every: 25              # -> <out>/step-25, step-50, ... for `bench run --lora ... --dev-slice`
+seed: 0
+
+# full_plan / min_moves / rule_effect etc. all on; drop a task here if its reward is all-0 or all-1 in the first
+# 20 steps (frac_reward_zero_std near 1 in log.jsonl means no learning signal for that prompt mix)
+task_filter: null
+
+# optimisation
+lr: 1.0e-5                  # LoRA RL; raise to 2e-5 if reward is flat and kl stays < 1e-3 after 50 steps
+warmup_ratio: 0.03
+per_device_batch: 8
+grad_accum: 4
+num_generations: 8          # group size G
+num_iterations: 1           # one gradient pass per generated batch (on-policy)
+beta: 0.04                  # KL to the SFT adapter (TRL keeps a frozen copy named "ref")
+epsilon: 0.2                # clipped ratio, low side
+epsilon_high: 0.28          # DAPO clip-higher
+loss_type: dapo             # token-level, no length bias (TRL default)
+scale_rewards: group
+mask_truncated: true        # replies cut at max_completion carry no gradient (DAPO overlong filtering)
+
+# generation
+max_completion: 1024
+temperature: 1.0
+top_p: 1.0
+enable_thinking: false      # SFT v2 targets are "ANSWER: ..." without <think>; matches the policy's format
+use_vllm: true
+vllm_mode: colocate         # one vLLM engine per training GPU, LoRA merged + pushed each step
+vllm_gpu_mem: 0.35          # 80 GB GPU: ~28 GB vLLM (18 GB weights + KV), rest for training
+vllm_max_len: 6144          # prompts are <= ~2k tokens (RLE frames) + 1024 completion
+vllm_sleep: false           # true frees vLLM memory during the backward pass (slower; use if OOM)
