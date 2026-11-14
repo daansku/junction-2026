@@ -50,7 +50,19 @@ const MOVE_COOLDOWN_MS = 120
 const IDLE_MS = 60_000
 const LOOP_FPS = 6
 
-type Phase = 'lobby' | 'playing' | 'done'
+type Phase = 'lobby' | 'playing' | 'review' | 'done'
+
+/** Between levels: what happened on the level just played, while the AI's recorded attempts replay. */
+interface Review {
+  idx: number
+  level: number
+  kind: 'solved' | 'lost' | 'gaveup'
+  actions: number
+  /** solved the last level of the challenge (or the whole game) */
+  last: boolean
+}
+
+const REVIEW_FPS = 10
 
 interface LevelResult {
   level: number
@@ -119,11 +131,14 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
   const [results, setResults] = useState<LevelResult[]>([])
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [starting, setStarting] = useState(false)
+  const [review, setReview] = useState<Review | null>(null)
 
   const sessionRef = useRef<{ id: string; runId: string } | null>(null)
   const levelRef = useRef(from)
   const movesRef = useRef(0)
   const resultsRef = useRef<LevelResult[]>([])
+  const phaseRef = useRef<Phase>('lobby')
+  phaseRef.current = phase
   const busy = useRef(false)
   const lastMoveAt = useRef(0)
   const lastInput = useRef(performance.now())
@@ -151,6 +166,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
       setOutcome(null)
       setFrame(null)
       setResults([])
+      setReview(null)
       setError(null)
       if (clearName) setName('')
     },
@@ -219,6 +235,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
       setLevelMoves(0)
       setResults([])
       setOutcome(null)
+      setReview(null)
       setPhase('playing')
     } catch (e) {
       setError(e)
@@ -230,7 +247,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
   const act = useCallback(
     (action: ActionName) => {
       const s = sessionRef.current
-      if (!s || phase !== 'playing') return
+      if (!s || phaseRef.current !== 'playing') return
       const now = performance.now()
       if (busy.current || now - lastMoveAt.current < MOVE_COOLDOWN_MS) return
       busy.current = true
@@ -245,21 +262,27 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           setLevelMoves(movesRef.current)
           const t = await api.truth(s.id)
           if (sessionRef.current?.id !== s.id) return
-          if (t.level && t.level !== levelRef.current) {
-            resultsRef.current = [...resultsRef.current, { level: levelRef.current, solved: true, actions: movesRef.current }]
-            setResults(resultsRef.current)
+          const played = levelRef.current
+          let solvedActions: number | null = null
+          if (t.level && t.level !== played) {
+            solvedActions = movesRef.current
             levelRef.current = t.level
             movesRef.current = 0
             setLevel(t.level)
             setLevelMoves(0)
+          } else if (t.state === 'WIN' && !resultsRef.current.some((r) => r.level === played)) {
+            solvedActions = movesRef.current
           }
-          if (t.state === 'WIN' && !resultsRef.current.some((r) => r.level === levelRef.current)) {
-            resultsRef.current = [...resultsRef.current, { level: levelRef.current, solved: true, actions: movesRef.current }]
-          }
-          if (t.state === 'WIN' || levelRef.current > lastLevel) {
-            finish(resultsRef.current, 'challenge_done')
+          if (solvedActions != null) {
+            resultsRef.current = [...resultsRef.current, { level: played, solved: true, actions: solvedActions }]
+            setResults(resultsRef.current)
+            const last = t.state === 'WIN' || levelRef.current > lastLevel
+            setReview({ idx: played - from, level: played, kind: 'solved', actions: solvedActions, last })
+            setPhase('review')
           } else if (t.state === 'GAME_OVER') {
-            finish([...resultsRef.current, { level: levelRef.current, solved: false, actions: movesRef.current }], 'game_over')
+            // level lost: the engine keeps the session; RESET restarts this level (and counts as a move, as for models)
+            setReview({ idx: played - from, level: played, kind: 'lost', actions: movesRef.current, last: false })
+            setPhase('review')
           }
         } catch (e) {
           setError(e)
@@ -268,13 +291,40 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
         }
       })()
     },
-    [phase, lastLevel, finish],
+    [lastLevel, from],
   )
 
   const giveUp = useCallback(() => {
-    if (phase !== 'playing') return
-    finish([...resultsRef.current, { level: levelRef.current, solved: false, actions: movesRef.current }], 'gave_up')
-  }, [phase, finish])
+    if (phaseRef.current !== 'playing') return
+    setReview({ idx: levelRef.current - from, level: levelRef.current, kind: 'gaveup', actions: movesRef.current, last: false })
+    setPhase('review')
+  }, [from])
+
+  const failLevelAndFinish = useCallback(
+    (reason: string) => finish([...resultsRef.current, { level: levelRef.current, solved: false, actions: movesRef.current }], reason),
+    [finish],
+  )
+
+  /** Primary action of the review screen (Enter). */
+  const reviewPrimary = useCallback(() => {
+    if (!review) return
+    if (review.kind === 'solved') {
+      if (review.last) finish(resultsRef.current, 'challenge_done')
+      else setPhase('playing')
+    } else if (review.kind === 'lost') {
+      phaseRef.current = 'playing'
+      setPhase('playing')
+      lastMoveAt.current = 0
+      act('RESET')
+    } else {
+      setPhase('playing')
+    }
+  }, [review, finish, act])
+
+  const reviewSecondary = useCallback(() => {
+    if (!review || review.kind === 'solved') return
+    failLevelAndFinish(review.kind === 'lost' ? 'game_over' : 'gave_up')
+  }, [review, failLevelAndFinish])
 
   // ---- input + idle
   useEffect(() => {
@@ -282,6 +332,16 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
       lastInput.current = performance.now()
       if (isTyping(e.target) && e.key !== 'Enter') return
       if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (phase === 'review') {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          reviewPrimary()
+        } else if ((e.key === 'r' || e.key === 'R') && review?.kind === 'lost') {
+          e.preventDefault()
+          reviewPrimary()
+        }
+        return
+      }
       if (e.key === 'Enter' && phase !== 'playing') {
         e.preventDefault()
         start()
@@ -303,7 +363,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('pointerdown', onPointer)
     }
-  }, [phase, available, act, start])
+  }, [phase, available, act, start, review, reviewPrimary])
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -383,12 +443,12 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           </p>
         </div>
         <div className="ch-head-right">
-          {phase === 'playing' && (
+          {(phase === 'playing' || phase === 'review') && (
             <ol className="ch-levels mono" aria-label="Level progress">
               {levelList.map((lv) => {
                 const r = results.find((x) => x.level === lv)
                 return (
-                  <li key={lv} className={r ? 'done' : lv === level ? 'now' : ''}>
+                  <li key={lv} className={r ? 'done' : lv === level ? (phase === 'review' && review?.kind !== 'solved' ? 'lost' : 'now') : ''}>
                     L{lv - from + 1} {r ? `✓ ${r.actions}` : lv === level ? `· ${levelMoves}` : ''}
                   </li>
                 )
@@ -508,44 +568,45 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
               <span className="kicker">
                 level {levelIdx + 1} of {nLevels} · you {levelMoves} moves{levelOpt ? ` · optimal ${levelOpt}` : ''}
               </span>
-              <p className="muted ch-race-note">The AI's recorded attempts on this level, move for move with you.</p>
+              <p className="muted ch-race-note">
+                The AI's recorded attempts on this level replay when you finish or lose it. The score to beat:
+              </p>
               {ghostQs[levelIdx]?.isLoading ? (
                 <p className="muted">Loading recorded runs…</p>
               ) : !levelGhosts.length ? (
                 <p className="muted">No recorded model run reached this level.</p>
               ) : (
-                <div className="ch-ghosts">
-                  {levelGhosts.map((g) => {
-                    const ended = levelMoves >= g.actions
-                    const hyp = hypothesisAt(g, levelMoves)
-                    const gf = ghostFrameAt(g, levelMoves)
-                    return (
-                      <div key={g.run_id ?? ghostName(g)} className="ch-ghost">
-                        {gf ? <FrameCanvas frame={gf} scale={2} label={`${ghostName(g)} frame`} /> : <div className="ch-ghost-empty" />}
-                        <div className="ch-ghost-meta">
-                          <strong>{ghostName(g)}</strong>
-                          <span className={`mono ch-ghost-state ${ended ? (g.solved ? 'good' : 'bad') : ''}`}>
-                            {ended
-                              ? g.solved
-                                ? `SOLVED in ${g.actions}`
-                                : `NEVER SOLVED · ${g.actions} moves`
-                              : `searching · ${Math.min(levelMoves, g.actions)}/${g.solved ? g.actions : '?'}`}
-                          </span>
-                          {hyp && <p className="ch-hyp mono">“{hyp.length > 160 ? `${hyp.slice(0, 157)}…` : hyp}”</p>}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <ul className="ch-tobeat mono">
+                  {levelGhosts.map((g) => (
+                    <li key={g.run_id ?? ghostName(g)}>
+                      <span>{ghostName(g)}</span>
+                      <span className={g.solved ? '' : 'bad'}>{g.solved ? `solved in ${g.actions}` : `never solved (${g.actions})`}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
             </section>
             <div className="ch-actions">
-              <Button variant="ghost" onClick={giveUp} title="End now and see the result">
+              <Button variant="ghost" onClick={giveUp} title="Stop this level and watch the AI's attempts">
                 give up
               </Button>
             </div>
           </aside>
         </div>
+      )}
+
+      {phase === 'review' && review && (
+        <LevelReview
+          review={review}
+          levelNo={review.idx + 1}
+          nLevels={nLevels}
+          optimal={optimal[review.idx] ?? 0}
+          ghosts={ghostQs[review.idx]?.data?.ghosts ?? []}
+          optimalGhost={ghostQs[review.idx]?.data?.optimal ?? null}
+          loading={!!ghostQs[review.idx]?.isLoading}
+          onPrimary={reviewPrimary}
+          onSecondary={reviewSecondary}
+        />
       )}
 
       {phase === 'done' && outcome && (
@@ -570,6 +631,109 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           </button>
         </footer>
       )}
+    </div>
+  )
+}
+
+function Reel({ g, title, tick, scale }: { g: GhostSlice; title: string; tick: number; scale: number }) {
+  const n = g.steps.length
+  const hold = REVIEW_FPS * 2 // hold the last frame 2 s before looping
+  const m = n ? tick % (n + 1 + hold) : 0
+  const shown = Math.min(m, n)
+  const frame = ghostFrameAt(g, shown)
+  const hyp = hypothesisAt(g, shown)
+  const ended = shown >= n
+  return (
+    <figure className="ch-reel-card">
+      {frame ? <FrameCanvas frame={frame} scale={scale} label={`${title} replay`} /> : <div className="ch-ghost-empty" />}
+      <figcaption className="ch-ghost-meta">
+        <strong>{title}</strong>
+        <span className={`mono ch-ghost-state ${ended ? (g.solved ? 'good' : 'bad') : ''}`}>
+          move {shown}/{n}
+          {ended ? (g.solved ? ' · SOLVED' : ' · NEVER SOLVED') : ''}
+        </span>
+        {hyp && <p className="ch-hyp mono">“{hyp.length > 180 ? `${hyp.slice(0, 177)}…` : hyp}”</p>}
+      </figcaption>
+    </figure>
+  )
+}
+
+function LevelReview(props: {
+  review: Review
+  levelNo: number
+  nLevels: number
+  optimal: number
+  ghosts: GhostSlice[]
+  optimalGhost: GhostSlice | null
+  loading: boolean
+  onPrimary: () => void
+  onSecondary: () => void
+}) {
+  const { review, levelNo, nLevels, optimal, ghosts, optimalGhost, loading, onPrimary, onSecondary } = props
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1000 / REVIEW_FPS)
+    return () => clearInterval(id)
+  }, [])
+  const reels = [
+    ...ghosts.filter((g) => g.steps.length).map((g) => ({ g, title: ghostName(g) })),
+    ...(optimalGhost?.steps.some((s) => s.frame) ? [{ g: optimalGhost, title: 'Optimal path' }] : []),
+  ]
+  const headline =
+    review.kind === 'solved'
+      ? `Level ${levelNo} solved in ${review.actions} moves.`
+      : review.kind === 'lost'
+        ? `Level ${levelNo} lost after ${review.actions} moves.`
+        : `You stopped level ${levelNo} after ${review.actions} moves.`
+  const primary =
+    review.kind === 'solved' ? (review.last ? 'See results' : `Next level (${levelNo + 1} of ${nLevels})`) : review.kind === 'lost' ? 'Retry level' : 'Keep trying'
+  return (
+    <div className="ch-grid">
+      <section className="ch-card ch-review">
+        <span className="kicker">the AI on level {levelNo} · recorded attempts, replayed</span>
+        {loading ? (
+          <p className="muted">Loading recorded runs…</p>
+        ) : !reels.length ? (
+          <p className="muted">No recorded model run reached this level.</p>
+        ) : (
+          <div className="ch-reels">
+            {reels.map((r) => (
+              <Reel key={r.g.run_id ?? r.title} g={r.g} title={r.title} tick={tick} scale={4} />
+            ))}
+          </div>
+        )}
+      </section>
+      <aside className="ch-side">
+        <section className={`ch-verdict ${review.kind === 'solved' ? 'good' : 'bad'}`}>
+          <span className="kicker">{review.kind === 'solved' ? 'level solved' : review.kind === 'lost' ? 'level lost' : 'level stopped'}</span>
+          <h2 className="ch-review-line">{headline}</h2>
+          <ul className="ch-tobeat mono">
+            <li>
+              <span>Optimal</span>
+              <span>{optimal} moves</span>
+            </li>
+            {ghosts.map((g) => (
+              <li key={g.run_id ?? ghostName(g)}>
+                <span>{ghostName(g)}</span>
+                <span className={g.solved ? '' : 'bad'}>{g.solved ? `solved in ${g.actions}` : `never solved (${g.actions})`}</span>
+              </li>
+            ))}
+          </ul>
+          {review.kind === 'lost' && (
+            <p className="muted">Retrying restarts this level; your moves so far still count, the same rule the models play by.</p>
+          )}
+          <div className="ch-end-actions">
+            <Button variant="primary" onClick={onPrimary}>
+              {primary} <Kbd>Enter</Kbd>
+            </Button>
+            {review.kind !== 'solved' && (
+              <Button variant="ghost" onClick={onSecondary}>
+                end challenge
+              </Button>
+            )}
+          </div>
+        </section>
+      </aside>
     </div>
   )
 }

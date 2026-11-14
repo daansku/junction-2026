@@ -11,6 +11,7 @@
 .ch-levels li { padding: 2px var(--s2); border: 1px solid var(--line); color: var(--text-3); }
 .ch-levels li.now { border-color: var(--accent); color: var(--text-1); }
 .ch-levels li.done { color: var(--good); }
+.ch-levels li.lost { color: var(--bad); }
 
 .ch-grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: var(--s4); align-items: start; }
 @media (max-width: 980px) { .ch-grid { grid-template-columns: 1fr; } }
@@ -50,6 +51,13 @@
 .ch-ghost-state.bad { color: var(--bad); }
 .ch-hyp { margin: 0; font-size: 12px; color: var(--text-2); line-height: 1.4; overflow-wrap: anywhere; }
 .ch-actions { display: flex; justify-content: flex-end; }
+.ch-tobeat { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.ch-tobeat li { display: flex; justify-content: space-between; gap: var(--s3); padding: 4px 0; border-bottom: 1px solid var(--line); }
+.ch-tobeat .bad { color: var(--bad); }
+.ch-review { min-width: 0; }
+.ch-reels { display: grid; grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: var(--s4); }
+.ch-reel-card { margin: 0; display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
+.ch-review-line { margin: 0; font-size: 24px; font-weight: 600; }
 
 .ch-board, .ch-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .ch-board th, .ch-table th { color: var(--text-2); font-weight: 500; text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line); }
