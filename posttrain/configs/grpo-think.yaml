@@ -1,0 +1,32 @@
+# RL v2 (thinking ON), human-approved Sat 20:20: think-games and think-ctrl. One 80 GB GPU (Modal H100).
+# Start = BASE Qwen3.5-9B + fresh LoRA (r16, alpha 32, language-model linears); no SFT adapter (the no-think SFT is
+# the documented negative result). Reward = verifier on the text after </think> only; no </think> = 0 (grpo.py).
+base: Qwen/Qwen3.5-9B
+steps: 120                  # the 6.5 h Modal timeout ends the run first if steps are slow; checkpoints survive
+save_every: 15
+seed: 0
+lora_r: 16                  # alpha = 2r = 32, dropout 0, every language-model Linear (grpo.lora_targets)
+
+lr: 1.0e-5
+warmup_ratio: 0.03
+per_device_batch: 4         # 3k-token completions: smaller micro-batch, same 64 completions/step (4 x 16 x 1)
+grad_accum: 16
+num_generations: 8
+num_iterations: 1
+beta: 0.04                  # KL to the base model (fresh LoRA: adapter disabled = reference)
+epsilon: 0.2
+epsilon_high: 0.28
+loss_type: dapo
+scale_rewards: group
+mask_truncated: true        # a reply cut at max_completion never closed </think>: reward 0 and no gradient
+
+max_completion: 3072        # thinking + answer
+max_prompt_tokens: 3072
+temperature: 1.0
+top_p: 1.0
+enable_thinking: true       # Qwen3.5 template default; generation prompt ends with "<think>\n"
+use_vllm: true
+vllm_mode: colocate
+vllm_gpu_mem: 0.35
+vllm_max_len: 6400          # 3072 prompt + 3072 completion + margin
+vllm_sleep: false
