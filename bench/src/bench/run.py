@@ -85,7 +85,7 @@ def _model_spec(a, g: dict, mc: bool) -> tuple[str, dict]:
             return "local-completions", {"model": a.served_name, "base_url": f"{base}/completions",
                                          "tokenizer": a.tokenizer, "tokenizer_backend": "huggingface",
                                          "num_concurrent": a.concurrency, "max_retries": 5, "timeout": 600}
-        return "local-chat-completions", {"model": a.served_name, "base_url": f"{base}/chat/completions",
+        return "bench-chat-completions", {"model": a.served_name, "base_url": f"{base}/chat/completions",
                                           "num_concurrent": a.concurrency, "max_retries": 5, "timeout": 1800,
                                           "tokenized_requests": False, "think_end_token": g["think_end_token"]}
     margs = {"pretrained": a.model, "dtype": g["vllm"]["dtype"], "gpu_memory_utilization": g["vllm"]["gpu_memory_utilization"],
@@ -110,7 +110,8 @@ def run_lm_eval(a, benches: list[dict], g: dict, out: Path) -> list[dict]:
     env = {**os.environ, "HF_DATASETS_TRUST_REMOTE_CODE": "1"}
     for (limit, fewshot, mc), group in groups.items():
         model, margs = _model_spec(a, g, mc)
-        cmd = [a.python or sys.executable, "-m", "lm_eval", "--model", model,
+        # bench.lmeval_shim = lm-eval's CLI plus the bench-chat-completions model (no task stop strings mid-thought)
+        cmd = [a.python or sys.executable, "-m", "bench.lmeval_shim", "--model", model,
                "--model_args", ",".join(f"{k}={v}" for k, v in margs.items()),
                "--tasks", ",".join(b["task"] for b in group),
                "--log_samples", "--output_path", str(raw), "--seed", str(g["seed"])]
