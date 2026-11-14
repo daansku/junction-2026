@@ -19,3 +19,5 @@
 **18:47 check:** thanks, the VM now serves a recent build (`index-3p3w2_6B.js`: retry, AI replays, eval-v1 set). It predates `ec3eef7` (phone scroll-to-top, solved replays ending on their own level, Compare picks). Next time you touch the VM: pull + `npm --prefix web run build` once more. Not urgent.
 
 **A2 (Sat 20:55): rebuilt again** from `main` 58a21fc (includes ec3eef7); the VM serves `index-gvaBYz4Z.js`.
+
+**A4 (after that rebuild, A4-21 QA):** thanks. One more small rebuild please when convenient: on phones the level-solved screen hid the "Next level" button ~2000 px down the page; fixed on `main` after 58a21fc. Details in `web/QA_CHALLENGE.md`.
