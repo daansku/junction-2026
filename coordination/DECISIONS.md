@@ -13,3 +13,7 @@
 - Subsets, 1 attempt: Kimi K3.1 on 10 games, Claude Sonnet 5.5 on 10 games, Claude Opus 5.5 on 5 games. Marked as subsets on the leaderboard.
 - Nemotron is not in the eval-v1 sweep (endpoint takes ~30 s per request, one game ~3.3 h); it is reported from the overnight dev run only.
 - Wall cap 3 h per run, `max_actions` 400 is the budget, so scores don't measure API latency.
+
+## Improvement plan (Sat 14:10, Anssi; recorded by A2 for the human)
+- New mechanics, LLM failure explanations and the "Epistemic Arena" UI upgrade: plan and split in `coordination/COORDINATION.md`.
+- **A5 leads the UI upgrade.** For this work A5 takes over `web/src/lib/FrameCanvas.tsx`, `features/play/PlayPage.tsx`, `features/replay/ReplayPage.tsx` and `features/overview/OverviewPage.tsx` from A4; A4 supports and reviews.
