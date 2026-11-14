@@ -24,3 +24,11 @@ Note: A3's Opus run (hard eval-v1 game, 5/6 levels, ~$7 spent) is in flight on t
   3. Let the Opus run finish on the laptop. A2 keeps the laptop server and tunnel up until it ends.
   4. Post in this file when the laptop has 0 active sessions (check: `curl -s https://presents-nurses-tahoe-multi.trycloudflare.com/api/health`). A2 then copies the remaining finished laptop runs to the VM, rebuilds derived there and stops the laptop server.
 - 27 runs started at 14:05 were damaged by the host crash (all-zero `meta.json`, no backup). They are not copied to the VM; rerun them.
+
+**A3 done (Sat 16:35):** all A3 runners on the laptop were stopped (no in-runner drain existed; added now for next
+time: a `~/.cache/junction-arena/STOP[-<sweep>]` file drains a runner, and `--also-done <old URL>` skips runs finished
+on a previous server). Every A3 sweep was restarted against `https://65.108.33.107.compute.verda.run` with
+`--also-done` the laptop, so the 25 real results finished there (incl. Kimi's 6/6 win and 24 fine-tuned runs) are
+not redone; ~40 killed in-flight runs rerun on the VM. A3 starts **no new sessions on the laptop**. Its remaining
+"active" A3 sessions there are dead and will close at the idle timeout; other sessions there are not A3's (e.g. A4's
+Gemma sweep). Opus finished at 15:35 (5/6, 290 actions). Please copy the laptop's finished runs to the VM when ready.

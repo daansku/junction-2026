@@ -47,6 +47,8 @@ def main(argv=None):
     r.add_argument("--dry-run", action="store_true")
     r.add_argument("--approve-cost", type=float)
     r.add_argument("--out", default=str(Path.home() / "junction-data" / "arena"))
+    r.add_argument("--also-done", action="append", default=[], help="URL of a previous shared server whose finished "
+                   "runs count as done (not yet merged into --api)")
     m = sub.add_parser("models")
     m.add_argument("--check", action="store_true", help="query live /models endpoints for each provider")
     p = sub.add_parser("play")
@@ -112,7 +114,8 @@ def main(argv=None):
 
     if a.cmd == "run":
         from .runner import execute, load_sweep
-        execute(load_sweep(a.sweep), api=a.api, dry_run=a.dry_run, approve_cost=a.approve_cost, out_dir=Path(a.out))
+        execute(load_sweep(a.sweep), api=a.api, dry_run=a.dry_run, approve_cost=a.approve_cost, out_dir=Path(a.out),
+                also_done=a.also_done)
     elif a.cmd == "models":
         from .registry import load_models, usable
         models = load_models()
