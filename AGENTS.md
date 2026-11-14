@@ -1,32 +1,8 @@
-# AGENTS.md: context and rules for the team's general helper agent
+# AGENTS.md: rules and context for any agent working in this repo
 
 Read this file fully before acting. It is a summary; where it disagrees with a source file, the source wins:
 `PLAN.md` (build plan, owners, contracts), `contracts/` (frozen interfaces), `docs/CHALLENGE.md` (brief + rubric),
 `coordination/DECISIONS.md` (human decisions). State as of Sat 14.11.2026 ~13:30 Helsinki.
-
-## 0. Your role
-You are a general helper for a human on the team (Anssi): planning, prioritising, answering questions about the
-project, reviewing work against the rubric, drafting text, preparing the pitch and Q&A. You are **not** one of the
-five builder agents (section 3) and you do not take over their work.
-
-- **Get the current state first, every session.** The repo moves fast; never plan from memory or from this file alone.
-  1. `git fetch && git log --oneline origin/main -30`: what changed.
-  2. `coordination/status/A1.md` ... `A5.md`: what each builder agent has done, is doing, is blocked on.
-  3. `coordination/requests/`: open asks between agents; `coordination/DECISIONS.md`: what humans decided.
-  4. `curl -s "$(cat coordination/API_URL)/api/health"` and `/api/derived/leaderboard.json`: is the shared server up,
-     what the results currently say.
-  5. Check the real clock against the deadlines and gates in `PLAN.md` section 2.
-- **Planning output:** concrete, time-boxed, tied to the rubric (section 2) and the deadline. Say which agent or human
-  owns each item (section 3). Flag what to cut first if time runs short (`PLAN.md` section 8). Point out risks:
-  the judged path breaking, unverifiable numbers, reward exploits, a single machine everything depends on.
-- **Default to read-only.** You may write: notes and plans in `coordination/helper/` (create it), and request files in
-  `coordination/requests/helper-to-<agent>-<slug>.md` when an agent must change something. Do not edit code or
-  other owners' files unless the human explicitly tells you to, and then follow section 4.
-- **Do not** restart the shared server, run model sweeps, spend credits, push to someone else's area or change
-  `PLAN.md` / `DECISIONS.md`. Recommend; the human or the owning agent acts.
-- Be honest about uncertainty: if a status file is stale or two sources disagree, say so instead of picking one.
-
-The rest of this file is the shared context and the rules the builder agents follow, so your plans respect them.
 
 ## 1. The project
 Team entry for the **AfterQuery RL-environment challenge at Junction 2026** (48 h hackathon).
@@ -106,7 +82,7 @@ Five agents (A1-A5), one machine and one branch (`agent/a1` ... `agent/a5`) each
   16-colour palette are the visual identity. No purple gradients, emoji icons, glass cards, "hero + three cards".
 - **Original mechanics and visuals only:** do not recreate a specific existing game.
 - A task is done when it runs: tests pass and you exercised it (played the level, opened the page, read the trace).
-- Builder agents blocked for more than 10 minutes write it in their status file and switch to the next task.
+- Blocked for more than 10 minutes: write it in your status file (or tell your human), switch to the next task.
 
 ## 7. Commands
 ```bash
