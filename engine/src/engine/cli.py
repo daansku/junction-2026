@@ -117,12 +117,12 @@ def cmd_render(a) -> int:
     return 0
 
 
-def verify_game(gd: dict) -> list[str]:
+def verify_game(gd: dict, regen: bool = True) -> list[str]:
     errs = []
     g = Game.from_dict(gd)
     if g.game_id != g._make_id():
         errs.append("game_id does not match content hash")
-    if gd["engine_version"] == ENGINE_VERSION:
+    if regen and gd["engine_version"] == ENGINE_VERSION:
         regen = make_game(GameSpec(**gd["spec"]))
         if regen.game_id != g.game_id:
             errs.append("not reproducible from spec with this engine version")
@@ -147,7 +147,7 @@ def cmd_verify(a) -> int:
     col = load_collection(a.collection)
     bad = 0
     for gd in col["games"]:
-        errs = verify_game(gd)
+        errs = verify_game(gd, regen=not a.quick)
         if errs:
             bad += 1
             print(f"FAIL {gd['game_id']}: {'; '.join(errs)}")
@@ -211,6 +211,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--cols", type=int, default=4)
     p.set_defaults(fn=cmd_render)
     p = sub.add_parser("verify", help="verify a collection"); p.add_argument("collection")
+    p.add_argument("--quick", action="store_true", help="skip regenerate-from-spec check")
     p.set_defaults(fn=cmd_verify)
     p = sub.add_parser("fuzz", help="generate+verify+random-play many seeds")
     p.add_argument("--n", type=int, default=1000); p.add_argument("--seed-start", type=int, default=500000)
