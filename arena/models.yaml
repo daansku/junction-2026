@@ -227,7 +227,7 @@
   params: "E4B (~4B effective)"
   link: https://huggingface.co/google/gemma-4-E4B-it
   max_concurrency: 4
-  verified: false               # flip after the first successful call (endpoint was cold-starting)
+  verified: true                # 04:10: text + image calls OK; plays through the harness (~3 s/action)
 
 - id: verda-small
   display_name: Small open model on Verda (base for fine-tune)
