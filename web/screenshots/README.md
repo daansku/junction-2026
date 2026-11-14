@@ -1,7 +1,7 @@
 # Deck screenshots + screen recordings (A4-22)
 
 1920×1080, dark theme, headless Chromium (Playwright) against the shared server's data (`?api=shared`), served from the
-production build. Taken **Sat 14.11 ~20:30** (eval-v1 sweep in progress; eval-v2 runs in progress).
+production build. Taken **Sat 14.11 ~18:30** (eval-v1 sweep in progress; eval-v2 runs in progress).
 **Retake after the 07:00 numbers lock** (leaderboard / insights / challenge stats change):
 
 ```bash
