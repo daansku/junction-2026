@@ -15,7 +15,7 @@ from manim import (
 )
 
 from common import (
-    pad_to_narration,
+    Narration,
     FAILURE_MODES, LINE_STRONG, MONO, PALETTE, PLACEHOLDER, SANS, TEXT_1, TEXT_2, TEXT_3,
     agent_sprite,
 )
@@ -41,12 +41,15 @@ class S5PostTrain(Scene):
             sq = Square(side_length=0.12, stroke_width=0, fill_color=c, fill_opacity=1)
             sq.move_to([random.uniform(-7, 7), random.choice([-1, 1]) * random.uniform(2.5, 4), 0])
             bits.add(sq)
+        vo = Narration(self, "S5")
+        vo.cue(0, delay=0.2)
         self.play(FadeIn(bot), FadeIn(name), FadeIn(bits), run_time=0.6)
         self.play(LaggedStart(*[b.animate.move_to(bot.get_center()).scale(0.2).set_opacity(0) for b in bits],
                               lag_ratio=0.01, run_time=1.8, rate_func=rate_functions.ease_in_cubic))
-        q = Text("can a small model learn from this experience?", font=SANS, font_size=26, color=TEXT_1).to_edge(UP, buff=0.8)
+        q = Text("can a small model learn from our games?", font=SANS, font_size=26, color=TEXT_1).to_edge(UP, buff=0.8)
         self.play(FadeIn(q), run_time=0.4)
         self.wait(1.0)
+        vo.cue(1, delay=0.4)
         self.play(FadeOut(VGroup(bot, name, bits)), q.animate.scale(0.75).to_edge(UP, buff=0.4), run_time=0.6)
 
         # ---- three bars with 95% CIs ----
@@ -90,5 +93,5 @@ class S5PostTrain(Scene):
         ctrl_box.move_to([x0 + width / 2 - 1.6, 0.0, 0])
         self.play(FadeIn(ctrl_box), run_time=0.4)
         self.wait(2.2)
-        pad_to_narration(self, "S5", tail=0.5)
+        vo.finish(tail=0.5)
         self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)

@@ -11,7 +11,7 @@ from manim import (
 )
 
 from common import (
-    pad_to_narration,
+    Narration,
     CACHE, FAILURE_MODES, MODE_COLOR, MONO, SANS, TEXT_1, TEXT_2, TEXT_3, frame_image, framed,
     load_json, set_frame,
 )
@@ -88,16 +88,21 @@ class S3Failures(Scene):
 
     def construct(self):
         panels = [self.panel(i) for i in range(len(REPLAYS))]
+        vo = Narration(self, "S3")
+        vo.cue(0, delay=0.2)
         world = Group(*[p[0] for p in panels])
         self.play(FadeIn(panels[0][0]), run_time=0.5)
         self.add(world)
         hyp = None
         for i, (p, img, steps, a, b, color) in enumerate(panels):
             if i > 0:
+                vo.cue(i, delay=0.5)
                 if hyp is not None:
                     self.play(FadeOut(hyp), run_time=0.2)
                 self.play(world.animate.shift(LEFT * SPACING), run_time=0.9, rate_func=rate_functions.ease_in_out_cubic)
-            hyp = self.play_steps(img, steps, a, b, color, 0.18 if i == 0 else 0.13)
+            # spread each replay over its spoken line (the first line also introduces the scene)
+            span = vo.dur(i) - (2.5 if i == 0 else 0.6)
+            hyp = self.play_steps(img, steps, a, b, color, min(0.35, max(0.12, span / (b - a))))
             self.wait(0.4)
         if hyp is not None:
             self.play(FadeOut(hyp), run_time=0.2)
@@ -124,6 +129,7 @@ class S3Failures(Scene):
 
         tiles.add_updater(tick)
         tiles.scale(3.0, about_point=ORIGIN)
+        vo.cue(3, delay=0.3)
         self.play(FadeOut(world), FadeIn(tiles), run_time=0.6)
         self.play(tiles.animate.scale(1 / 3.0, about_point=ORIGIN), run_time=2.0, rate_func=rate_functions.ease_in_out_cubic)
         # coloured tags appear on tiles: each failure is a labelled, measurable decision
@@ -135,5 +141,5 @@ class S3Failures(Scene):
         self.play(FadeIn(marks, lag_ratio=0.02), run_time=1.6)
         self.wait(1.0)
         tiles.clear_updaters()
-        pad_to_narration(self, "S3", tail=0.5)
+        vo.finish(tail=0.5)
         self.play(FadeOut(Group(tiles, marks)), run_time=0.5)

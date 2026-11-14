@@ -1,9 +1,9 @@
 """Draft voice-over with a local Piper voice (free, offline).
 
-Reads video/narration.json, writes video/cache/audio/<key>.wav (one file per scene, lines
-joined with short pauses), video/cache/audio/<key>.lines.json (start/end of each line, for
-captions) and video/cache/audio/durations.json (seconds per scene, read by the scenes so each
-scene lasts at least as long as its narration).
+Reads video/narration.json and writes, per scene, one wav per line
+(video/cache/audio/<key>_<i>.wav) plus video/cache/audio/<key>.lines.json (text and length of
+each line). The scenes read the lengths (scenes/common.py Narration) to time their beats;
+tools/build.py places each line at the time the scene cued it.
 
 Usage (from the repo root):
   video/.venv/python.exe video/tools/tts.py
@@ -22,8 +22,6 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 VIDEO = ROOT / "video"
 OUT = VIDEO / "cache" / "audio"
 VOICE = VIDEO / "assets" / "voices" / "en_US-lessac-medium.onnx"
-LEAD_IN = 0.4      # silence before the first line
-GAP = 0.45         # silence between lines
 
 
 def synth(voice: PiperVoice, text: str) -> tuple[bytes, int]:
@@ -37,31 +35,22 @@ def synth(voice: PiperVoice, text: str) -> tuple[bytes, int]:
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
+    for old in OUT.glob("*.wav"):
+        old.unlink()
     voice = PiperVoice.load(str(VOICE))
     spec = json.loads((VIDEO / "narration.json").read_text(encoding="utf-8"))
-    durations = {}
     for sc in spec["scenes"]:
-        pcm, rate, t, lines = b"", 22050, LEAD_IN, []
-        chunks = []
-        for line in sc["lines"]:
-            data, rate = synth(voice, line)
-            chunks.append(data)
-        silence = lambda s: b"\x00\x00" * int(rate * s)
-        pcm = silence(LEAD_IN)
-        for line, data in zip(sc["lines"], chunks):
-            dur = len(data) / 2 / rate
-            lines.append({"text": line, "start": round(t, 3), "end": round(t + dur, 3)})
-            pcm += data + silence(GAP)
-            t += dur + GAP
-        with wave.open(str(OUT / f"{sc['key']}.wav"), "wb") as w:
-            w.setnchannels(1)
-            w.setsampwidth(2)
-            w.setframerate(rate)
-            w.writeframes(pcm)
+        lines = []
+        for i, text in enumerate(sc["lines"]):
+            data, rate = synth(voice, text)
+            with wave.open(str(OUT / f"{sc['key']}_{i}.wav"), "wb") as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(rate)
+                w.writeframes(data)
+            lines.append({"text": text, "dur": round(len(data) / 2 / rate, 3), "rate": rate})
         (OUT / f"{sc['key']}.lines.json").write_text(json.dumps(lines, indent=1), encoding="utf-8")
-        durations[sc["key"]] = round(t, 3)
-        print(f"{sc['key']}: {t:.1f} s")
-    (OUT / "durations.json").write_text(json.dumps(durations, indent=1), encoding="utf-8")
+        print(sc["key"], [l["dur"] for l in lines])
 
 
 if __name__ == "__main__":
