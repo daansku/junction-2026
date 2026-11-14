@@ -50,7 +50,7 @@ Keep 5 browser tabs pre-loaded (`110%` zoom on dark display):
 1. **If venue Wi-Fi / Verda tunnel drops:**
    - Run local full stack immediately (`make dev` / `make server PORT=8000` serving synced `data/derived/*.json` and `web/public/challenge/*.json` — `/challenge` plays 100% client-side in TypeScript via `engine.ts` with zero server round-trips!).
    - Or append `?api=mock` to any web route (`data/fixtures/` + bundled static assets).
-2. **If projector / browser audio-video fails:**
-   - Play the standalone 2–3 minute rendered **Manim presentation video** (`video/` MP4, built from real game palettes and `data/derived/` numbers) alongside local `docs/deck/index.html` (zero external fonts or CDN dependencies).
+2. **If projector / live browser session stalls:**
+   - Play A4's captured 1080p H.264 screen recordings in `web/screenshots/video/` (`challenge-full-run.mp4` 57 s — note explicitly it is a scripted optimal flow demo, not a human score — `replay-argon.mp4` 31 s, `live-wall.mp4` 23 s) or A6's standalone 2–3 minute rendered **Manim presentation video** (`video/` MP4) alongside local `docs/deck/index.html` (zero external fonts or CDN dependencies).
 3. **If external model APIs throttle during the 15-minute judge rerun:**
    - Run local Docker Harbor baselines (`oracle`, `nop`, `redteam`) immediately (`0` network calls), or point Harbor OpenCode at our dedicated Verda GPU vLLM endpoint.

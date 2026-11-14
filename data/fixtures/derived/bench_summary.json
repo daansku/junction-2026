@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-14T16:48:32Z",
-  "protocol_version": "ft-benchmarks-v1",
+  "generated_at": "2026-11-14T16:55:12Z",
+  "protocol_version": "ft-benchmarks-v3",
   "bootstrap_resamples": 10000,
   "bootstrap_seed": 20261114,
   "suite_definition": [
@@ -9,21 +9,21 @@
       "label": "BIG-Bench Hard (27 tasks)",
       "group": "primary",
       "setting": "3-shot CoT",
-      "items": 6511
+      "items": 1350
     },
     {
       "id": "math",
       "label": "MATH",
       "group": "primary",
       "setting": "0-shot CoT",
-      "items": 5000
+      "items": 350
     },
     {
       "id": "gsm8k",
       "label": "GSM8K",
       "group": "primary",
       "setting": "8-shot CoT",
-      "items": 1319
+      "items": 250
     },
     {
       "id": "medqa",
@@ -37,56 +37,56 @@
       "label": "MMLU-Pro: Health",
       "group": "primary",
       "setting": "5-shot CoT",
-      "items": null
+      "items": 100
     },
     {
       "id": "mmlu_pro_law",
       "label": "MMLU-Pro: Law",
       "group": "primary",
       "setting": "5-shot CoT",
-      "items": null
+      "items": 100
     },
     {
       "id": "mmlu_pro_history",
       "label": "MMLU-Pro: History (Negative Ctrl)",
       "group": "negative_control",
       "setting": "5-shot CoT",
-      "items": null
+      "items": 100
     },
     {
       "id": "bbh_tracking_shuffled_objects",
       "label": "BBH: Tracking Shuffled Objects",
       "group": "bbh_logic_secondary",
       "setting": "3-shot CoT",
-      "items": null
+      "items": 50
     },
     {
       "id": "bbh_navigate",
       "label": "BBH: Navigate",
       "group": "bbh_logic_secondary",
       "setting": "3-shot CoT",
-      "items": null
+      "items": 50
     },
     {
       "id": "bbh_logical_deduction",
       "label": "BBH: Logical Deduction",
       "group": "bbh_logic_secondary",
       "setting": "3-shot CoT",
-      "items": null
+      "items": 50
     },
     {
       "id": "bbh_web_of_lies",
       "label": "BBH: Web of Lies",
       "group": "bbh_logic_secondary",
       "setting": "3-shot CoT",
-      "items": null
+      "items": 50
     },
     {
       "id": "bbh_temporal_sequences",
       "label": "BBH: Temporal Sequences",
       "group": "bbh_logic_secondary",
       "setting": "3-shot CoT",
-      "items": null
+      "items": 50
     }
   ],
   "claim_evaluation": {

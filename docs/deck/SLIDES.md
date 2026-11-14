@@ -48,10 +48,10 @@
 - **Controlled Post-Training Ladder (`SFT v2` + `GRPO`):** Token-matched `ctrl` (Tulu-3 reasoning) vs `games` (Narrator `<think>` causal rationales + A1 verifiable world-model tasks: `next_frame`, `rule_induction`, `solvable_in_k`, weighted by `decision_point_targets.json`) vs `mix`, followed by engine-verified GRPO.
 - **Pre-Registered Honesty Claim Rule (`FT_BENCHMARKS.md`):** `10,000`-resample paired item-level bootstrap CIs across 6 Primary Far-Transfer tasks (`BBH`, `MATH`, `GSM8K`, `MedQA`, `MMLU-Pro Health & Law`) + `MMLU-Pro: History` negative control. Transfer is claimed **only** if `cand > ctrl` on headline + `≥2` primary benchmarks (`95% CI > 0`) while outpacing `History`.
 
-## Slide 8 — Business & Real-World Value (`docs/BUSINESS.md` Top 3)
-1. **Contamination-Proof Frontier Lab Eval & Post-Training Gym:** Fresh private seed splits + Harbor MCP sidecars (`9/9` red-team = `0.000`) + engine-verified RL environments that never saturate across training cutoffs.
+## Slide 8 — Business & Real-World Value (`docs/BUSINESS.md` + `BACKUP IDEAS.md`)
+1. **Contamination-Proof Frontier Lab Eval & Post-Training Gym:** Fresh private seed splits + Harbor MCP sidecars (`9/9` red-team = `0.000`) + engine-verified RL environments that never saturate across training cutoffs. *(Two-outcome win: if post-training transfers, we sell the RL gym; if `28.7k` game examples don't game unseen rules, that proves the benchmark resists training-to-the-test.)*
 2. **Pre-Deployment Sanity Gate for Tool-Using Agents:** Catches zero-effect action loops (`46.9%` of failures) and sunk-cost refusal to reset (`42.1%`) before agents burn enterprise API/cloud budgets.
-3. **Procedural Mid-Training Data Engine:** Unlimited BFS-verified state-transition & causal-induction traces (`engine/tasks`) where `SFT v1` (`0.012`) proved raw trajectory cloning fails without explicit state rationales.
+3. **Procedural Data & Solvable-Level SDK + `/challenge` Flywheel:** Solver-verified causal-induction traces (`engine/tasks`), grid-studio level SDK hedge, and daily human discovery data via `/challenge`.
 
 ## Slide 9 — Ask & 15-Minute Live Exploit Hunt
 - **One-Command Harbor Reproduction (`arena/HARBOR.md`):** `harbor run -p harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4 -a oracle | nop | opencode`.

@@ -32,18 +32,18 @@ ROW_ORDER: dict[str, int] = {
 }
 
 FT_BENCHMARKS_SUITE: list[dict[str, Any]] = [
-    {"id": "bbh", "label": "BIG-Bench Hard (27 tasks)", "group": "primary", "setting": "3-shot CoT", "items": 6511},
-    {"id": "math", "label": "MATH", "group": "primary", "setting": "0-shot CoT", "items": 5000},
-    {"id": "gsm8k", "label": "GSM8K", "group": "primary", "setting": "8-shot CoT", "items": 1319},
+    {"id": "bbh", "label": "BIG-Bench Hard (27 tasks)", "group": "primary", "setting": "3-shot CoT", "items": 1350},
+    {"id": "math", "label": "MATH", "group": "primary", "setting": "0-shot CoT", "items": 350},
+    {"id": "gsm8k", "label": "GSM8K", "group": "primary", "setting": "8-shot CoT", "items": 250},
     {"id": "medqa", "label": "MedQA-USMLE (4-opt)", "group": "primary", "setting": "0-shot", "items": 1273},
-    {"id": "mmlu_pro_health", "label": "MMLU-Pro: Health", "group": "primary", "setting": "5-shot CoT", "items": None},
-    {"id": "mmlu_pro_law", "label": "MMLU-Pro: Law", "group": "primary", "setting": "5-shot CoT", "items": None},
-    {"id": "mmlu_pro_history", "label": "MMLU-Pro: History (Negative Ctrl)", "group": "negative_control", "setting": "5-shot CoT", "items": None},
-    {"id": "bbh_tracking_shuffled_objects", "label": "BBH: Tracking Shuffled Objects", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": None},
-    {"id": "bbh_navigate", "label": "BBH: Navigate", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": None},
-    {"id": "bbh_logical_deduction", "label": "BBH: Logical Deduction", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": None},
-    {"id": "bbh_web_of_lies", "label": "BBH: Web of Lies", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": None},
-    {"id": "bbh_temporal_sequences", "label": "BBH: Temporal Sequences", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": None},
+    {"id": "mmlu_pro_health", "label": "MMLU-Pro: Health", "group": "primary", "setting": "5-shot CoT", "items": 100},
+    {"id": "mmlu_pro_law", "label": "MMLU-Pro: Law", "group": "primary", "setting": "5-shot CoT", "items": 100},
+    {"id": "mmlu_pro_history", "label": "MMLU-Pro: History (Negative Ctrl)", "group": "negative_control", "setting": "5-shot CoT", "items": 100},
+    {"id": "bbh_tracking_shuffled_objects", "label": "BBH: Tracking Shuffled Objects", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
+    {"id": "bbh_navigate", "label": "BBH: Navigate", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
+    {"id": "bbh_logical_deduction", "label": "BBH: Logical Deduction", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
+    {"id": "bbh_web_of_lies", "label": "BBH: Web of Lies", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
+    {"id": "bbh_temporal_sequences", "label": "BBH: Temporal Sequences", "group": "bbh_logic_secondary", "setting": "3-shot CoT", "items": 50},
 ]
 
 BBH_SUBSET_NAMES: tuple[str, ...] = (
@@ -467,7 +467,7 @@ def build_bench_summary(
 
     return {
         "generated_at": generated_at or now_iso(),
-        "protocol_version": "ft-benchmarks-v1",
+        "protocol_version": "ft-benchmarks-v3",
         "bootstrap_resamples": resamples,
         "bootstrap_seed": DEFAULT_SEED,
         "suite_definition": FT_BENCHMARKS_SUITE,
