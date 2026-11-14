@@ -1,40 +1,75 @@
-# Overnight run plan: Sat 14.11, 03:45 to 09:00
+# Overnight run plan: Sat 14.11, 03:55 to 09:00 (option B)
 
 Goal: wake up to real model traces on `dev` (for the UI, the deck and a first gap estimate),
 plus Harbor/OpenCode evidence that the judges' path works. `eval-v1` is **not** touched before the 11:00 freeze.
+Keys: `coordination/KEYS.md`. Judging path: `coordination/JUDGING.md`.
 
-Runner machine: **A4's machine** (it holds the Featherless, Nemotron, Kimi and Gemini keys; A3's machine has none).
-All runs that count go to the shared server (`coordination/API_URL`). Keys: `coordination/KEYS.md`.
-Judging path: `coordination/JUDGING.md`.
+## Why option B
+The shared server (`coordination/API_URL`, A2's machine) still runs engine **0.2.0**. `main` is 0.5.0, with different game ids, and A2 isn't answering at night.
+The runs are therefore recorded on a **separate server on A4's machine** and copied to the shared server in the morning.
+This is a documented exception to PLAN.md §3.4 ("local traces are never used for results"). It covers `dev` only: the overnight runs never mix with the `eval-v1` leaderboard.
 
-## Blockers before the sweep can start
-| # | What | Who | Status |
+| | Value |
+|---|---|
+| Machine | A4's machine (holds the Featherless, Nemotron and Kimi keys) |
+| Overnight server | `http://localhost:8100`, engine 0.5.0, `DATA_DIR=~/junction-overnight` (empty at start, separate from A4's test runs in `~/junction-data`) |
+| Started with | `DATA_DIR=~/junction-overnight .venv/bin/python -m server serve --port 8100` |
+| Sweep | `arena/sweeps/overnight-dev.yaml` |
+| Must stay awake | A4's machine (server, runner, Docker) |
+
+## Sizing (from the 03:50 smoke, 1 run per model)
+| Model | s / action | $ / action | 150-action run |
 |---|---|---|---|
-| B1 | Shared server runs engine **0.2.0**; `main` is 0.5.0, with different game ids. Pull + restart the shared server **before** the sweep, then **don't restart it until the sweep ends**. | A2 | requested 03:45 |
-| B2 | Cost: `overnight-dev` dry-run = **$14.57** (Featherless) + 60 runs on Nemotron/Kimi credits (no per-token price). Cap in `DECISIONS.md` must cover it. | human | cap reads $20 locally; commit DECISIONS.md |
-| B3 | `gemini-flash` has no `api_model` yet, so the runner skips it. Pick an id from the live list (e.g. `models/gemini-flash-latest`, `models/gemini-3.8-flash`), with its price from the Gemini docs. | A3 | optional; sweep runs without it |
-| B4 | Host machines stay awake: the shared server host and A4's machine (runner + Docker). | human | |
+| `featherless-gpt-oss-120b` | 9.6 | 0.00123 | 24 min, $0.18 |
+| `featherless-open` (DeepSeek V3.2) | 16.8 | 0.00040 | 42 min, $0.06 |
+| `verda-kimi-k3-1-pro` | 23.9 | credits | 60 min |
+| `nemotron-3-5-super-vl` | 29.0 | credits | 73 min |
+| `featherless-qwen3-5-9b` | 50.3 | 0.00072 | 2 h, **dropped** |
+
+A 400-action run would take 1 to 5.5 h, so the sweep is cut to **4 dev games × 2 attempts, max 150 actions per run**.
+That is enough for levels 1 to 3 at 2 to 3× optimal.
+Per-model concurrency is set in `arena/models.yaml`: Verda models 3, Featherless 2 each.
+The expected finish is about 07:45, when the last Nemotron round completes.
+
+Cost: dry-run **$1.76**; at the measured rate about $2 on Featherless, plus 16 runs on Verda credits.
+Each run stops at $1 (`max_cost_usd`), so the worst case is $16, under the $20 cap in `DECISIONS.md`.
 
 ## Schedule
-| When | Step | Command (repo root, A4's machine) | Cost |
-|---|---|---|---|
-| 03:45 | **Smoke** against a local server: catches provider/harness errors. Local traces don't count. | `.venv/bin/python -m arena run arena/sweeps/overnight-smoke.yaml --api http://localhost:8000` | ~$0.49 + 2 credit runs |
-| 03:45 | **Harbor + OpenCode + Nemotron**, 1 dev game (judges' path, JUDGING.md row 4) | see JUDGING.md | credits |
-| after B1 | **overnight-dev sweep** → shared server: 10 dev games × 3 attempts × 5 models + 4 baselines = 230 runs. Resumable by `run_key`, so after a crash rerun the same command. | `.venv/bin/python -m arena run arena/sweeps/overnight-dev.yaml --api $(cat coordination/API_URL)` | $14.57 + credits |
-| after sweep | **Harbor OpenCode × 3 attempts** on 2 dev games with Nemotron (the rubric's "3 agent runs" on the judges' harness) | `harbor run -p <task> -a opencode -m verda-nemotron/nemotron-3.5-super-vl --ak opencode_config=<arena/opencode-nemotron.json as JSON> --ae 'NVIDIA_VERDA_INFERENCE_KEY=${NVIDIA_VERDA_INFERENCE_KEY}' -k 3` | credits |
-| ~07:00 | **Rebuild derived data** on the shared host so the leaderboard and insights show real numbers | A5: `python -m analysis sync && python -m analysis build`, or `POST /api/admin/rebuild` | — |
-| 09:00 | Humans: G1 review, look at replays of the overnight runs | humans | — |
+| When | Step | Status |
+|---|---|---|
+| 03:2x | Harbor in Docker: oracle 1.0, do-nothing 0, stop-early 1/6 (JUDGING.md) | done |
+| 03:31–03:48 | Harbor + OpenCode + Nemotron on 1 dev game: reward 0.113, 2/6 levels (JUDGING.md) | done |
+| 03:45–03:53 | Smoke, 1 game per model on the local test server: all 5 models play through the harness | done |
+| 03:55 | **overnight-dev** → `localhost:8100`: 56 runs (32 model + 24 baseline) | running |
+| after sweep | Harbor OpenCode + Nemotron, 3 attempts on 1 dev game (rubric: 3 agent runs on the judges' harness): `harbor run ... -k 3`, exact command in JUDGING.md | todo |
+| 09:00 | **Morning copy** to the shared server (below), then A5 rebuilds derived data | todo, humans + A2 |
 
-Models in `overnight-dev`: `nemotron-3-5-super-vl`, `verda-kimi-k3-1-pro`, `featherless-open` (DeepSeek V3.2),
-`featherless-gpt-oss-120b`, `featherless-qwen3-5-9b` (+ `gemini-flash` once B3 is done).
-Budgets per run: 400 actions, 500 turns, $1.00, 40 min wall time.
+Rerun after a crash: the same command resumes by `run_key`.
+```bash
+.venv/bin/python -m arena run arena/sweeps/overnight-dev.yaml --api http://localhost:8100
+```
+
+## Morning copy (A2 + a human, after A2 restarts the shared server on main)
+1. On A4's machine, pack the overnight runs (each run is a folder `runs/<run_id>/` with `meta.json` + `steps.jsonl`):
+   ```bash
+   tar czf overnight-runs.tgz -C ~/junction-overnight runs
+   ```
+2. Move `overnight-runs.tgz` to the shared host by hand: a USB stick, or a private file share. Not git: `data/runs/` is gitignored.
+3. On the shared host, unpack into its `DATA_DIR`. Run ids are unique (timestamp + hash), so nothing is overwritten:
+   ```bash
+   tar xzf overnight-runs.tgz -C "$DATA_DIR"
+   ```
+   Restart the server so `/runs` lists them.
+4. A5: `POST /api/admin/rebuild` on the shared host, or `python -m analysis sync && python -m analysis build`.
+
+Alternative if the copy is awkward: A5 runs `python -m analysis sync` against this machine's server through a temporary tunnel. A human would have to start the tunnel.
 
 ## Not overnight
 - `eval-v1` main sweep: after the 11:00 freeze and the 13:00 cost approval (`arena/sweeps/main.yaml`).
 - Human baseline: humans playing on the shared server from 09:30.
-- Anthropic models: no key on any machine yet.
+- Anthropic and Gemini models: no Anthropic key; `gemini-flash` has no `api_model` yet (A3: pick from the live list, e.g. `models/gemini-flash-latest`, with its price from the docs).
 
 ## Log
-- 03:2x Harbor in Docker on A4's machine: oracle 1.0, do-nothing 0, stop-early 1/6 (JUDGING.md).
-- 03:48 Harbor + OpenCode + Nemotron finished: reward 0.113, 2/6 levels, 94 actions (15-min cap). Config committed: `arena/opencode-nemotron.json`.
-- 03:42 Harbor + OpenCode + Nemotron running on dev game `gridworld-s1000-d1-l6-9b1065f8`: level 1 solved after 53 actions, reward 0.083 so far.
+- 03:53 Smoke stopped after enough data. Overnight server up on :8100 (engine 0.5.0).
+- 03:48 Harbor + OpenCode + Nemotron: reward 0.113, 2/6 levels, 94 actions (15-min test cap).
+- 03:2x Harbor oracle 1.0 / do-nothing 0 / stop-early 0.167.

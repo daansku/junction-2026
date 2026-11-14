@@ -95,7 +95,7 @@
   context: 1048576
   max_output: 32768
   link: https://build.nvidia.com/models
-  max_concurrency: 2
+  max_concurrency: 3            # Verda endpoint; 1 run ~ 29 s/action measured 03:50
   verified: true                # id from the organisers' config; first real run confirms it
 
 # featherless.ai: OpenAI-compatible, https://api.featherless.ai/v1, key FEATHERLESS_API_KEY.
@@ -113,7 +113,7 @@
   price_out: 0.41
   params: "671B MoE"
   link: https://featherless.ai/models/deepseek-ai/DeepSeek-V3.2
-  max_concurrency: 1            # concurrency_cost 4
+  max_concurrency: 2            # concurrency_cost 4; 7 units ran in parallel fine on 03:50 smoke
   verified: true
 
 - id: featherless-kimi-k2-6
@@ -209,7 +209,7 @@
   price_out: null
   params: null
   link: https://verda.com
-  max_concurrency: 2
+  max_concurrency: 3            # Verda inference API; ~24 s/action measured 03:50
   verified: true
 
 - id: verda-small

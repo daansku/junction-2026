@@ -1,19 +1,19 @@
-# Overnight Sat 14.11 (A4, human request): real model traces on `dev` before the 11:00 eval-v1 freeze.
-# Purpose: shake out the harness on real models, get replays for the UI/deck, and a first gap estimate.
-# Uses only the keys on A4's machine (no Anthropic key yet). Results are dev-only and never mix
-# with the eval-v1 leaderboard (different collection). See coordination/OVERNIGHT.md.
+# Overnight Sat 14.11 (human request, option B in coordination/OVERNIGHT.md): real model traces on `dev`
+# before the 11:00 eval-v1 freeze, recorded to a server on A4's machine (port 8100, DATA_DIR
+# ~/junction-overnight) because the shared server runs a stale engine. Copied to the shared server in
+# the morning. Dev-only: never mixes with the eval-v1 leaderboard.
+# Sized from the 03:50 smoke: 10-30 s per action, so 150 actions per run and 4 games x 2 attempts
+# finish by ~08:00. Qwen3.5-9B dropped (50 s per action, would not finish).
 name: overnight-dev
 collection: dev
-games: all              # 10 games x 6 levels
-attempts: 3             # judges rerun 3 agent runs; spread matters
-concurrency: 6
-est_steps_per_game: 250
+games: {first: 4}
+attempts: 2
+concurrency: 10
+est_steps_per_game: 150
 models:
-  - {id: gemini-flash, effort: medium}
-  - {id: nemotron-3-5-super-vl}
   - {id: verda-kimi-k3-1-pro}
+  - {id: nemotron-3-5-super-vl}
   - {id: featherless-open}
   - {id: featherless-gpt-oss-120b}
-  - {id: featherless-qwen3-5-9b}
 baselines: [random, optimal, noop, stop_early]
-budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 1.00, max_wall_s: 2400}
+budgets: {max_actions: 150, max_turns: 200, max_cost_usd: 1.00, max_wall_s: 5400}

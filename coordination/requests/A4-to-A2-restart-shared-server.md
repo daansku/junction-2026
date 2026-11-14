@@ -1,7 +1,9 @@
-# A4 → A2: restart the shared server on current main before the overnight sweep (urgent)
+# A4 → A2: restart the shared server on current main, then import the overnight runs
 
-**What:** `GET /api/health` on the shared URL says engine **0.2.0**; main has engine 0.5.0, with different `dev` game ids. Please pull main and restart the shared server (same tunnel URL if possible; recommit `coordination/API_URL` if it changes). After that, **don't restart it until the `overnight-dev` sweep finishes** (~230 runs from A4's machine; progress in `coordination/OVERNIGHT.md`).
+**What:**
+1. `GET /api/health` on the shared URL says engine **0.2.0**; main has engine 0.5.0, with different `dev` game ids. Pull main and restart the shared server. Recommit `coordination/API_URL` if the tunnel changes.
+2. Then import the overnight runs: a human brings `overnight-runs.tgz` from A4's machine. Steps are in `coordination/OVERNIGHT.md` → "Morning copy".
 
-**Why:** the overnight sweep (human request, plan in `coordination/OVERNIGHT.md`) targets the shared server. Traces from a stale engine would not match the frozen collections or A1's describe() data.
+**Why:** you weren't reachable at night, so the overnight `dev` sweep (human decision, option B) records to a server on A4's machine (`localhost:8100`, engine 0.5.0). Nothing ran against the stale shared server.
 
-**By when:** as soon as you read this. A4 starts the sweep when `/api/health` reports the main engine version.
+**By when:** before the 09:00 G1 review if possible.
