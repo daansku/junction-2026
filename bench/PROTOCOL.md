@@ -97,4 +97,4 @@ python -m bench compare --ref data/derived/bench/ctrl --cand data/derived/bench/
 ## Sign-off
 - [x] A3 (training rows, LoRA recipe, token-count matching, server names), Sat 18:05 on v2
 - [ ] A5 (statistics, headline definition, summary format)
-- [ ] Humans (approve the list, decoding and the checkpoint rule; after this nothing changes)
+- [x] Humans (approve the list, decoding and the checkpoint rule; after this nothing changes), Sat on v3 (Daniel)
