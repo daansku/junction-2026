@@ -69,14 +69,16 @@ export function cleanName(raw: string): string {
     .slice(0, NAME_MAX)
 }
 
+/** One board row. Server rows (A2-22) are computed from the recorded run, not sent by the client. */
 export interface BoardEntry {
   name: string
-  score: number
-  cleared: number
-  moves: number
+  levels_completed: number
+  actions: number
   beat_ai: boolean
   at: string
   run_id?: string | null
+  /** local fallback only: our challenge score (server rows rank by levels, then actions) */
+  score?: number
 }
 
 export interface Board {
@@ -89,14 +91,17 @@ const localKey = (gameId: string) => `challengeBoard:${gameId}`
 function readLocal(gameId: string): BoardEntry[] {
   try {
     const v = JSON.parse(localStorage.getItem(localKey(gameId)) ?? '[]')
-    return Array.isArray(v) ? (v as BoardEntry[]) : []
+    return Array.isArray(v) ? (v as BoardEntry[]).filter((e) => typeof e.levels_completed === 'number') : []
   } catch {
     return []
   }
 }
 
+/** Same order as the server board: more levels, then fewer actions, then earlier. */
 function sortBoard(entries: BoardEntry[]): BoardEntry[] {
-  return [...entries].sort((a, b) => b.score - a.score || b.cleared - a.cleared || a.moves - b.moves)
+  return [...entries].sort(
+    (a, b) => b.levels_completed - a.levels_completed || a.actions - b.actions || a.at.localeCompare(b.at),
+  )
 }
 
 export async function fetchBoard(gameId: string): Promise<Board> {
@@ -104,9 +109,8 @@ export async function fetchBoard(gameId: string): Promise<Board> {
     try {
       const res = await fetch(`${API.base}/challenge/board?game_id=${encodeURIComponent(gameId)}&limit=10`)
       if (res.ok) {
-        const doc = (await res.json()) as { entries?: BoardEntry[] } | BoardEntry[]
-        const entries = Array.isArray(doc) ? doc : (doc.entries ?? [])
-        return { source: 'server', entries: sortBoard(entries).slice(0, 10) }
+        const doc = (await res.json()) as { rows?: BoardEntry[] }
+        return { source: 'server', entries: (doc.rows ?? []).slice(0, 10) }
       }
     } catch {
       /* server without the board yet: local fallback */
@@ -115,13 +119,17 @@ export async function fetchBoard(gameId: string): Promise<Board> {
   return { source: 'local', entries: sortBoard(readLocal(gameId)).slice(0, 10) }
 }
 
+/**
+ * Server board: POST {run_id, name, beat_ai}; the server reads levels/actions from the run, which must be ended
+ * first (409 while IN_PROGRESS). Falls back to this browser when the endpoint is missing or refuses.
+ */
 export async function submitScore(gameId: string, e: BoardEntry): Promise<'server' | 'local'> {
-  if (API.base) {
+  if (API.base && e.run_id) {
     try {
       const res = await fetch(`${API.base}/challenge/score`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ game_id: gameId, ...e }),
+        body: JSON.stringify({ run_id: e.run_id, name: e.name, beat_ai: e.beat_ai }),
       })
       if (res.ok) return 'server'
     } catch {

@@ -138,10 +138,10 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
   const bestModel = useMemo(() => [...models].sort((a, b) => b.mean_score - a.mean_score)[0] ?? null, [models])
 
   // ---- session lifecycle
-  const endSession = useCallback((reason: string) => {
+  const endSession = useCallback((reason: string): Promise<void> => {
     const s = sessionRef.current
     sessionRef.current = null
-    if (s) api.endSession(s.id, reason).catch(() => {})
+    return s ? api.endSession(s.id, reason).catch(() => {}) : Promise.resolve()
   }, [])
 
   const resetToLobby = useCallback(
@@ -160,7 +160,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
   const finish = useCallback(
     (finalResults: LevelResult[], reason: string) => {
       const s = sessionRef.current
-      endSession(reason)
+      const ended = endSession(reason)
       const full = levelList.map((lv) => finalResults.find((r) => r.level === lv) ?? { level: lv, solved: false, actions: 0 })
       const score = challengeScore(full, optimal)
       const cleared = full.filter((r) => r.solved).length
@@ -183,14 +183,15 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
       setPhase('done')
       const entry: BoardEntry = {
         name: name || 'visitor',
+        levels_completed: cleared,
+        actions: moves,
         score,
-        cleared,
-        moves,
         beat_ai: o.beat,
         at: new Date().toISOString(),
         run_id: s?.runId ?? null,
       }
-      submitScore(gameId, entry).then((src) => {
+      // the server reads the score from the run, so the run must be closed before posting
+      ended.then(() => submitScore(gameId, entry)).then((src) => {
         setOutcome((cur) => (cur ? { ...cur, boardSource: src } : cur))
         boardQ.refetch()
       })
@@ -204,7 +205,8 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
     setError(null)
     endSession('switched_game')
     try {
-      const player = { kind: 'human', name: name || 'visitor', mode: 'challenge' } as Player
+      // both tags: A2 suggested `purpose`, A5 was asked for `mode`; analysis drops either
+      const player = { kind: 'human', name: name || 'visitor', mode: 'challenge', purpose: 'challenge' } as Player
       const s = await startSessionWithTakeover({ gameId, player, startLevel: from > 1 ? from : undefined })
       sessionRef.current = { id: s.session_id, runId: s.run_id }
       levelRef.current = from
@@ -584,8 +586,8 @@ function BoardCard({ board, source, highlight }: { board: BoardEntry[]; source?:
             <tr>
               <th>#</th>
               <th className="l">name</th>
-              <th>score</th>
               <th>levels</th>
+              <th>moves</th>
               <th className="l">vs AI</th>
             </tr>
           </thead>
@@ -594,8 +596,8 @@ function BoardCard({ board, source, highlight }: { board: BoardEntry[]; source?:
               <tr key={`${e.at}-${i}`} className={highlight && e.at === highlight ? 'me' : ''}>
                 <td>{i + 1}</td>
                 <td className="l">{e.name}</td>
-                <td>{e.score.toFixed(1)}</td>
-                <td>{e.cleared}</td>
+                <td>{e.levels_completed}</td>
+                <td>{e.actions}</td>
                 <td className={`l ${e.beat_ai ? 'good' : 'muted'}`}>{e.beat_ai ? 'beat it' : '—'}</td>
               </tr>
             ))}
