@@ -107,6 +107,10 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
     except Exception:
         desc = None
     notes, history, out = "", [], []
+    nar = None
+    if hasattr(game, "skin"):  # real engine game (MockGame has no skin/rules): A1-21 discovery rationales
+        from engine.tasks.rationale import Narrator  # visible colour/shape, effects only after seen, no rule names
+        nar = Narrator(game)
     plan: list[str] = []
     detour, before = None, []
     blow_level = rng.randint(1, game.truth()["levels_total"]) if kind == "gameover" else None
@@ -121,6 +125,8 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
             plan = []
             prev = frame
             frame = game.step(a)
+            if nar:
+                nar.after(a, game)
             history.append((a, diff_count(prev, frame)))
             continue
         take_detour = kind == "recover" and t["state"] != "GAME_OVER" and detour is None and rng.random() < p_detour
@@ -131,14 +137,14 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
         else:
             if t["state"] == "GAME_OVER":
                 a, plan = "RESET", []
-                new_notes, hyp = _notes(t, [], None)
+                new_notes, hyp = nar.before([], None) if nar else _notes(t, [], None)
             else:
                 if not plan:
                     plan = replan(game, before, detour, desc)
                     if not plan:
                         break  # unsolvable from here (should not happen with RESET allowed)
                 a = plan[0]
-                new_notes, hyp = _notes(t, plan, detour)
+                new_notes, hyp = nar.before(plan, detour) if nar else _notes(t, plan, detour)
             allowed_now = [getattr(x, "value", x) for x in game.available_actions()] or allowed
             prompt = parts_to_text(build_parts(frame, notes, history, allowed_now, MODES, step))
             example = (prompt, new_notes, hyp, a, t["level"])
@@ -146,6 +152,8 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
             plan = plan[1:] if plan and plan[0] == a else []
         prev = frame
         frame = game.step(a)
+        if nar:
+            nar.after(a, game)
         history.append((a, diff_count(prev, frame)))
         if example:
             prompt, new_notes, hyp, a, lvl = example
