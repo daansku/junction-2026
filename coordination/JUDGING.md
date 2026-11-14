@@ -20,7 +20,7 @@ Then they spend 15 minutes hunting reward exploits. They must be able to run the
 | 1 | Harbor task export: sidecar, verifier, oracle (reference), nop (do-nothing) | A3 | done (`harbor lint` clean, oracle 1.0 natively) |
 | 2 | **Stop-early baseline**: `-a oracle --ae ORACLE_STOP_AFTER_LEVELS=<n>` (oracle replays only the first n levels) | A4 | done |
 | 3 | **Docker build + full `harbor run`** with oracle / nop / stop-early on `dev` (needs Docker: A4's machine has it) | A4 | done (see Results) |
-| 4 | **OpenCode agent run** through Harbor, using the organisers' Nemotron opencode config (`NVIDIA_VERDA_INFERENCE_KEY`, see `coordination/KEYS.md`) | A4 | running |
+| 4 | **OpenCode agent run** through Harbor, using the organisers' Nemotron opencode config (`NVIDIA_VERDA_INFERENCE_KEY`, see `coordination/KEYS.md`) | A4 | done once (see Results); 3 attempts in OVERNIGHT.md |
 | 5 | Export the frozen `eval-v1` after the 11:00 freeze and rerun oracle once | A3 | after 11:00 |
 | 6 | README one-command eval + fix SUBMISSION / QA_PREP / DEMO_SCRIPT / PITCH to use the Harbor commands | A5 | todo |
 | 7 | Reward integrity check: do-nothing = 0, stop-early earns only the solved levels, oracle = 1.0, reported in the deck | A5 (numbers from A4's runs) | todo |
@@ -47,3 +47,21 @@ Each oracle run takes about 70 s, most of it Docker build and uv install.
 (6/6, 92 actions), nop 0.000. That machine runs Norton TLS scanning, which breaks pip inside containers, so it used a
 local-only export (`--extra-ca`, `--vendor`; task logic identical). Since then `solve.sh` uses a standard-library MCP
 client, so the oracle/stop-early runs no longer download uv or mcp inside the agent container.
+
+### OpenCode + Nemotron 3.5 Super VL through Harbor (judges' path)
+Config: `arena/opencode-nemotron.json` (organisers' config, rewritten in OpenCode's `provider` schema).
+```bash
+set -a; . ./.env; set +a      # host env must hold NVIDIA_VERDA_INFERENCE_KEY
+harbor run -p <task> -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
+  --ak "opencode_config=$(python3 -c 'import json;print(json.dumps(json.load(open("arena/opencode-nemotron.json"))))')" \
+  --ae 'NVIDIA_VERDA_INFERENCE_KEY=${NVIDIA_VERDA_INFERENCE_KEY}' \
+  --agent-timeout-multiplier 0.25        # 15 min cap for testing; judges use the task default (60 min)
+```
+- The `${...}` template is required: without `--ae`, the key never reaches the agent container, and Verda answers 404. Harbor stores only the template in the job's `config.json`, not the key.
+- `--ak config=<file>` is rejected by Harbor 0.26 for opencode ("does not support config"). Use `opencode_config`.
+
+| Run | Actions | Invalid | Levels | Reward | Note |
+|---|---|---|---|---|---|
+| OpenCode + Nemotron, attempt 1 | 94 | 2 | 2/6 | **0.113** | hit the 15-min test cap (AgentTimeoutError); level 1 at 2× optimal, level 2 at 5.7× |
+
+The reference run scores 1.000 on the same task. The gap shows on the judges' own harness.
