@@ -16,6 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "video" / "cache" / "engine.json"
 SEED, DIFF = 1000, 1          # the Harbor task game (gridworld-s1000-d1-l6-...)
 SKIN_LEVEL = 5                # level with the most objects, so the reshuffle is visible
+MONTAGE_SEEDS = list(range(1001, 1037))   # other generated games for the S1 opening montage
 
 
 def as_strings(frame) -> list[str]:
@@ -51,8 +52,15 @@ def main() -> None:
         g = Game(spec, game.levels, make_skin(other, spec.family, True, used))
         g.goto_level(SKIN_LEVEL)
         skins.append(as_strings(g.frame()))
+    # generator montage: one frame from each of many other generated games
+    montage = []
+    for k, other in enumerate(MONTAGE_SEEDS):
+        g = make_game(GameSpec(seed=other, difficulty=1 + k % 3, n_levels=6))
+        g.goto_level(1 + k % len(g.levels))
+        montage.append({"seed": other, "game_id": g.game_id, "frame": as_strings(g.frame())})
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps({"game_id": game.game_id, "levels": levels, "skins": skins, "skin_level": SKIN_LEVEL}), encoding="utf-8")
+    OUT.write_text(json.dumps({"game_id": game.game_id, "levels": levels, "skins": skins, "skin_level": SKIN_LEVEL,
+                               "montage": montage}), encoding="utf-8")
     print(game.game_id, [len(l["frames"]) for l in levels])
 
 
