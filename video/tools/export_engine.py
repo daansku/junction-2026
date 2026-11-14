@@ -15,6 +15,7 @@ from engine.generator.skin import make_skin
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "video" / "cache" / "engine.json"
 SEED, DIFF = 1000, 1          # the Harbor task game (gridworld-s1000-d1-l6-...)
+SKIN_LEVEL = 5                # level with the most objects, so the reshuffle is visible
 
 
 def as_strings(frame) -> list[str]:
@@ -48,10 +49,10 @@ def main() -> None:
     skins = []
     for other in (SEED, 4242, 7777):
         g = Game(spec, game.levels, make_skin(other, spec.family, True, used))
-        g.goto_level(2)
+        g.goto_level(SKIN_LEVEL)
         skins.append(as_strings(g.frame()))
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps({"game_id": game.game_id, "levels": levels, "skins": skins}), encoding="utf-8")
+    OUT.write_text(json.dumps({"game_id": game.game_id, "levels": levels, "skins": skins, "skin_level": SKIN_LEVEL}), encoding="utf-8")
     print(game.game_id, [len(l["frames"]) for l in levels])
 
 

@@ -1,6 +1,6 @@
 # Video storyboard: draft v1 (A6, Sat 14.11)
 
-**Status:** structure approved by Anssi (Sat 14.11). VO lines still draft; scenes being built.
+**Status:** structure approved by Anssi (Sat 14.11). All scenes drafted. The spoken lines now live in `video/narration.json` (source for TTS and captions); build with `video/.venv/python.exe video/tools/build.py`.
 
 ## Decisions (Anssi, Sat 14.11)
 

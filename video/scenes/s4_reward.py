@@ -12,6 +12,7 @@ from manim import (
 )
 
 from common import (
+    pad_to_narration,
     ACCENT, BAD, GOOD, LINE_STRONG, MONO, SANS, TEXT_1, TEXT_2, TEXT_3, agent_sprite, PALETTE,
 )
 
@@ -84,4 +85,5 @@ class S4Reward(Scene):
         no = Text("agent cannot reach the score", font=SANS, font_size=22, color=TEXT_2).to_edge(DOWN, buff=0.8)
         self.play(FadeIn(no), run_time=0.4)
         self.wait(1.6)
+        pad_to_narration(self, "S4", tail=0.5)
         self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)
