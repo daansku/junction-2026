@@ -113,3 +113,57 @@ def run(inp: Path, out: Path, model_id: str = DEFAULT_MODEL, effort: str | None 
                 n_err += bool(res["error"])
     log(f"judge done: {len(todo) - n_err} answered, {n_err} errors (rerun to retry), spent ${spent:.2f} -> {out}")
     return {"todo": len(todo), "est_cost": est, "sent": len(todo), "errors": n_err, "spent": spent}
+
+
+# ---------------------------------------------------------------- single-call hooks for A5's `analysis explain`
+# Python: arena.judge.complete(prompt, system=..., max_tokens=350) -> {"reply", "model", "cost_usd", ...}
+# CLI:    echo '{"system": "...", "prompt": "...", "max_tokens": 350}' | python -m arena judge-one
+# Spend across calls (and across processes) is tracked in a ledger and refused above the cap.
+import os as _os
+
+LEDGER = Path.home() / ".cache" / "junction-arena" / "judge-spend.jsonl"
+THINKING_FLOOR = 4000  # Gemini 3.x counts hidden thinking against max_tokens; 350 truncates replies to a few words
+_prov_cache: dict = {}
+
+
+def spent_so_far() -> float:
+    if not LEDGER.exists():
+        return 0.0
+    return sum(json.loads(l).get("cost_usd") or 0.0 for l in LEDGER.read_text(encoding="utf-8").splitlines() if l.strip())
+
+
+def complete(prompt: str, system: str = DEFAULT_SYSTEM, max_tokens: int = 350, model_id: str | None = None,
+             cap: float | None = None) -> dict:
+    model_id = model_id or _os.environ.get("ARENA_JUDGE_MODEL", DEFAULT_MODEL)
+    if not _prov_cache:  # imported directly (not via `python -m arena`): load .env keys + OS trust store once
+        from .__main__ import load_dotenv, use_os_trust_store
+        load_dotenv()
+        use_os_trust_store()
+    if model_id not in _prov_cache:
+        m = load_models().get(model_id)
+        if m is None or not usable(m) or not has_key(m):
+            raise RuntimeError(f"judge model {model_id} unknown, unverified or without key")
+        _prov_cache[model_id] = (m, get_provider(m))
+    m, prov = _prov_cache[model_id]
+    if cap is None:
+        from .runner import spend_cap
+        cap = float(_os.environ.get("ARENA_JUDGE_CAP", spend_cap()))
+    if spent_so_far() >= cap:
+        raise RuntimeError(f"judge spend cap ${cap:.2f} reached (ledger {LEDGER}); raise ARENA_JUDGE_CAP after approval")
+    mt = max(max_tokens, THINKING_FLOOR) if m["provider"] == "google" else max_tokens
+    rep = prov.complete(system or DEFAULT_SYSTEM, [{"type": "text", "text": prompt}], max_tokens=mt)
+    cost = price(m, rep.tokens_in, rep.tokens_out) or 0.0
+    LEDGER.parent.mkdir(parents=True, exist_ok=True)
+    with LEDGER.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({"model": model_id, "cost_usd": cost, "tokens_in": rep.tokens_in,
+                            "tokens_out": rep.tokens_out}) + "\n")
+    return {"reply": rep.text, "model": model_id, "cost_usd": cost, "tokens_in": rep.tokens_in,
+            "tokens_out": rep.tokens_out, "finish_reason": rep.raw_stop}
+
+
+def judge_one_stdin() -> None:
+    import sys
+    req = json.loads(sys.stdin.read())
+    out = complete(req["prompt"], system=req.get("system") or DEFAULT_SYSTEM, max_tokens=req.get("max_tokens") or 350,
+                   model_id=req.get("model"))
+    sys.stdout.write(json.dumps(out))

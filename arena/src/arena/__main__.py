@@ -77,7 +77,13 @@ def main(argv=None):
     j.add_argument("--concurrency", type=int, default=4)
     j.add_argument("--dry-run", action="store_true")
     j.add_argument("--approve-cost", type=float)
+    sub.add_parser("judge-one", help="one judge call: JSON {system, prompt, max_tokens} on stdin -> JSON reply on stdout")
     a = ap.parse_args(argv)
+
+    if a.cmd == "judge-one":
+        from .judge import judge_one_stdin
+        judge_one_stdin()
+        return
 
     if a.cmd == "judge":
         from .judge import run as judge_run
