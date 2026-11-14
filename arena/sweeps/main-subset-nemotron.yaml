@@ -1,0 +1,14 @@
+# Nemotron 3.5 Super VL on a small eval-v1 subset (human request Sat 14:45, run from A4's machine,
+# which holds NVIDIA_VERDA_INFERENCE_KEY). Not in the main sweep: the Verda deployment serves about one
+# request per 25-30 s across all callers and parallel requests only queue (A4 measured 13:30-13:40),
+# so one 400-action game takes ~3.4 h. One run at a time, first 3 games (inside the Kimi/Sonnet/Opus
+# subsets), 1 attempt, 4 h wall cap. Same harness h1; marked as a subset by its sweep name.
+name: main-subset-nemotron
+collection: eval-v1
+games: {first: 3}
+attempts: 1
+concurrency: 1
+est_steps_per_game: 400
+models:
+  - {id: nemotron-3-5-super-vl, max_concurrency: 1}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 2.00, max_wall_s: 14400}
