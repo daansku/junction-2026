@@ -55,3 +55,24 @@ optimal route's cells have a bypass (are not cut points of the floor graph).
 Fresh gridbranch samples (12 games each): d1 3.1 loops / 26 moves, d2 4.1 / 30, d3 5.0 / 31, d4 (8 levels) 6.3 / 45;
 median 1.2-3.8 s per game, worst ~40 s (d4). Targets ramp per level: loops >= min(6, 1 + level/2 + (d-1)),
 bypass >= 0.30 + 0.05 x level + 0.05 x (d-1); relaxed one step after 40 attempts.
+
+### gridbranch v2 (BRANCH_VERSION 2, Sat ~21:30): fewer rejections, mechanics on every route
+
+Profile, 30 games d1-d3 x 6 levels (`branching.REJECTS` / `SECONDS` diagnostics):
+
+| | Candidates | Accepted | Time |
+|---|---:|---:|---:|
+| v1 | 13,497 | 1.3% | 102 s |
+| v2 | 3,247 | 5.5% | 82 s |
+
+v2 changes: loops are built (walls joining distant corridors opened until the target is met, vault cells
+kept) instead of rejected; start/goal are a far pair (double sweep); a goal vault is always built when a gate
+rule needs a chokepoint, shifted to fit at map edges, entrance facing away from the start, with a walled
+corridor of one extra chokepoint per gate; a teleport-aware draft so A1's placement still finds routes
+after teleporters wall the goal side off; one_way / hazards / push_blocks / ice placed on a max-flow minimum
+cut across every start-goal route (naive shortest route = the trap: arrow against travel, lethal hazard run;
+other routes passable or survivable); cheapest checks first.
+
+eval-v3b rebuilt with v2 (same seeds and shape): 3.4 real loops/level, 0% linear, 25.9 optimal moves, new
+rule forced 108/108, use-rule avoider >= 0.8 on 3% (v1: 7%). Route rules forced, v1 vs v2: one_way 14/19 vs
+21/23, push_blocks 13/16 vs 19/22, ice 29/32 vs 35/36, hazards 23/23 vs 27/27. 0 failures at d1-d4.
