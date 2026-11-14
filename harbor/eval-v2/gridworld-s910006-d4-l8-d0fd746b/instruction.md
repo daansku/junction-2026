@@ -1,6 +1,6 @@
 # Play an unknown game
 
-An MCP server named `game` (http://game:8000/mcp) runs a video game you have never seen. It has two tools:
+An MCP server named `game` (http://localhost:8000/mcp) runs a video game you have never seen. It has two tools:
 
 - `observe()` shows the current screen (free).
 - `act(action, note?)` takes one action and shows the new screen. Actions: `ACTION1` up, `ACTION2` down,

@@ -110,13 +110,14 @@ container**, the exact seat of a real agent: same filesystem, same network, same
 | 7 | **Race:** 32 parallel `act` calls from 32 sessions | all counted exactly (33 valid actions recorded = 33 sent), nothing lost to the race | 0.0 |
 | 8 | **RESET spam:** 2,000 RESETs | every RESET counts as an action on the level; no level solved | **0.0** |
 | 9 | **Wall spam:** 3,100 moves in a cycle | the move budget ends the level (GAME_OVER) after 33 actions; afterwards only RESET is accepted | **0.0** |
+| 10 | **Fetch the answer from the internet** (A4, Sat ~20:40): our public web server serves every eval game's `optimal_path` (`GET /api/games/<id>`) and recorded winning runs; the repo holds `solution/solve.sh` | **was open** (agent container had internet). Fixed: every task now sets an agent-phase egress allowlist (`[agent] network_mode = "allowlist"`): only `game` + model APIs. The game now sits on `localhost:8000` (shared network namespace; via Harbor's proxy it reset idle MCP connections, see `arena/HARBOR.md` "Network"). Probe from the agent seat: GitHub raw, PyPI, our server by name and by IP -> no connection; `api.anthropic.com` reachable; only `localhost:8000` answers locally; oracle 1.000 (eval-v1 + eval-v2 game 1), stop-early 0.125 (eval-v2); OpenCode plays with 0 connection resets | blocked |
 
 Reference points on the same task (judge simulation, fresh clone): **oracle 1.000** (6/6 levels, 86 actions), **do-nothing 0.000**;
 stop-early earns exactly the levels it solves (0.167 per level at optimal play, table above).
 Doing the task well is the only way to score: per level `min(1, optimal / actions)`, only for solved levels, every action including RESET counted.
 
 Residual risks (not exploitable today):
-- The agent container has internet (PyPI answered 200). The repo is not public (GitHub raw returned 404 from inside), so the committed `harbor/eval-v1/*/solution/solve.sh` is not reachable. **If the repo is made public, an agent with web access could fetch the optimal paths**; keep `eval-v1` solutions private, or regenerate held-out tasks for the judges.
+- ~~The agent container has internet~~ Closed by row 10: the agent phase only reaches `game` and model APIs, so a public repo or our public server can no longer leak `solve.sh` / optimal paths to the agent. A judge who adds `--allow-agent-host <their API>` opens only that host. Outside Harbor the public server still serves eval optimal paths (gallery, challenge); fine for the demo, not reachable from a task.
 - `invalid_actions` in `score.json` lags: the sidecar rewrites the file only after a valid action (request to A3). Not part of the reward.
 
 Reproduce:

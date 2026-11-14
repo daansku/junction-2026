@@ -15,6 +15,10 @@ environment_mode = "separate"
 
 [agent]
 timeout_sec = 3600.0
+# Egress allowlist while the agent plays: only the game sidecar and model APIs (arena/HARBOR.md, "Network").
+# Add your model API host with `harbor run ... --allow-agent-host <host>`.
+network_mode = "allowlist"
+allowed_hosts = ["api.anthropic.com", "generativelanguage.googleapis.com", "api.openai.com", "openrouter.ai", "inference.verda.com", "containers.datacrunch.io", "api.featherless.ai", "integrate.api.nvidia.com", "api.together.xyz", "api.fireworks.ai", "api.deepseek.com", "api.moonshot.ai", "api.x.ai", "api.mistral.ai"]
 
 [environment]
 build_timeout_sec = 900.0
@@ -25,7 +29,7 @@ gpus = 0
 [[environment.mcp_servers]]
 name = "game"
 transport = "streamable-http"
-url = "http://game:8000/mcp"
+url = "http://localhost:8000/mcp"
 args = []
 
 [verifier.env]

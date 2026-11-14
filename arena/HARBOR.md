@@ -15,7 +15,7 @@ harbor run -p harbor/eval-v1 -a opencode -m <provider/model>    # frontier agent
 ## What a task contains
 | file | role |
 |---|---|
-| `task.toml` | schema 1.1; `game` MCP server (`streamable-http`, `http://game:8000/mcp`); **separate** verifier; `/evidence/score.json` collected from the `game` service as an artifact |
+| `task.toml` | schema 1.1; `game` MCP server (`streamable-http`, `http://localhost:8000/mcp`); agent egress allowlist; **separate** verifier; `/evidence/score.json` collected from the `game` service as an artifact |
 | `instruction.md` | tools, actions, "find the goal yourself", scoring; no rules, no colours, no numbers |
 | `environment/Dockerfile` | the agent's container: plain ubuntu, **no game code** |
 | `environment/docker-compose.yaml` | adds the `game` sidecar (built from `environment/game/`) |
@@ -38,6 +38,62 @@ levels, 0 for unsolved. Every move and RESET on a level counts. In [0, 1]; only 
 - Invalid actions are rejected and not counted; actions after the win do nothing; a hard cap (3000) on total actions.
 - Doing nothing = 0. Stopping early = credit only for levels actually solved, discounted by actions used.
 - Claims in text are ignored: the reward comes from the sidecar's game state only.
+
+## Network: the agent reaches only the game and model APIs
+Our public web server serves the eval games with their optimal paths and every recorded run, and the repo holds
+`solution/solve.sh`. An agent with open internet could fetch either and replay the answer. So every task sets an
+**egress allowlist for the agent phase** (`[agent] network_mode = "allowlist"`, Harbor's Docker egress control):
+the agent can reach the game and the model APIs in `allowed_hosts` (Anthropic, Google, OpenAI,
+OpenRouter, Verda, Featherless, NVIDIA, Together, Fireworks, DeepSeek, Moonshot, xAI, Mistral) and nothing else.
+Setup (installing OpenCode) and the verifier keep their default network.
+
+**Your model API is not in the list?** Add it: `harbor run ... --allow-agent-host <host>` (repeatable).
+
+**The game is at `http://localhost:8000/mcp`.** With egress control on, Harbor runs the `game` service inside its
+egress sidecar's network namespace, next to the agent (shared network only: separate filesystem and processes).
+Local traffic skips Harbor's transparent proxy (gost). A first version kept `game` as its own host on the compose
+network: that traffic went through the proxy, which reset idle MCP connections, so `act` failed with `ECONNRESET`
+after slow model turns (Haiku 9, Nemotron 11, DeepSeek 4 of 4 calls in 3-min runs; 0 without the allowlist). On
+localhost: 0 resets (Nemotron 24 acts, DeepSeek 10). Do not add `expose` or `networks` to `game`: Docker refuses
+`expose` in a shared namespace, and an own network puts the proxy back in the path.
+
+Red team from the agent's seat with the allowlist on (`coordination/redteam/attack.py`, `ATTACK=recon`, Sat 21:00,
+committed `eval-v1` game 1): GitHub raw, PyPI, our web server (by name and by IP) unreachable; `api.anthropic.com`
+reachable; on localhost only `:8000` answers (`/healthz`, `/mcp`), no game files visible. Committed tasks: oracle
+1.000 (eval-v1 game 1, 6/6, 86 actions; eval-v2 game 1, 8/8, 187), stop-early 0.125 (eval-v2, 1/8).
+
+## Other models through OpenCode
+`arena/opencode-models.json` registers the OpenAI-compatible endpoints (Verda Kimi + Nemotron, Featherless).
+Anthropic and Gemini use OpenCode's built-in providers (`anthropic/<model>`, `gemini/<model>`).
+
+```bash
+set -a; . ./.env; set +a
+CFG=$(python3 -c 'import json;print(json.dumps(json.load(open("arena/opencode-models.json"))))')
+harbor run -p harbor/eval-v2 -a opencode -m <selector> --ak "opencode_config=$CFG" \
+  --ae 'NVIDIA_VERDA_INFERENCE_KEY=${NVIDIA_VERDA_INFERENCE_KEY}' --ae 'VERDA_INFERENCE_KEY=${VERDA_INFERENCE_KEY}' \
+  --ae 'FEATHERLESS_API_KEY=${FEATHERLESS_API_KEY}' --ae 'GOOGLE_GENERATIVE_AI_API_KEY=${GEMINI_API_KEY}' -k 3
+```
+- Gemini: OpenCode's `google` provider reads `GOOGLE_GENERATIVE_AI_API_KEY`, not `GEMINI_API_KEY`; without the
+  `--ae` above it fails with `ProviderAuthError ... API key is missing`.
+- Anthropic: Harbor forwards `ANTHROPIC_API_KEY` from the host by itself.
+- Smoke test of every model (3-min cap, checks the model connects and plays): `bash arena/harbor_models_smoke.sh <out>`,
+  summary table from `python3 arena/harbor_smoke_report.py <out>`. Capped-run rewards are not results.
+
+Smoke results (A4, Sat 14.11 20:30-21:10, eval-v2 game 1, 3-min agent cap, Docker 29.8.1 + Harbor 0.26.0). "Works" =
+the model connects and its game actions count. Every model below plays through Harbor + OpenCode:
+
+| Selector | Actions in 3 min | Notes |
+|---|---:|---|
+| `anthropic/claude-haiku-5-5` | 78 / 31 | first run stopped on its own at 1/8 levels ($0.005); second run under the allowlist |
+| `gemini/gemini-4-argon` | 20 | needs `GOOGLE_GENERATIVE_AI_API_KEY` |
+| `gemini/gemini-4-carbon` | 10 | slow turns |
+| `gemini/gemini-3.8-flash` | 31 | 1/8 levels; also used `bash` |
+| `verda-kimi/kimi-k3-1-pro` | 31 / 8 | 1/8 levels in the first run; spends turns in `bash` (9 calls in the second) |
+| `verda-nemotron/nemotron-3.5-super-vl` | 23 | allowlist + localhost: 0 resets |
+| `featherless/deepseek-ai/DeepSeek-V3.2` | 10 | text only; allowlist + localhost: 0 resets |
+| `featherless/zai-org/GLM-5.3` | 1 | very long turns; with `output` 8192 it stopped at the output limit (`length`), now 32768 |
+
+Not tested: `anthropic/claude-sonnet-5-5` and `claude-opus-5-5` (Anthropic key nearly empty); same provider path as Haiku.
 
 ## Verified (2026-11-14, on A1's `dev` collection)
 - Unit tests: optimal = 1.0, nothing = 0, stop one move short = 0, one wasted RESET = exact partial credit,
