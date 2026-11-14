@@ -10,7 +10,22 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ..core.level import Level, Pos, State
+    from ..generator.placement import Draft
     from ..render.canvas import Canvas
+
+
+def cells(level: "Level", name: str, key: str) -> list[tuple[int, int]]:
+    """Static cell list from level.data[name][key] as tuples."""
+    return [tuple(p[:2]) for p in level.data.get(name, {}).get(key, [])]
+
+
+def static(level: "Level", name: str, build):
+    """Per-level cache of parsed static data (hot path for the solver). Not a dataclass
+    field, so dataclasses.replace() gives a fresh cache and to_dict() ignores it."""
+    cache = level.__dict__.setdefault("_cache", {})
+    if name not in cache:
+        cache[name] = build(level.data.get(name, {}))
+    return cache[name]
 
 
 class Component:
@@ -21,8 +36,20 @@ class Component:
     uses_interact: bool = False
     roles: dict[str, tuple[int, str]] = {}  # skin role -> default (colour index, sprite)
 
+    # --- generation ---
+    place_order: int = 50     # lower places first (teleporters cut the map before doors use it)
+
+    def place(self, draft: "Draft") -> bool:
+        """Add this component to a draft level (walls, draft.data[name], draft.claim(cell)).
+        Return False if the layout does not suit it; the generator then retries."""
+        return True
+
     # --- lifecycle ---
     def init_state(self, level: "Level", state: "State") -> None: ...
+
+    def blocks_object(self, level: "Level", state: "State", pos: "Pos") -> bool:
+        """True if a pushed object may not enter `pos`."""
+        return False
 
     # --- movement ---
     def remap(self, level: "Level", state: "State", action: Any) -> Any:

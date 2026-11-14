@@ -97,3 +97,15 @@ def test_no_global_random_or_builtin_hash():
         # random.Random(seed) instances are fine; the module-level global stream is not
         assert not re.search(r"\brandom\.(random|randint|choice|choices|shuffle|seed|sample|uniform)\(", text), p
         assert not re.search(r"(?<![\w.`])hash\(", text), p
+
+
+def test_deterministic_across_processes():
+    """Different PYTHONHASHSEED must give byte-identical games (no builtin hash() leaks)."""
+    import os
+    import subprocess
+    import sys
+    code = ("from engine import make_game, GameSpec; g = make_game(GameSpec(seed=31, difficulty=3)); "
+            "print(g.game_id, g.state_hash())")
+    outs = {subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                           env={**os.environ, "PYTHONHASHSEED": str(h)}).stdout for h in (1, 2)}
+    assert len(outs) == 1 and next(iter(outs)).startswith("gridworld-s31")

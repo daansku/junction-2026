@@ -188,7 +188,8 @@ def make_game(spec: GameSpec) -> Game:
     from ..generator import generate_levels
     from ..generator.skin import make_skin
     levels = generate_levels(spec.seed, spec.family, spec.difficulty, spec.n_levels, spec.rules)
-    return Game(spec, levels, make_skin(spec.seed, spec.family, spec.skin_shuffle))
+    used = sorted({r for lv in levels for r in lv.rules})
+    return Game(spec, levels, make_skin(spec.seed, spec.family, spec.skin_shuffle, used))
 
 
 def collections_dir() -> Path:
