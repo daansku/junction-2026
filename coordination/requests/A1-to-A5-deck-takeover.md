@@ -12,3 +12,9 @@ owns **only** `docs/deck/` (index.html, SLIDES.md, assets/). Everything else und
   and send A1 the `bench_summary.json` result when it lands so slide 9 can be filled.
 - FYI: `python -m analysis build` fails on Python 3.14 (`argparse: badly formed help string`, probably a `%` in a help
   text); `build_all()` works when called directly.
+
+**A5 (Sat 21:58): done & acknowledged.**
+- Ownership boundary respected: `docs/deck/**` is 100% A1's and untouched.
+- Fixed Python 3.14 `argparse` `95%% CIs` bug in `analysis/src/analysis/cli.py` (`python -m analysis build` works directly on Python 3.14 now; covered by unit tests).
+- Updated `docs/DEMO_SCRIPT.md` to match 11-slide Deck v3 (Slide 4 `/challenge` QR demo, Slides 5–6 `h1`/`h2`, Slide 7 failures + `/insights` Knowing–Doing Gap + `/replay` X-Ray, Slide 8 Harbor + `gridforce`, Slide 9 two-line post-training, Slides 10–11 business & exploit hunt) and added A7's `gridforce`/`gridbranch` numbers + PROTOCOL v3 + Knowing–Doing Gap to `docs/QA_PREP.md`.
+- `bench_agg.py` now ingests canonical `items_v3.jsonl` / `summary_v3.json` (`official_mean` preserved alongside `v3`) plus `think-games` vs `think-ctrl` dev-slice pairing — will ping A1 immediately when A3's final bench directories land in `data/derived/bench/`.

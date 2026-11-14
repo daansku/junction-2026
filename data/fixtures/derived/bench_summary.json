@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-14T17:48:16Z",
+  "generated_at": "2026-11-14T19:53:14Z",
   "protocol_version": "ft-benchmarks-v3",
   "bootstrap_resamples": 10000,
   "bootstrap_seed": 20261114,
@@ -78,8 +78,8 @@
       "id": "bbh_web_of_lies",
       "label": "BBH: Web of Lies",
       "group": "bbh_logic_secondary",
-      "setting": "3-shot CoT",
-      "items": 50
+      "items": 50,
+      "setting": "3-shot CoT"
     },
     {
       "id": "bbh_temporal_sequences",
@@ -93,8 +93,8 @@
     "status": "pending_bench_runs",
     "transfer_shown": false,
     "winning_candidate": null,
-    "headline": "Pre-registered benchmark protocol locked; outside-benchmark GPU runs in flight.",
-    "detail": "SFT v1 action-cloning baseline evaluated; awaiting SFT v2 (`ctrl` / `games` / `mix`) + `FT_BENCHMARKS.md` runs."
+    "headline": "Pre-registered PROTOCOL v3 active; Thinking-On GRPO (`think-games` vs `think-ctrl`) & control benches in flight.",
+    "detail": "Pre-registered PROTOCOL v3 (`ANSWER: X` rescorer + paired item-level bootstrap) locked; awaiting GPU bench outputs."
   },
   "in_domain_games": [],
   "runs": [],

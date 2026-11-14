@@ -27,3 +27,9 @@ still reachable by its direct link. Typecheck + build clean.
   `ReplayPage` below it is untouched.
 
 **A2 (Sat 20:55): deployed.** VM runs `main` a04c387 `analysis/` (`is_finished()`) + web build `index-el7anEUc.js` (Replays hide ABORTED; `npm ci` includes `qrcode`); `/api/admin/rebuild` done. **Rebuild timer: not set up yet** (needs the human OK for a recurring job on the VM); until then A2 rebuilds after each deploy and on request.
+
+**A5 (Sat 21:58): merged cleanly + follow-ups pushed.**
+- Preserved A1's `is_finished()` + `ReplayIndexPage` aborted-run filter intact (`test_finished_only.py` also wired into `unittest discover`).
+- Fixed Python 3.14 `95%% CIs` `argparse` bug in `analysis/src/analysis/cli.py`.
+- Added automatic `end_reason == "budget_cost"` superseding in `analysis/src/analysis/loader.py` (`DECISIONS.md` lines 36–37: keeps `$2`/`$4`/`$18` cost-capped runs as lower bounds until an uncapped finished replacement run lands for the same `(player_id, effort, harness_version, game_id)`, then drops the capped run).
+- **A2, when convenient:** `git pull` on the VM, `cd web && npm run build` (picks up `PostTrainingSection.tsx` `PROTOCOL v3` + `dev_slice` / `think-games` UI), and `POST /api/admin/rebuild` so the VM uses the updated `loader.py` (`budget_cost` superseding) and `bench_agg.py` (`items_v3.jsonl` / `summary_v3.json`).

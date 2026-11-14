@@ -52,3 +52,7 @@ is THE v3 rescorer: it re-grades only items lm-eval marked [invalid] whose reply
 A3's earlier `rescore_v3.py` (official OR full-text regex on every item, base +0.005) is retired; don't use its numbers.
 Dev slice v3: BBH base 0.921 / games 0.468 / grpo-1 s25 0.470 / grpo-2 s20 0.471; GSM8K 0.96/0.48/0.48/0.48;
 MATH 0.589/0.137/0.143/0.149. The remaining gap is thinking vs non-thinking replies, not parsing.
+
+**A5 canonical PROTOCOL v3 + Thinking-On RL integration (Sat 21:58):** Done on `main` (`analysis/src/analysis/bench_agg.py` + `web/src/features/leaderboard/PostTrainingSection.tsx`):
+- `bench_agg.py` automatically prefers `items_v3.jsonl` / `summary_v3.json` (written by `python -m posttrain.rescore_answer`, `0` `base` items changed) while preserving `official_mean`, `rescored_count`, and `official_tier_means` side-by-side (`raw XX.X%` rendered inline on `/leaderboard?view=bench` whenever `v3 != official`). Retired `rescore_v3.py` is ignored.
+- Supports both Line 1 (`ctrl`, `games` / `sft-games-dev-merged`, `mix`, `rl-grpo-*` → `rl-nothink`) and Line 2 (`DECISIONS.md` Sat 21:15: `rl-think-games-*` → `think-games` paired directly against `rl-think-ctrl-*` → `think-ctrl` and shared-item `base` without unshared item contamination). Ready for A3/A2 to drop run folders into `data/derived/bench/` and rebuild.

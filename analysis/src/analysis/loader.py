@@ -250,7 +250,7 @@ def filter_benchmark_runs(
             continue
         if kind == "baseline" and (name.startswith("smoke") or mid.startswith("smoke")):
             continue
-        if end_reason in ("idle_timeout", "server_shutdown", "error"):
+        if end_reason in INFRA_REASONS:
             continue
         if not is_finished(outcome, kind, end_reason):
             continue
@@ -280,7 +280,7 @@ def filter_benchmark_runs(
 
     # Second pass: when a collection has runs against its current engine game_ids,
     # exclude stale runs from superseded engine generations on that same collection name.
-    cleaned: list[dict[str, Any]] = []
+    stage2: list[dict[str, Any]] = []
     for run in stage1:
         meta = run.get("meta") or {}
         col = str(meta.get("collection") or "dev")
@@ -291,6 +291,33 @@ def filter_benchmark_runs(
             and gid not in by_col.get(col, set())
             and gid not in fx_ids
         ):
+            continue
+        stage2.append(run)
+
+    # Third pass (DECISIONS.md Sat 19:25 & 19:28): when an uncapped model rerun finishes on a game,
+    # supersede earlier cost-capped (`end_reason == "budget_cost"`) runs for that same (model, effort, harness, game).
+    uncapped_model_keys: set[tuple[str, str, str, str]] = set()
+    for run in stage2:
+        meta = run.get("meta") or {}
+        player = meta.get("player") or {}
+        pid, kind, effort, _ = normalize_player(player)
+        if kind != "model":
+            continue
+        end_reason = str(meta.get("end_reason") or "").strip().lower()
+        if end_reason != "budget_cost":
+            hv = str(meta.get("harness_version") or "h1")
+            gid = str(meta.get("game_id") or "")
+            uncapped_model_keys.add((pid, effort or "", hv, gid))
+
+    cleaned: list[dict[str, Any]] = []
+    for run in stage2:
+        meta = run.get("meta") or {}
+        player = meta.get("player") or {}
+        pid, kind, effort, _ = normalize_player(player)
+        end_reason = str(meta.get("end_reason") or "").strip().lower()
+        hv = str(meta.get("harness_version") or "h1")
+        gid = str(meta.get("game_id") or "")
+        if kind == "model" and end_reason == "budget_cost" and (pid, effort or "", hv, gid) in uncapped_model_keys:
             continue
         cleaned.append(run)
     return cleaned
