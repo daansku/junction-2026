@@ -125,8 +125,10 @@ class HttpClient:
             params["collection"] = self.collection
         runs = self.http.get("/runs", **params)
         runs = runs if isinstance(runs, list) else runs.get("runs", [])
-        return {r["run_key"] for r in runs if r.get("run_key") and r.get("outcome") == "ABORTED"
-                and r.get("end_reason") in ("idle_timeout", "server_restart")}
+        infra = lambda r: r.get("outcome") == "ABORTED" and r.get("end_reason") in ("idle_timeout", "server_restart")
+        real = {r["run_key"] for r in runs if r.get("run_key") and r.get("ended_at")
+                and r.get("outcome") != "IN_PROGRESS" and not infra(r)}
+        return {r["run_key"] for r in runs if r.get("run_key") and infra(r)} - real  # a real result wins
 
 
 # ---------------------------------------------------------------- mock
