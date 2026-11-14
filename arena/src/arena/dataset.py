@@ -159,14 +159,21 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
     return out
 
 
-def build(games, out_path: Path, n_recover: int = 2, n_gameover: int = 1, seed: int = 0, log=print) -> Counter:
+def _count(rng: random.Random, n: float) -> int:
+    """Fractional per-game count: 0.3 = one trajectory in 30% of games (lets you hit a target mix)."""
+    whole = int(n)
+    return whole + (1 if rng.random() < n - whole else 0)
+
+
+def build(games, out_path: Path, n_recover: float = 2, n_gameover: float = 1, seed: int = 0, log=print) -> Counter:
     """games: iterable of (game_id, factory) where factory() returns a fresh Game."""
     rng = random.Random(seed)
     stats = Counter()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8") as f:
         for gid, factory in games:
-            for kind in ["optimal"] + ["recover"] * n_recover + ["gameover"] * n_gameover:
+            kinds = ["optimal"] + ["recover"] * _count(rng, n_recover) + ["gameover"] * _count(rng, n_gameover)
+            for kind in kinds:
                 exs = game_examples(factory(), rng, kind, game_id=gid)
                 for e in exs:
                     f.write(json.dumps(e) + "\n")
