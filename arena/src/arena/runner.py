@@ -23,7 +23,7 @@ from .client import AlreadyFinished, make_client
 from .cost import est_tokens_per_step, price
 from .frames import _repo_root
 from .providers import get_provider
-from .registry import load_models, usable
+from .registry import has_key, key_env, load_models, usable
 
 DEFAULT_CAP = 5.0
 
@@ -82,6 +82,9 @@ def plan(sw: dict, client, models: dict) -> tuple[list[Job], list[str]]:
             continue
         if not usable(m):
             warnings.append(f"model {m['id']} not verified / no api_model yet - skipped")
+            continue
+        if not has_key(m):
+            warnings.append(f"model {m['id']}: no {key_env(m)} in .env - skipped")
             continue
         if m.get("test_only") and sw.get("api") not in ("mock", None) and not sw.get("allow_test_models"):
             warnings.append(f"model {m['id']} is test-only - skipped")

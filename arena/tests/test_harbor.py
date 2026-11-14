@@ -136,3 +136,18 @@ def test_extra_ca_is_opt_in_only(tmp_path):
     local = export(str(DEV), tmp_path / "local", first=1, log=lambda *_: None, extra_ca=ca)[0]
     assert (local / "environment/extra-ca.crt").exists() and (local / "environment/game/extra-ca.crt").exists()
     assert "update-ca-certificates" in (local / "environment/game/Dockerfile").read_text()
+
+
+@needs_engine
+def test_oracle_needs_no_downloads_and_vendor_is_opt_in(tmp_path):
+    from arena.harbor.export import export
+    t = export(str(DEV), tmp_path / "a", first=1, log=lambda *_: None)[0]
+    solve = (t / "solution/solve.sh").read_text()
+    assert "curl " not in solve and "uv run" not in solve and "pip install" not in solve and "MiniMCP" in solve
+    assert 'pip install --no-cache-dir "mcp' in (t / "environment/game/Dockerfile").read_text()
+    vend = tmp_path / "vendor"
+    (vend / "pkg").mkdir(parents=True)
+    t2 = export(str(DEV), tmp_path / "b", first=1, log=lambda *_: None, vendor=vend)[0]
+    df = (t2 / "environment/game/Dockerfile").read_text()
+    assert "COPY vendor /srv/vendor" in df and "pip install" not in df and "__PIP_INSTALL__" not in df
+    assert (t2 / "environment/game/vendor/pkg").is_dir()

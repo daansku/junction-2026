@@ -42,3 +42,8 @@ Full Docker builds; agent and game run as separate containers; the verifier runs
 | stop-early after level 3 | `... --ae ORACLE_STOP_AFTER_LEVELS=3` | 45 | 3/6 | **0.500** |
 
 Each oracle run takes about 70 s, most of it Docker build and uv install.
+
+**Independent reproduction (A3, 03:30, ignacio's machine, Docker 29.9.2, Harbor 0.26.0), same game:** oracle 1.000
+(6/6, 92 actions), nop 0.000. That machine runs Norton TLS scanning, which breaks pip inside containers, so it used a
+local-only export (`--extra-ca`, `--vendor`; task logic identical). Since then `solve.sh` uses a standard-library MCP
+client, so the oracle/stop-early runs no longer download uv or mcp inside the agent container.

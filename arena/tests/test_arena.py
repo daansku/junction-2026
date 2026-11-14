@@ -103,7 +103,7 @@ def test_run_key_stable():
 def test_registry_loads_and_unverified_are_unusable():
     ms = load_models()
     assert usable(ms["claude-haiku-5-5"])
-    assert not usable(ms["gemini-flash"])
+    assert not usable(ms["verda-small"])
 
 
 def test_sweep_resumes(tmp_path):
@@ -116,8 +116,18 @@ def test_sweep_resumes(tmp_path):
     assert again == []
 
 
-def test_cost_gate_blocks_expensive_sweep(tmp_path):
+def test_cost_gate_blocks_expensive_sweep(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-not-used")
     sw = {"name": "big", "collection": "dev", "games": {"first": 3}, "attempts": 50, "concurrency": 1,
           "models": [{"id": "claude-opus-5-5", "effort": "max"}], "baselines": [], "budgets": {}}
     with pytest.raises(SystemExit):
         execute(sw, api="mock", dry_run=False, approve_cost=None, out_dir=tmp_path, log=lambda *_: None)
+
+
+def test_models_without_keys_are_skipped(tmp_path, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    warnings = []
+    sw = {"name": "k", "collection": "dev", "games": {"first": 1}, "attempts": 1, "concurrency": 1,
+          "models": [{"id": "claude-haiku-5-5"}], "baselines": [], "budgets": {}}
+    rows = execute(sw, api="mock", dry_run=True, approve_cost=None, out_dir=tmp_path, log=warnings.append)
+    assert any("no ANTHROPIC_API_KEY" in w for w in warnings)

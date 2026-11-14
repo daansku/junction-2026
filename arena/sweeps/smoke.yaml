@@ -1,18 +1,18 @@
-# A3-06 smoke sweep: 2 cheap models x 3 dev games + random/optimal on all of dev.
+# A3-06 smoke sweep: cheap models x 3 dev games on the shared server (+ baselines already in baselines-dev).
+#   python -m arena run arena/sweeps/smoke.yaml --api shared --dry-run
 name: smoke
 collection: dev
 games: {first: 3}
 attempts: 1
-concurrency: 4
-est_steps_per_game: 120
+concurrency: 9
+est_steps_per_game: 200
 models:
-  - id: claude-haiku-5-5
-    effort: low
-  - id: gemini-flash          # skipped until verified in models.yaml
-    effort: low
-baselines: [random, optimal, noop, stop_early]
+  - {id: gemini-flash, effort: low}
+  - {id: featherless-qwen3-5-9b}
+  - {id: nemotron-3-5-super-vl}     # Verda container, paid by time not tokens (price null)
+  - {id: claude-haiku-5-5, effort: low}   # skipped until ANTHROPIC_API_KEY is set
 budgets:
   max_actions: 200
   max_turns: 260
-  max_cost_usd: 0.50
-  max_wall_s: 1200
+  max_cost_usd: 0.75
+  max_wall_s: 5400

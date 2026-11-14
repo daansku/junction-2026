@@ -1,0 +1,17 @@
+# Key check: 3 actions per model on one dev game, against a LOCAL server (coordination/KEYS.md).
+#   python -m arena run arena/sweeps/keycheck.yaml --api http://localhost:8765
+name: keycheck
+collection: dev
+games: {first: 1}
+attempts: 1
+concurrency: 6
+est_steps_per_game: 3
+models:
+  - {id: gemini-flash, effort: low}
+  - {id: gemini-pro, effort: low}
+  - {id: featherless-qwen3-5-9b}
+  - {id: featherless-gpt-oss-120b}
+  - {id: nemotron-3-5-super-vl}
+  - {id: verda-kimi-k3-1-pro}
+  - {id: claude-haiku-5-5, effort: low}
+budgets: {max_actions: 3, max_turns: 6, max_cost_usd: 0.20, max_wall_s: 300}

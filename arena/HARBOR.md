@@ -48,8 +48,18 @@ levels, 0 for unsolved. Every move and RESET on a level counts. In [0, 1]; only 
 - **Not yet run:** the Docker build and a full `harbor run` (Docker Desktop was not running on this machine;
   Harbor CLI now installed on this machine).
 
+## Oracle needs no downloads
+`solution/solve.sh` embeds a ~60-line standard-library MCP client (`arena/harbor/mcp_mini.py`), so the reference
+run works offline and behind TLS-inspecting proxies.
+
 ## Local machines with antivirus TLS scanning
 Norton "Web/Mail Shield" (and similar) re-signs HTTPS with its own root, so downloads inside task containers fail
 (`CERTIFICATE_VERIFY_FAILED`). `--extra-ca <pem>` bakes that root into the task containers for **local runs only**;
 never hand such an export to judges. On ignacio's machine Norton also corrupts chunked downloads even when the
-certificate is trusted (`InvalidChunkLength` from pip), so a full local `harbor run` needs Norton's SSL scanning paused.
+certificate is trusted (`InvalidChunkLength` from pip, on the host too). Workaround that needs no settings change:
+build the sidecar's Linux dependencies on the host with uv (which copes) and pass them in:
+
+    uv pip install --target vendor --python-platform x86_64-manylinux_2_17 --python-version 3.12 "mcp>=1.6,<2"
+    python -m arena harbor-export --collection dev --out C:/hb-local --extra-ca norton-root.crt --vendor vendor
+
+Both flags are local-only. Tasks for judges are exported without them.

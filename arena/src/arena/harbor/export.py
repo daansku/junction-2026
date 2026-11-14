@@ -115,29 +115,21 @@ SOLVE_SH = """#!/bin/bash
 # Oracle (reference run): replay the engine's optimal path through the game's MCP tools.
 # Stop-early baseline: same script with ORACLE_STOP_AFTER_LEVELS=<n> (harbor run -a oracle
 # --ae ORACLE_STOP_AFTER_LEVELS=1) plays only the first n levels optimally, then stops.
+# Standard-library MCP client only: no downloads, so it works offline and behind TLS-inspecting proxies.
 set -euo pipefail
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.local/bin/env
-uv run --with 'mcp<2' python3 - <<'EOF'
-import asyncio
-from mcp.client.session import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+python3 - <<'EOF'
+__MINI__
 
 import os
 
 LEVELS = __LEVELS__
 STOP = int(os.environ.get("ORACLE_STOP_AFTER_LEVELS") or len(LEVELS))
-PATH = [a for lv in LEVELS[:STOP] for a in lv]
-
-async def main():
-    async with streamablehttp_client("http://game:8000/mcp") as streams:
-        async with ClientSession(streams[0], streams[1]) as s:
-            await s.initialize()
-            for a in PATH:
-                await s.call_tool("act", {"action": a})
-            print(f"replayed {len(PATH)} actions over {min(STOP, len(LEVELS))}/{len(LEVELS)} levels")
-
-asyncio.run(main())
+PATH_ = [a for lv in LEVELS[:STOP] for a in lv]
+c = MiniMCP("http://game:8000/mcp")
+c.initialize()
+for a in PATH_:
+    c.call("act", {"action": a})
+print(f"replayed {len(PATH_)} actions over {min(STOP, len(LEVELS))}/{len(LEVELS)} levels")
 EOF
 """
 
@@ -155,13 +147,13 @@ ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt NODE_EXTRA_CA_CERTS=/etc/ssl/cer
 """
 
 GAME_DOCKERFILE = """FROM python:3.12-slim
-__EXTRA_CA__RUN pip install --no-cache-dir "mcp>=1.6,<2"
+__EXTRA_CA____PIP_INSTALL__
 WORKDIR /srv
 COPY engine /srv/engine
 COPY arena /srv/arena
 COPY contracts /srv/contracts
 COPY collection.json /srv/collection.json
-ENV PYTHONPATH=/srv ARENA_REPO_ROOT=/srv GAME_COLLECTION=/srv/collection.json PORT=8000
+ENV PYTHONPATH=/srv:/srv/vendor ARENA_REPO_ROOT=/srv GAME_COLLECTION=/srv/collection.json PORT=8000
 EXPOSE 8000
 CMD ["python", "-m", "arena.harbor.sidecar"]
 """
@@ -192,8 +184,15 @@ def _safe_name(game_id: str) -> str:
     return "".join(c if c.isalnum() or c in "-_" else "-" for c in game_id)
 
 
+PIP_ONLINE = 'RUN pip install --no-cache-dir "mcp>=1.6,<2"\n'
+# Local-only: Linux site-packages prepared on the host with
+#   uv pip install --target <dir> --python-platform x86_64-manylinux_2_17 --python-version 3.12 "mcp>=1.6,<2"
+# and copied in, so the build needs no network (TLS-inspecting antivirus breaks pip downloads).
+PIP_VENDOR = 'COPY vendor /srv/vendor\n'
+
+
 def export(collection: str, out: Path, first: int | None = None, agent_timeout: int = 3600, log=print,
-           extra_ca: Path | None = None) -> list[Path]:
+           extra_ca: Path | None = None, vendor: Path | None = None) -> list[Path]:
     from ..engine_adapter import load_engine
     eng, name = load_engine()
     if name != "engine":
@@ -223,7 +222,11 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         (t / "environment" / "Dockerfile").write_text(MAIN_DOCKERFILE.replace("__EXTRA_CA__", ca_block), newline="\n")
         (t / "environment" / "docker-compose.yaml").write_text(COMPOSE.replace("__GAME_ID__", gid))
         gd = t / "environment" / "game"
-        (gd / "Dockerfile").write_text(GAME_DOCKERFILE.replace("__EXTRA_CA__", ca_block), newline="\n")
+        pip_block = PIP_VENDOR if vendor else PIP_ONLINE
+        (gd / "Dockerfile").write_text(GAME_DOCKERFILE.replace("__EXTRA_CA__", ca_block)
+                                       .replace("__PIP_INSTALL__\n", pip_block), newline="\n")
+        if vendor:
+            shutil.copytree(vendor, gd / "vendor", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         if extra_ca:
             shutil.copy2(extra_ca, t / "environment" / "extra-ca.crt")
             shutil.copy2(extra_ca, gd / "extra-ca.crt")
@@ -237,7 +240,9 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         (gd / "collection.json").write_text(json.dumps({**{k: v for k, v in coll.items() if k != "games"},
                                                         "games": [g]}))
         (t / "tests" / "test.sh").write_text(TEST_SH, newline="\n")
-        (t / "solution" / "solve.sh").write_text(SOLVE_SH.replace("__LEVELS__", json.dumps(levels)), newline="\n")
+        mini = (Path(__file__).parent / "mcp_mini.py").read_text(encoding="utf-8")
+        solve = SOLVE_SH.replace("__MINI__", mini).replace("__LEVELS__", json.dumps(levels))
+        (t / "solution" / "solve.sh").write_text(solve, newline="\n")
         made.append(t)
     log(f"exported {len(made)} Harbor tasks from {coll_file.name} -> {out}"
         + (f" (LOCAL ONLY: extra CA {extra_ca.name} baked in; do not hand these to judges)" if extra_ca else ""))

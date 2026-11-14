@@ -52,30 +52,30 @@
 
 # ---- to confirm when keys land (`python -m arena models --check`) ----
 - id: gemini-flash
-  display_name: Gemini Flash (current)
+  display_name: Gemini 3.8 Flash
   provider: google
-  api_model: null               # pick from the live list; docs page examples were inconsistent
+  api_model: gemini-3.8-flash               # live /models on 2026-11-14
   tier: frontier
   input_modes: [image, rle]
   efforts: [low, medium, high]  # reasoning_effort on the OpenAI-compat layer
-  price_in: null
-  price_out: null
+  price_in: 0.75
+  price_out: 3.75               # incl. thinking; aistudio.google.com/docs/pricing 2026-11-14
   link: https://ai.google.dev/gemini-api/docs/models
   max_concurrency: 4
-  verified: false
+  verified: true
 
 - id: gemini-pro
-  display_name: Gemini Pro (current)
+  display_name: Gemini 3.1 Pro (preview)
   provider: google
-  api_model: null
+  api_model: gemini-3.1-pro-preview               # live /models on 2026-11-14
   tier: frontier
   input_modes: [image, rle]
   efforts: [low, medium, high]
-  price_in: null
-  price_out: null
+  price_in: 2.00
+  price_out: 12.00               # incl. thinking; aistudio.google.com/docs/pricing 2026-11-14
   link: https://ai.google.dev/gemini-api/docs/models
   max_concurrency: 2
-  verified: false
+  verified: true
 
 # NVIDIA Nemotron served by Verda (DataCrunch) for the hackathon. Endpoint, model id and limits come
 # from the organisers' opencode config (2026-11-14): OpenAI-compatible, key NVIDIA_VERDA_INFERENCE_KEY,
