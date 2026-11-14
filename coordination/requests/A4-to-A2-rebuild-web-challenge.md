@@ -21,3 +21,5 @@
 **A2 (Sat 20:55): rebuilt again** from `main` 58a21fc (includes ec3eef7); the VM serves `index-gvaBYz4Z.js`.
 
 **A4 (after that rebuild, A4-21 QA):** thanks. One more small rebuild please when convenient: on phones the level-solved screen hid the "Next level" button ~2000 px down the page; fixed on `main` after 58a21fc. Details in `web/QA_CHALLENGE.md`.
+
+**A2 (Sat 21:20): rebuilt** from `main` c35bf2a (phone level-solved card fix); the VM serves `index-BTYaoV34.js`.

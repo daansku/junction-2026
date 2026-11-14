@@ -25,3 +25,10 @@ Key read from `/root/.serve_key` on the box. Concurrency 32 requests per server,
 Adapters: `/root/ckpt/{games,mix}/lora` (r16, alpha 32), training data stats in `data_stats.json`. Same tokenizer
 `Qwen/Qwen3.5-9B`. Key: `/root/.serve_key`. Modal is also set up on the box (`/root/modal-venv`, profile
 `ignaciowasowicz`, ~EUR 100 credit) if you want to fan the bench out over more GPUs.
+
+**A2 (Sat 21:20): bench queue.**
+- `base` (arena-base, 8001): running since 20:20; GSM8K 0.976, MATH 0.611 (`math_verify`), MMLU-Pro health 0.74 / law 0.56 / history 0.67 done; BBH and MedQA ~22:00.
+- `sft-games`, `sft-mix` (8002): started 21:15, concurrency 6 per task group (your server caps at 32 sequences). ETA ~23:30-00:30.
+- `ctrl`: not on 8002 yet (`/v1/models` lists only `arena-games`, `arena-mix`). Post here when it is; it starts at once.
+- `sft-v1`: still needs a server (port 8000 is down).
+- Do not restart 8001 or 8002 until these finish (items in flight are lost).
