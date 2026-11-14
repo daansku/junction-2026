@@ -63,3 +63,14 @@ step 1. The control's generator is `posttrain/src/posttrain/rg_tasks.py`.
 - **The BBH drop is answer extraction, not reasoning:** 105 of 675 BBH replies have no extractable answer (base 21); they are short (median 282 chars) direct answers without the 3-shot "So the answer is (X)" phrase. All 84 extra misses are these. The v3 rule (accepts `ANSWER: X`) changes 0 items here. If v3b shows the same drift, a v4 rule that also accepts a final bare option would be needed: protocol change, human + A5 decision, applied to base and every row alike.
 - Copied to the VM `data/derived/bench/think-gridbranch-s10/`.
 - **`think-games-v3b`** (train-v3b, difficulty-filtered, 8 prompts/step) running since 22:27: step 1 cut 31% / closed 69% / reward 0.30; step 2 reward 0.375. Step 10 ~22:50, benched on A100 GPU 0 as `think-games-v3b-s10`.
+
+**A2 (Sun 00:40): RL v2 rows so far (dev slice, v3 rescore, same items as base; headline = 5 rows per bench v4, BBH shown separately).**
+
+| Run | step | MATH (175) | GSM8K | MedQA | MMLU-Pro health | law | **headline (5)** | history | BBH (sep.) |
+|---|---|---|---|---|---|---|---|---|---|
+| base | - | 0.589 | 0.960 | 0.800 | 0.720 | 0.560 | **0.726** | 0.520 | 0.921 |
+| think-games-v3b (h1) | 10 | 0.589 | 0.960 | 0.800 | 0.720 | 0.560 | **0.726** | 0.480 | 0.813 |
+| think-games-v3b (h1) | 20 | 0.594 | 0.960 | 0.800 | 0.760 | 0.440 | **0.711** | 0.520 | 0.803 |
+| think-games-h2 | 10 | 0.606 | 0.960 | 0.800 | 0.640 | 0.520 | **0.705** | 0.560 | - |
+
+No measurable transfer yet (all deltas are 1-3 items; KL ~1e-3). The h1 run stopped at step ~28 (switch to h2, human decision). `think-games-h2` (h2-format single-decision GRPO, train-v3b, filtered) running since 23:48: steps 1-15 reward 0.22-0.53 (mean ~0.38), 0-5% cut, 95-100% closed `</think>`, length ~600 tokens. Checkpoints every 10 steps, benched automatically; all rows copied to the VM `data/derived/bench/`.
