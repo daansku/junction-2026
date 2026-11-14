@@ -52,6 +52,12 @@ def to_dataset(rows: list[dict]):
     } for s in rows])
 
 
+def prompt_tokens(tok, s: dict, thinking: bool) -> int:
+    msgs = [m for m in s["messages"] if m["role"] != "assistant"]
+    text = tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False, enable_thinking=bool(thinking))
+    return len(tok(text, add_special_tokens=False)["input_ids"])
+
+
 # --------------------------------------------------------------------------------------------- reward
 
 
@@ -169,7 +175,7 @@ def make_callbacks(a, tok):
 
 DEFAULTS = dict(  # overridden by --config yaml, then by explicit CLI flags
     base="Qwen/Qwen3.5-9B", sft_lora=None, tasks=None, out=None, steps=300, save_every=25,
-    task_filter=None, limit=None, seed=0, lora_r=16,
+    task_filter=None, limit=None, seed=0, lora_r=16, max_prompt_tokens=3072,
     lr=1e-5, warmup_ratio=0.03, per_device_batch=8, grad_accum=4, num_generations=8,
     max_completion=1024, temperature=1.0, top_p=1.0, beta=0.04, epsilon=0.2, epsilon_high=0.28,
     loss_type="dapo", scale_rewards="group", num_iterations=1, mask_truncated=True,
@@ -197,7 +203,9 @@ def parse_args(argv=None):
     ap.add_argument("--max-completion", type=int)
     ap.add_argument("--beta", type=float, help="KL coefficient to the SFT policy")
     ap.add_argument("--vllm-gpu-mem", type=float)
-    ap.add_argument("--no-vllm", dest="use_vllm", action="store_false", default=None)
+    ap.add_argument("--max-prompt-tokens", type=int, help="drop longer prompts (rule_effect has 12k-token outliers)")
+    ap.add_argument("--vllm-max-len", type=int, help="vLLM context: >= longest prompt + max completion")
+    ap.add_argument("--no-vllm",dest="use_vllm", action="store_false", default=None)
     ap.add_argument("--thinking", dest="enable_thinking", action="store_true", default=None,
                     help="Qwen thinking mode on (default off: SFT v2 data answers without <think>)")
     ap.add_argument("--no-mask-truncated", dest="mask_truncated", action="store_false", default=None,
@@ -234,9 +242,13 @@ def main(argv=None):
         tok.pad_token = tok.eos_token
     tok.padding_side = "left"
 
-    rows = load_tasks(a.tasks, a.task_filter, a.limit, a.seed)
+    rows = load_tasks(a.tasks, a.task_filter, None, a.seed)
+    n_all = len(rows)
+    rows = [r for r in rows if prompt_tokens(tok, r, a.enable_thinking) <= a.max_prompt_tokens][: a.limit or None]
+    if a.vllm_max_len < a.max_prompt_tokens + a.max_completion:
+        raise SystemExit(f"vllm_max_len {a.vllm_max_len} < max_prompt_tokens + max_completion")
     ds = to_dataset(rows)
-    counts = {}
+    counts = {"dropped_long_prompts": n_all - len(rows)} if not a.limit else {}
     for r in rows:
         counts[r["task"]] = counts.get(r["task"], 0) + 1
 
