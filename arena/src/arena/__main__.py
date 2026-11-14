@@ -68,7 +68,23 @@ def main(argv=None):
     h.add_argument("--agent-timeout", type=int, default=3600)
     h.add_argument("--extra-ca", help="LOCAL ONLY: PEM root CA to trust inside task containers (antivirus TLS scanning)")
     h.add_argument("--vendor", help="LOCAL ONLY: Linux py3.12 site-packages dir for the sidecar (built with uv --target)")
+    j = sub.add_parser("judge", help="judge-LLM calls for failure explanations (prompts jsonl from A5's analysis)")
+    j.add_argument("--in", dest="inp", required=True, help="jsonl: {id, prompt, system?, max_tokens?} per line")
+    j.add_argument("--out", required=True, help="jsonl replies (appended; rerun resumes)")
+    j.add_argument("--model", default="gemini-pro")
+    j.add_argument("--effort")
+    j.add_argument("--max-tokens", type=int, default=8000, help="includes hidden thinking tokens on Gemini")
+    j.add_argument("--concurrency", type=int, default=4)
+    j.add_argument("--dry-run", action="store_true")
+    j.add_argument("--approve-cost", type=float)
     a = ap.parse_args(argv)
+
+    if a.cmd == "judge":
+        from .judge import run as judge_run
+        from .runner import spend_cap
+        judge_run(Path(a.inp), Path(a.out), model_id=a.model, effort=a.effort, max_tokens=a.max_tokens,
+                  concurrency=a.concurrency, dry_run=a.dry_run, approve_cost=a.approve_cost, cap=spend_cap())
+        return
 
     if a.cmd == "harbor-export":
         from .harbor.export import export
