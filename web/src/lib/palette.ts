@@ -1,11 +1,11 @@
 // Game palette, 16 colours, index 0–15. Source of truth: contracts/palette.json (A2).
-// Until that file exists we fall back to a built-in copy of the ARC-AGI-3 palette.
+// Fallback is a copy of contracts/palette.json v1, used only if the file is missing.
 
 const FALLBACK: string[] = [
-  '#FFFFFF', '#CCCCCC', '#999999', '#666666',
-  '#333333', '#000000', '#E53AA3', '#FF7BCC',
-  '#F93C31', '#1E93FF', '#88D8F1', '#FFDC00',
-  '#FF851B', '#921231', '#4FCC30', '#A356D6',
+  '#000000', '#1E5BD8', '#E5383B', '#2FB54A',
+  '#F5C518', '#8A8F98', '#D63AAF', '#F2832B',
+  '#6FD3F2', '#7A1F2B', '#FFFFFF', '#3A3F47',
+  '#8E5CE6', '#1FA39A', '#A8D94A', '#8B5A2B',
 ]
 
 const contractFiles = import.meta.glob('../../../contracts/palette*.json', {

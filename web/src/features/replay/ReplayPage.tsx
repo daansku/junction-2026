@@ -213,7 +213,7 @@ export function ReplayPage() {
           </div>
 
           <aside className="replay-side">
-            <Panel label={`step ${cur + 1} · ${step?.action}`}>
+            <Panel label={`step ${cur + 1} · ${step?.action ?? 'start'}`}>
               <div className="step-fields">
                 {step?.reasoning && (
                   <div>
@@ -248,7 +248,7 @@ export function ReplayPage() {
               <ol className="step-list mono">
                 {steps.data!.map((s, i) => (
                   <li key={i} className={i === cur ? 'cur' : undefined} onClick={() => setIdx(i)}>
-                    <span className="muted">{String(i + 1).padStart(3, ' ')}</span> {s.action}
+                    <span className="muted">{String(i + 1).padStart(3, ' ')}</span> {s.action ?? 'start'}
                     {s.truth?.events?.length ? <span className="muted"> {s.truth.events.join(',')}</span> : null}
                   </li>
                 ))}

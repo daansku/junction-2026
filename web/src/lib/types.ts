@@ -31,15 +31,31 @@ export interface Truth {
   [k: string]: unknown
 }
 
+export interface GameSpec {
+  family?: string
+  seed?: number
+  n_levels?: number
+  difficulty?: number
+  rules?: string[] | null
+  skin_shuffle?: boolean
+}
+
 export interface GameMeta {
   game_id: string
   collection?: string
+  spec?: GameSpec
+  engine_version?: string
+  levels_total?: number
+  difficulty?: number
+  /** union of rules across levels */
+  rules?: string[]
+  rules_per_level?: string[][]
+  optimal_moves_total?: number
+  thumbnail_url?: string
+  // legacy/mock convenience
   family?: string
   seed?: number
-  difficulty?: number
   n_levels?: number
-  rules?: string[]
-  thumbnail_url?: string
   [k: string]: unknown
 }
 
@@ -55,7 +71,7 @@ export interface LevelDescribe {
 
 export interface GameDescribe extends GameMeta {
   levels: LevelDescribe[]
-  engine_version?: string
+  available_actions?: ActionName[]
 }
 
 export interface Player {
@@ -113,7 +129,8 @@ export interface RunMeta {
 export interface Step {
   i: number
   t_ms?: number
-  action: ActionName
+  /** null on step 0 (initial frame) */
+  action: ActionName | null
   frame: Frame
   truth?: Partial<Truth>
   reasoning?: string

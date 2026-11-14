@@ -2,7 +2,8 @@ import { PALETTE } from '@/lib/palette'
 
 // 7×5 pixel mark drawn from game palette cells (DESIGN.md §1).
 const MARK = ['99.bb', '99.bb', '.....', 'ee.88', 'ee.88']
-const MAP: Record<string, number> = { '9': 9, b: 11, e: 14, '8': 8 }
+// palette indices: 1 blue, 4 yellow, 3 green, 2 red
+const MAP: Record<string, number> = { '9': 1, b: 4, e: 3, '8': 2 }
 
 export function Wordmark() {
   const px = 3

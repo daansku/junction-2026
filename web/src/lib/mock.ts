@@ -47,6 +47,7 @@ interface Fixtures {
   describes: Record<string, GameDescribe>
   runs: Record<string, { meta: RunMeta; stepsPath?: string }>
   derived: Record<string, string>
+  frames: Record<string, Frame>
 }
 
 let fixturesPromise: Promise<Fixtures> | null = null
@@ -54,7 +55,7 @@ let fixturesPromise: Promise<Fixtures> | null = null
 function loadFixtures(): Promise<Fixtures> {
   if (fixturesPromise) return fixturesPromise
   fixturesPromise = (async () => {
-    const fx: Fixtures = { games: [], describes: {}, runs: {}, derived: {} }
+    const fx: Fixtures = { games: [], describes: {}, runs: {}, derived: {}, frames: {} }
     const entries = Object.entries(fixtureLoaders)
     for (const [key, load] of entries) {
       const rel = relPath(key)
@@ -83,7 +84,8 @@ function loadFixtures(): Promise<Fixtures> {
           : v && typeof v === 'object'
             ? ((v as Record<string, unknown>).games as unknown[] | undefined)
             : undefined
-        if (Array.isArray(list) && list.every((g) => g && typeof g === 'object' && 'game_id' in g)) {
+        const isGame = (g: unknown) => !!g && typeof g === 'object' && 'game_id' in g && !('run_id' in g)
+        if (Array.isArray(list) && list.length && list.every(isGame)) {
           for (const g of list as GameDescribe[]) {
             fx.games.push(g)
             if (Array.isArray(g.levels)) fx.describes[g.game_id] = g
@@ -91,12 +93,17 @@ function loadFixtures(): Promise<Fixtures> {
         } else if (v && typeof v === 'object' && 'game_id' in v && 'levels' in v) {
           const g = v as GameDescribe
           fx.describes[g.game_id] = g
-          if (!fx.games.some((x) => x.game_id === g.game_id)) fx.games.push(g)
+        } else if (Array.isArray(v) && rel.startsWith('frames/') && v.length === FRAME_SIZE) {
+          fx.frames[rel.slice('frames/'.length).replace(/\.json$/, '')] = v as Frame
         }
       } catch {
         /* not a game file */
       }
     }
+    // dedupe games by id (games.json + games/*.json both list them)
+    const seen = new Set<string>()
+    fx.games = fx.games.filter((g) => !seen.has(g.game_id) && !!seen.add(g.game_id))
+    for (const id of Object.keys(fx.describes)) if (!seen.has(id)) fx.games.push(fx.describes[id])
     return fx
   })()
   return fixturesPromise
@@ -108,7 +115,8 @@ const GRID = 10
 const CELL = 6
 const OX = 2
 const OY = 4
-const C = { bg: 5, floor: 5, wall: 2, player: 9, goal: 14, budget: 11, used: 4, pipDone: 14, pipNow: 0, pipTodo: 3, win: 14, lose: 8 }
+// Indices follow contracts/palette.json: 0 black, 1 blue, 2 red, 3 green, 4 yellow, 5 grey, 10 white, 11 dark_grey
+const C = { bg: 0, floor: 0, wall: 5, player: 1, goal: 3, budget: 4, used: 11, pipDone: 3, pipNow: 10, pipTodo: 11, win: 3, lose: 2 }
 
 function rng(seed: number) {
   let s = seed >>> 0 || 1
@@ -214,6 +222,7 @@ const MOCK_GAMES: MockGame[] = [
       seed,
       difficulty: d,
       n_levels: n,
+      levels_total: n,
       rules: ['walls', 'goal'],
       levels: lv,
       engine_version: 'mock-0',
@@ -435,7 +444,12 @@ export class MockApi implements Api {
   /** Mock-only: frame of the first level, used as a thumbnail. */
   previewFrame(gameId: string): Frame | null {
     const g = MOCK_GAMES.find((m) => m.meta.game_id === gameId)
-    return g ? render(newSim(g)) : null
+    return g ? render(newSim(g)) : this.fixtureInitial
+  }
+
+  private fixtureInitial: Frame | null = null
+  constructor() {
+    loadFixtures().then((fx) => (this.fixtureInitial = fx.frames.initial ?? null))
   }
 
   async createSession(body: { game_id: string; player: Player; run_key?: string }): Promise<SessionStart> {

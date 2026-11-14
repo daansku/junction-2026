@@ -33,7 +33,8 @@ export function GalleryPage() {
               <div className="game-card-meta">
                 <span className="mono game-id">{g.game_id}</span>
                 <span className="muted mono">
-                  d{g.difficulty ?? '?'} · {g.n_levels ?? '?'} levels
+                  d{g.difficulty ?? g.spec?.difficulty ?? '?'} · {g.levels_total ?? g.spec?.n_levels ?? g.n_levels ?? '?'} levels
+                  {g.optimal_moves_total ? ` · opt ${g.optimal_moves_total}` : ''}
                 </span>
                 <span className="game-card-links">
                   <Link to={`/play/${encodeURIComponent(g.game_id)}`}>Play</Link>
