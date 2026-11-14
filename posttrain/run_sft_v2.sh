@@ -7,7 +7,7 @@ ROW=$1; GPU=${GPU:-0}
 cd /root && . /root/venv/bin/activate
 mkdir -p /root/ckpt/$ROW
 echo "== $ROW on GPU $GPU start $(date -u +%H:%M)"
-CUDA_VISIBLE_DEVICES=$GPU python /root/train_sft.py --base Qwen/Qwen3.5-9B --data /root/sftv2/$ROW.jsonl \
+CUDA_VISIBLE_DEVICES=$GPU python -u /root/train_sft.py --base Qwen/Qwen3.5-9B --data /root/sftv2/$ROW.jsonl \
   --out /root/ckpt/$ROW/lora --epochs 1 --lr 2e-4 --batch 1 --grad-accum 16 --max-len 2048 --lora-r 16
 cp /root/sftv2/$ROW.stats.json /root/ckpt/$ROW/lora/data_stats.json
 echo "== $ROW done $(date -u +%H:%M)"
