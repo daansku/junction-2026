@@ -21,7 +21,8 @@ echo "GPUs=$NGPU batch=$BATCH grad_accum=$ACC"
 # Python 3.12 via uv: the image's system Python (3.14 on Ubuntu 26.04) may lack torch/vllm wheels.
 command -v uv >/dev/null || { curl -LsSf https://astral.sh/uv/install.sh | sh; }
 export PATH="$HOME/.local/bin:$PATH"
-uv venv -q -p 3.12 /root/venv && . /root/venv/bin/activate
+[ -x /root/venv/bin/python ] || uv venv -q -p 3.12 /root/venv   # rerun-safe
+. /root/venv/bin/activate
 uv pip install -q "torch" "transformers>=4.57" "peft>=0.13" accelerate
 python -c "import torch; print('torch', torch.__version__, 'cuda', torch.cuda.is_available(), torch.cuda.device_count())"
 
