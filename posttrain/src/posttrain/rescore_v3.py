@@ -1,4 +1,6 @@
-"""Bench PROTOCOL v3 rescoring (human decision Sat 20:50): one answer-extraction rule for EVERY row.
+"""RETIRED 21:05: use `python -m posttrain.rescore_answer` (minimal rule, base unchanged). Kept for the record.
+
+Bench PROTOCOL v3 rescoring (human decision Sat 20:50): one answer-extraction rule for EVERY row.
 
 Why: the SFT v2 / RL models were trained on replies without a thinking block and on A1's aux tasks whose answers read
 "ANSWER: X". On the FT_BENCHMARKS suite they reply e.g. "ANSWER: (C)" (correct) and lm-eval's "the answer is X" filters
