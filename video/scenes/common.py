@@ -76,6 +76,13 @@ def frame_image(frame: list[str] | np.ndarray, height: float = 4.0) -> ImageMobj
     return img
 
 
+def set_frame(img: ImageMobject, frame: list[str] | np.ndarray) -> None:
+    """Swap the pixels of a frame image in place (for replays)."""
+    a = frame if isinstance(frame, np.ndarray) else frame_array(frame)
+    rgba = np.concatenate([PALETTE_RGB[a], np.full(a.shape + (1,), 255, dtype=np.uint8)], axis=2)
+    img.pixel_array = rgba
+
+
 def frame_cells(frame: list[str] | np.ndarray, size: float = 4.0, skip_bg: bool = True) -> VGroup:
     """Frame as individual squares (slow; use when cells must move or morph)."""
     a = frame if isinstance(frame, np.ndarray) else frame_array(frame)
