@@ -1,0 +1,47 @@
+# Benchmark list for every bench run (PLAN.md §3.2). Frozen once bench/PROTOCOL.md is approved by the humans.
+# Task names were checked against the installed lm-evaluation-harness 0.4.13 task registry and
+# reasoning-gym's dataset factory on the Verda box (Sat 14.11 17:10). Anything not found there was dropped, not guessed.
+#
+# kind: lm_eval        -> run through lm-evaluation-harness (vLLM backend, chat template applied)
+# kind: reasoning_gym  -> procedurally generated items, fixed seed, graded by reasoning-gym's own score_answer
+# limit: max items per (sub)task, taken from the start of the test split (lm-eval --limit) or the first N seeds
+version: 1
+
+tiers:
+  near_transfer:
+    description: same skill as our games, new format
+    benchmarks:
+      - {id: rg_maze, kind: reasoning_gym, dataset: maze, n: 100}
+      - {id: rg_sokoban, kind: reasoning_gym, dataset: sokoban, n: 100}
+      - {id: rg_rush_hour, kind: reasoning_gym, dataset: rush_hour, n: 100}
+      - {id: rg_shortest_path, kind: reasoning_gym, dataset: shortest_path, n: 100}
+      - {id: rg_arc_1d, kind: reasoning_gym, dataset: arc_1d, n: 100}
+      - {id: rg_arc_agi, kind: reasoning_gym, dataset: arc_agi, n: 100}   # ARC-AGI-1 tasks in text form
+      # our own held-out games (eval-v1 / eval-v2, h1 and h2) are scored by the arena, not here:
+      # A3's `python -m arena finetune-eval` writes them; A5 joins both into bench_summary.json
+
+  logical:
+    description: the target tier (post-training must move this)
+    benchmarks:
+      - {id: rg_zebra_puzzles, kind: reasoning_gym, dataset: zebra_puzzles, n: 200}    # procedural ZebraLogic-style
+      - {id: rg_knights_knaves, kind: reasoning_gym, dataset: knights_knaves, n: 200}  # procedural Knights and Knaves
+      - {id: bbh_logical_deduction_5, kind: lm_eval, task: bbh_cot_zeroshot_logical_deduction_five_objects}
+      - {id: bbh_logical_deduction_7, kind: lm_eval, task: bbh_cot_zeroshot_logical_deduction_seven_objects}
+      - {id: bbh_tracking_shuffled_5, kind: lm_eval, task: bbh_cot_zeroshot_tracking_shuffled_objects_five_objects}
+      - {id: bbh_tracking_shuffled_7, kind: lm_eval, task: bbh_cot_zeroshot_tracking_shuffled_objects_seven_objects}
+      - {id: bbh_navigate, kind: lm_eval, task: bbh_cot_zeroshot_navigate}
+      - {id: bbh_web_of_lies, kind: lm_eval, task: bbh_cot_zeroshot_web_of_lies}
+      - {id: musr, kind: lm_eval, task: leaderboard_musr}   # multiple choice (loglikelihood) in lm-eval: the Open LLM Leaderboard setup
+      # FOLIO: not in lm-eval 0.4.13 -> dropped (PLAN §3.2: drop rather than guess)
+
+  regression_guard:
+    description: did post-training break general ability?
+    benchmarks:
+      - {id: gsm8k, kind: lm_eval, task: gsm8k_cot_zeroshot}
+      - {id: math500, kind: lm_eval, task: minerva_math500}
+      - {id: mmlu_pro, kind: lm_eval, task: mmlu_pro, limit: 50}   # 50 per subject x 14 subjects = 700 items
+      - {id: ifeval, kind: lm_eval, task: ifeval}
+
+# The dev slice for RL checkpoints (PLAN §3.3): small, cheap, logical tier + guard sentinel.
+dev_slice: [rg_zebra_puzzles, rg_knights_knaves, bbh_logical_deduction_5, bbh_web_of_lies, gsm8k]
+dev_slice_limit: 100
