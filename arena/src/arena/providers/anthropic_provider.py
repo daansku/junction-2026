@@ -1,3 +1,4 @@
+import os
 """Claude via the Anthropic SDK. No server-side model fallback: a leaderboard row must be one model."""
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ from .base import Reply, with_retries
 class AnthropicProvider:
     def __init__(self, model: dict):
         self.model = model
-        self.client = anthropic.Anthropic()  # ANTHROPIC_API_KEY or `ant auth login` profile
+        self.client = anthropic.Anthropic(timeout=float(os.environ.get("ARENA_REQUEST_TIMEOUT_S", "180")), max_retries=0)  # ANTHROPIC_API_KEY or `ant auth login` profile
 
     def complete(self, system, parts, effort=None, max_tokens=16000) -> Reply:
         content = []

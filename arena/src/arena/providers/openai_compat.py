@@ -34,7 +34,10 @@ def make_client(provider: str, base_url: str | None = None, api_key_env: str | N
     url = base_url or url_fn()
     if not url:
         raise RuntimeError(f"no base URL for provider {provider}; set it in .env")
-    return OpenAI(base_url=url, api_key=os.environ.get(key_env) or "EMPTY")
+    # Per-request timeout: the SDK default (600 s x 2 SDK retries) let a queued request stall a run for
+    # an hour, past its wall budget (pilot, 2026-11-14). Our own with_retries handles transient errors.
+    timeout = float(os.environ.get("ARENA_REQUEST_TIMEOUT_S", "180"))
+    return OpenAI(base_url=url, api_key=os.environ.get(key_env) or "EMPTY", timeout=timeout, max_retries=0)
 
 
 class OpenAICompatProvider:
