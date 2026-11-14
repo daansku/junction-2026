@@ -115,16 +115,16 @@ export function ReplayIndexPage() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>player</th>
-                  <th>kind</th>
-                  <th>game</th>
-                  <th>outcome</th>
-                  <th className="num">levels</th>
-                  <th className="num">actions</th>
-                  <th className="num">resets</th>
-                  <th className="num">tokens</th>
-                  <th className="num">cost</th>
-                  <th>started (UTC)</th>
+                  <th>Player</th>
+                  <th>Kind</th>
+                  <th>Game</th>
+                  <th>Outcome</th>
+                  <th className="num">Levels</th>
+                  <th className="num">Actions</th>
+                  <th className="num">Resets</th>
+                  <th className="num">Tokens</th>
+                  <th className="num">Cost</th>
+                  <th>Started (UTC)</th>
                 </tr>
               </thead>
               <tbody>
@@ -512,7 +512,7 @@ export function ReplayPage() {
                   onClick={() => setXraySplit((v) => (v == null ? 50 : null))}
                   title="Drag the #ffdc00 curtain to contrast raw agent pixels vs hidden engine physics (Key: X)"
                 >
-                  x-ray {xraySplit != null ? `${xraySplit}%` : 'off'}
+                  X-ray {xraySplit != null ? `${xraySplit}%` : 'off'}
                 </Button>
               </div>
             </div>

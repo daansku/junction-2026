@@ -24,9 +24,14 @@
 .ch-fact { display: flex; align-items: baseline; gap: var(--s3); font-size: 16px; }
 .ch-big { font-size: 32px; font-weight: 500; font-variant-numeric: tabular-nums; min-width: 3.2ch; }
 
-.ch-reel { margin: 0; color: var(--text-2); font-size: 14px; text-align: center; max-width: 100%; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.ch-reel { margin: 0; color: var(--text-2); font-size: 14px; text-align: center; max-width: 100%; display: flex; flex-direction: column; gap: var(--s3); overflow: hidden; }
 .ch-reel-name { color: var(--text-1); }
-.ch-reel-thinking { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-reel-thinking {
+  width: var(--ch-frame-width, 100%); max-width: 100%; min-height: calc(2 * 1.4em + 16px + 2px); max-height: calc(2 * 1.4em + 16px + 2px);
+  margin-inline: auto; padding: 8px 12px; border: 1px solid var(--line); background: var(--surface-1);
+  line-height: 1.4; text-align: left; overflow: hidden; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
 
 .ch-start .ch-input {
   height: 40px; font-size: 18px; padding: 0 var(--s2);
@@ -37,6 +42,8 @@
 .ch-go { height: 44px; font-size: 18px; justify-content: center; }
 .ch-keys { margin: 0; line-height: 1.9; }
 .ch-keys .kbd { margin-right: 2px; }
+.ch-control-line { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: center; gap: var(--s2); }
+.ch-touch-note { display: block; }
 
 .ch-qr { align-items: flex-start; }
 .ch-qr-box { flex: none; background: #ffffff; }
@@ -130,3 +137,13 @@
 
 /* phones/tablets: the result card (with "Next level") above the replays, not 2000px down the page */
 @media (max-width: 980px) { .ch-grid-review > .ch-side { order: -1; } }
+
+/* End-screen results table: model colors match the leaderboard */
+.ch-table-wrap { overflow-x: auto; }
+.ch-table th .ch-th-sub { display: block; font-size: 10px; font-weight: 400; color: var(--text-3); }
+.ch-table td.ch-rate { text-align: center; min-width: 52px; }
+.ch-player { display: inline-flex; align-items: center; gap: var(--s2); white-space: nowrap; }
+.ch-score-td { min-width: 72px; }
+.ch-score-td > span:first-child { display: block; }
+.ch-score-track { display: block; height: 3px; margin-top: 2px; background: var(--line); }
+.ch-score-fill { display: block; height: 100%; }

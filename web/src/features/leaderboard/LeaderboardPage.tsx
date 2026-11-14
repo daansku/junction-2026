@@ -14,7 +14,8 @@ import {
   cx,
 } from '@/design/primitives'
 import { api } from '@/lib/api'
-import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
+import { PlotFigure, cssVar } from '@/lib/PlotFigure'
+import { playerColor } from '@/lib/modelColors'
 import type { RunMeta } from '@/lib/types'
 import { fetchLeaderboardH2, fetchLeaderboardH2b } from './phase2Api'
 import { ModelCardDialog } from './ModelCardDialog'
@@ -74,33 +75,18 @@ function rowLabel(row: LeaderboardRow, hideCollection = false): string {
   return row.effort ? `${base} (${row.effort})` : base
 }
 
-export function rowColorKey(row: LeaderboardRow): string {
-  return `${row.player_id}::${row.effort ?? ''}::${row.collection ?? ''}::${row.harness_version ?? 'h1'}`
+/** Row colour: the player's fixed colour, the same on every page (see lib/modelColors.ts). */
+export function rowColor(row: LeaderboardRow): string {
+  return playerColor({ kind: row.kind, id: row.player_id })
 }
 
-export function buildRowColorMap(rows: LeaderboardRow[]): (row: LeaderboardRow) => string {
-  const colors = seriesColors()
-  const ranked = [...rows]
-    .filter((r) => r.kind !== 'baseline')
-    .sort((a, b) => completionCompare(a, b) || a.player_id.localeCompare(b.player_id))
-  const map = new Map<string, string>()
-  ranked.forEach((r, idx) => {
-    map.set(rowColorKey(r), colors[idx % colors.length] || cssVar('--accent') || '#ffdc00')
-  })
-  return (row: LeaderboardRow) => {
-    if (row.kind === 'baseline') return cssVar('--text-3') || '#76756f'
-    return map.get(rowColorKey(row)) || colors[0] || cssVar('--accent') || '#ffdc00'
-  }
+/** Kept for callers that build a per-view lookup; colours no longer depend on the rows shown. */
+export function buildRowColorMap(_rows: LeaderboardRow[]): (row: LeaderboardRow) => string {
+  return rowColor
 }
 
-export function seriesColorFor(row: LeaderboardRow, fallbackIndex: number): string {
-  if (row.kind === 'baseline') return cssVar('--text-3') || '#76756f'
-  const colors = seriesColors()
-  const paletteIndex =
-    row.model_order != null && row.model_order < 900
-      ? Math.abs(row.model_order) % colors.length
-      : fallbackIndex % colors.length
-  return colors[paletteIndex] || cssVar('--accent')
+export function seriesColorFor(row: LeaderboardRow, _fallbackIndex?: number): string {
+  return rowColor(row)
 }
 
 function runRankScore(r: RunMeta): number {

@@ -1,13 +1,18 @@
 {
  "game_id": "gridworld-s910000-d4-l8-f71ee29e",
- "levels": 3,
+ "levels": 8,
  "start_level": 1,
  "optimal_moves": [
   31,
   22,
-  27
+  27,
+  27,
+  13,
+  14,
+  24,
+  29
  ],
- "generated_at": "2026-11-14T15:36:23+00:00",
+ "generated_at": "2026-11-14T22:22:39+00:00",
  "source": "https://65.108.33.107.compute.verda.run",
  "score_rule": "per level min(1, optimal/actions) if solved else 0; mean x 100",
  "players": [
@@ -16,14 +21,19 @@
    "kind": "human",
    "name": "People (first attempts)",
    "model_id": null,
-   "attempts": 1,
-   "mean_score": 50.2,
-   "best_score": 50.2,
-   "cleared_all_rate": 1.0,
+   "attempts": 3,
+   "mean_score": 44.8,
+   "best_score": 57.0,
+   "cleared_all_rate": 0.667,
    "per_level_solve_rate": [
     1.0,
     1.0,
-    1.0
+    1.0,
+    0.667,
+    0.667,
+    0.667,
+    0.667,
+    0.667
    ],
    "runs": [
     {
@@ -43,10 +53,869 @@
        "level": 3,
        "solved": true,
        "actions": 75
+      },
+      {
+       "level": 4,
+       "solved": true,
+       "actions": 85
+      },
+      {
+       "level": 5,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 6,
+       "solved": true,
+       "actions": 15
+      },
+      {
+       "level": 7,
+       "solved": true,
+       "actions": 202
+      },
+      {
+       "level": 8,
+       "solved": true,
+       "actions": 43
       }
      ],
-     "score": 50.2,
+     "score": 56.9,
+     "cleared": 8
+    },
+    {
+     "run_id": "20261114T183040-104e80e3",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 102
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 80
+      },
+      {
+       "level": 4,
+       "solved": true,
+       "actions": 126
+      },
+      {
+       "level": 5,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 6,
+       "solved": true,
+       "actions": 14
+      },
+      {
+       "level": 7,
+       "solved": true,
+       "actions": 61
+      },
+      {
+       "level": 8,
+       "solved": true,
+       "actions": 72
+      }
+     ],
+     "score": 57.0,
+     "cleared": 8
+    },
+    {
+     "run_id": "20261114T204329-a035b192",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 71
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 83
+      },
+      {
+       "level": 4,
+       "solved": false,
+       "actions": 49
+      },
+      {
+       "level": 5,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 6,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 20.4,
      "cleared": 3
+    }
+   ]
+  },
+  {
+   "id": "gemini-4-carbon@h2b",
+   "kind": "model",
+   "name": "Gemini 4 Carbon \u00b7 h2b",
+   "model_id": "gemini-4-carbon@h2b",
+   "attempts": 3,
+   "mean_score": 81.7,
+   "best_score": 82.9,
+   "cleared_all_rate": 1.0,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T203206-502ad5fb",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 28
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 37
+      },
+      {
+       "level": 4,
+       "solved": true,
+       "actions": 41
+      },
+      {
+       "level": 5,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 6,
+       "solved": true,
+       "actions": 17
+      },
+      {
+       "level": 7,
+       "solved": true,
+       "actions": 52
+      },
+      {
+       "level": 8,
+       "solved": true,
+       "actions": 31
+      }
+     ],
+     "score": 79.9,
+     "cleared": 8
+    },
+    {
+     "run_id": "20261114T203206-9bff1527",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 23
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 39
+      },
+      {
+       "level": 4,
+       "solved": true,
+       "actions": 39
+      },
+      {
+       "level": 5,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 6,
+       "solved": true,
+       "actions": 17
+      },
+      {
+       "level": 7,
+       "solved": true,
+       "actions": 45
+      },
+      {
+       "level": 8,
+       "solved": true,
+       "actions": 31
+      }
+     ],
+     "score": 82.9,
+     "cleared": 8
+    },
+    {
+     "run_id": "20261114T203207-50001b09",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 26
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 45
+      },
+      {
+       "level": 4,
+       "solved": true,
+       "actions": 37
+      },
+      {
+       "level": 5,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 6,
+       "solved": true,
+       "actions": 14
+      },
+      {
+       "level": 7,
+       "solved": true,
+       "actions": 50
+      },
+      {
+       "level": 8,
+       "solved": true,
+       "actions": 31
+      }
+     ],
+     "score": 82.4,
+     "cleared": 8
+    }
+   ]
+  },
+  {
+   "id": "gemini-flash@h2b",
+   "kind": "model",
+   "name": "Gemini 3.8 Flash \u00b7 h2b",
+   "model_id": "gemini-flash@h2b",
+   "attempts": 2,
+   "mean_score": 63.2,
+   "best_score": 74.0,
+   "cleared_all_rate": 0.5,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    0.5,
+    0.5
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T203206-023094c6",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 42
+      },
+      {
+       "level": 4,
+       "solved": true,
+       "actions": 80
+      },
+      {
+       "level": 5,
+       "solved": true,
+       "actions": 14
+      },
+      {
+       "level": 6,
+       "solved": true,
+       "actions": 24
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 178
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 52.5,
+     "cleared": 6
+    },
+    {
+     "run_id": "20261114T203206-cc29404f",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 25
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 56
+      },
+      {
+       "level": 4,
+       "solved": true,
+       "actions": 47
+      },
+      {
+       "level": 5,
+       "solved": true,
+       "actions": 14
+      },
+      {
+       "level": 6,
+       "solved": true,
+       "actions": 15
+      },
+      {
+       "level": 7,
+       "solved": true,
+       "actions": 32
+      },
+      {
+       "level": 8,
+       "solved": true,
+       "actions": 78
+      }
+     ],
+     "score": 74.0,
+     "cleared": 8
+    }
+   ]
+  },
+  {
+   "id": "gemini-4-argon",
+   "kind": "model",
+   "name": "Gemini 4 Argon",
+   "model_id": "gemini-4-argon",
+   "attempts": 1,
+   "mean_score": 23.1,
+   "best_score": 23.1,
+   "cleared_all_rate": 0.0,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T150443-e99253f8",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 26
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 339
+      },
+      {
+       "level": 4,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 5,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 6,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 23.1,
+     "cleared": 2
+    }
+   ]
+  },
+  {
+   "id": "gemini-pro@h2",
+   "kind": "model",
+   "name": "Gemini 3.1 Pro (preview) \u00b7 h2",
+   "model_id": "gemini-pro@h2",
+   "attempts": 1,
+   "mean_score": 20.1,
+   "best_score": 20.1,
+   "cleared_all_rate": 0.0,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T152339-ae8f6169",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 33
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 33
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 64
+      },
+      {
+       "level": 4,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 5,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 6,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 20.1,
+     "cleared": 2
+    }
+   ]
+  },
+  {
+   "id": "verda-kimi-k3-1-pro",
+   "kind": "model",
+   "name": "Kimi K3.1 Pro (Verda)",
+   "model_id": "verda-kimi-k3-1-pro",
+   "attempts": 1,
+   "mean_score": 13.9,
+   "best_score": 13.9,
+   "cleared_all_rate": 0.0,
+   "per_level_solve_rate": [
+    1.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T164300-6b72b11d",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 196
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 66
+      },
+      {
+       "level": 4,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 5,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 6,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 13.9,
+     "cleared": 2
+    }
+   ]
+  },
+  {
+   "id": "gemini-flash",
+   "kind": "model",
+   "name": "Gemini 3.8 Flash",
+   "model_id": "gemini-flash",
+   "attempts": 2,
+   "mean_score": 11.7,
+   "best_score": 12.5,
+   "cleared_all_rate": 0.0,
+   "per_level_solve_rate": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T160226-792d78f5",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 36
+      },
+      {
+       "level": 2,
+       "solved": false,
+       "actions": 179
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 4,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 5,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 6,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 10.8,
+     "cleared": 1
+    },
+    {
+     "run_id": "20261114T171640-75d2fbf8",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 31
+      },
+      {
+       "level": 2,
+       "solved": false,
+       "actions": 369
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 4,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 5,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 6,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 12.5,
+     "cleared": 1
+    }
+   ]
+  },
+  {
+   "id": "claude-sonnet-5-5",
+   "kind": "model",
+   "name": "Claude Sonnet 5.5",
+   "model_id": "claude-sonnet-5-5",
+   "attempts": 1,
+   "mean_score": 4.4,
+   "best_score": 4.4,
+   "cleared_all_rate": 0.0,
+   "per_level_solve_rate": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T180424-d7eff2ee",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 88
+      },
+      {
+       "level": 2,
+       "solved": false,
+       "actions": 312
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 4,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 5,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 6,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 4.4,
+     "cleared": 1
+    }
+   ]
+  },
+  {
+   "id": "verda-kimi-k3-1-pro@h2",
+   "kind": "model",
+   "name": "Kimi K3.1 Pro (Verda) \u00b7 h2",
+   "model_id": "verda-kimi-k3-1-pro@h2",
+   "attempts": 1,
+   "mean_score": 2.1,
+   "best_score": 2.1,
+   "cleared_all_rate": 0.0,
+   "per_level_solve_rate": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "runs": [
+    {
+     "run_id": "20261114T164300-afc94ef6",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 184
+      },
+      {
+       "level": 2,
+       "solved": false,
+       "actions": 216
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 4,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 5,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 6,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 7,
+       "solved": false,
+       "actions": 0
+      },
+      {
+       "level": 8,
+       "solved": false,
+       "actions": 0
+      }
+     ],
+     "score": 2.1,
+     "cleared": 1
     }
    ]
   }

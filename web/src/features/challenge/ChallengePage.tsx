@@ -1,15 +1,17 @@
 // "Can you beat the AI?" kiosk demo (PLAN.md §3.4, A4-20/A4-21). No paid model calls: the AI side is
 // recorded runs (ghost slices from /games/{id}/ghosts) and precomputed per-level stats.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { FrameCanvas } from '@/lib/FrameCanvas'
+import { cssVar } from '@/lib/PlotFigure'
 import { isTyping } from '@/lib/keys'
 import { useServerInfo } from '@/lib/server'
 import { Button, ErrorState, Kbd } from '@/design/primitives'
 import type { ActionName, Frame, Player } from '@/lib/types'
 import { fetchGhosts, startSessionWithTakeover, type GhostSlice } from '@/features/play/epistemicApi'
+import { playerColor } from '@/lib/modelColors'
 import {
   challengeScore,
   cleanName,
@@ -23,6 +25,7 @@ import {
   submitScore,
   type BoardEntry,
   type ChallengeStats,
+  type StatsPlayer,
 } from './challengeApi'
 import { QrCode } from './QrCode'
 import './challenge.css'
@@ -83,7 +86,7 @@ interface Outcome {
 }
 
 function ghostName(g: GhostSlice): string {
-  return g.player?.name || g.player?.model_id || 'model'
+  return (g.player?.name || g.player?.model_id || 'model').replace(/\s+·\s+h\d\w*$/, '')
 }
 
 function hypothesisAt(g: GhostSlice, moves: number): string | null {
@@ -107,9 +110,11 @@ function pct(x: number) {
 
 export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
   const [params] = useSearchParams()
+  const challengeStageRef = useRef<HTMLDivElement>(null)
+  const [frameWidth, setFrameWidth] = useState<number | null>(null)
   const gameId = params.get('game') || DEFAULT_GAME
   const from = Math.max(1, Number(params.get('from')) || 1)
-  const nLevels = Math.min(6, Math.max(1, Number(params.get('levels')) || DEFAULT_LEVELS))
+  const nLevels = Math.min(8, Math.max(1, Number(params.get('levels')) || DEFAULT_LEVELS))
   const levelList = useMemo(() => Array.from({ length: nLevels }, (_, i) => from + i), [from, nLevels])
   const lastLevel = from + nLevels - 1
   const server = useServerInfo()
@@ -376,25 +381,32 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
       if (available.length && !available.includes(a)) return
       act(a)
     }
-    const onPointer = () => {
+    // any sign of a person (click, touch, mouse move, scroll) keeps the page from resetting
+    const onActivity = () => {
       lastInput.current = performance.now()
     }
+    const ACTIVITY = ['pointerdown', 'pointermove', 'wheel', 'touchstart', 'scroll'] as const
     window.addEventListener('keydown', onKey)
-    window.addEventListener('pointerdown', onPointer)
+    for (const ev of ACTIVITY) window.addEventListener(ev, onActivity, { passive: true })
     return () => {
       window.removeEventListener('keydown', onKey)
-      window.removeEventListener('pointerdown', onPointer)
+      for (const ev of ACTIVITY) window.removeEventListener(ev, onActivity)
     }
   }, [phase, available, act, start, review, reviewPrimary])
 
+  // idle reset is for the unattended booth screen (/kiosk) only; people playing /challenge keep their game
   useEffect(() => {
+    if (!kiosk) return
     const id = setInterval(() => {
       if (performance.now() - lastInput.current < IDLE_MS) return
       lastInput.current = performance.now()
-      if (phase !== 'lobby' || name) resetToLobby(true)
+      if (phase !== 'lobby' || name) {
+        resetToLobby(true)
+        window.scrollTo({ top: 0 }) // the end screen is long; come back to the top of the lobby
+      }
     }, 2000)
     return () => clearInterval(id)
-  }, [phase, name, resetToLobby])
+  }, [kiosk, phase, name, resetToLobby])
 
   // phones: Play sits below the frame, so a new phase would open scrolled down with the frame cut off
   useEffect(() => {
@@ -449,6 +461,18 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
     return null
   }, [loopReels, tick])
 
+  useLayoutEffect(() => {
+    const stage = challengeStageRef.current
+    if (!stage) return
+    const canvas = stage.querySelector('canvas')
+    if (!canvas) return
+    const measure = () => setFrameWidth(canvas.getBoundingClientRect().width)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(canvas)
+    return () => observer.disconnect()
+  }, [phase, loop?.frame])
+
   const shareUrl = useMemo(() => {
     const u = new URL(`${globalThis.location.origin}${import.meta.env.BASE_URL}challenge`)
     params.forEach((v, k) => k !== 'kiosk' && k !== 'api' && u.searchParams.set(k, v))
@@ -486,7 +510,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
               }}
               title="End the current game, clear the name, back to the attract screen"
             >
-              reset kiosk
+              Reset kiosk
             </Button>
           )}
         </div>
@@ -496,7 +520,11 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
 
       {phase === 'lobby' && (
         <div className="ch-grid">
-          <div className="ch-stage">
+          <div
+            ref={challengeStageRef}
+            className="ch-stage"
+            style={frameWidth ? ({ '--ch-frame-width': `${frameWidth}px` } as React.CSSProperties) : undefined}
+          >
             <FrameCanvas frame={loop?.frame ?? ghostQs[0]?.data?.optimal?.start_frame ?? null} scale="fit" maxScale={kiosk ? 13 : 10} viewportReserve={kiosk ? 64 : 120} bezel label="Recorded AI attempt" />
             {loop ? (
               <p className="ch-reel mono">
@@ -504,7 +532,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
                 {loop.thinking[loop.i] && <span className="ch-reel-thinking">{loop.thinking[loop.i]}</span>}
               </p>
             ) : (
-              <p className="ch-reel mono">level 1 · this is where you start</p>
+              <p className="ch-reel mono">Level 1 · this is where you start</p>
             )}
           </div>
           <aside className="ch-side">
@@ -515,7 +543,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
                   {humans && (
                     <div className="ch-fact">
                       <span className="ch-big mono">{pct(humans.cleared_all_rate)}</span>
-                      <span>people won all {nLevels}</span>
+                      <span>People won all {nLevels}</span>
                     </div>
                   )}
                   {models.length ? (
@@ -523,7 +551,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
                       <span className="ch-big mono">
                         {models.filter((m) => m.cleared_all_rate > 0).length}/{models.length}
                       </span>
-                      <span>computer players won all {nLevels}</span>
+                      <span>Computer players won all {nLevels}</span>
                     </div>
                   ) : (
                     <p className="muted">No completed computer-player runs yet.</p>
@@ -559,14 +587,12 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
             <section className="ch-card ch-controls">
               <span className="kicker">how to play</span>
               <p className="muted ch-keys ch-control-line">
-                <Kbd>←</Kbd>
-                <Kbd>↑</Kbd>
-                <Kbd>↓</Kbd>
-                <Kbd>→</Kbd> move
+                <span>Move</span>
+                <span><Kbd>←</Kbd><Kbd>↑</Kbd><Kbd>↓</Kbd><Kbd>→</Kbd></span>
               </p>
-              <p className="muted ch-keys ch-control-line"><Kbd>Space</Kbd> interact</p>
-              <p className="muted ch-keys ch-control-line"><Kbd>R</Kbd> restart level</p>
-              <p className="muted ch-keys ch-control-line">Touch controls on phones.</p>
+              <p className="muted ch-keys ch-control-line"><span>Interact</span><span><Kbd>Space</Kbd></span></p>
+              <p className="muted ch-keys ch-control-line"><span>Restart level</span><span><Kbd>R</Kbd></span></p>
+              <p className="muted ch-keys ch-control-line ch-touch-note">Touch controls on phones.</p>
             </section>
             <BoardCard board={board?.entries ?? []} />
             <section className="ch-card ch-qr">
@@ -613,7 +639,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
                   {opponentsQ.data.slice(0, 8).map((o) => (
                     <li key={o.name}>
                       <span>{o.name}</span>
-                      <span className="muted">{o.finished ? 'recorded' : 'still playing'}</span>
+                      <span className="muted">{o.finished ? 'Recorded' : 'Still playing'}</span>
                     </li>
                   ))}
                   {opponentsQ.data.length > 8 && (
@@ -627,7 +653,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
             </section>
             <div className="ch-actions">
               <Button variant="ghost" onClick={giveUp} title="Stop this level">
-                give up
+                Give up
               </Button>
             </div>
           </aside>
@@ -643,6 +669,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           frame={frame}
           ghosts={ghostQs[review.idx]?.data?.ghosts ?? []}
           optimalGhost={ghostQs[review.idx]?.data?.optimal ?? null}
+          humanGhost={ghostQs[review.idx]?.data?.human ?? null}
           onPrimary={reviewPrimary}
           onSecondary={reviewSecondary}
         />
@@ -656,6 +683,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           from={from}
           ghostsByLevel={ghostQs.map((q) => q.data?.ghosts ?? [])}
           optimalByLevel={ghostQs.map((q) => q.data?.optimal ?? null)}
+          humanByLevel={ghostQs.map((q) => q.data?.human ?? null)}
           board={board?.entries ?? []}
           boardSource={board?.source}
           name={name}
@@ -665,9 +693,9 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
 
       {kiosk && (
         <footer className="ch-foot muted mono">
-          kiosk · idle {IDLE_MS / 1000}s returns here ·{' '}
+          Kiosk · idle {IDLE_MS / 1000}s returns here ·{' '}
           <button type="button" className="linklike" onClick={() => clearLocalBoard(gameId)}>
-            clear this device's board
+            Clear this device's board
           </button>
         </footer>
       )}
@@ -689,7 +717,7 @@ function Reel({ g, title, tick, scale }: { g: GhostSlice; title: string; tick: n
       <figcaption className="ch-ghost-meta">
         <strong>{title}</strong>
         <span className={`mono ch-ghost-state ${ended ? (g.solved ? 'good' : 'bad') : ''}`}>
-          move {shown}/{n}
+          Move {shown}/{n}
           {ended ? (g.solved ? ' · SOLVED' : ' · NEVER SOLVED') : ''}
         </span>
         {/* always rendered at a fixed height so changing model text never moves the layout */}
@@ -710,10 +738,11 @@ function LevelReview(props: {
   frame: Frame | null
   ghosts: GhostSlice[]
   optimalGhost: GhostSlice | null
+  humanGhost: GhostSlice | null
   onPrimary: () => void
   onSecondary: () => void
 }) {
-  const { review, levelNo, nLevels, optimal, frame, ghosts, optimalGhost, onPrimary, onSecondary } = props
+  const { review, levelNo, nLevels, optimal, frame, ghosts, optimalGhost, humanGhost, onPrimary, onSecondary } = props
   const headline =
     review.kind === 'solved'
       ? `Level ${levelNo} solved in ${review.actions} moves.`
@@ -726,7 +755,7 @@ function LevelReview(props: {
     <section className={`ch-verdict ${review.kind === 'solved' ? 'good' : 'bad'}`}>
       <span className="kicker">{review.kind === 'solved' ? 'level solved' : review.kind === 'lost' ? 'level lost' : 'level stopped'}</span>
       <h2 className="ch-review-line">{headline}</h2>
-      {review.kind === 'solved' && optimal > 0 && <p className="mono muted">optimal: {optimal} moves</p>}
+      {review.kind === 'solved' && optimal > 0 && <p className="mono muted">Optimal: {optimal} moves</p>}
       {review.kind === 'lost' && (
         <p className="muted">Retry restarts this level. Your moves so far still count, the same rule the models play by.</p>
       )}
@@ -736,7 +765,7 @@ function LevelReview(props: {
         </Button>
         {review.kind !== 'solved' && (
           <Button variant="ghost" onClick={onSecondary}>
-            end challenge
+            End challenge
           </Button>
         )}
       </div>
@@ -747,8 +776,8 @@ function LevelReview(props: {
       // level done, so its AI attempts can no longer spoil it (lost / stopped levels can be retried: no AI there)
       <div className="ch-grid ch-grid-review">
         <section className="ch-card ch-review">
-          <span className="kicker">the AI on level {levelNo} · recorded attempts, replayed</span>
-          <LevelReels key={review.level} ghosts={ghosts} optimalGhost={optimalGhost} level={levelNo} />
+          <span className="kicker">recorded attempts</span>
+          <LevelReels key={review.level} ghosts={ghosts} optimalGhost={optimalGhost} humanGhost={humanGhost} level={levelNo} />
         </section>
         <aside className="ch-side">{card}</aside>
       </div>
@@ -767,7 +796,17 @@ function LevelReview(props: {
 }
 
 /** Every recorded model attempt + the optimal path on one level, replayed in lockstep from move 0. */
-function LevelReels({ ghosts, optimalGhost, level }: { ghosts: GhostSlice[]; optimalGhost: GhostSlice | null; level: number }) {
+function LevelReels({
+  ghosts,
+  optimalGhost,
+  humanGhost,
+  level,
+}: {
+  ghosts: GhostSlice[]
+  optimalGhost: GhostSlice | null
+  humanGhost: GhostSlice | null
+  level: number
+}) {
   const [tick, setTick] = useState(0)
   // restarts from move 0 on mount; callers remount with `key` to restart (array props are not stable refs)
   useEffect(() => {
@@ -775,6 +814,7 @@ function LevelReels({ ghosts, optimalGhost, level }: { ghosts: GhostSlice[]; opt
     return () => clearInterval(id)
   }, [])
   const reels = [
+    ...(humanGhost?.steps.length ? [{ g: humanGhost, title: 'Human' }] : []),
     ...ghosts.filter((g) => g.steps.length).map((g) => ({ g, title: ghostName(g) })),
     ...(optimalGhost?.steps.some((s) => s.frame) ? [{ g: optimalGhost, title: 'Optimal path' }] : []),
   ]
@@ -795,13 +835,17 @@ function LevelReels({ ghosts, optimalGhost, level }: { ghosts: GhostSlice[]; opt
 }
 
 /** After the challenge: every recorded model attempt + the optimal path, one level at a time. */
-function AiReplays({ levels, from }: { levels: Array<{ ghosts: GhostSlice[]; optimal: GhostSlice | null }>; from: number }) {
+function AiReplays({
+  levels,
+}: {
+  levels: Array<{ ghosts: GhostSlice[]; optimal: GhostSlice | null; human: GhostSlice | null }>
+}) {
   const [sel, setSel] = useState(0)
-  const cur = levels[sel] ?? { ghosts: [], optimal: null }
+  const cur = levels[sel] ?? { ghosts: [], optimal: null, human: null }
   return (
     <section className="ch-card ch-review">
       <div className="ch-review-head">
-        <span className="kicker">how the AI played · recorded attempts, replayed</span>
+        <span className="kicker">Replays</span>
         <div className="ch-tabs" role="tablist">
           {levels.map((_, i) => (
             <Button key={i} variant="ghost" mono active={i === sel} onClick={() => setSel(i)} role="tab" aria-selected={i === sel}>
@@ -810,8 +854,7 @@ function AiReplays({ levels, from }: { levels: Array<{ ghosts: GhostSlice[]; opt
           ))}
         </div>
       </div>
-      <LevelReels key={sel} ghosts={cur.ghosts} optimalGhost={cur.optimal} level={sel + 1} />
-      <p className="muted ch-note">Level numbers are within this challenge (game levels {from}–{from + levels.length - 1}).</p>
+      <LevelReels key={sel} ghosts={cur.ghosts} optimalGhost={cur.optimal} humanGhost={cur.human} level={sel + 1} />
     </section>
   )
 }
@@ -827,10 +870,10 @@ function BoardCard({ board, highlight }: { board: BoardEntry[]; highlight?: stri
           <thead>
             <tr>
               <th>#</th>
-              <th className="l">name</th>
-              <th>levels</th>
-              <th>moves</th>
-              <th className="l">vs AI</th>
+              <th className="l">Name</th>
+              <th>Levels</th>
+              <th>Moves</th>
+              <th className="l">Result</th>
             </tr>
           </thead>
           <tbody>
@@ -840,7 +883,7 @@ function BoardCard({ board, highlight }: { board: BoardEntry[]; highlight?: stri
                 <td className="l">{e.name}</td>
                 <td>{e.levels_completed}</td>
                 <td>{e.actions}</td>
-                <td className={`l ${e.beat_ai ? 'good' : 'muted'}`}>{e.beat_ai ? 'beat it' : '—'}</td>
+                <td className={`l ${e.beat_ai ? 'good' : 'muted'}`}>{e.beat_ai ? 'Beat AI' : '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -857,6 +900,7 @@ function EndScreen(props: {
   from: number
   ghostsByLevel: GhostSlice[][]
   optimalByLevel: Array<GhostSlice | null>
+  humanByLevel: Array<GhostSlice | null>
   board: BoardEntry[]
   boardSource?: 'server' | 'local'
   name: string
@@ -864,8 +908,6 @@ function EndScreen(props: {
 }) {
   const { outcome, stats, optimal, from, ghostsByLevel, board, onAgain } = props
   const n = optimal.length
-  const models = (stats?.players ?? []).filter((p) => p.kind === 'model')
-  const humans = (stats?.players ?? []).find((p) => p.kind === 'human')
 
   // "The AI needed N moves to figure out what you saw in M": biggest gap on a level you solved.
   const insight = useMemo(() => {
@@ -897,17 +939,17 @@ function EndScreen(props: {
         <div className="ch-stats">
           <div>
             <span className="ch-big mono">{outcome.score.toFixed(1)}</span>
-            <span className="muted">your score / 100</span>
+            <span className="muted">Your score / 100</span>
           </div>
           <div>
             <span className="ch-big mono">
               {outcome.cleared}/{n}
             </span>
-            <span className="muted">levels cleared</span>
+            <span className="muted">Levels cleared</span>
           </div>
           <div>
             <span className="ch-big mono">{outcome.moves}</span>
-            <span className="muted">moves (optimal {optimal.reduce((a, b) => a + b, 0)})</span>
+            <span className="muted">Moves (optimal {optimal.reduce((a, b) => a + b, 0)})</span>
           </div>
         </div>
         {insight && <p className="ch-insight">{insight}</p>}
@@ -915,68 +957,11 @@ function EndScreen(props: {
           <Button variant="primary" onClick={onAgain}>
             Play again <Kbd>Enter</Kbd>
           </Button>
-          {outcome.runId && <Link to={`/replay/${outcome.runId}`}>watch your replay</Link>}
+          {outcome.runId && <Link to={`/replay/${outcome.runId}`}>Watch your replay</Link>}
         </div>
       </section>
 
-      <section className="ch-card ch-a-table">
-        <span className="kicker">you vs recorded players · score per level = optimal / your moves, 0 if unsolved</span>
-        <table className="ch-table mono">
-          <thead>
-            <tr>
-              <th className="l">player</th>
-              {optimal.map((_, i) => (
-                <th key={i}>L{i + 1}</th>
-              ))}
-              <th>score</th>
-              <th>attempts</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="me">
-              <td className="l">You{props.name ? ` (${props.name})` : ''}</td>
-              {outcome.results.map((r) => (
-                <td key={r.level}>{r.solved ? `${r.actions} mv` : '✗'}</td>
-              ))}
-              <td>{outcome.score.toFixed(1)}</td>
-              <td>1</td>
-            </tr>
-            <tr>
-              <td className="l">Optimal path</td>
-              {optimal.map((o, i) => (
-                <td key={i}>{o} mv</td>
-              ))}
-              <td>100.0</td>
-              <td>—</td>
-            </tr>
-            {humans && (
-              <tr>
-                <td className="l">People (first attempts)</td>
-                {humans.per_level_solve_rate.map((x, i) => (
-                  <td key={i}>{pct(x)} solved</td>
-                ))}
-                <td>{humans.mean_score.toFixed(1)}</td>
-                <td>{humans.attempts}</td>
-              </tr>
-            )}
-            {models.map((m) => (
-              <tr key={m.id}>
-                <td className="l">{m.name}</td>
-                {m.per_level_solve_rate.map((x, i) => (
-                  <td key={i}>{pct(x)} solved</td>
-                ))}
-                <td>{m.mean_score.toFixed(1)}</td>
-                <td>{m.attempts}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="muted ch-note">
-          Scores and win rates for people and models are averages over every recorded attempt. You beat the AI when your
-          score is above the best model average.
-          {stats ? ` Data: ${stats.generated_at.slice(0, 16).replace('T', ' ')} UTC.` : ''}
-        </p>
-      </section>
+      <ResultsTable outcome={outcome} optimal={optimal} players={stats?.players ?? []} name={props.name} />
 
       <div className="ch-a-board">
         <BoardCard board={board} />
@@ -984,8 +969,120 @@ function EndScreen(props: {
 
       {/* right under the verdict so it is on screen at 1080p without scrolling */}
       <div className="ch-a-replays">
-        <AiReplays levels={ghostsByLevel.map((g, i) => ({ ghosts: g, optimal: props.optimalByLevel[i] ?? null }))} from={from} />
+        <AiReplays levels={ghostsByLevel.map((g, i) => ({ ghosts: g, optimal: props.optimalByLevel[i] ?? null, human: props.humanByLevel[i] ?? null }))} />
       </div>
     </div>
+  )
+}
+
+/** "Gemini 4 Carbon · h2b" -> ["Gemini 4 Carbon", "h2b"] */
+function splitHarness(name: string): [string, string | null] {
+  const m = name.match(/^(.*?)\s+·\s+(h\d\w*)$/)
+  return m ? [m[1], m[2]] : [name, null]
+}
+
+function ResultsTable({
+  outcome,
+  optimal,
+  players,
+  name,
+}: {
+  outcome: Outcome
+  optimal: number[]
+  players: StatsPlayer[]
+  name: string
+}) {
+  const youColor = cssVar('--accent') || '#ffdc00'
+  // one row per model: its best harness variant ("gemini-flash@h2b" and "gemini-flash" are one model)
+  const seen = new Set<string>()
+  const rows = [...players]
+    .sort((a, b) => b.mean_score - a.mean_score)
+    .filter((p) => {
+      const k = p.kind === 'human' ? 'human' : (p.model_id ?? p.id).split('@')[0]
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+  // same fixed colour per player as the leaderboard / overview (lib/modelColors.ts)
+  const colors = rows.map((p) => playerColor({ kind: p.kind, id: p.model_id ?? p.id }))
+
+  const scoreCell = (score: number, color: string) => (
+    <td className="ch-score-td">
+      <span>{score.toFixed(1)}</span>
+      <span className="ch-score-track" aria-hidden="true">
+        <span className="ch-score-fill" style={{ width: `${Math.max(0, Math.min(100, score))}%`, background: color }} />
+      </span>
+    </td>
+  )
+  const rateCell = (rate: number, color: string, key: number) => (
+    <td
+      key={key}
+      className={rate > 0 ? 'ch-rate' : 'ch-rate muted'}
+      style={rate > 0 ? { background: `color-mix(in srgb, ${color} ${Math.round(8 + rate * 27)}%, transparent)` } : undefined}
+    >
+      {pct(rate)}
+    </td>
+  )
+
+  return (
+    <section className="ch-card ch-a-table">
+      <span className="kicker">You vs everyone</span>
+      <div className="ch-table-wrap">
+        <table className="ch-table mono">
+          <thead>
+            <tr>
+              <th className="l">Player</th>
+              {optimal.map((o, i) => (
+                <th key={i} title={`Optimal: ${o} moves`}>
+                  L{i + 1}
+                  <span className="ch-th-sub">{o} mv</span>
+                </th>
+              ))}
+              <th>Score</th>
+              <th>Runs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="me">
+              <td className="l">
+                <span className="ch-player">
+                  <span className="swatch" style={{ background: youColor }} aria-hidden="true" />
+                  You{name ? ` (${name})` : ''}
+                </span>
+              </td>
+              {outcome.results.map((r) => (
+                <td
+                  key={r.level}
+                  className="ch-rate"
+                  style={r.solved ? { background: `color-mix(in srgb, ${youColor} 30%, transparent)` } : undefined}
+                  title={r.solved ? `Solved in ${r.actions} moves` : 'Not solved'}
+                >
+                  {r.solved ? `${r.actions} mv` : '✗'}
+                </td>
+              ))}
+              {scoreCell(outcome.score, youColor)}
+              <td>1</td>
+            </tr>
+            {rows.map((p, idx) => {
+              const color = colors[idx]
+              const [label] = splitHarness(p.name)
+              return (
+                <tr key={p.id}>
+                  <td className="l">
+                    <span className="ch-player">
+                      <span className="swatch" style={{ background: color }} aria-hidden="true" />
+                      {label}
+                    </span>
+                  </td>
+                  {p.per_level_solve_rate.map((x, i) => rateCell(x, color, i))}
+                  {scoreCell(p.mean_score, color)}
+                  <td>{p.attempts}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   )
 }
