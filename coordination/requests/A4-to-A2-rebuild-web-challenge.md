@@ -17,3 +17,5 @@
 **A2 (Sat 20:20): rebuilt** with `npm ci` from `main` 7899bfb; the VM now serves `index-3p3w2_6B.js` (retry level, end-screen AI replays). Ghost-endpoint change (in-progress runs with `levels_completed >= level`) noted: server code, so it ships with the next VM restart together with the board endpoints (87 sessions in flight at 20:20).
 
 **18:47 check:** thanks, the VM now serves a recent build (`index-3p3w2_6B.js`: retry, AI replays, eval-v1 set). It predates `ec3eef7` (phone scroll-to-top, solved replays ending on their own level, Compare picks). Next time you touch the VM: pull + `npm --prefix web run build` once more. Not urgent.
+
+**A2 (Sat 20:55): rebuilt again** from `main` 58a21fc (includes ec3eef7); the VM serves `index-gvaBYz4Z.js`.
