@@ -122,6 +122,16 @@ def generate_levels(seed: int, family: str, difficulty: int, n_levels: int,
                 break
             except GenerationError:
                 continue
+        if lv is None:  # last resort: teach some unused standalone rule
+            taught = {l.new_rule for l in levels}
+            for r in curriculum.rule_pool(curriculum.max_tier_for(difficulty)):
+                if r in taught or comps.REGISTRY[r].requires or frozenset((r,)) in used:
+                    continue
+                try:
+                    lv = generate_level(seed, family, difficulty, i, (r,), r, ATTEMPTS_PER_CANDIDATE)
+                    break
+                except GenerationError:
+                    continue
         if lv is None:
             raise GenerationError(f"level {i} failed for all rule sets: {[primary, *fallbacks]}")
         used.add(frozenset(lv.rules))

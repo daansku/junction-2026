@@ -34,6 +34,7 @@ class Component:
     always_on: bool = False   # tier-0 parts (walls, goal, budget) are active in every level
     layer: int = 50           # draw order, low first; player is drawn at 100
     uses_interact: bool = False
+    requires: tuple[str, ...] = ()  # taught only together with one of these (curriculum)
     roles: dict[str, tuple[int, str]] = {}  # skin role -> default (colour index, sprite)
 
     # --- generation ---

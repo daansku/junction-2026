@@ -21,12 +21,19 @@ Colours below are defaults; skin shuffle permutes object colours per game, so ne
 | control remap | `remap.py` | 2 | live | half-filled square; toggles a per-level scramble (mirror h/v, swap axes, reverse); HUD pip lit while scrambled | on the path (+ decoy) | `test_remap_mirror` |
 | mirror twin | `twin.py` | 2 | live | small square + ring goal in its own colour; copies every move (mirrored L/R at d>=2), walls stop it; win needs both on goals | twin start/goal placed apart | `test_twin_*` |
 | stamina | `stamina.py` | 2 | live | every action costs 1; 0 = lost; refill pads restore to max (single use); HUD meter | refills off the path | `test_stamina_and_refill` |
+| cracked floor | `cracked_floor.py` | 2 | live | X tile; holds once, collapses to a dark hole when you step off | on the way to a key/gem/plate; **taught only with collect_all, keys_doors or plates_gates** (`requires`) | `test_cracked_floor_*` |
+| beacon goal | `beacon_goal.py` | 2 | live | extra goal rings; real goal wears a fresh colour, a decoy wears the game's usual goal colour; HUD beacon pip = real colour; decoy sends you to start | decoy on the shortest path | `test_beacon_decoy_sends_home` |
+
+Proposals: `a5-decoy-and-camouflage` -> beacon_goal; `a5-delayed-state-switch` -> phase_walls; `auto-01` -> cracked_floor; `auto-02` -> collect_all; `auto-03` -> twin. `a5-sokoban-deadlock-box`: covered by push_blocks + the necessity check (the rule-ignorant plan must fail); no dedicated deadlock generator yet.
+
+## Skins (A1-12)
+Per game, by seed: object colours AND shapes are shuffled (distinct within a game). Fixed: floor, wall, budget bar, player = solid square, goal-like rings, arrows, HUD meters.
 
 Difficulty 1 games use tier 1 only; difficulty 2-3 draw from tiers 1-2.
 
 Every generated level is checked: BFS-solvable, **every active rule matters** (a player who ignores it has a longer/impossible optimum, or their optimal plan fails on the real level), random walk wins < 2%.
 
-## Curriculum (engine 0.3.0)
+## Curriculum (engine 0.4.0)
 Level 1 = movement + goal. Levels 2..n-1 each introduce one new rule (teaching layout: smaller grid, +8 move allowance), alone or with 1-2 seen rules. For games with >= 5 levels the last level is an "exam": 2-3 seen rules, no new rule. No two levels share a rule set. Order and combos come from the seed.
 
 ## Frame layout

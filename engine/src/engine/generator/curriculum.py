@@ -47,12 +47,24 @@ def plan(seed: int, family: str, difficulty: int, n_levels: int,
     seen: list[str] = []
     exam = n_levels >= 5  # last level recombines seen rules, no new rule
     for i in range(1, n_levels):
-        if order and not (exam and i == n_levels - 1):
-            new = order.pop(0)
+        # a rule with `requires` waits until one of its partners has been taught
+        ready = [r for r in order if not comps.REGISTRY[r].requires
+                 or any(q in seen for q in comps.REGISTRY[r].requires)]
+        if ready and not (exam and i == n_levels - 1):
+            new = ready[0]
+            order.remove(new)
             k = _old_count(rng, difficulty, len(seen), i)
             olds = rng.sample(seen, k)
+            req = comps.REGISTRY[new].requires
+            if req and not any(q in olds for q in req):
+                partner = rng.choice(sorted(q for q in req if q in seen))
+                olds = (olds[1:] if len(olds) >= 2 else olds) + [partner]
             primary = tuple(sorted({new, *olds}))
             fallbacks = [tuple(sorted({new, o})) for o in seen if o not in olds] + [(new,)]
+            if req:
+                pairs = [tuple(sorted({new, q})) for q in req if q in seen]
+                fallbacks = [f for f in fallbacks + pairs if any(q in f for q in req)]
+                fallbacks = [f for f in dict.fromkeys(fallbacks) if f != primary]
             fallbacks = [f for f in dict.fromkeys(fallbacks) if f != primary and frozenset(f) not in used]
             if frozenset(primary) in used:
                 primary, fallbacks = (fallbacks[0], fallbacks[1:]) if fallbacks else ((new,), [])

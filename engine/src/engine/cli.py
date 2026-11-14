@@ -33,23 +33,37 @@ def cmd_gen(a) -> int:
     return 0
 
 
+def _build_one(args: tuple[int, int, int]) -> dict | None:
+    seed, levels, d = args
+    try:
+        return make_game(GameSpec(seed=seed, n_levels=levels, difficulty=d)).to_dict()
+    except Exception as e:  # noqa: BLE001  a rare unbuildable seed is skipped, not fatal
+        print(f"  skip seed {seed} d{d}: {e}", file=sys.stderr)
+        return None
+
+
 def cmd_collection(a) -> int:
-    """Build a frozen collection: seeds start..start+n-1, difficulties cycled."""
+    """Build a frozen collection: seeds start..start+n-1, difficulties cycled. Parallel with
+    --workers; output order is by seed regardless of worker count (deterministic file)."""
+    from concurrent.futures import ProcessPoolExecutor
     diffs = [int(x) for x in a.difficulties.split(",")]
-    games = []
+    jobs = [(a.seed_start + i, a.levels, diffs[i % len(diffs)]) for i in range(a.n)]
     t0 = time.time()
-    for i in range(a.n):
-        d = diffs[i % len(diffs)]
-        g = make_game(GameSpec(seed=a.seed_start + i, n_levels=a.levels, difficulty=d))
-        games.append(g.to_dict())
-        print(f"  {g.game_id}  opt={g.describe()['optimal_moves_total']}", file=sys.stderr)
+    if a.workers > 1:
+        with ProcessPoolExecutor(a.workers) as ex:
+            built = list(ex.map(_build_one, jobs, chunksize=4))
+    else:
+        built = [_build_one(j) for j in jobs]
+    games = [g for g in built if g is not None]
+    for g in games[:20]:
+        print(f"  {g['game_id']}", file=sys.stderr)
     out = {"name": a.name, "engine_version": ENGINE_VERSION,
            "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "split": a.split, "games": games}
     path = Path(a.out) if a.out else collection_path(a.name)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
-    print(f"wrote {path} ({len(games)} games, {time.time() - t0:.1f}s)", file=sys.stderr)
+    print(f"wrote {path} ({len(games)}/{len(jobs)} games, {time.time() - t0:.1f}s)", file=sys.stderr)
     return 0
 
 
@@ -143,6 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--levels", type=int, default=6)
     p.add_argument("--difficulties", default="1,2,3")
     p.add_argument("--split", default="dev"); p.add_argument("--out")
+    p.add_argument("--workers", type=int, default=1)
     p.set_defaults(fn=cmd_collection)
     p = sub.add_parser("play", help="play in the terminal"); _game_args(p); p.set_defaults(fn=cmd_play)
     p = sub.add_parser("render", help="PNG contact sheet of a game"); _game_args(p)

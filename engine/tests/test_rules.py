@@ -96,7 +96,9 @@ def test_tier1_all_registered():
 @pytest.mark.parametrize("rule", rule_pool(2))
 @pytest.mark.parametrize("difficulty", [1, 3])
 def test_generated_teaching_level(rule, difficulty):
-    lv = generate_level(7, "gridworld", difficulty, 1, (rule,), rule)
+    req = REGISTRY[rule].requires
+    rules = tuple(sorted({rule, req[0]})) if req else (rule,)
+    lv = generate_level(7, "gridworld", difficulty, 1, rules, rule)
     path = solve(lv)
     assert path is not None and len(path) == lv.optimal_moves <= lv.move_budget
     assert rule_matters(lv, rule, lv.optimal_moves)
@@ -166,3 +168,42 @@ def test_stamina_and_refill():
 
 def test_all_tier2_registered():
     assert {"collect_all", "phase_walls", "rotation", "remap", "twin", "stamina"} <= set(REGISTRY)
+
+
+# ---- from rules/proposals ------------------------------------------------------
+def test_cracked_floor_collapses_behind_you():
+    lv = corridor(5, ["cracked_floor"], {"cracked_floor": {"cells": [[2, 1]]}}, rows=1)
+    s, _, ev = run(lv, [R, R])
+    assert "floor_collapsed" in ev and (2, 1) in s.c["cracked_floor"]
+    s2, ev2, _ = step_level(lv, s, L)
+    assert s2.pos == (3, 1) and "bump" in ev2
+
+
+def test_beacon_decoy_sends_home():
+    lv = corridor(6, ["beacon_goal"], {"beacon_goal": {"decoys": [[3, 1]]}}, rows=1)
+    s, out, ev = run(lv, [R, R])
+    assert "decoy" in ev and s.pos == lv.start and out == PLAYING
+
+
+def test_cracked_floor_needs_partner_in_curriculum():
+    from engine.generator.curriculum import plan
+    for seed in range(30):
+        seen = set()
+        for rules, new, _ in plan(seed, "gridworld", 3, 8):
+            if new == "cracked_floor":
+                assert set(rules) & {"collect_all", "keys_doors", "plates_gates"}
+                assert seen & {"collect_all", "keys_doors", "plates_gates"}
+            if new:
+                seen.add(new)
+
+
+def test_skin_shuffle_shapes_and_colours_distinct():
+    from engine.generator.skin import FIXED, FIXED_SHAPE, make_skin
+    rules = ["keys_doors", "hazards", "ice", "push_blocks", "collect_all"]
+    a = make_skin(1, "gridworld", True, rules)
+    b = make_skin(2, "gridworld", True, rules)
+    assert a != b
+    for sk in (a, b):
+        movable = [r for r in sk if r not in FIXED and r not in FIXED_SHAPE]
+        assert len({sk[r][1] for r in movable}) == len(movable)
+    assert make_skin(1, "gridworld", True, rules) == a

@@ -85,3 +85,4 @@ def tiers() -> dict[str, int]:
 from . import walls, goal, budget  # noqa: E402,F401  tier 0
 from . import keys_doors, plates_gates, teleporters, hazards, push_blocks, one_way, ice  # noqa: E402,F401  tier 1
 from . import collect_all, phase_walls, rotation, remap, twin, stamina  # noqa: E402,F401  tier 2
+from . import cracked_floor, beacon_goal  # noqa: E402,F401  tier 2, from rules/proposals
