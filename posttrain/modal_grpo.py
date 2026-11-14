@@ -80,6 +80,68 @@ def train(sft: str, tasks: str, run: str, steps: int, save_every: int, config: s
         raise RuntimeError(f"posttrain.grpo exited {rc}")
 
 
+@app.function(image=image, gpu="L40S", timeout=3600, volumes={"/vol": vol, "/hf": hf_cache})
+def evaluate(adapters: str, tasks: str = "heldout-gameturn-s2.jsonl", out: str = "eval/heldout.json",
+             samples: int = 4, no_base: bool = False):
+    """In-domain check: `modal run posttrain/modal_grpo.py::evaluate --adapters sft/games,runs/grpo-2/step-20`
+    (paths relative to the volume). L40S (~$2/h): 9B bf16 fits, ~5-10 min for 200 prompts x 5 replies x adapters."""
+    import subprocess
+
+    paths = [f"/vol/{p.strip().strip('/')}" for p in adapters.split(",") if p.strip()]
+    Path(f"/vol/{out}").parent.mkdir(parents=True, exist_ok=True)
+    cmd = ["python", "-m", "posttrain.eval_tasks", "--tasks", f"/vol/tasks/{tasks}", "--out", f"/vol/{out}",
+           "--samples", str(samples), "--adapters", *paths] + (["--no-base"] if no_base else [])
+    print("[modal] " + " ".join(cmd), flush=True)
+    rc = subprocess.run(cmd, cwd="/repo").returncode
+    hf_cache.commit()
+    vol.commit()
+    if rc:
+        raise RuntimeError(f"eval_tasks exited {rc}")
+
+
+bench_image = (
+    modal.Image.debian_slim(python_version="3.12")
+    .apt_install("git")
+    # same versions as A2's bench venv on the A100 box (/srv/bench/.venv), so Modal rows match its rows
+    .uv_pip_install("vllm==0.33.0", "transformers==5.20.2", "lm-eval[api,ifeval,math]==0.4.13",
+                    "reasoning-gym==0.1.25", "datasets==5.2.0", "huggingface_hub", "pyyaml", "math-verify==0.9.0",
+                    "antlr4-python3-runtime==4.11.0")
+    .env({"HF_HOME": "/hf", "PYTHONUNBUFFERED": "1", "PYTHONPATH": "/repo/bench/src"})
+    .add_local_dir(REPO / "bench" / "src", "/repo/bench/src", ignore=["**/__pycache__"])
+    .add_local_dir(REPO / "bench" / "configs", "/repo/bench/configs")
+)
+
+
+@app.function(image=bench_image, gpu="H100", timeout=3 * 3600, volumes={"/vol": vol, "/hf": hf_cache})
+def bench_dev(adapter: str, name: str):
+    """Dev-slice bench of one adapter on its own H100, A2's generation.yaml unchanged (vLLM at 0.88).
+    `modal run posttrain/modal_grpo.py::bench_dev --adapter runs/grpo-1/step-25 --name rl-grpo-1-step-25`
+    -> /vol/bench/<name>/ (pull with `modal volume get junction-grpo /bench/<name> /srv/bench/out/`)."""
+    import subprocess
+    import threading
+
+    stop = threading.Event()
+
+    def committer():
+        while not stop.wait(300):
+            try:
+                vol.commit()
+            except Exception:  # noqa: BLE001
+                pass
+
+    threading.Thread(target=committer, daemon=True).start()
+    out = f"/vol/bench/{name}"
+    cmd = ["python", "-m", "bench", "run", "--model", "Qwen/Qwen3.5-9B", "--lora", f"/vol/{adapter.strip('/')}",
+           "--name", name, "--dev-slice", "--out", out, "--resume"]
+    print("[modal] " + " ".join(cmd), flush=True)
+    rc = subprocess.run(cmd, cwd="/repo").returncode
+    stop.set()
+    hf_cache.commit()
+    vol.commit()
+    if rc:
+        raise RuntimeError(f"bench exited {rc}")
+
+
 @app.local_entrypoint()
 def main(sft: str = "mix", tasks: str = "rl-s0-mix.jsonl", run: str = "grpo-1", steps: int = 150,
          save_every: int = 25, config: str = "grpo-1-h100.yaml", extra: str = ""):
