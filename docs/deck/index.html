@@ -250,17 +250,17 @@ body.present .slide.current .frame { width: min(100vw, 177.78vh); border: 0; bor
   <div class="top"><span>The gap</span><span><b>05</b> / 11</span></div>
   <div class="body">
     <h2>On games with never-seen rules, humans finish. No model does.</h2>
-    <div class="chart" role="img" aria-label="eval-v2 scores: optimal 1.000, human playtesters 0.684, Gemini 4 Argon 0.442, Gemini Flash 0.020, random 0, do nothing 0">
+    <div class="chart" role="img" aria-label="eval-v2 scores: optimal 1.000, human playtesters 0.699, Gemini 4 Argon 0.442, Gemini Flash 0.020, random 0, do nothing 0">
       <div class="row"><div class="who">Optimal<small>shortest solution</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">1.000<small>20 of 20 won</small></div></div>
-      <div class="row"><div class="who h">Human playtesters<small>first attempt</small></div><div class="track"><div class="fill h" style="--v:.684"></div><div class="ci" style="--lo:.604;--hi:.758"></div></div><div class="val">0.684<small>8 of 14 won</small></div></div>
+      <div class="row"><div class="who h">Human playtesters<small>first attempt</small></div><div class="track"><div class="fill h" style="--v:.699"></div><div class="ci" style="--lo:.617;--hi:.769"></div></div><div class="val">0.699<small>8 of 13 won</small></div></div>
       <div class="row"><div class="who m">Gemini 4 Argon<small>medium effort</small></div><div class="track"><div class="fill m" style="--v:.442"></div><div class="ci" style="--lo:.346;--hi:.526"></div></div><div class="val">0.442<small>0 of 6 won</small></div></div>
       <div class="row"><div class="who m">Gemini Flash<small>medium effort</small></div><div class="track"><div class="fill m" style="--v:.020"></div><div class="ci" style="--lo:0;--hi:.05"></div></div><div class="val">0.020<small>0 of 7 won</small></div></div>
       <div class="row"><div class="who">Random · Do nothing<small>baselines</small></div><div class="track"><div class="fill z"></div></div><div class="val">0.000<small>0 of 20 won</small></div></div>
       <div class="axis"><span></span><div><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span></div><span></span></div>
     </div>
-    <p class="muted">Score per level = optimal moves ÷ moves used, 0 if unsolved, averaged over all 8 levels. Whiskers: 95% bootstrap CI.</p>
+    <p class="muted">Score per level = optimal moves ÷ moves used, 0 if unsolved, averaged over all 8 levels. Finished attempts only. Whiskers: 95% bootstrap CI.</p>
   </div>
-  <div class="src">eval-v2: 30 games × 8 levels, 3 never-trained rules each · harness h1 · leaderboard.json, built 17:49 UTC from the shared server's runs</div>
+  <div class="src">eval-v2: 30 games × 8 levels, 3 never-trained rules each · harness h1 · leaderboard.json, built 18:35 UTC from the shared server's runs (finished attempts only)</div>
 </div></div></section>
 
 <!-- 6 -->
