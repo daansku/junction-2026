@@ -9,3 +9,5 @@
 **Check after:** `https://65.108.33.107.compute.verda.run/challenge` level 1 shows no AI panel ("No hints…"). Board endpoints still wait for your restart; the page falls back to a per-device board until then.
 
 **By when:** now (humans are playtesting).
+
+**Update (Sat ~19:05):** still the first build on the VM (`index-0TzhiDNT.js`). The human now also reports "end-screen AI replays don't show": that build has no end-screen replays at all. Please rebuild as soon as you can; it is a static rebuild only.

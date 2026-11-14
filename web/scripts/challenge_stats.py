@@ -82,7 +82,9 @@ def main() -> int:
     runs = unwrap(get(api, f"/runs?game_id={a.game}&limit=5000"), "runs")
 
     players: dict[str, dict] = defaultdict(lambda: {"attempts": []})
-    for r in runs:
+    # Human baseline counts first attempts only (repeats know the level): keep each person's earliest run.
+    seen_humans: set[str] = set()
+    for r in sorted(runs, key=lambda x: x["run_id"]):
         p = r.get("player") or {}
         kind = p.get("kind")
         if kind not in ("model", "human") or p.get("mode") == "challenge":
@@ -100,6 +102,11 @@ def main() -> int:
             continue  # not finished with the challenge window yet
         if (r.get("actions") or 0) == 0:
             continue
+        if kind == "human":
+            who = str(p.get("name", "")).strip().lower()
+            if who in seen_humans:
+                continue
+            seen_humans.add(who)
         steps = unwrap(get(api, f"/runs/{r['run_id']}/steps"), "steps")
         if lc < start - 1:
             continue  # never reached the window: says nothing about these levels
@@ -110,7 +117,7 @@ def main() -> int:
                   for i, lv in enumerate(levels)]
         key = "human" if kind == "human" else (p.get("model_id") or p.get("name"))
         entry = players[key]
-        entry.update({"kind": kind, "name": "Humans (playtests)" if kind == "human" else (p.get("name") or key),
+        entry.update({"kind": kind, "name": "People (first attempts)" if kind == "human" else (p.get("name") or key),
                       "model_id": None if kind == "human" else key})
         entry["attempts"].append({"run_id": r["run_id"], "levels": levels,
                                   "score": round(100 * sum(scores) / n, 1),

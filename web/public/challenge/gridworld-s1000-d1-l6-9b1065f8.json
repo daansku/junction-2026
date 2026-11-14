@@ -1,226 +1,51 @@
 {
  "game_id": "gridworld-s1000-d1-l6-9b1065f8",
  "levels": 3,
+ "start_level": 1,
  "optimal_moves": [
   13,
   9,
   23
  ],
- "generated_at": "2026-11-14T14:54:05+00:00",
+ "generated_at": "2026-11-14T15:37:29+00:00",
  "source": "https://65.108.33.107.compute.verda.run",
  "score_rule": "per level min(1, optimal/actions) if solved else 0; mean x 100",
  "players": [
   {
    "id": "human",
    "kind": "human",
-   "name": "Humans (playtests)",
+   "name": "People (first attempts)",
    "model_id": null,
-   "attempts": 11,
-   "mean_score": 71.5,
-   "best_score": 95.0,
-   "cleared_all_rate": 0.818,
+   "attempts": 7,
+   "mean_score": 61.2,
+   "best_score": 93.9,
+   "cleared_all_rate": 0.714,
    "per_level_solve_rate": [
     1.0,
-    0.909,
-    0.818
+    0.857,
+    0.714
    ],
    "runs": [
     {
-     "run_id": "20261114T143713-9c860f37",
+     "run_id": "20261114T102533-a8d23cbf",
      "levels": [
       {
        "level": 1,
        "solved": true,
-       "actions": 14
+       "actions": 22
       },
       {
        "level": 2,
        "solved": true,
-       "actions": 9
+       "actions": 18
       },
       {
        "level": 3,
        "solved": true,
-       "actions": 25
+       "actions": 40
       }
      ],
-     "score": 95.0,
-     "cleared": 3
-    },
-    {
-     "run_id": "20261114T143551-1250414e",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 13
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 9
-      },
-      {
-       "level": 3,
-       "solved": true,
-       "actions": 32
-      }
-     ],
-     "score": 90.6,
-     "cleared": 3
-    },
-    {
-     "run_id": "20261114T143148-c1315752",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 13
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 11
-      },
-      {
-       "level": 3,
-       "solved": true,
-       "actions": 23
-      }
-     ],
-     "score": 93.9,
-     "cleared": 3
-    },
-    {
-     "run_id": "20261114T142647-db194d37",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 13
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 11
-      },
-      {
-       "level": 3,
-       "solved": true,
-       "actions": 23
-      }
-     ],
-     "score": 93.9,
-     "cleared": 3
-    },
-    {
-     "run_id": "20261114T110809-93697bdf",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 20
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 56
-      },
-      {
-       "level": 3,
-       "solved": false,
-       "actions": 14
-      }
-     ],
-     "score": 27.0,
-     "cleared": 2
-    },
-    {
-     "run_id": "20261114T105510-ffc8611f",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 38
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 78
-      },
-      {
-       "level": 3,
-       "solved": true,
-       "actions": 41
-      }
-     ],
-     "score": 33.9,
-     "cleared": 3
-    },
-    {
-     "run_id": "20261114T102832-e558895e",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 16
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 10
-      },
-      {
-       "level": 3,
-       "solved": true,
-       "actions": 26
-      }
-     ],
-     "score": 86.6,
-     "cleared": 3
-    },
-    {
-     "run_id": "20261114T102644-fb162b5d",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 15
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 10
-      },
-      {
-       "level": 3,
-       "solved": true,
-       "actions": 25
-      }
-     ],
-     "score": 89.6,
-     "cleared": 3
-    },
-    {
-     "run_id": "20261114T102602-fbe135d2",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 13
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 10
-      },
-      {
-       "level": 3,
-       "solved": true,
-       "actions": 32
-      }
-     ],
-     "score": 87.3,
+     "score": 55.5,
      "cleared": 3
     },
     {
@@ -246,25 +71,113 @@
      "cleared": 1
     },
     {
-     "run_id": "20261114T102533-a8d23cbf",
+     "run_id": "20261114T105510-ffc8611f",
      "levels": [
       {
        "level": 1,
        "solved": true,
-       "actions": 22
+       "actions": 38
       },
       {
        "level": 2,
        "solved": true,
-       "actions": 18
+       "actions": 78
       },
       {
        "level": 3,
        "solved": true,
-       "actions": 40
+       "actions": 41
       }
      ],
-     "score": 55.5,
+     "score": 33.9,
+     "cleared": 3
+    },
+    {
+     "run_id": "20261114T110809-93697bdf",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 20
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 56
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 14
+      }
+     ],
+     "score": 27.0,
+     "cleared": 2
+    },
+    {
+     "run_id": "20261114T142647-db194d37",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 11
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 23
+      }
+     ],
+     "score": 93.9,
+     "cleared": 3
+    },
+    {
+     "run_id": "20261114T143148-c1315752",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 11
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 23
+      }
+     ],
+     "score": 93.9,
+     "cleared": 3
+    },
+    {
+     "run_id": "20261114T143551-1250414e",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 9
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 32
+      }
+     ],
+     "score": 90.6,
      "cleared": 3
     }
    ]
@@ -284,28 +197,6 @@
     1.0
    ],
    "runs": [
-    {
-     "run_id": "20261114T015741-b30e6f23",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 13
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 20
-      },
-      {
-       "level": 3,
-       "solved": true,
-       "actions": 71
-      }
-     ],
-     "score": 59.1,
-     "cleared": 3
-    },
     {
      "run_id": "20261114T015741-8260dc79",
      "levels": [
@@ -327,6 +218,28 @@
      ],
      "score": 76.1,
      "cleared": 3
+    },
+    {
+     "run_id": "20261114T015741-b30e6f23",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 13
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 20
+      },
+      {
+       "level": 3,
+       "solved": true,
+       "actions": 71
+      }
+     ],
+     "score": 59.1,
+     "cleared": 3
     }
    ]
   },
@@ -345,28 +258,6 @@
     0.0
    ],
    "runs": [
-    {
-     "run_id": "20261114T015741-484822ac",
-     "levels": [
-      {
-       "level": 1,
-       "solved": true,
-       "actions": 39
-      },
-      {
-       "level": 2,
-       "solved": true,
-       "actions": 9
-      },
-      {
-       "level": 3,
-       "solved": false,
-       "actions": 102
-      }
-     ],
-     "score": 44.4,
-     "cleared": 2
-    },
     {
      "run_id": "20261114T015741-02f65e44",
      "levels": [
@@ -388,6 +279,28 @@
      ],
      "score": 28.9,
      "cleared": 1
+    },
+    {
+     "run_id": "20261114T015741-484822ac",
+     "levels": [
+      {
+       "level": 1,
+       "solved": true,
+       "actions": 39
+      },
+      {
+       "level": 2,
+       "solved": true,
+       "actions": 9
+      },
+      {
+       "level": 3,
+       "solved": false,
+       "actions": 102
+      }
+     ],
+     "score": 44.4,
+     "cleared": 2
     }
    ]
   },
