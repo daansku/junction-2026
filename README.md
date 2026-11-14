@@ -18,44 +18,41 @@ make setup && . .venv/bin/activate      # creates .venv with engine, server, are
 uv tool install harbor==0.26.0          # Harbor CLI (or: pipx install harbor==0.26.0); Docker must be running
 ```
 
-### 1. One-Command Eval & Reward-Integrity Baselines (`oracle`, `nop`, `stop-early`)
+### 1. One Command: Reference, Do-Nothing, Stop-Early and Agent Runs
 
-The frozen evaluation tasks are already committed at `harbor/eval-v1/` (`30` tasks, `harbor lint` clean) and `harbor/eval-v2/` (`30` tasks, difficulty 4), so judges can run directly without re-exporting:
-
-```bash
-# Run directly on committed frozen eval-v1 task 1 (or re-export via: python -m arena harbor-export --collection eval-v1 --out /tmp/junction-harbor --first 3)
-TASK=harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4
-harbor lint "$TASK"
-
-# 1) Reference ceiling (BFS optimal_path -> reward 1.000)
-harbor run -p "$TASK" -a oracle
-
-# 2) Do-nothing baseline (0 actions -> reward 0.000)
-harbor run -p "$TASK" -a nop
-
-# 3) Stop-early baseline (solves Level 1 only, stops -> reward 1/6 = 0.167)
-harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1
-```
-
-### 2. Run OpenCode + Nemotron 3.5 Super VL (`k=3` Rubric Runs)
+The frozen evaluation tasks are committed at `harbor/eval-v2/` (`30` tasks, difficulty 4, 8 levels, 3 unseen rules per game: **the judging set**) and `harbor/eval-v1/` (`30` tasks, difficulty 1-3, 6 levels: easier, frontier models nearly solve it). `harbor lint` clean; no re-export needed.
 
 ```bash
-set -a; . ./.env; set +a   # requires NVIDIA_VERDA_INFERENCE_KEY in .env
-harbor run -p "$TASK" -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
-  --ak "opencode_config=$(python3 -c 'import json;print(json.dumps(json.load(open("arena/opencode-nemotron.json"))))')" \
-  --ae 'NVIDIA_VERDA_INFERENCE_KEY=${NVIDIA_VERDA_INFERENCE_KEY}' \
-  -k 3 -n 1
+make judge                                          # eval-v2 game 1: reference + do-nothing + stop-early (no model cost)
+make judge MODEL=gemini/gemini-4-argon K=3          # + 3 OpenCode agent runs (60-min cap each)
+make judge TASK=harbor/eval-v2/<task> MODEL=anthropic/claude-sonnet-5-5 K=3
 ```
 
-### Verified Harbor Rubric Results (`gridworld-s1000-d1-l6-9b1065f8`, Docker 29.8.1 + Harbor 0.26.0)
+`MODEL` is an OpenCode selector: `anthropic/<model>`, `gemini/<model>`, `openai/<model>`, or one registered in [arena/opencode-models.json](arena/opencode-models.json) (`verda-kimi/kimi-k3-1-pro`, `verda-nemotron/nemotron-3.5-super-vl`, `featherless/<org>/<model>`). Keys come from `.env` ([coordination/KEYS.md](coordination/KEYS.md)). The agent can reach only the game and the model APIs in each task's egress allowlist; for another API add `EXTRA="--allow-agent-host <host>"` ([arena/HARBOR.md](arena/HARBOR.md), "Network"). `make judge` ([arena/judge.sh](arena/judge.sh)) prints a summary table at the end.
 
-| Run | Harbor Command | Actions | Levels | Reward |
+The same runs by hand:
+
+```bash
+TASK=harbor/eval-v2/gridworld-s910000-d4-l8-f71ee29e
+harbor run -p "$TASK" -a oracle                                    # reference: BFS optimal path -> 1.000
+harbor run -p "$TASK" -a nop                                       # do-nothing -> 0.000
+harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1    # stop-early after level 1 -> 1/8 = 0.125
+set -a; . ./.env; set +a
+harbor run -p "$TASK" -a opencode -m gemini/gemini-4-argon -k 3 -n 1 \
+  --ae 'GOOGLE_GENERATIVE_AI_API_KEY=${GEMINI_API_KEY}'              # Gemini: OpenCode reads this name, not GEMINI_API_KEY
+```
+
+### Verified Harbor Results (Docker 29.8.1 + Harbor 0.26.0)
+
+| Run | Task | Actions | Levels | Reward |
 |---|---|---:|---:|---:|
-| **Reference (`oracle`)** | `harbor run -p "$TASK" -a oracle` | 92 | 6 / 6 | **1.000** |
-| **Stop-early (L3)** | `harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=3` | 45 | 3 / 6 | **0.500** |
-| **Stop-early (L1)** | `harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1` | 13 | 1 / 6 | **0.167** |
-| **OpenCode + Nemotron (`k=3`)** | `-a opencode -m verda-nemotron/nemotron-3.5-super-vl` | 155 / 135 / 227 | 1/6 each | **0.067 mean** (`0.020`, `0.094`, `0.087`) |
-| **Do-nothing (`nop`)** | `harbor run -p "$TASK" -a nop` | 0 | 0 / 6 | **0.000** |
+| **Reference (`oracle`)** | eval-v2 game 1 (`s910000`) | 187 | 8 / 8 | **1.000** |
+| **Stop-early (L1)** | eval-v2 game 1 | 31 | 1 / 8 | **0.125** |
+| **Do-nothing (`nop`)** | eval-v2 game 1 | 0 | 0 / 8 | **0.000** |
+| **Reference (`oracle`)** | eval-v1 game 1 (`s900000`) | 86 | 6 / 6 | **1.000** |
+| **OpenCode + Nemotron (`k=3`, 30-min cap)** | dev game `s1000` | 155 / 135 / 227 | 1/6 each | **0.067 mean** (`0.020`, `0.094`, `0.087`) |
+
+Every model in [arena/HARBOR.md](arena/HARBOR.md) ("Other models through OpenCode") plays through Harbor + OpenCode (smoke runs: Claude Haiku 5.5, Kimi K3.1, Gemini 4 Argon / Carbon, Gemini 3.8 Flash, Nemotron, DeepSeek V3.2, GLM 5.3). Reward-exploit red team (10 attacks from the agent's seat, all 0.0 or blocked): [coordination/JUDGING.md](coordination/JUDGING.md).
 
 > *Note:* `python -m server mcp` is retained strictly for interactive local dev/demo inspection; official evaluation runs exclusively through `arena harbor-export` + `harbor run` ([arena/HARBOR.md](arena/HARBOR.md), [coordination/JUDGING.md](coordination/JUDGING.md)).
 
@@ -83,7 +80,7 @@ cd web && npm install && npm run typecheck && npm run build
 ## What Makes This Environment Meaningful & Exploit-Resistant
 
 1. **Zero Text Hints + Per-Game `skin_shuffle` (`engine 0.5.0`, [rules/CATALOG.md](rules/CATALOG.md)):**
-   Agents observe only a `64×64` frame of palette indices `0..15` ([contracts/palette.json](contracts/palette.json)) and `available_actions` (`RESET`, `ACTION1..4`, plus `ACTION5` wait when active). Colors and non-directional glyphs permute per game seed.
+   Agents observe only a `64×64` frame of palette indices `0..15` ([contracts/palette.json](contracts/palette.json)) and `available_actions` (`RESET`, `ACTION1..4`; `ACTION5` interact is listed only in games that use it, none in the frozen sets; phase walls advance with every counted action). Colors and non-directional glyphs permute per game seed.
    - **HUD (`rows 0–1`):** move-budget bar shrinking per step.
    - **HUD (`rows 3–4`):** level progress pips + held-key / health / gem / stamina state indicators.
    - **Playfield (`rows 6–63`):** **15 live mechanics** across Tiers 0–2 (`walls`, `goal`, `move_budget`, `keys_doors`, `plates_gates`, `teleporters`, `hazards`, `push_blocks`, `ice`, `one_way`, `collect_all`, `phase_walls`, `rotation`, `remap`, `twin`, `stamina`, `cracked_floor`, `beacon_goal` — 3 base + 15 composable rules) plus **3 opt-in Tier-3 mechanics** (`conveyors`, `enemies`, `gravity`) ready for `eval-v2`.
@@ -91,25 +88,33 @@ cd web && npm install && npm run typecheck && npm run build
    Every level passes exact BFS shortest-path verification (`optimal_moves`, `optimal_path`), rule-necessity ablation (removing any active rule alters optimal path or solvability), bounded budget slack (`ceil(optimal_moves × slack)`), and `< 2%` random-walk win rejection. Held-out `eval-v1` adds **unseen rule pairs** and **held-out visual skins** (`engine/src/engine/splits.py`).
 3. **Action-Efficiency Reward Integrity ([analysis/METRICS.md](analysis/METRICS.md)):**
    $$\text{level\_score}(L) = \min\!\left(1.0,\; \frac{\text{optimal\_moves}(L)}{\text{actions\_used}(L)}\right) \text{ if solved else } 0.0$$
-   - `noop` and `stop_early` score **`0.000`**; denominator always spans `1..levels_total`.
+   - Do-nothing scores **`0.000`**; stopping early earns only the levels solved (Harbor oracle stopped after level 1: `1/8 = 0.125` on eval-v2), and the arena `stop_early` baseline (stops before finishing level 1) scores `0.000`. The denominator always spans `1..levels_total`.
    - `actions_used(L)` includes all actions taken before `RESET` plus `RESET` itself — reset farming strictly lowers efficiency.
    - `Truth` (`optimal_moves`, `events`, `active_rules`, `new_rule`) never enters LLM prompts or Harbor MCP responses.
 
 ---
 
-## Live Multi-Model Benchmark Results (`dev` Split, Engine `0.5.0`, `h1` Harness)
+## The Gap: Frozen `eval-v2` (Difficulty 4, `h1` / `h2` Harnesses)
 
-Synced from the shared server (`67` clean benchmark runs after filtering practice `anonymous`/`test` sessions, `smoke-*` checks, and tunnel timeouts) and verified by `python -m analysis check-claims --derived data/derived` (`0` errors):
+Board built Sat 14.11 19:19 UTC from the shared server's `1,006` runs (`python -m analysis sync && python -m analysis build`; practice, smoke and aborted runs filtered). Score = mean over levels of `min(1, optimal / actions)` for solved levels, 0 otherwise; humans play each game once (first attempt).
 
-| Player | Modality | Games | Levels Solved | Action-Eff. Score | No-Effect Rate | Resets | Notes |
-|---|---|---:|---:|---:|---:|---:|---|
-| **`Optimal`** | baseline | 4 | 24 / 24 (`100.0%`) | **1.000** | 6.0% | 0 | Exact BFS `optimal_path` (`WAIT` at `phase_walls`) |
-| **`Human`** | `image` | 10 | 40 / 60 (`66.7%`) | **0.578** | 6.9% | 3 | First-attempt human play (`40%` full-game win; `0.795` on `eval-v1`) |
-| **`Kimi K3.1 Pro (Verda)`** | `image+rle` | 8 | 25 / 48 (`52.1%`) | **0.374** | 7.6% | 13 | Frontier VLM (`RHAE = 0.647` vs human; best run `5/6` lvls) |
-| **`Nemotron 3.5 Super VL`** | `image+rle` | 8 | 6 / 48 (`12.5%`) | **0.061** | 76.8% | 28 | 120B MoE open VLM |
-| **`DeepSeek V3.2`** | `rle` | 8 | 0 / 48 (`0.0%`) | **0.000** | 55.1% | 67 | 671B MoE text-only (`$0.069/game`) |
-| **`gpt-oss-120b`** | `rle` | 8 | 0 / 48 (`0.0%`) | **0.000** | 65.8% | 42 | 120B MoE text-only (`$0.193/game`) |
-| **`Random` / `Stop Early` / `Noop`** | baseline | 20 | 0 / 120 (`0.0%`) | **0.000** | — | 30 / 0 / 0 | Verified zero-exploit baselines |
+| Player | Harness | Games | Levels Solved | Full Wins | Score | 95% CI |
+|---|---|---:|---:|---:|---:|---|
+| **Optimal (BFS)** | - | 20 | 160 / 160 | 100% | **1.000** | - |
+| **Human (first attempt)** | browser | 20 | 150 / 160 | 75% | **0.693** | 0.632-0.749 |
+| **Gemini 4 Argon** | h1 | 7 | 36 / 56 | 14% | **0.494** | 0.372-0.621 |
+| **Gemini 3.1 Pro** | h2 | 4 | 20 / 32 | 0% | **0.439** | 0.242-0.636 |
+| **Kimi K3.1 Pro** | h2 | 4 | 20 / 32 | 0% | **0.398** | 0.150-0.590 |
+| **Gemini 3.8 Flash** | h1 | 8 | 3 / 64 | 0% | **0.028** | 0.004-0.060 |
+| **Random / Stop-early / Do-nothing** | - | 20 each | 0 | 0% | **0.000** | - |
+
+**Paired on the same eval-v2 games (human vs model, per game):** humans score higher on every shared game for Gemini 4 Argon (6 / 6; 0.656 vs 0.442), Gemini 3.8 Flash (7 / 7), Gemini 3.1 Pro h2 (4 / 4; 0.661 vs 0.439) and Kimi K3.1 h2 (4 / 4; 0.661 vs 0.398).
+
+*Still running at build time (single games, not yet a row to trust):* Gemini 4 Carbon finished 1 eval-v2 game at **0.789** (8/8, above the humans' 0.635 on that game); Claude Sonnet 5.5 1 game at 0.044. The Gemini 4 sweep over all 30 eval-v2 games is in progress; rebuild before quoting.
+
+**eval-v1 is the easy set:** on the one eval-v1 game they played, Gemini 4 Carbon / Argon / Hydrogen score 0.925 / 0.900 / 0.820, near the optimum and above humans. Use eval-v2 for the gap.
+
+h1 = one fresh request per turn (notes + last 12 actions + frame); h2 = how labs benchmark (full history, reasoning kept, native tool calls, high effort). OpenCode in Harbor is a third harness (bash + code allowed); its numbers come from `make judge`.
 
 *(Offline CI baseline in `data/fixtures/derived/leaderboard.json` is also committed and verified via `python -m analysis check-claims --derived data/fixtures/derived`.)*
 

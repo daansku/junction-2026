@@ -29,7 +29,7 @@ from starlette.responses import JSONResponse
 INSTRUCTIONS = (
     "A video game you have never seen. Each tool returns the screen as a 64x64 image and as a text grid "
     "(one hex digit 0-f per cell = colour index, row 0 at the top). Actions: ACTION1=up, ACTION2=down, "
-    "ACTION3=left, ACTION4=right, ACTION5=interact, RESET=restart the current level. Nobody tells you the "
+    "ACTION3=left, ACTION4=right, ACTION5=interact (only when listed as available), RESET=restart the current level. Nobody tells you the "
     "goal or the rules: find them by acting. Every action counts against your score."
 )
 MAX_ACTIONS = int(os.environ.get("MAX_ACTIONS", "3000"))
@@ -129,7 +129,7 @@ def build(ep: Episode, port: int = 8000) -> FastMCP:
     @mcp.tool()
     def act(action: str, note: str | None = None) -> list:
         """Take one action: ACTION1 (up), ACTION2 (down), ACTION3 (left), ACTION4 (right),
-        ACTION5 (interact), RESET (restart the current level). Returns the new screen."""
+        ACTION5 (interact, only when listed as available), RESET (restart the current level). Returns the new screen."""
         return show(*ep.act(action))
 
     @mcp.custom_route("/healthz", methods=["GET"])

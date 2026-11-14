@@ -265,7 +265,7 @@ def main(argv: list[str] | None = None) -> int:
     p_h2 = sub.add_parser("h2", help="Build separate h2 leaderboard_h2.json (PLAN.md §3.1)")
     _add_common_io_args(p_h2)
 
-    p_bench = sub.add_parser("bench", help="Build post-training bench_summary.json with paired 95% CIs (PLAN.md §3.2)")
+    p_bench = sub.add_parser("bench", help="Build post-training bench_summary.json with paired 95%% CIs (PLAN.md §3.2)")
     _add_common_io_args(p_bench)
     p_bench.add_argument("--bench-dir", help="Directory containing <run>/{summary.json,items.jsonl} (default: <out>/bench)")
 

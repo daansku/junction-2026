@@ -9,13 +9,14 @@ PY := $(VENV_BIN)/python
 PORT ?= 8000
 # DATA_DIR defaults to ~/junction-data (server/src/server/config.py); export DATA_DIR=... to override
 
-.PHONY: help setup dev server web web-build test smoke fixtures mcp share bench
+.PHONY: help setup dev server web web-build test smoke fixtures mcp share bench judge
 
 help:
 	@echo "make setup      venv + all python packages (editable) + web deps"
 	@echo "make dev        server on :$(PORT) (reload) + web dev server"
 	@echo "make server     server only on :$(PORT)"
 	@echo "make test       all python tests"
+	@echo "make judge      Harbor judging protocol: reference, do-nothing, stop-early (+ MODEL=<opencode selector> K=3 agent runs)"
 	@echo "make smoke      end-to-end smoke (throwaway local server; API_URL=... to target another)"
 	@echo "make fixtures   regenerate data/fixtures/ from the fake engine"
 	@echo "make mcp        MCP server over stdio (API_URL=... to proxy to a running server)"
@@ -64,3 +65,8 @@ mcp:
 
 share:
 	cloudflared tunnel --url http://localhost:$(PORT)
+
+# Judging protocol through Harbor (arena/judge.sh): reference + do-nothing + stop-early, and K OpenCode runs if MODEL is set.
+#   make judge [TASK=harbor/eval-v2/<task>] [MODEL=gemini/gemini-4-argon] [K=3] [OUT=<dir>]
+judge:
+	TASK="$(TASK)" MODEL="$(MODEL)" K="$(K)" OUT="$(OUT)" bash arena/judge.sh
