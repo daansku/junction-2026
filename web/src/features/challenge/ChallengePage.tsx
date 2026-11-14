@@ -11,7 +11,6 @@ import { Button, ErrorState, Kbd } from '@/design/primitives'
 import type { ActionName, Frame, Player } from '@/lib/types'
 import { fetchGhosts, startSessionWithTakeover, type GhostSlice } from '@/features/play/epistemicApi'
 import {
-  CHALLENGE_GAMES,
   challengeScore,
   cleanName,
   clearLocalBoard,
@@ -107,18 +106,8 @@ function pct(x: number) {
 }
 
 export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   const gameId = params.get('game') || DEFAULT_GAME
-  const pickGame = (id: string) =>
-    setParams(
-      (p) => {
-        const n = new URLSearchParams(p)
-        if (id === DEFAULT_GAME) n.delete('game')
-        else n.set('game', id)
-        return n
-      },
-      { replace: true },
-    )
   const from = Math.max(1, Number(params.get('from')) || 1)
   const nLevels = Math.min(6, Math.max(1, Number(params.get('levels')) || DEFAULT_LEVELS))
   const levelList = useMemo(() => Array.from({ length: nLevels }, (_, i) => from + i), [from, nLevels])
@@ -437,8 +426,8 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
     return [
       {
         title: ghostName(g),
-        sub: `game level ${teaserLevel} (not part of the challenge) · ${g.solved ? `solved in ${g.actions} moves` : `${g.actions} moves, never solved`}`,
         steps: [g.start_frame, ...g.steps.map((st) => st.frame)].filter((f): f is Frame => !!f).slice(0, 200),
+        thinking: [null, ...g.steps.map((st) => st.hypothesis ?? null)].slice(0, 200),
       },
     ]
   }, [teaserQ.data, teaserLevel])
@@ -474,9 +463,6 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
       <header className="ch-head">
         <div>
           <h1 className="ch-title">Can you beat the AI?</h1>
-          <p className="ch-sub">
-            {nLevels} levels. No instructions. Work out the rules from what you see. The AI got the same pixels.
-          </p>
         </div>
         <div className="ch-head-right">
           {(phase === 'playing' || phase === 'review') && (
@@ -514,7 +500,8 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
             <FrameCanvas frame={loop?.frame ?? ghostQs[0]?.data?.optimal?.start_frame ?? null} scale="fit" maxScale={kiosk ? 13 : 10} viewportReserve={kiosk ? 64 : 120} bezel label="Recorded AI attempt" />
             {loop ? (
               <p className="ch-reel mono">
-                <span className="ch-reel-name">{loop.title}</span> · {loop.sub} · move {loop.i}
+                <span className="ch-reel-name">{loop.title}</span>
+                {loop.thinking[loop.i] && <span className="ch-reel-thinking">{loop.thinking[loop.i]}</span>}
               </p>
             ) : (
               <p className="ch-reel mono">level 1 · this is where you start</p>
@@ -522,26 +509,13 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           </div>
           <aside className="ch-side">
             <section className="ch-card">
-              <span className="kicker">pick a challenge · {nLevels} levels</span>
-              <div className="ch-tabs" role="radiogroup" aria-label="Game">
-                {CHALLENGE_GAMES.map((g) => (
-                  <Button key={g.id} variant="ghost" mono active={g.id === gameId} onClick={() => pickGame(g.id)} role="radio" aria-checked={g.id === gameId} title={g.id}>
-                    game {g.label}
-                  </Button>
-                ))}
-                {!CHALLENGE_GAMES.some((g) => g.id === gameId) && <span className="mono muted">{gameId}</span>}
-              </div>
-            </section>
-            <section className="ch-card">
-              <span className="kicker">recorded results on these {nLevels} levels</span>
+              <span className="kicker">results</span>
               {stats ? (
                 <div className="ch-facts">
                   {humans && (
                     <div className="ch-fact">
                       <span className="ch-big mono">{pct(humans.cleared_all_rate)}</span>
-                      <span>
-                        of people cleared all {nLevels} <span className="muted mono">(first attempts, n={humans.attempts})</span>
-                      </span>
+                      <span>people won all {nLevels}</span>
                     </div>
                   )}
                   {models.length ? (
@@ -549,10 +523,10 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
                       <span className="ch-big mono">
                         {models.filter((m) => m.cleared_all_rate > 0).length}/{models.length}
                       </span>
-                      <span>AI models ever cleared all {nLevels}</span>
+                      <span>computer players won all {nLevels}</span>
                     </div>
                   ) : (
-                    <p className="muted">No finished AI run on this game yet.</p>
+                    <p className="muted">No completed computer-player runs yet.</p>
                   )}
                 </div>
               ) : (
@@ -593,7 +567,6 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
               <QrCode text={shareUrl} size={132} />
               <div>
                 <span className="kicker">play on your phone</span>
-                <p className="mono ch-url">{shareUrl.replace(/^https?:\/\//, '')}</p>
                 {server.published && <p className="muted">Results are frozen; your play is not added to the research data.</p>}
               </div>
             </section>

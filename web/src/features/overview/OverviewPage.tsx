@@ -7,11 +7,10 @@ import { FrameCanvas } from '@/lib/FrameCanvas'
 import { PALETTE } from '@/lib/palette'
 import { PlotFigure, seriesColors, cssVar } from '@/lib/PlotFigure'
 import type { Frame, RunMeta } from '@/lib/types'
-import { useServerInfo } from '@/lib/server'
 import type { LeaderboardDocument, LeaderboardRow } from '@/features/leaderboard/types'
 import { completionCompare } from '@/features/leaderboard/ranking'
 import { XrayOverlay } from '@/features/play/XrayOverlay'
-import { Button, Empty, ErrorState, Kbd, Panel, Swatch } from '@/design/primitives'
+import { Button, Empty, ErrorState, Panel, Swatch } from '@/design/primitives'
 import './overview.css'
 
 const DEFAULT_COLLECTION = 'eval-v2'
@@ -134,7 +133,6 @@ const pct = (v?: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%
 
 export function OverviewPage() {
   const navigate = useNavigate()
-  const server = useServerInfo()
   const games = useQuery({ queryKey: ['games', undefined], queryFn: () => api.listGames() })
   const runs = useQuery({ queryKey: ['runs', undefined, undefined], queryFn: () => api.listRuns() })
   const lb = useQuery({
@@ -248,51 +246,36 @@ export function OverviewPage() {
         <div className="ov-intro">
           <h1 className="ov-title">Games no model has seen before.</h1>
           <p className="ov-lede">
-            A factory that generates unlimited grid games, each one seeded, multi-level and proven solvable. Every level
-            adds one new rule. Agents see only the 64×64 frame: no score, no rule names, no win flag. They have to work
-            out the goal and the rules by acting, under a move budget.
+            Every game is generated and checked for a solution. Each level adds a new twist, and you discover what to do
+            by trying moves on the board.
           </p>
           <ol className="ov-steps">
             <li>
               <span className="mono ov-n">1</span>
               <span>
-                <b>Factory.</b> Seeded generator, BFS solvability proof, budget from the optimal solution; every new
-                rule is forced to matter.
+                <b>New worlds.</b> Every game is generated and checked before you play.
               </span>
             </li>
             <li>
               <span className="mono ov-n">2</span>
               <span>
-                <b>Pixels only.</b> Models and humans play identical frames via MCP, REST or keyboard — toggle X-Ray to
-                contrast agent blindness against engine truth.
+                <b>Learn by playing.</b> Watch the board and discover what each object does.
               </span>
             </li>
             <li>
               <span className="mono ov-n">3</span>
               <span>
-                <b>Arena.</b> Frontier models, humans and baselines on held-out worlds; score is action efficiency
-                against the BFS optimal path.
+                <b>Compare results.</b> See how your score stacks up against other players.
               </span>
             </li>
           </ol>
           <div className="ov-cta">
             <Link to="/challenge">
-              <Button variant="primary">Beat the AI</Button>
+              <Button variant="primary">Take the challenge</Button>
             </Link>
             <Link to={firstGame ? `/play/${encodeURIComponent(firstGame)}` : '/play'}>
-              <Button>Play &amp; Race Ghosts</Button>
+              <Button>Play a game</Button>
             </Link>
-            <Link to="/leaderboard">Leaderboard</Link>
-            <Link to="/leaderboard?view=h2">Extended results</Link>
-            <Link to="/insights">Why Models Fail</Link>
-            <Link to="/gallery">Gallery</Link>
-            {!server.published && <Link to="/live">Live</Link>}
-            <span className="muted ov-keys">
-              <Kbd>←</Kbd>
-              <Kbd>↑</Kbd>
-              <Kbd>→</Kbd>
-              <Kbd>↓</Kbd> move · <Kbd>R</Kbd> reset
-            </span>
           </div>
         </div>
         <div className="ov-stage">{showcase ? <Showcase run={showcase} /> : <div className="ov-stage-empty" />}</div>

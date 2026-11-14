@@ -23,8 +23,9 @@
 .ch-fact { display: flex; align-items: baseline; gap: var(--s3); font-size: 16px; }
 .ch-big { font-size: 32px; font-weight: 500; font-variant-numeric: tabular-nums; min-width: 3.2ch; }
 
-.ch-reel { margin: 0; color: var(--text-2); font-size: 14px; text-align: center; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-reel { margin: 0; color: var(--text-2); font-size: 14px; text-align: center; max-width: 100%; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
 .ch-reel-name { color: var(--text-1); }
+.ch-reel-thinking { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .ch-start .ch-input {
   height: 40px; font-size: 18px; padding: 0 var(--s2);
