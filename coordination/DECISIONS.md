@@ -29,3 +29,7 @@
 - **eval-v2 frontier runs (Sat 18:20, ignacio, recorded by A3):** Kimi K3.1 (credits) and Gemini Flash (medium, ~$45) on all 30 eval-v2 games x1, h1, same budgets as the eval-v1 main sweep, plus baselines (`arena/sweeps/eval-v2-frontier.yaml`). Note: total committed model spend is now ~$360 vs the $300 cap (Gemini costs were undercounted ~3.6x before 17:15).
 - **Extra GPU (Sat 18:20, ignacio):** 1x H100 80 GB at `31.22.104.125` for A3 (SFT v2 / RL), "use it as you please".
 
+## Bench (Sat 18:00 and 20:15, Anssi; recorded by A2 for the human)
+- Fine-tune benchmark list = `FT_BENCHMARKS.md` (also decided 17:55 by ignacio), implemented in `bench/` as the primary suite; reasoning-gym kept as a secondary tier.
+- Decoding: Qwen3.5 model-card sampling (temperature 1.0, top_p 0.95, top_k 20, presence_penalty 1.5), not greedy.
+- Suite size: fixed subsample per model (~2,250 generative items + full MedQA; BBH 50/task, MATH 50/subject, GSM8K 250, MMLU-Pro health/law/history 100 each), same items for every model. Full suite was ~13 h per model. Protocol: `bench/PROTOCOL.md` v3.

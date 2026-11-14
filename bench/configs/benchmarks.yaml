@@ -1,5 +1,8 @@
 # Benchmark list for every bench run. Frozen once bench/PROTOCOL.md is approved by the humans.
 #
+# Version 3 (Sat 14.11 20:15, human decision): fixed subsample of ~2,250 generative items per model + full MedQA,
+# because the full ~17k-item suite takes ~13 h per model on the shared vLLM server. First N items per (sub)task (lm-eval --limit).
+#
 # Version 2 (Sat 14.11 18:00): the PRIMARY suite is the humans' list in FT_BENCHMARKS.md (Daniel, 17:24),
 # adopted by human decision over A2's v1 list. reasoning-gym tiers are kept as a labelled SECONDARY tier
 # (PLAN.md §3.2 near transfer / logic); they never enter the headline number.
@@ -8,24 +11,24 @@
 # kind: lm_eval        -> lm-evaluation-harness; `fewshot` overrides the task default (null = task default)
 # kind: reasoning_gym  -> procedurally generated items, fixed seed, graded by reasoning-gym's own score_answer
 # limit: max items per (sub)task (lm-eval --limit)
-version: 2
+version: 3
 
 tiers:
   primary:
     description: far-transfer suite from FT_BENCHMARKS.md; headline = unweighted mean over these six rows
     headline: true
     benchmarks:
-      - {id: bbh, kind: lm_eval, task: bbh_cot_fewshot}                 # all 27 tasks, 3-shot CoT (task default)
-      - {id: math, kind: lm_eval, task: minerva_math, fewshot: 0}       # 5,000 items, 0-shot CoT (task default is 4-shot)
-      - {id: gsm8k, kind: lm_eval, task: gsm8k_cot}                     # 8-shot CoT (task default)
-      - {id: medqa, kind: lm_eval, task: medqa_4options}                # 0-shot, 4 options; loglikelihood multiple choice (only form in lm-eval)
-      - {id: mmlu_pro_health, kind: lm_eval, task: mmlu_pro_health}     # 5-shot CoT (task default), full subject
-      - {id: mmlu_pro_law, kind: lm_eval, task: mmlu_pro_law}           # 5-shot CoT (task default), full subject
+      - {id: bbh, kind: lm_eval, task: bbh_cot_fewshot, limit: 50}      # all 27 tasks, 3-shot CoT; first 50 per task = 1,350
+      - {id: math, kind: lm_eval, task: minerva_math, fewshot: 0, limit: 50}  # 0-shot CoT (task default 4-shot); 50 per subject x 7 = 350
+      - {id: gsm8k, kind: lm_eval, task: gsm8k_cot, limit: 250}         # 8-shot CoT (task default); first 250 of 1,319
+      - {id: medqa, kind: lm_eval, task: medqa_4options}                # 0-shot, 4 options, full 1,273; loglikelihood multiple choice (only form in lm-eval; cheap)
+      - {id: mmlu_pro_health, kind: lm_eval, task: mmlu_pro_health, limit: 100}  # 5-shot CoT (task default)
+      - {id: mmlu_pro_law, kind: lm_eval, task: mmlu_pro_law, limit: 100}        # 5-shot CoT (task default)
 
   negative_control:
     description: knowledge recall; must not move. If it rises like the primary suite, the gain is answer formatting, not reasoning
     benchmarks:
-      - {id: mmlu_pro_history, kind: lm_eval, task: mmlu_pro_history}   # 5-shot CoT
+      - {id: mmlu_pro_history, kind: lm_eval, task: mmlu_pro_history, limit: 100}  # 5-shot CoT
 
   # pre-declared BBH subset (FT_BENCHMARKS.md "secondary"): reported from the `bbh` items above, no extra run.
   bbh_subset:
