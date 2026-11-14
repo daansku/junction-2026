@@ -295,27 +295,27 @@ export function LeaderboardPage() {
 
   return (
     <div className="lb-stack">
-      <PageHeader title="Benchmark Leaderboard" />
+      <PageHeader title="Leaderboard" />
 
       <div className="lb-view-tabs" role="tablist" aria-label="Leaderboard views">
         <button
           type="button"
           role="tab"
           aria-selected={view === 'h1'}
-          className={cx('lb-view-tab mono', view === 'h1' && 'active')}
+          className={cx('lb-view-tab', view === 'h1' && 'active')}
           onClick={() => setView('h1')}
         >
-          <span>Standard evaluation</span>
+          <span>Standard</span>
           <span className="lb-tab-count">{allRows.length}</span>
         </button>
         <button
           type="button"
           role="tab"
           aria-selected={view === 'h2'}
-          className={cx('lb-view-tab mono', view === 'h2' && 'active')}
+          className={cx('lb-view-tab', view === 'h2' && 'active')}
           onClick={() => setView('h2')}
         >
-          <span>Extended evaluation</span>
+          <span>Extended</span>
           <span className="lb-tab-count">{lbH2.data?.rows.length ?? '—'}</span>
         </button>
       </div>

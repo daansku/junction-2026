@@ -245,7 +245,6 @@ export function InsightsPage() {
     <div className="ins-stack">
       <PageHeader
         title="Why Models Fail"
-        sub="Model reasoning compared against actual game state."
       />
 
       {/* 1. COMPACT FAILURE OVERVIEW — 3 big numbers + clickable breakdown (minimal text) */}
@@ -275,9 +274,9 @@ export function InsightsPage() {
               onClick={() => jumpToFailures({ stage: expStageFilter === 'h2' ? 'all' : 'h2' })}
             >
               <span className="ins-stat-num mono">
-                {h1PerceptionPct}% → {h2PerceptionPct}%
+                {h1PerceptionPct}% to {h2PerceptionPct}%
               </span>
-              <span className="ins-stat-title">Board misreads: standard → extended</span>
+              <span className="ins-stat-title">Board misreads: standard to extended</span>
               <span className="ins-stat-sub mono muted">Multi-turn memory fixes vision</span>
             </button>
 
@@ -496,22 +495,7 @@ export function InsightsPage() {
                   return (
                     <div key={`${ex.run_id}-${ex.level}`} className="ins-exp-card">
                       <div className="ins-exp-card-head">
-                        <span className="ins-rule-label">
-                          {ex.rule && <RuleSprite rule={ex.rule} size={18} />}
-                          <strong>{friendlyPlayer(ex.player_id)}</strong>
-                          {ex.harness_version && (
-                            <span
-                              className={cx(
-                                'ins-hrn-badge mono',
-                                ex.harness_version === 'h2' && 'ins-hrn-h2',
-                              )}
-                            >
-                              {ex.harness_version}
-                            </span>
-                          )}
-                          <span className="mono muted">L{ex.level}</span>
-                          {ex.rule && <span className="muted">· {friendlyRule(ex.rule)}</span>}
-                        </span>
+                        <strong>{friendlyPlayer(ex.player_id)}</strong>
 
                         <span className="ins-card-badges">
                           {ex.deduced_rule_in_cot && (
@@ -542,7 +526,7 @@ export function InsightsPage() {
 
                       <div className="ins-exp-card-foot mono">
                         <Link to={replayHref} className="ins-pill">
-                          X-Ray @{ex.step ?? 0} →
+                          View X-Ray at step {ex.step ?? 0}
                         </Link>
                         {tkHref && (
                           <Link to={tkHref} className="ins-takeover-pill">
@@ -678,7 +662,7 @@ export function InsightsPage() {
                         return (
                           <Link key={`${fm.mode}-${idx}`} className="ins-evidence-chip" to={href}>
                             <span>{ex.player_id ? friendlyPlayer(ex.player_id) : 'Run'}</span>
-                            <span className="ins-evidence-link">@{ex.step ?? 0} →</span>
+                            <span className="ins-evidence-link">Step {ex.step ?? 0}</span>
                           </Link>
                         )
                       })}

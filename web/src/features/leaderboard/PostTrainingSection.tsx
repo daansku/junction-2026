@@ -186,11 +186,11 @@ export function LeaderboardH2View(props: {
   }, [collectionRows])
 
   if (isLoading && !doc) {
-    return <Loading what="Loading extended evaluation" />
+    return <Loading what="Loading extended results" />
   }
 
   if (allRows.length === 0) {
-    return <Empty>No extended evaluation runs published yet.</Empty>
+    return <Empty>No extended results published yet.</Empty>
   }
 
   return (
