@@ -9,19 +9,11 @@ import { fetchGhosts, type GhostSlice, type GhostsResponse } from '@/features/pl
 import type { Frame, RunMeta, Step } from '@/lib/types'
 
 /**
- * Challenge set (human decision Sat ~19:30, "for now"): eval-v1 games a person has beaten, with the most models
- * recorded on them; first 3 levels each. A (default, human decision ~19:40): s900002 (d3, the person beat every finished
- * model). B: s900000 (d1, 9 models finished, most beat the person).
- * The eval-v2 set (s910000 / s910019 / s910021, games people finished) is kept below for when its model runs land.
+ * The default is the strongest eval-v2 challenge game: two humans completed all eight levels and seven models have
  * `?game=<id>` opens any game.
  */
-export const CHALLENGE_GAMES: Array<{ id: string; label: string }> = [
-  { id: 'gridworld-s900002-d3-l6-f09d6348', label: 'A' },
-  { id: 'gridworld-s900000-d1-l6-33a57ce4', label: 'B' },
-]
-export const EVAL_V2_GAMES = ['gridworld-s910000-d4-l8-f71ee29e', 'gridworld-s910019-d4-l8-50cff9f4', 'gridworld-s910021-d4-l8-404033da']
-export const DEFAULT_GAME = CHALLENGE_GAMES[0].id
-export const DEFAULT_LEVELS = 3
+export const DEFAULT_GAME = 'gridworld-s910000-d4-l8-f71ee29e'
+export const DEFAULT_LEVELS = 8
 export const NAME_MAX = 20
 
 export interface StatsLevel {
@@ -209,8 +201,56 @@ function sliceLevel(meta: RunMeta, steps: Step[], level: number): GhostSlice | n
   }
 }
 
-export async function fetchChallengeGhosts(gameId: string, level: number, limit = 3): Promise<GhostsResponse> {
-  const base = await fetchGhosts(gameId, level, limit)
+/** Base model id: harness variants ("gemini-flash@h2b", "Gemini 3.8 Flash · h2b") count as one model. */
+function modelKey(g: GhostSlice): string {
+  const id = g.player?.model_id || g.player?.name || ''
+  return id.split('@')[0].replace(/\s+·\s+h\d\w*$/, '')
+}
+
+export interface ChallengeGhosts extends GhostsResponse {
+  /** Best recorded research human on this level (visitor challenge plays excluded). */
+  human: GhostSlice | null
+}
+
+/** Best research-human attempt on one level: solved first, then fewest moves. Visitor challenge plays are excluded. */
+async function fetchHumanGhost(gameId: string, level: number): Promise<GhostSlice | null> {
+  const runs = await api.listRuns({ game_id: gameId, kind: 'human' })
+  const cands = runs
+    .filter((r) => {
+      const p = r.player as (typeof r.player & { mode?: string; purpose?: string }) | undefined
+      return (
+        p?.kind === 'human' &&
+        p.mode !== 'challenge' &&
+        p.purpose !== 'challenge' &&
+        !r.start_level &&
+        !r.takeover_of &&
+        ((r.levels_completed ?? 0) >= level || (r.outcome != null && r.outcome !== 'IN_PROGRESS'))
+      )
+    })
+    .sort((a, b) => (b.levels_completed ?? 0) - (a.levels_completed ?? 0) || (a.actions ?? 0) - (b.actions ?? 0))
+    .slice(0, 4)
+  const slices = await Promise.all(
+    cands.map(async (r) => {
+      try {
+        return sliceLevel(r, await api.getRunSteps(r.run_id), level)
+      } catch {
+        return null
+      }
+    }),
+  )
+  const best = slices
+    .filter((g): g is GhostSlice => !!g)
+    .sort((a, b) => Number(b.solved) - Number(a.solved) || a.actions - b.actions)[0]
+  return best ? { ...best, player: { ...best.player, name: 'Human' } } : null
+}
+
+export async function fetchChallengeGhosts(gameId: string, level: number, limit = 3): Promise<ChallengeGhosts> {
+  // ask for extra candidates: harness variants of one model are collapsed below
+  const [base, human] = await Promise.all([
+    fetchGhosts(gameId, level, Math.min(10, limit * 3)),
+    fetchHumanGhost(gameId, level).catch(() => null),
+  ])
+  let ghosts = base.ghosts
   try {
     const have = new Set(base.ghosts.map((g) => g.run_id))
     const runs = await api.listRuns({ game_id: gameId, kind: 'model' })
@@ -234,11 +274,19 @@ export async function fetchChallengeGhosts(gameId: string, level: number, limit 
         }
       }),
     )
-    const ghosts = [...base.ghosts, ...extra.filter((g): g is GhostSlice => !!g)]
-    // solvers first (fewest moves), then failed attempts, so a level never shows only failures when someone solved it
-    ghosts.sort((a, b) => Number(b.solved) - Number(a.solved) || a.actions - b.actions)
-    return { ...base, ghosts: ghosts.slice(0, limit) }
+    ghosts = [...base.ghosts, ...extra.filter((g): g is GhostSlice => !!g)]
   } catch {
-    return base
+    /* finished ghosts only */
   }
+  // solvers first (fewest moves), then failed attempts, so a level never shows only failures when someone solved it
+  ghosts = [...ghosts].sort((a, b) => Number(b.solved) - Number(a.solved) || a.actions - b.actions)
+  // one reel per model: its best attempt across efforts and harnesses
+  const seenModels = new Set<string>()
+  ghosts = ghosts.filter((g) => {
+    const k = modelKey(g)
+    if (seenModels.has(k)) return false
+    seenModels.add(k)
+    return true
+  })
+  return { ...base, ghosts: ghosts.slice(0, limit), human }
 }

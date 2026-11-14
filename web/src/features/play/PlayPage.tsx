@@ -545,7 +545,7 @@ export function PlayPage() {
                     onClick={() => setXraySplit((cur) => (cur == null ? 50 : null))}
                     title="Debug X-Ray split curtain (spoils hidden rules)"
                   >
-                    x-ray {xraySplit != null ? `${xraySplit}%` : 'off'}
+                    X-ray {xraySplit != null ? `${xraySplit}%` : 'off'}
                   </Button>
                 </div>
               </div>
@@ -613,7 +613,7 @@ export function PlayPage() {
             label={`ghost race · L${currentLevel} lockstep`}
             actions={
               <Button variant="ghost" mono active={ghostRaceOn} onClick={() => setGhostRaceOn((v) => !v)}>
-                {ghostRaceOn ? 'on' : 'off'}
+                {ghostRaceOn ? 'On' : 'Off'}
               </Button>
             }
           >
@@ -769,7 +769,7 @@ export function PlayPage() {
             label="truth · hidden from agents"
             actions={
               <Button variant="ghost" mono active={showTruth} onClick={() => setShowTruth((v) => !v)}>
-                {showTruth ? 'on' : 'off'}
+                {showTruth ? 'On' : 'Off'}
               </Button>
             }
           >

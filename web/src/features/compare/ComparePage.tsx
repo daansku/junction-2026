@@ -279,12 +279,12 @@ export function ComparePage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>player</th>
-                    <th>solved</th>
-                    <th className="num">actions</th>
-                    <th className="num">vs optimal</th>
-                    <th className="num">resets</th>
-                    <th>hypotheses on this level</th>
+                    <th>Player</th>
+                    <th>Solved</th>
+                    <th className="num">Actions</th>
+                    <th className="num">Vs optimal</th>
+                    <th className="num">Resets</th>
+                    <th>Hypotheses on this level</th>
                   </tr>
                 </thead>
                 <tbody>

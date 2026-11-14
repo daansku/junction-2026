@@ -13,7 +13,8 @@ import {
   cx,
 } from '@/design/primitives'
 import { api } from '@/lib/api'
-import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
+import { PlotFigure, cssVar } from '@/lib/PlotFigure'
+import { playerColor } from '@/lib/modelColors'
 import type { RunMeta } from '@/lib/types'
 import { fetchExplanations } from '@/features/play/epistemicApi'
 import { RuleSprite } from '@/features/play/XrayOverlay'
@@ -442,7 +443,7 @@ export function InsightsPage() {
               {[
                 { id: 'all', label: 'All' },
                 { id: 'knowing_doing', label: 'Knew rule' },
-                { id: 'h2', label: 'extended only' },
+                { id: 'h2', label: 'Extended only' },
                 { id: 'perception', label: 'Misread' },
                 { id: 'rule_induction', label: 'Missed rule' },
                 { id: 'belief_updating', label: 'Looping' },
@@ -604,7 +605,11 @@ export function InsightsPage() {
                   tickFormat: (d: number) => `L${d}`,
                 },
                 y: { domain: [0, 1.04], label: 'Efficiency' },
-                color: { legend: true, range: seriesColors() },
+                color: (() => {
+                  // fixed per-player colours, same as the leaderboard (lib/modelColors.ts)
+                  const byLabel = new Map(curvePlayers.map((p) => [p.playerLabel, playerColor({ id: p.player_id })]))
+                  return { legend: true, domain: [...byLabel.keys()], range: [...byLabel.values()] }
+                })(),
                 marks: [
                   Plot.ruleY([1.0], { stroke: cssVar('--text-2') }),
                   Plot.lineY(curvePlayers, {

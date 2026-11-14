@@ -63,9 +63,11 @@ used to draw frames and cell swatches — never as UI chrome.
 
 ### Chart colours (categorical — players / models)
 From the dataviz reference palette, validated for CVD in fixed order. Assign by
-**entity, not rank**: a model keeps its colour on every page (hash of model id
-→ slot is NOT allowed; use the order in `models.yaml`, then fold the rest into
-"Other").
+**entity, not rank**: a model keeps its colour on every page. The mapping lives
+in `src/lib/modelColors.ts` (`playerColor`): each evaluated model has a fixed
+slot, chosen so models shown together never share one; unlisted models use
+their `models.yaml` order. Humans are `--text-1`, baselines `--text-3`. Never
+colour by rank or by position in the current view.
 
 | Slot | Dark | Light |
 |---|---|---|
@@ -77,6 +79,10 @@ From the dataviz reference palette, validated for CVD in fixed order. Assign by
 | 6 | `#008300` | `#008300` |
 | 7 | `#9085e9` | `#6250d6` |
 | 8 | `#e66767` | `#e34948` |
+| 9 | `#3fb7c9` | `#1592a8` |
+| 10 | `#a3b83a` | `#6f8a0e` |
+| 11 | `#b07c5b` | `#8a5a3c` |
+| 12 | `#c46bd1` | `#a443b3` |
 
 - Scatter / heatmap forms: max **3** categorical series before folding or faceting.
 - Baselines are not categorical series: `optimal`, `human`, `random` are drawn

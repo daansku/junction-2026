@@ -88,7 +88,7 @@ function Showcase({ run }: { run: RunMeta }) {
           active={xraySplit != null}
           onClick={() => setXraySplit((v) => (v == null ? 50 : null))}
         >
-          x-ray {xraySplit != null ? `${xraySplit}%` : 'off'}
+          X-ray {xraySplit != null ? `${xraySplit}%` : 'off'}
         </Button>
       </div>
       <div className="ov-canvas-center">
@@ -274,17 +274,17 @@ export function OverviewPage() {
       </section>
 
       <div className="ov-bottom">
-        <Panel label="leaderboard · top 6" pad={false} actions={<Link to="/leaderboard">full ledger →</Link>}>
+        <Panel label="leaderboard · top 6" pad={false}>
           {rows.length ? (
             <div className="table-wrap">
               <table className="table">
                 <thead>
                   <tr>
                     <th className="num">#</th>
-                    <th>player</th>
-                    <th className="num">games won</th>
-                    <th className="num">levels won</th>
-                    <th className="num">efficiency</th>
+                    <th>Player</th>
+                    <th className="num">Games won</th>
+                    <th className="num">Levels won</th>
+                    <th className="num">Efficiency</th>
                     <th className="num">$/game</th>
                   </tr>
                 </thead>

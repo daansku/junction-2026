@@ -179,14 +179,14 @@ export function GameDetail({ gameId }: { gameId: string }) {
             <table className="table">
               <thead>
                 <tr>
-                  <th>player (best run)</th>
-                  <th>kind</th>
-                  <th>outcome</th>
-                  <th className="num">levels</th>
-                  <th className="num">actions</th>
-                  <th className="num">vs optimal</th>
-                  <th className="num">resets</th>
-                  <th className="num">runs</th>
+                  <th>Player (best run)</th>
+                  <th>Kind</th>
+                  <th>Outcome</th>
+                  <th className="num">Levels</th>
+                  <th className="num">Actions</th>
+                  <th className="num">Vs optimal</th>
+                  <th className="num">Resets</th>
+                  <th className="num">Runs</th>
                 </tr>
               </thead>
               <tbody>

@@ -2,7 +2,8 @@ import * as Plot from '@observablehq/plot'
 import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button, Chip, Empty, Loading, Panel, Stat, Swatch, cx } from '@/design/primitives'
-import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
+import { PlotFigure, cssVar } from '@/lib/PlotFigure'
+import { playerColor } from '@/lib/modelColors'
 import { ModelCardDialog, cardLabel } from './ModelCardDialog'
 import { bestByCompletion, completionCompare } from './ranking'
 import type {
@@ -42,15 +43,8 @@ function fmtTokensCompact(v: number): string {
   return String(Math.round(v))
 }
 
-function seriesColorFor(row: LeaderboardRow, fallbackIdx: number): string {
-  if (row.kind === 'baseline') return cssVar('--text-3') || '#76756f'
-  if (row.kind === 'human') return cssVar('--text-1') || '#f3f2ee'
-  const palette = seriesColors()
-  const idx =
-    row.model_order != null && row.model_order < 900
-      ? Math.abs(row.model_order) % palette.length
-      : fallbackIdx % palette.length
-  return palette[idx] || cssVar('--accent')
+function seriesColorFor(row: LeaderboardRow, _fallbackIdx?: number): string {
+  return playerColor({ kind: row.kind, id: row.player_id })
 }
 
 function rowLabel(r: LeaderboardRow): string {
