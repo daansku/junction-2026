@@ -9,7 +9,7 @@
 - **SFT v2 trained (all three):** `games` val loss 2.62->0.23, `mix` 1.37->0.94, `ctrl` 1.51->1.10 (2.50M tokens each, token-matched). Served on A100 port 8002 as `arena-{games,mix,ctrl,sftv1}`.
 
 ## RL
-- **RL (grpo-1):** started Sat 19:48 on a Modal H100 (app `junction-grpo`, 4 h cap, ~$16) from SFT v2 `games` (A3 decision 19:35, before bench results). Data 4,290 prompts: 70% `game_turn` (h1 map turns) + 30% aux (blocked_moves, full_plan, rule_effect). 150 steps, checkpoint every 25 -> Modal volume `junction-grpo` `/runs/grpo-1/step-<k>`, pulled to `/root/ckpt/grpo-1/` on the A100 box (`posttrain/tools/modal_pull.sh`). Status: loading model; first step not yet logged.
+- **RL (grpo-1):** started Sat 19:48 on a Modal H100 (app `junction-grpo`, 4 h cap, ~$16) from SFT v2 `games` (A3 decision 19:35, before bench results). Data 4,290 prompts: 70% `game_turn` (h1 map turns) + 30% aux (blocked_moves, full_plan, rule_effect). 150 steps, checkpoint every 25 -> Modal volume `junction-grpo` `/runs/grpo-1/step-<k>`, pulled to `/root/ckpt/grpo-1/` on the A100 box (`posttrain/tools/modal_pull.sh`). Status 20:00: training, steps 1-2 clean (vLLM weight sync verified), ~85-120 s/step -> ~3.6-4 h; reward 0.39/0.27, game_turn 0.29/0.33, 25-38% of groups without signal, replies ~100 tokens (none truncated). Checkpoints expected step-25 ~20:45, step-50 ~21:25, step-75 ~22:05, step-100 ~22:45; the 4 h cap may end it before step 150.
 
 ## Timeline (Helsinki)
 | When | What | Who uses it |
