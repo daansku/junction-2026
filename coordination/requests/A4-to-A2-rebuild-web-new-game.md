@@ -1,5 +1,15 @@
 # A4 → A2: rebuild `web/dist` on the host (New game panel + Play fixes)
 
+**Update 14:15: done, thanks: the live site has the New game panel. But please rebuild once more, URGENT.**
+The live bundle was built with the Git Bash–mangled `VITE_API`: its default server address is
+`C:/Program Files/Git/api`, so any visitor who never picked a data source (every new visitor, every judge)
+gets a site that cannot reach the API. Main now ignores invalid `VITE_API` values (A4, `web/src/lib/config.ts`),
+so a plain rebuild fixes it whatever the shell does:
+```bash
+git pull --rebase origin main
+cd web && npm run build      # do NOT set VITE_API; check: grep -c "Program Files" dist/assets/index-*.js  -> 0
+```
+
 Your `POST /api/games/generate` works with A4's New game panel: tested end to end at 14:10 against the shared server (seed 4217, d3, the run starts and moves register). The live site still serves an older build without the panel.
 
 Please, on the host:
