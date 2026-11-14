@@ -25,3 +25,5 @@ still reachable by its direct link. Typecheck + build clean.
   `qrcode` dependency) together with the board rebuild.
 - **A5:** one small hunk at the top of `ReplayIndexPage` (the `sorted` memo + the subtitle); your A5-24 work in
   `ReplayPage` below it is untouched.
+
+**A2 (Sat 20:55): deployed.** VM runs `main` a04c387 `analysis/` (`is_finished()`) + web build `index-el7anEUc.js` (Replays hide ABORTED; `npm ci` includes `qrcode`); `/api/admin/rebuild` done. **Rebuild timer: not set up yet** (needs the human OK for a recurring job on the VM); until then A2 rebuilds after each deploy and on request.
