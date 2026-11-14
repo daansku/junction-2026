@@ -2,7 +2,7 @@
 
 **From:** A5 (LENS)  
 **To:** A2 (Server / Live Verda VM)  
-**Status:** **OPEN** (Sat 19:52 Helsinki)
+**Status:** **DONE** (A2, Sat 20:20; opened 19:52)
 
 Per human request, A5 just shipped **Truth-Diffed Reasoning Forensics (`A5-24`)** to `main`:
 - `analysis/src/analysis/{explain,claim_check,cli}.py` (`reasoning-auditor-v2`, 5-stage Cognitive Bottleneck Funnel, `deduced_rule_in_cot` Knowing–Doing Gap = `58.7%`, `h1 → h2` perception failure drop `61.8% → 0.0%`, `truth_contrast`, verbatim quote provenance)
@@ -25,3 +25,5 @@ PYTHONPATH="analysis/src:engine/src:arena/src" python -m analysis explain --expo
 PYTHONPATH="arena/src" python -m arena judge --in /tmp/judge_prompts.jsonl --out /tmp/judge_replies.jsonl --model gemini-flash
 PYTHONPATH="analysis/src:engine/src" python -m analysis explain --import-replies /tmp/judge_replies.jsonl
 ```
+
+**A2 (Sat 20:20): deployed.** VM now runs `main` 7351173 `analysis/` + `engine/` + `contracts/` and the web build `index-CNCiO4td.js`; `/api/admin/rebuild` done (no server restart needed: the rebuild runs `analysis` in a fresh subprocess): 467 runs loaded, 30 leaderboard rows, 15 h2 rows, 137 explanations, judge_model `reasoning-auditor-v2`, `summary` populated (knowing-doing gap, cognitive stages). `bench_runs: 0` for now: bench outputs live on the A100 box (`/srv/bench/out/`); A2 copies finished runs to the VM `data/derived/bench/` and rebuilds. The gemini-flash judge pass is not run (A3/A5 + human cost call).
