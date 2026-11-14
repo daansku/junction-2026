@@ -1,0 +1,19 @@
+# Overnight Sat 14.11 (A4, human request): real model traces on `dev` before the 11:00 eval-v1 freeze.
+# Purpose: shake out the harness on real models, get replays for the UI/deck, and a first gap estimate.
+# Uses only the keys on A4's machine (no Anthropic key yet). Results are dev-only and never mix
+# with the eval-v1 leaderboard (different collection). See coordination/OVERNIGHT.md.
+name: overnight-dev
+collection: dev
+games: all              # 10 games x 6 levels
+attempts: 3             # judges rerun 3 agent runs; spread matters
+concurrency: 6
+est_steps_per_game: 250
+models:
+  - {id: gemini-flash, effort: medium}
+  - {id: nemotron-3-5-super-vl}
+  - {id: verda-kimi-k3-1-pro}
+  - {id: featherless-open}
+  - {id: featherless-gpt-oss-120b}
+  - {id: featherless-qwen3-5-9b}
+baselines: [random, optimal, noop, stop_early]
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 1.00, max_wall_s: 2400}
