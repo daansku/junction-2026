@@ -156,6 +156,40 @@ def cmd_verify(a) -> int:
     return 1 if bad else 0
 
 
+def _fuzz_one(args: tuple[int, int]) -> str | None:
+    """None if ok, else an error string."""
+    from .core.rng import rng_for
+    seed, d = args
+    try:
+        g = make_game(GameSpec(seed=seed, difficulty=d))
+        errs = verify_game(g.to_dict())
+        if errs:
+            return f"seed {seed} d{d}: {'; '.join(errs)}"
+        rng = rng_for("fuzz-player", seed)
+        acts = [a.value for a in Action] + ["up", 3, 0]
+        g.reset()
+        for _ in range(400):
+            f = g.step(rng.choice(acts))
+            if len(f) != 64 or any(len(r) != 64 for r in f):
+                return f"seed {seed} d{d}: bad frame"
+        return None
+    except Exception as e:  # noqa: BLE001
+        return f"seed {seed} d{d}: {type(e).__name__}: {e}"
+
+
+def cmd_fuzz(a) -> int:
+    from concurrent.futures import ProcessPoolExecutor
+    jobs = [(a.seed_start + i, 1 + i % 3) for i in range(a.n)]
+    t0 = time.time()
+    with ProcessPoolExecutor(a.workers) as ex:
+        res = list(ex.map(_fuzz_one, jobs, chunksize=8))
+    bad = [r for r in res if r]
+    for r in bad[:50]:
+        print("FAIL", r)
+    print(f"fuzz: {len(jobs) - len(bad)}/{len(jobs)} ok in {time.time() - t0:.0f}s")
+    return 1 if bad else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m engine")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -178,6 +212,10 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(fn=cmd_render)
     p = sub.add_parser("verify", help="verify a collection"); p.add_argument("collection")
     p.set_defaults(fn=cmd_verify)
+    p = sub.add_parser("fuzz", help="generate+verify+random-play many seeds")
+    p.add_argument("--n", type=int, default=1000); p.add_argument("--seed-start", type=int, default=500000)
+    p.add_argument("--workers", type=int, default=8)
+    p.set_defaults(fn=cmd_fuzz)
     a = ap.parse_args(argv)
     return a.fn(a)
 

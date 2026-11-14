@@ -42,3 +42,17 @@ Level 1 = movement + goal. Levels 2..n-1 each introduce one new rule (teaching l
 - rows 6-63: play area, logical grid x integer cell size, centred
 - GAME_OVER: red dither over the floor; only `RESET` works
 - WIN (all levels): green frame with checker band; nothing works after
+
+## Collections
+| File | Games | Seeds | Status |
+|---|---|---|---|
+| `dev.json` | 10 x 6 levels, d1/d2/d3 | 1000-1009 | playtesting; regenerated whenever the engine changes |
+| `eval-v1.json` | 30 x 6 levels, 10 per difficulty | 900000-900029 | **DRAFT** until the 11:00 freeze (`"frozen": true` then) |
+| `train-v1.json` | >= 2,000 x 6 levels | 100000+ | fine-tune source; hold-outs removed |
+
+Hold-outs (`engine/src/engine/splits.py`): train never contains a level whose rule set includes one of
+`ice+teleporters`, `remap+twin`, `keys_doors+rotation`, `beacon_goal+collect_all`, `hazards+stamina`,
+`phase_walls+push_blocks`, and never a game whose player colour is maroon or brown. Every eval game entry
+has `holdout: {levels: [...], skin: bool}` so results can be split into seen vs unseen.
+
+Commands: `python -m engine verify <name>`, `python -m engine fuzz --n 1000 --workers 8`.
