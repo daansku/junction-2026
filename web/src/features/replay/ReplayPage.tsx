@@ -7,7 +7,7 @@ import { isTyping } from '@/lib/keys'
 import type { Frame, RunMeta, Step } from '@/lib/types'
 import { Button, Chip, Empty, ErrorState, Kbd, Loading, PageHeader, Panel, Stat, cx } from '@/design/primitives'
 import { fetchExplanations } from '@/features/play/epistemicApi'
-import { friendlyCause, friendlyRule, friendlyStageShort } from '@/features/insights/labels'
+import { conciseSummary, friendlyCause, friendlyRule, friendlyStageShort, truncateQuote } from '@/features/insights/labels'
 import { RuleSprite, XrayOverlay } from '@/features/play/XrayOverlay'
 import './replay.css'
 
@@ -646,23 +646,14 @@ export function ReplayPage() {
                       )}
                     </span>
                   </div>
-                  {activeExplanation.truth_contrast && (
-                    <div className="replay-truth-contrast">
-                      <span className="mono replay-truth-kicker">REALITY vs MODEL</span>{' '}
-                      {activeExplanation.truth_contrast}
-                    </div>
-                  )}
-                  {activeExplanation.explanation && (
-                    <p className="replay-exp-text">{activeExplanation.explanation}</p>
+                  {(activeExplanation.truth_contrast || activeExplanation.explanation) && (
+                    <p className="replay-exp-text">
+                      {conciseSummary(activeExplanation.truth_contrast || activeExplanation.explanation)}
+                    </p>
                   )}
                   {activeExplanation.evidence_quote && (
-                    <blockquote className="replay-exp-quote mono">
-                      {activeExplanation.quote_source && (
-                        <span className="muted">
-                          [{activeExplanation.quote_source === 'reasoning' ? (m?.harness_version === 'h2' ? 'CoT' : 'notes') : 'hyp'}]{' '}
-                        </span>
-                      )}
-                      “{activeExplanation.evidence_quote}”
+                    <blockquote className="replay-exp-quote mono" title={activeExplanation.evidence_quote}>
+                      “{truncateQuote(activeExplanation.evidence_quote, 130)}”
                     </blockquote>
                   )}
                 </div>

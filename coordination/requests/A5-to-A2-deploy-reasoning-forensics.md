@@ -33,9 +33,10 @@ PYTHONPATH="analysis/src:engine/src" python -m analysis explain --import-replies
   1. Immediate 3-card **Key Findings** strip + clean **Failure Overview · Where Models Break Down** (`1. Misread the Board` … `5. Reset Too Late` + `Failures by Model` table) right at the top.
   2. **Why Models Failed** step-by-step traces promoted immediately below the overview with plain-English labels, rule dropdown, and `Show 12 More`.
   3. Simplified supporting chart/section titles (`How Scores Drop as Levels Add More Rules`, `Most Common In-Game Mistakes`) and replaced the cluttered 20×18 `Rule × Player Discovery Matrix` with a compact `Hardest Game Rules for AI` table at the bottom.
-- **A2, please run on the Verda VM:**
+- **A2, please run on the Verda VM (`scripts/deploy_vm.sh --web` from `origin/main`):**
   ```bash
   git pull --ff-only origin main && npm --prefix web run build && curl -sS -X POST http://127.0.0.1:8000/api/admin/rebuild
   ```
+  *(Updated Sat 22:50 with second human readability pass trimming >65% of text on `/insights`.)*
 
 **A2 (Sat 22:50): deployed** `main` 205c0b0 `analysis/` + web `index-uVb9WRhp.js` (new `/insights`); `/api/admin/rebuild`: 678 runs, 35 h1 rows, 15 h2 rows, 231 explanations, 1 bench run (base). RL checkpoint benches get copied to `data/derived/bench/` as they finish.

@@ -2,63 +2,57 @@ export interface StageDisplayMeta {
   step: number
   title: string
   short: string
-  hint: string
 }
 
 export const STAGE_META: Record<string, StageDisplayMeta> = {
   perception: {
     step: 1,
-    title: 'Misread the Board',
-    short: 'Misread Board',
-    hint: 'Miscounted walls, player position, or goal coordinates',
+    title: 'Misread the board',
+    short: 'Misread board',
   },
   rule_induction: {
     step: 2,
-    title: 'Missed the New Rule',
-    short: 'Missed Rule',
-    hint: 'Never figured out what mechanic changed on this level',
+    title: 'Missed the new rule',
+    short: 'Missed rule',
   },
   belief_updating: {
     step: 3,
-    title: 'Stuck Repeating Moves',
-    short: 'Stuck Looping',
-    hint: 'Kept repeating blocked moves that changed nothing on screen',
+    title: 'Stuck repeating moves',
+    short: 'Stuck looping',
   },
   spatial_planning: {
     step: 4,
-    title: 'Knew the Rule, Failed the Plan',
-    short: 'Bad Plan',
-    hint: 'Wrote the right rule in reasoning, then misplanned the path',
+    title: 'Knew rule, bad plan',
+    short: 'Bad plan',
   },
   budget_management: {
     step: 5,
-    title: 'Reset Too Late',
-    short: 'Late Reset',
-    hint: 'Waited until too few moves remained to finish after restarting',
+    title: 'Reset too late',
+    short: 'Late reset',
   },
 }
 
 export const CAUSE_LABELS: Record<string, string> = {
-  coordinate_misread: 'Misread board coordinates',
-  unprobed_new_rule: 'Never tested the new rule',
-  false_rule_hypothesis: 'Locked onto a wrong rule guess',
-  ignored_falsifying_feedback: 'Ignored blocked moves (no change)',
-  knew_rule_failed_rollout: 'Knew the rule, misplanned the path',
-  hazard_collision: 'Walked into a hazard',
-  sunk_cost_late_reset: 'Reset too late to finish in budget',
+  coordinate_misread: 'Misread coordinates',
+  unprobed_new_rule: 'Never tested rule',
+  false_rule_hypothesis: 'Wrong rule guess',
+  ignored_falsifying_feedback: 'Ignored blocked moves',
+  knew_rule_failed_rollout: 'Knew rule, bad path',
+  hazard_collision: 'Hit a hazard',
+  sunk_cost_late_reset: 'Reset too late',
 }
 
 export const FAILURE_MODE_LABELS: Record<string, string> = {
-  no_effect_loop: 'Repeating moves that change nothing (wall bumps)',
-  zero_change_wall_bump: 'Repeating moves that change nothing (wall bumps)',
-  belief_mismatch: 'Wrong belief about the board state',
-  late_reset: 'Restarting too late to recover',
-  budget_exhaustion: 'Running out of allowed moves',
-  unsolved_level: 'Failing to reach the goal',
-  rule_blindness: 'Never triggering the new rule',
-  missed_new_rule: 'Missing the newly added rule',
-  premature_hypothesis: 'Locking onto an early wrong guess',
-  hazard_death: 'Stepping onto a hazard',
+  no_effect_loop: 'Wall-bump loops (no change)',
+  zero_change_wall_bump: 'Wall-bump loops (no change)',
+  belief_mismatch: 'Wrong board state belief',
+  late_reset: 'Reset too late',
+  budget_exhaustion: 'Ran out of moves',
+  unsolved_level: 'Did not reach goal',
+  rule_blindness: 'Never used new rule',
+  missed_new_rule: 'Missed new rule',
+  premature_hypothesis: 'Early wrong guess',
+  hazard_death: 'Hit a hazard',
 }
 
 export const RULE_LABELS: Record<string, string> = {
@@ -67,9 +61,9 @@ export const RULE_LABELS: Record<string, string> = {
   collect_all: 'Collect All',
   conveyors: 'Conveyors',
   cracked_floor: 'Cracked Floor',
-  enemies: 'Moving Enemies',
+  enemies: 'Enemies',
   goal: 'Basic Goal',
-  gravity: 'Gravity Pull',
+  gravity: 'Gravity',
   hazards: 'Hazards',
   ice: 'Sliding Ice',
   keys_doors: 'Keys & Doors',
@@ -81,7 +75,7 @@ export const RULE_LABELS: Record<string, string> = {
   push_blocks: 'Push Blocks',
   remap: 'Swapped Controls',
   rotation: 'Rotated Controls',
-  stamina: 'Stamina Limit',
+  stamina: 'Stamina',
   teleporters: 'Teleporters',
   twin: 'Twin Avatars',
 }
@@ -97,6 +91,7 @@ const PLAYER_NAMES: Record<string, string> = {
   'claude-haiku-5-5': 'Claude Haiku 5.5',
   'claude-opus-5-5': 'Claude Opus 5.5',
   'verda-nemotron-super-vl': 'Nemotron Super VL',
+  'nemotron-3-5-super-vl': 'Nemotron Super VL',
   'nemotron-super-vl': 'Nemotron Super VL',
   'featherless-deepseek-v3-2': 'DeepSeek V3.2',
   'deepseek-v3-2': 'DeepSeek V3.2',
@@ -142,4 +137,23 @@ export function friendlyPlayer(raw?: string | null): string {
   const [base, effort] = raw.includes(':') ? raw.split(':', 2) : [raw, null]
   const clean = PLAYER_NAMES[base] ?? base.replace(/^(verda|featherless|modal)-/, '')
   return effort ? `${clean} (${effort})` : clean
+}
+
+/** Strip backticks & raw snake_case rule names from auditor text and cap to one crisp sentence. */
+export function conciseSummary(raw?: string | null): string {
+  if (!raw) return ''
+  let s = raw.replace(/`([a-z0-9_]+)`/gi, (_, slug: string) => RULE_LABELS[slug] ?? slug.replace(/_/g, ' '))
+  s = s.replace(/\bin h1 notes\b/gi, 'in notes').replace(/\bin h2 CoT\b/gi, 'in thinking')
+  // Keep only the first sentence if multi-sentence
+  const dotIdx = s.indexOf('. ')
+  if (dotIdx > 25 && dotIdx < 165) {
+    s = s.slice(0, dotIdx + 1)
+  }
+  return s.length > 165 ? `${s.slice(0, 162).trimEnd()}…` : s
+}
+
+export function truncateQuote(raw?: string | null, max = 115): string {
+  if (!raw) return ''
+  const clean = raw.replace(/\s+/g, ' ').trim()
+  return clean.length > max ? `${clean.slice(0, max).trimEnd()}…` : clean
 }

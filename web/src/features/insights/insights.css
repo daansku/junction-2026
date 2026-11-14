@@ -4,73 +4,66 @@
   gap: var(--s4);
 }
 
-/* 1. Top 3 Headline Insight Cards (Immediate scannable takeaways) */
-.ins-hero-grid {
+/* 1. Compact 3-Number Stat Strip inside Failure Overview */
+.ins-stat-strip {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--s3);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-bottom: var(--s4);
 }
 
-@media (min-width: 960px) {
-  .ins-hero-grid {
+@media (min-width: 820px) {
+  .ins-stat-strip {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-.ins-hero-card {
+.ins-stat-btn {
+  appearance: none;
+  text-align: left;
+  cursor: pointer;
+  padding: var(--s3) var(--s4);
+  background: var(--surface-2);
+  border: 0;
+  color: var(--text-1);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: var(--s2);
-  padding: var(--s3) var(--s4);
+  gap: 3px;
+}
+
+.ins-stat-btn:hover {
   background: var(--surface-1);
-  border: 1px solid var(--line);
 }
 
-.ins-hero-card-accent {
-  border-left: 3px solid var(--accent);
+.ins-stat-btn-active {
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
-.ins-hero-kicker {
-  color: var(--text-3);
-}
-
-.ins-hero-stat {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--s2);
-  font-variant-numeric: tabular-nums;
-}
-
-.ins-hero-stat strong {
-  font-size: 28px;
+.ins-stat-num {
+  font-size: 26px;
   font-weight: 600;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
   color: var(--text-1);
 }
 
-.ins-hero-card-accent .ins-hero-stat strong {
+.ins-accent {
   color: var(--accent);
 }
 
-.ins-hero-stat span {
-  font-size: 12px;
-  color: var(--text-2);
-}
-
-.ins-hero-desc {
-  margin: 0;
+.ins-stat-title {
   font-size: 13.5px;
-  line-height: 1.48;
-  color: var(--text-2);
+  font-weight: 500;
+  color: var(--text-1);
 }
 
-.ins-hero-foot {
-  padding-top: 2px;
+.ins-stat-sub {
+  font-size: 11.5px;
 }
 
-/* 2. Failure Overview Split (5 Breakdown Bars + By-Model Table) */
+/* 2. Failure Overview Split (5 Bars + Compact Model Table) */
 .ins-forensic-split {
   display: grid;
   grid-template-columns: 1fr;
@@ -78,9 +71,9 @@
   align-items: start;
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 1024px) {
   .ins-forensic-split {
-    grid-template-columns: 1.05fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -97,8 +90,7 @@
   justify-content: space-between;
   align-items: center;
   gap: var(--s2);
-  flex-wrap: wrap;
-  font-size: 11px;
+  font-size: 11.5px;
 }
 
 .ins-inline-reset {
@@ -107,7 +99,7 @@
   border: 0;
   padding: 0;
   color: var(--accent);
-  font-size: 11px;
+  font-size: 11.5px;
   cursor: pointer;
 }
 
@@ -134,7 +126,7 @@
 .ins-funnel-list {
   display: flex;
   flex-direction: column;
-  gap: var(--s2);
+  gap: 6px;
 }
 
 .ins-funnel-row {
@@ -142,13 +134,13 @@
   width: 100%;
   text-align: left;
   cursor: pointer;
-  padding: var(--s2) var(--s3);
+  padding: 8px var(--s3);
   background: var(--surface-2);
   border: 1px solid var(--line);
   color: var(--text-1);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .ins-funnel-row:hover {
@@ -168,17 +160,9 @@
 }
 
 .ins-stage-title {
-  display: block;
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--text-1);
-}
-
-.ins-stage-hint {
-  display: block;
-  font-size: 12px;
-  color: var(--text-2);
-  margin-top: 1px;
 }
 
 .ins-stage-count {
@@ -190,20 +174,15 @@
 .ins-funnel-bars {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .ins-funnel-bar-line {
   display: grid;
-  grid-template-columns: 22px 1fr 34px;
+  grid-template-columns: 20px 1fr 34px;
   align-items: center;
   gap: var(--s2);
   font-size: 10.5px;
-}
-
-.ins-forensic-table-wrap {
-  max-height: 360px;
-  overflow-y: auto;
 }
 
 .ins-forensic-table td,
@@ -225,13 +204,7 @@
   box-shadow: inset 2px 0 0 var(--accent);
 }
 
-/* 3. Why Models Failed — Filter Bar & Cards */
-.ins-ledger-head-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s2);
-}
-
+/* 3. Why Models Failed — Clean Filter Bar & Low-Density Cards */
 .ins-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -239,21 +212,12 @@
   justify-content: space-between;
   gap: var(--s2);
   margin-bottom: var(--s3);
-  padding-bottom: var(--s2);
-  border-bottom: 1px solid var(--line);
 }
 
 .ins-metric-pills {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s1);
-}
-
-.ins-rule-select-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
 }
 
 .ins-rule-select {
@@ -278,12 +242,10 @@
   gap: 6px;
 }
 
-.ins-rule-tag {
-  padding: 0 5px;
-  background: var(--surface-1);
-  border: 1px solid var(--line);
-  font-size: 11px;
-  color: var(--text-2);
+.ins-card-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .ins-exp-grid {
@@ -292,7 +254,7 @@
   gap: var(--s3);
 }
 
-@media (min-width: 980px) {
+@media (min-width: 960px) {
   .ins-exp-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -301,11 +263,11 @@
 .ins-exp-card {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: var(--s2);
-  padding: var(--s3);
+  padding: var(--s3) var(--s4);
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-left: 2px solid var(--bad);
 }
 
 .ins-exp-card-head {
@@ -330,71 +292,36 @@
   color: var(--accent);
 }
 
-.ins-exp-submeta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 11.5px;
-}
-
 .ins-kd-badge {
   padding: 1px 6px;
   border: 1px solid var(--accent);
   color: var(--accent);
-  background: #080809;
-  font-size: 10.5px;
-  font-weight: 500;
-}
-
-.ins-truth-contrast {
-  padding: 6px var(--s2);
   background: var(--surface-1);
-  border: 1px solid var(--line);
-  border-left: 2px solid var(--accent);
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--text-1);
-}
-
-.ins-truth-kicker {
-  display: inline-block;
-  margin-right: 6px;
-  padding: 0 5px;
-  background: var(--accent);
-  color: #0e0e0f;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 10.5px;
 }
 
 .ins-exp-card-text {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.48;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.5;
   color: var(--text-1);
 }
 
 .ins-exp-card-quote {
   margin: 0;
-  padding: 5px var(--s2);
+  max-width: 62ch;
+  padding: 4px var(--s2);
   border-left: 2px solid var(--line-strong);
-  background: var(--surface-1);
   font-size: 11.5px;
-  line-height: 1.42;
+  line-height: 1.45;
   color: var(--text-2);
-}
-
-.ins-quote-kicker {
-  color: var(--text-3);
-  margin-right: 4px;
 }
 
 .ins-exp-card-foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--s2);
-  flex-wrap: wrap;
   padding-top: 2px;
 }
 
@@ -404,7 +331,7 @@
   padding-top: var(--s3);
 }
 
-/* 4. Supporting Charts & Mistakes */
+/* 4. Supporting Charts & Common Mistakes */
 .ins-two-col {
   display: grid;
   grid-template-columns: 1fr;
@@ -426,10 +353,10 @@
 .ins-failure-block {
   border: 1px solid var(--line);
   background: var(--surface-2);
-  padding: var(--s2) var(--s3);
+  padding: 8px var(--s3);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .ins-failure-head {
@@ -450,48 +377,17 @@
   height: 100%;
 }
 
-/* 5. Chips, Links & Findings */
-.ins-findings-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--s3);
-}
-
-@media (min-width: 1024px) {
-  .ins-findings-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.ins-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s2);
-}
-
-.ins-summary {
-  color: var(--text-2);
-  line-height: 1.45;
-  margin: 0;
-}
-
 .ins-evidence-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.ins-evidence-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .ins-evidence-chip,
 .ins-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   padding: 3px 8px;
   background: var(--surface-1);
   border: 1px solid var(--line);
@@ -514,11 +410,12 @@
 .ins-takeover-pill {
   display: inline-flex;
   align-items: center;
-  padding: 3px 7px;
-  background: #080809;
+  padding: 3px 8px;
+  background: var(--surface-1);
   border: 1px solid var(--accent);
+  border-radius: var(--radius);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 11.5px;
   text-decoration: none;
 }
 
@@ -527,7 +424,7 @@
   color: #0e0e0f;
 }
 
-/* 6. Compact Rule Solve-Rate Bar */
+/* 5. Compact Rule Solve-Rate Bar */
 .ins-inline-rate {
   display: inline-flex;
   flex-direction: column;
