@@ -70,6 +70,7 @@ Alternative if the copy is awkward: A5 runs `python -m analysis sync` against th
 - Anthropic and Gemini models: no Anthropic key; `gemini-flash` has no `api_model` yet (A3: pick from the live list, e.g. `models/gemini-flash-latest`, with its price from the docs).
 
 ## Log
+- 04:13 Check: 10 runs active (Kimi 3, Nemotron 3, DeepSeek 2, gpt-oss 2), all stepped within the last 30 s, 0 invalid/errored steps, runner log empty. 24/24 baselines done (oracle 4 WIN). Pace after 15 min: gpt-oss ~9 s/action, DeepSeek and Nemotron ~16–30 s, Kimi ~27 s. Kimi is the bottleneck: 8 runs × ~68 min / 3 slots, so expected finish **~07:30**.
 - 04:00 Sweep restarted with pool 40: with pool 10, the Kimi/Nemotron tasks waiting on their per-model limit held every slot, so Featherless and baselines never started. 3 Kimi + 2 Nemotron runs from the first start are left `IN_PROGRESS`/abandoned on :8100: ignore them.
 - 03:55 Sweep started.
 - 03:53 Smoke stopped after enough data. Overnight server up on :8100 (engine 0.5.0).
