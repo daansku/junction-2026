@@ -1,0 +1,42 @@
+.cmp-levels { display: flex; gap: 2px; flex-wrap: wrap; margin-bottom: var(--s2); }
+.cmp-level-tab {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  height: 28px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  color: var(--text-2);
+  cursor: pointer;
+}
+.cmp-level-tab:hover { color: var(--text-1); }
+.cmp-level-tab.active { color: var(--text-1); border-color: var(--accent); }
+.cmp-tab-rule { font-size: 11px; color: var(--accent); }
+.cmp-levelinfo { font-size: 12px; margin-bottom: var(--s4); }
+
+.cmp-controls { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s3); max-width: 900px; }
+.cmp-controls input[type='range'] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.cmp-keys { font-size: 12px; white-space: nowrap; }
+
+.cmp-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+@media (max-width: 900px) {
+  .cmp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .cmp-grid { grid-template-columns: 1fr; }
+}
+.cmp-cell .panel-body { display: flex; flex-direction: column; gap: var(--s2); align-items: center; }
+.cmp-status { display: flex; gap: var(--s3); align-items: center; font-size: 12px; width: 100%; }
+.cmp-chip { margin-left: auto; }
+.cmp-never { padding: var(--s6) 0; }
+.cmp-summary { margin-bottom: var(--s4); }
+.cmp-hyps { font-size: 11px; color: var(--text-2); white-space: normal; max-width: 520px; }
+.cmp-hyps div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-picker { max-height: 320px; overflow: auto; }
+.log-reset { color: var(--warn); }

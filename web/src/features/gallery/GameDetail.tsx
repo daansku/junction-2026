@@ -101,6 +101,7 @@ export function GameDetail({ gameId }: { gameId: string }) {
                 optimal path
               </Button>
             )}
+            <Link to={`/compare?game=${encodeURIComponent(g.game_id)}`}>Compare runs</Link>
             <Link to={`/play/${encodeURIComponent(g.game_id)}`}>
               <Button variant="primary">Play this game</Button>
             </Link>
@@ -112,7 +113,11 @@ export function GameDetail({ gameId }: { gameId: string }) {
         {g.levels.map((l) => (
           <Panel
             key={l.level}
-            label={`level ${l.level}`}
+            label={
+              <Link to={`/compare?game=${encodeURIComponent(g.game_id)}&level=${l.level}`} title="Compare runs on this level">
+                level {l.level}
+              </Link>
+            }
             actions={l.new_rule ? <span className="new-rule mono">+ {l.new_rule}</span> : null}
             className="level-card"
           >

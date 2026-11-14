@@ -4,6 +4,8 @@ import { Layout } from './Layout'
 import { PlayPage } from '@/features/play/PlayPage'
 import { GalleryPage } from '@/features/gallery/GalleryPage'
 import { ReplayPage, ReplayIndexPage } from '@/features/replay/ReplayPage'
+import { LiveWall } from '@/features/replay/LiveWall'
+import { ComparePage } from '@/features/compare/ComparePage'
 import { LeaderboardPage } from '@/features/leaderboard/LeaderboardPage'
 import { InsightsPage } from '@/features/insights/InsightsPage'
 import { NotFound } from './NotFound'
@@ -23,6 +25,8 @@ const router = createBrowserRouter([
       { path: 'gallery/:gameId', element: <GalleryPage /> },
       { path: 'replay', element: <ReplayIndexPage /> },
       { path: 'replay/:run', element: <ReplayPage /> },
+      { path: 'live', element: <LiveWall /> },
+      { path: 'compare', element: <ComparePage /> },
       { path: 'leaderboard', element: <LeaderboardPage /> },
       { path: 'insights', element: <InsightsPage /> },
       { path: '*', element: <NotFound /> },
