@@ -37,6 +37,9 @@ const LABEL: Record<string, string> = {
   ACTION5: '␣',
 }
 
+/** Minimum time between two moves, on top of waiting for the previous move's frame. */
+const MOVE_COOLDOWN_MS = 120
+
 function loadName() {
   try {
     return localStorage.getItem('playerName') ?? ''
@@ -91,7 +94,11 @@ export function PlayPage() {
   const [showTruth, setShowTruth] = useState(false)
   const [truth, setTruth] = useState<Truth | null>(null)
   const [finished, setFinished] = useState<Truth | null>(null)
-  const queue = useRef<Promise<unknown>>(Promise.resolve())
+  // One move at a time: key presses while a move is in flight, or within the cooldown, are dropped,
+  // not queued. Queued presses made a laggy server replay a burst of spammed moves (playtest feedback).
+  const moveBusy = useRef(false)
+  const lastMoveAt = useRef(0)
+  const truthSeq = useRef(0)
   const sessionRef = useRef<Session | null>(null)
   sessionRef.current = session
 
@@ -110,6 +117,7 @@ export function PlayPage() {
     }
     setNameMissing(false)
     blurActive()
+    moveBusy.current = false
     setError(null)
     endCurrent('restarted')
     try {
@@ -149,26 +157,38 @@ export function PlayPage() {
     (action: ActionName) => {
       const s = sessionRef.current
       if (!s || finished) return
-      queue.current = queue.current.then(async () => {
-        if (sessionRef.current?.id !== s.id) return
+      const now = performance.now()
+      if (moveBusy.current || now - lastMoveAt.current < MOVE_COOLDOWN_MS) return
+      moveBusy.current = true
+      lastMoveAt.current = now
+      ;(async () => {
         try {
           const res = await api.act(s.id, { action })
+          if (sessionRef.current?.id !== s.id) return
           setFrame(res.frame)
           setAvailable(res.available_actions)
           setLog((l) => [...l, action])
           // Truth is fetched for the end-of-game summary and the optional debug panel;
-          // the player only ever sees the frame while playing.
-          const t = await api.truth(s.id)
-          setTruth(t)
-          if (t.state === 'WIN') {
-            setFinished(t)
-            api.endSession(s.id, 'won').catch(() => {})
-            sessionRef.current = null
-          }
+          // the player only ever sees the frame while playing. Not awaited, so it never slows the next move.
+          const seq = ++truthSeq.current
+          api
+            .truth(s.id)
+            .then((t) => {
+              if (seq !== truthSeq.current && t.state !== 'WIN') return
+              setTruth(t)
+              if (t.state === 'WIN' && sessionRef.current?.id === s.id) {
+                setFinished(t)
+                api.endSession(s.id, 'won').catch(() => {})
+                sessionRef.current = null
+              }
+            })
+            .catch((e) => setError(e))
         } catch (e) {
           setError(e)
+        } finally {
+          if (sessionRef.current?.id === s.id || !sessionRef.current) moveBusy.current = false
         }
-      })
+      })()
     },
     [finished],
   )
