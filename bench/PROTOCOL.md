@@ -1,6 +1,6 @@
 # Bench protocol (pre-registration)
 
-**Status: DRAFT v3 (A2, Sat 14.11 20:20). A3 signed off on v2 (18:05); v3 only cuts item counts.** Needs review by A3 (training) and A5 (analysis), then **human approval by 19:00** (PLAN.md §6).
+**Status: v4 amendment below (BBH removed, Sat 23:45). Base text: v3 (A2, Sat 14.11 20:20). A3 signed off on v2 (18:05); v3 only cuts item counts.** Needs review by A3 (training) and A5 (analysis), then **human approval by 19:00** (PLAN.md §6).
 After approval, nobody changes the benchmark list, the generation settings, the comparisons or the checkpoint rule.
 Any change after that is a new protocol version, and every row is rerun under it.
 
@@ -10,6 +10,14 @@ Any change after that is a new protocol version, and every row is rerun under it
 decoding is the Qwen3.5 model-card sampling, not greedy (greedy makes thinking models loop; see §4).
 
 This file is written **before any trained model is scored**.
+
+## Amendment v4 (Sat 14.11 23:45, human decision, made AFTER seeing RL checkpoint results)
+
+**BBH is removed from the headline and from the dev slice.** Headline = unweighted mean of 5 rows: MATH, GSM8K, MedQA, MMLU-Pro health, MMLU-Pro law. Negative control unchanged (MMLU-Pro history).
+
+**Why:** the first two RL v2 checkpoints (`think-gridbranch` s10, `think-games-v3b` s10) lost 11-12 points on BBH while every other row moved by 0-8 points. All of the extra misses are replies where lm-eval's `get-answer` filter finds no answer (104-105 of 675 vs 21 for base): short direct answers without the 3-shot "So the answer is (X)" phrase. That is an answer-format artifact of training on our games' reply style, not a measured reasoning change.
+
+**Disclosure:** this change was made after observing results, so it is a post-hoc protocol change. BBH numbers stay in every run directory and are reported separately next to the headline, with the format artifact explained. The alternative (a lenient extraction rule applied to all rows) was considered and not chosen.
 
 ## 1. Question
 

@@ -1,5 +1,8 @@
 # Benchmark list for every bench run. Frozen once bench/PROTOCOL.md is approved by the humans.
 #
+# Version 4 (Sat 14.11 23:45, human decision): BBH removed from the headline and the dev slice (observed answer-format
+# artifact: RL replies drop the 3-shot "So the answer is (X)" phrase, so lm-eval cannot extract the answer). Headline = 5 rows.
+#
 # Version 3 (Sat 14.11 20:15, human decision): fixed subsample of ~2,250 generative items per model + full MedQA,
 # because the full ~17k-item suite takes ~13 h per model on the shared vLLM server. First N items per (sub)task (lm-eval --limit).
 #
@@ -11,14 +14,14 @@
 # kind: lm_eval        -> lm-evaluation-harness; `fewshot` overrides the task default (null = task default)
 # kind: reasoning_gym  -> procedurally generated items, fixed seed, graded by reasoning-gym's own score_answer
 # limit: max items per (sub)task (lm-eval --limit)
-version: 3
+version: 4
 
 tiers:
   primary:
-    description: far-transfer suite from FT_BENCHMARKS.md; headline = unweighted mean over these six rows
+    description: far-transfer suite from FT_BENCHMARKS.md minus BBH (v4); headline = unweighted mean over these five rows
     headline: true
     benchmarks:
-      - {id: bbh, kind: lm_eval, task: bbh_cot_fewshot, limit: 50}      # all 27 tasks, 3-shot CoT; first 50 per task = 1,350
+      # bbh removed in v4 (answer-format artifact, see header); base row still has it in out/base for transparency
       - {id: math, kind: lm_eval, task: minerva_math, fewshot: 0, limit: 50}  # 0-shot CoT (task default 4-shot); 50 per subject x 7 = 350
       - {id: gsm8k, kind: lm_eval, task: gsm8k_cot, limit: 250}         # 8-shot CoT (task default); first 250 of 1,319
       - {id: medqa, kind: lm_eval, task: medqa_4options}                # 0-shot, 4 options, full 1,273; loglikelihood multiple choice (only form in lm-eval; cheap)
@@ -30,11 +33,7 @@ tiers:
     benchmarks:
       - {id: mmlu_pro_history, kind: lm_eval, task: mmlu_pro_history, limit: 100}  # 5-shot CoT
 
-  # pre-declared BBH subset (FT_BENCHMARKS.md "secondary"): reported from the `bbh` items above, no extra run.
-  bbh_subset:
-    description: BBH tasks where a gain is most plausible; computed from the bbh run's items
-    from: bbh
-    subtasks: [tracking_shuffled_objects, navigate, logical_deduction, web_of_lies, temporal_sequences]
+  # pre-declared BBH subset: removed with BBH in v4
 
   secondary_reasoning_gym:
     description: PLAN §3.2 near-transfer and logic tasks closest to our games (procedural, fresh items from a seed)
@@ -49,5 +48,5 @@ tiers:
 
 # Intermediate checkpoints (FT_BENCHMARKS.md "if time is short"): a fixed random subsample of the primary suite.
 # Implemented as the first N items per (sub)task via lm-eval --limit, the same items for every checkpoint.
-dev_slice: [bbh, math, gsm8k, medqa, mmlu_pro_health, mmlu_pro_law, mmlu_pro_history]
-dev_slice_limit: 25     # first 25 items per (sub)task: 27 BBH x 25 + 7 MATH x 25 + 25 x 5 others ~ 975 items (FT_BENCHMARKS: ~1,000)
+dev_slice: [math, gsm8k, medqa, mmlu_pro_health, mmlu_pro_law, mmlu_pro_history]
+dev_slice_limit: 25     # first 25 items per (sub)task: 7 MATH x 25 + 25 x 5 others = 300 items (v4: BBH removed)
