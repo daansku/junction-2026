@@ -1,0 +1,13 @@
+# Gemini 4 Argon on the first 10 eval-v1 games x 1 (4 d1, 3 d2, 3 d3): the same subset as Kimi K3.1 and
+# DeepSeek V3.2, and it contains the Opus d3 game. Follows probe-gemini4 (Sat 16:38): Argon won eval-v1
+# game 1 6/6 in 97 actions (optimal 86, $0.62), so we test whether the gap holds on harder games.
+# NOT RUN: dry-run est $36 (over the $20 cap); human chose eval-v2 instead (main-subset-argon-v2.yaml).
+name: main-subset-argon
+collection: eval-v1
+games: {first: 10}
+attempts: 1
+concurrency: 3
+est_steps_per_game: 250
+models:
+  - {id: gemini-4-argon, effort: medium, max_concurrency: 3}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 12.00, max_wall_s: 10800}
