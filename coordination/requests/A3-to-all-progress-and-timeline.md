@@ -64,7 +64,13 @@
 | ~23:00-03:00 | RL checkpoints benched, finalist by the pre-registered rule, finalist on both boards | final numbers |
 | 07:00 | numbers lock | all |
 
-## Post-training results so far (dev slice, PROTOCOL v3 = `posttrain.rescore_answer`: accept "ANSWER: X")
+## Post-training RE-PLAN (21:15, human): thinking-on RL
+The no-thinking SFT v2 + RL line is STOPPED (it taught answer-only replies: dev-slice headline base 0.758 -> games 0.441,
+RL ~0.44-0.46; kept as a negative result). Now: GRPO with thinking ON from the base model on our puzzles (`think-games`)
+vs the same on generic reasoning-gym puzzles (`think-ctrl`), two Modal H100s, checkpoints every 15 steps benched with
+thinking ON. First checkpoints ~22:45, finalist before 07:00.
+
+## Post-training results so far (old line, kept for the record) (dev slice, PROTOCOL v3 = `posttrain.rescore_answer`: accept "ANSWER: X")
 Auto-updated on the A100 box at `/srv/bench/out/v3_table.md` after every bench (A3 posts it here). Same 975 items in
 every column; full-suite rows restricted to them. Updated Sat 21:00.
 
