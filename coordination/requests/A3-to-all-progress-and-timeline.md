@@ -22,7 +22,7 @@
 | ~23:30 | h1 Kimi subset (10 games) | A5 |
 | ~01:00 | eval-v2 Gemini Flash (all 30, uncapped), eval-v2 Kimi (30, now 12 in parallel), untuned-Qwen game eval (H100) | A5 leaderboard, fine-tune result |
 | ~01:30 | h1 main sweep (Gemini Flash 30x3 + baselines; now 40 in parallel) | A5 leaderboard |
-| ~22:30 | SFT v2 games/mix/ctrl + SFT v1 on the FT_BENCHMARKS suite (A3 runs A2's bench since 19:50, all 4 in parallel; base bench by A2 running) | transfer claim |
+| ~00:30 | SFT v2 games/mix/ctrl on the FT_BENCHMARKS suite (restarted 20:15: the multi-LoRA vLLM server crashed at 19:50 on a vLLM 0.33 bug with loglikelihood requests; now merged models, one plain server each on A100 GPU 0); SFT v1 after; base bench (A2's run) continuing | transfer claim |
 | ~23:00-03:00 | RL checkpoints benched, finalist by the pre-registered rule, finalist on both boards | final numbers |
 | 07:00 | numbers lock | all |
 
