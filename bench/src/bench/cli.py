@@ -79,6 +79,7 @@ def main(argv=None) -> int:
     r.add_argument("--served-name", help="model name on that server (with --api)")
     r.add_argument("--tokenizer", help="HF id or dir of the tokenizer (with --api; loglikelihood tasks need it)")
     r.add_argument("--concurrency", type=int, default=48, help="parallel requests to the server (with --api)")
+    r.add_argument("--gpu-mem", type=float, help="in-process vLLM memory share, overrides generation.yaml (results unchanged)")
     r.add_argument("--lora", help="LoRA adapter dir on top of --model")
     r.add_argument("--out", required=True)
     r.add_argument("--name")

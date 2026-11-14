@@ -79,6 +79,12 @@ def _gen_kwargs(g: dict) -> dict:
             "max_gen_toks": g["max_gen_toks"]}
 
 
+def _gpu_mem(a, g: dict) -> float:
+    """vLLM memory share: --gpu-mem overrides the config (e.g. 0.25 to bench next to a training run on one GPU).
+    It changes only memory/batching, not sampling or results, so it is not part of the config hash."""
+    return float(getattr(a, "gpu_mem", None) or g["vllm"]["gpu_memory_utilization"])
+
+
 def _model_spec(a, g: dict, mc: bool) -> tuple[str, dict]:
     """lm-eval --model and --model_args for in-process vLLM or an OpenAI-compatible server."""
     if a.api:
@@ -90,7 +96,7 @@ def _model_spec(a, g: dict, mc: bool) -> tuple[str, dict]:
         return "bench-chat-completions", {"model": a.served_name, "base_url": f"{base}/chat/completions",
                                           "num_concurrent": a.concurrency, "max_retries": 5, "timeout": 1800,
                                           "tokenized_requests": False, "think_end_token": g["think_end_token"]}
-    margs = {"pretrained": a.model, "dtype": g["vllm"]["dtype"], "gpu_memory_utilization": g["vllm"]["gpu_memory_utilization"],
+    margs = {"pretrained": a.model, "dtype": g["vllm"]["dtype"], "gpu_memory_utilization": _gpu_mem(a, g),
              "max_model_len": g["max_model_len"], "seed": g["seed"], "think_end_token": g["think_end_token"],
              "language_model_only": g["vllm"]["language_model_only"]}
     if a.lora:
@@ -183,7 +189,7 @@ def parse_lm_eval_samples(raw: Path, b: dict) -> list[dict]:
 def _rg_generate_inprocess(a, g: dict, convs: list[list[dict]]) -> list[tuple[str, bool, int]]:
     from vllm import LLM, SamplingParams
     s = g["sampling"]
-    llm_kw = dict(model=a.model, dtype=g["vllm"]["dtype"], gpu_memory_utilization=g["vllm"]["gpu_memory_utilization"],
+    llm_kw = dict(model=a.model, dtype=g["vllm"]["dtype"], gpu_memory_utilization=_gpu_mem(a, g),
                   max_model_len=g["max_model_len"], seed=g["seed"], language_model_only=g["vllm"]["language_model_only"])
     if a.lora:
         llm_kw.update(enable_lora=True, max_lora_rank=64)
