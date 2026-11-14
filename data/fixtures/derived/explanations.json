@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-11-14T12:37:34Z",
+  "judge_model": "trace-auditor-v1",
+  "explanations": [
+    {
+      "run_id": "fixture-run-0001",
+      "game_id": "gridworld-s2-d2-l6-f978fc99",
+      "player_id": "mock-model:medium",
+      "level": 3,
+      "step": 30,
+      "rule": "walls",
+      "verdict": "ran_out_of_budget",
+      "explanation": "Run ended at step 30 on Level 3 after 3 moves (budget 38, outcome `BUDGET`) while navigating `walls`. Optimal play finishes in 19 moves (\u2191\u2192\u2192\u2193\u2192\u2192\u2192\u2191\u2191\u2191 \u2026): navigate around solid wall cells instead of repeating blocked moves.",
+      "evidence_quote": "reach the green square to finish the level; yellow bar = moves left",
+      "judge_model": "trace-auditor-v1"
+    }
+  ]
+}

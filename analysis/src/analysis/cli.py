@@ -1,4 +1,4 @@
-"""CLI entry point: python -m analysis <sync|aggregate|rules|insights|build|check-claims>."""
+"""CLI entry point: python -m analysis <sync|aggregate|rules|insights|explain|build|check-claims>."""
 from __future__ import annotations
 
 import argparse
@@ -10,6 +10,7 @@ from typing import Any
 
 from .aggregate import aggregate_runs
 from .claim_check import check_claims, validate_against_schema
+from .explain import build_explanations, build_failure_packets, estimate_judge_cost
 from .insights import generate_auto_proposals, synthesize_insights
 from .loader import default_data_dir, find_repo_root, load_collections, load_models, load_runs
 from .rule_discovery import analyze_rules
@@ -165,15 +166,35 @@ def build_all(
     leaderboard = aggregate_runs(runs, models_registry=models, game_descs=games)
     rules_data = analyze_rules(runs, models_registry=models, game_descs=games)
     insights = synthesize_insights(leaderboard, rules_data, runs=runs)
+    explanations = build_explanations(runs, game_descs=games, repo_root=root)
+
+    # Preserve any prior LLM-judge entries on incremental rebuilds so `analysis build` never clobbers A3's judge run
+    existing_exp_path = out_dir / "explanations.json"
+    if existing_exp_path.exists():
+        try:
+            prev_exp = json.loads(existing_exp_path.read_text(encoding="utf-8"))
+            llm_by_key = {
+                (e.get("run_id"), e.get("level")): e
+                for e in (prev_exp.get("explanations") or [])
+                if e.get("judge_model") and e.get("judge_model") != "trace-auditor-v1"
+            }
+            if llm_by_key:
+                merged = [llm_by_key.get((e["run_id"], e["level"]), e) for e in explanations["explanations"]]
+                models_used = sorted({str(e.get("judge_model") or "trace-auditor-v1") for e in merged})
+                explanations["explanations"] = merged
+                explanations["judge_model"] = ", ".join(models_used)
+        except Exception:
+            pass
 
     schema_path = root / "contracts" / "derived.schema.json"
-    for payload in (leaderboard, rules_data, insights):
+    for payload in (leaderboard, rules_data, insights, explanations):
         validate_against_schema(payload, schema_path)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "leaderboard.json").write_text(json.dumps(leaderboard, indent=2) + "\n", encoding="utf-8")
     (out_dir / "rules.json").write_text(json.dumps(rules_data, indent=2) + "\n", encoding="utf-8")
     (out_dir / "insights.json").write_text(json.dumps(insights, indent=2) + "\n", encoding="utf-8")
+    (out_dir / "explanations.json").write_text(json.dumps(explanations, indent=2) + "\n", encoding="utf-8")
 
     proposals_written: list[str] = []
     if write_proposals:
@@ -186,6 +207,7 @@ def build_all(
         "leaderboard_rows": len(leaderboard["rows"]),
         "rule_cells": len(rules_data["cells"]),
         "insights": len(insights["insights"]),
+        "explanations": len(explanations["explanations"]),
         "proposals_written": proposals_written,
     }
 
@@ -218,7 +240,13 @@ def main(argv: list[str] | None = None) -> int:
     _add_common_io_args(p_ins)
     p_ins.add_argument("--write-proposals", action="store_true", help="Write rules/proposals/auto-*.md")
 
-    p_build = sub.add_parser("build", help="Build leaderboard.json, rules.json, and insights.json")
+    p_exp = sub.add_parser("explain", help="Build explanations.json (or estimate judge-LLM cost)")
+    _add_common_io_args(p_exp)
+    p_exp.add_argument("--estimate", action="store_true", help="Print judge token & USD cost estimate and exit")
+    p_exp.add_argument("--judge-cmd", help="Shell command accepting JSON {system, prompt, max_tokens} on stdin")
+    p_exp.add_argument("--judge-arena", action="store_true", help="Use arena.judge.complete if available")
+
+    p_build = sub.add_parser("build", help="Build leaderboard.json, rules.json, insights.json, and explanations.json")
     _add_common_io_args(p_build)
     p_build.add_argument("--write-proposals", action="store_true", help="Write rules/proposals/auto-*.md")
 
@@ -288,6 +316,32 @@ def main(argv: list[str] | None = None) -> int:
         if args.write_proposals:
             written = [str(p) for p in generate_auto_proposals(rd, lb, root / "rules" / "proposals")]
         print(json.dumps({"insights": len(ins["insights"]), "proposals": written, "out": str(out_dir / "insights.json")}, indent=2))
+        return 0
+
+    if args.cmd == "explain":
+        packets = build_failure_packets(runs, game_descs=games, repo_root=root)
+        est = estimate_judge_cost(packets)
+        if args.estimate:
+            print(json.dumps(est, indent=2))
+            return 0
+        judge_fn = None
+        if args.judge_arena:
+            arena_src = root / "arena" / "src"
+            if arena_src.exists() and str(arena_src) not in sys.path:
+                sys.path.insert(0, str(arena_src))
+            from arena import judge as _arena_judge  # type: ignore
+
+            judge_fn = lambda pkt: _arena_judge.complete(prompt=pkt, system=None)  # noqa: E731
+        exp = build_explanations(
+            runs,
+            game_descs=games,
+            repo_root=root,
+            judge_fn=judge_fn,
+            judge_cmd=args.judge_cmd,
+        )
+        validate_against_schema(exp, root / "contracts" / "derived.schema.json")
+        (out_dir / "explanations.json").write_text(json.dumps(exp, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({**est, "written": len(exp["explanations"]), "judge_model": exp["judge_model"], "out": str(out_dir / "explanations.json")}, indent=2))
         return 0
 
     return 1

@@ -8,7 +8,7 @@ Exact mathematical definitions for every derived table in `data/derived/` and `d
 
 ### Benchmark Run Hygiene (`filter_benchmark_runs`)
 Before aggregation, `load_runs(..., clean=True)` removes non-benchmark noise from shared server exports (`PLAN.md §3.2`, `coordination/OVERNIGHT.md`):
-1. **Unlabelled practice humans:** `player.kind == "human"` with `name/id` in `{"anonymous", "test"}` (intentional labelled human baseline runs use `--player human:<label>`).
+1. **Unlabelled practice humans & mid-run take-overs:** `player.kind == "human"` with `name/id` in `{"anonymous", "test"}` (intentional labelled human baseline runs use `--player human:<label>`), plus any session with `meta.start_level` or `meta.takeover_of` set (`COORDINATION.md` §3: `[ TAKE OVER FROM STEP N ]` sessions jump straight into level $L$ and are never counted in baselines).
 2. **Smoke checks:** `player.id` starting with `"smoke-"`.
 3. **Infrastructure / timeout aborts:** runs with `end_reason == "idle_timeout"`, or `player.kind == "model"` with `outcome == "ABORTED"` (provider disconnects, 530 tunnel drops, or interrupted batch pools), while preserving intentional reward-integrity baselines (`noop`, `stop_early`, `random`) whose `outcome` may be `"ABORTED"`.
 4. **Superseded collection game IDs:** runs tagged with a collection (`dev`, `eval-v1`, `smoke`, `showcase`) whose `game_id` is no longer in the active `data/collections/<collection>.json` (e.g., `engine 0.2.0` game hashes replaced when `dev.json` upgraded to `engine 0.5.0`).
@@ -105,3 +105,26 @@ For each `(rule, player_id, effort)` across all level segments where `prev_truth
   4. `belief_mismatch` (`belief != expected_belief_from_state`)
   5. `rule_blindness` (failed introducing level with `hypothesis_match == False`)
 - **Automated rule proposals (`rules/proposals/auto-*.md`):** Generated whenever a rule exhibits `intro_solve_rate < 0.50` or high wasted/no-effect rate, directly linking the failure evidence to a concrete Tier 2/3 mechanic for `eval-v2`.
+
+---
+
+## 6. Per-Level Failure Explanations (`explanations.json`)
+
+Built by `python -m analysis explain` (and incrementally preserved during `python -m analysis build`), validated against `contracts/derived.schema.json#/$defs/explanations`.
+
+### Scope & Packet Construction
+For every attempted failed level (`actions_used > 0` and `solved == False`) on a `model` run:
+- Ground-truth level metadata: `active_rules`, `new_rule`, `optimal_moves`, `move_budget`, and BFS `optimal_path` (arrow sequence from `game.describe()`).
+- Step-aligned trace excerpt: 1-based step index `i`, `action`, `truth.events`, `no_effect` flag, and verbatim `hypothesis` / `reasoning` strings from `steps.jsonl`.
+
+### Judge Prompt & Output Contract
+- **Cost check first:** `python -m analysis explain --estimate` outputs `failed_levels`, `est_tokens_in`, `est_tokens_out`, `est_cost_fast_judge_usd`, `est_cost_sonnet_judge_usd`, and `within_decisions_sweep_cap` (`<= $20.00`).
+- **System prompt (`JUDGE_SYSTEM_PROMPT`):** Instructs the judge model (which sees ground truth that playing models never see) to return strict JSON:
+  - `run_id` (`string`), `game_id` (`string | null`), `player_id` (`string | null`), `level` (`integer >= 1`)
+  - `step` (`integer | null`): exact 1-based step `i` in `steps.jsonl` where the failure crystallizes
+  - `rule` (`string | null`): canonical rule slug misunderstood by the model
+  - `verdict` (`string`): `never_used_rule | wrong_hypothesis | ignored_no_effect | late_reset | hazard_loss | ran_out_of_budget`
+  - `explanation` (`string`): concise diagnosis of what failed at `step` and what the optimal path required
+  - `evidence_quote` (`string | null`): **verbatim** contiguous substring copied from the model's `hypothesis` or `reasoning` on that level (verified by `_verify_quote_in_steps`; non-verbatim LLM quotes are rejected in favour of verified substrings)
+  - `judge_model` (`string`): model identifier (or `"trace-auditor-v1"` when synthesized deterministically offline)
+

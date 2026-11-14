@@ -20,6 +20,7 @@ from analysis.aggregate import aggregate_runs  # noqa: E402
 from analysis.claim_check import check_claims, validate_against_schema  # noqa: E402
 from analysis.cli import main as cli_main  # noqa: E402
 from analysis.compare import build_comparisons  # noqa: E402
+from analysis.explain import build_explanations, build_failure_packets, estimate_judge_cost  # noqa: E402
 from analysis.loader import (  # noqa: E402
     extract_level_segments,
     filter_benchmark_runs,
@@ -318,6 +319,60 @@ class AnalysisPipelineTests(unittest.TestCase):
         collect_cell = next(c for c in rules_doc["cells"] if c["rule"] == "collect_all")
         self.assertEqual(collect_cell["actions_to_first_use"], 1.0)
         self.assertEqual(collect_cell["intro_solve_rate"], 1.0)
+
+    def test_takeover_filter_and_failure_explanations(self) -> None:
+        # 1) Take-over runs (`start_level` or `takeover_of`) are excluded from baselines
+        r_takeover = _make_run("r-takeover", "alice", "human", [_make_step(0, None), _make_step(1, "ACTION1", state="WIN")])
+        r_takeover["meta"]["start_level"] = 3
+        r_takeover["meta"]["takeover_of"] = {"run_id": "model-run-1", "step": 23}
+        self.assertEqual(filter_benchmark_runs([r_takeover], REPO_ROOT), [])
+
+        # 2) Failure explanations + verbatim quote enforcement + cost estimate
+        s0 = _make_step(0, None, optimal_moves=4)
+        s0["truth"]["active_rules"] = ["walls", "goal", "checkpoints"]
+        s0["truth"]["new_rule"] = "checkpoints"
+        s1 = _make_step(1, "ACTION4", events=["bump"], optimal_moves=4)
+        s1["truth"]["active_rules"] = ["walls", "goal", "checkpoints"]
+        s1["truth"]["new_rule"] = "checkpoints"
+        s1["hypothesis"] = "Blue hollow ring looks like the immediate exit."
+        s2 = _make_step(2, "ACTION2", events=["checkpoints_reset"], optimal_moves=4, frame_row6="3" + "0" * 63)
+        s2["truth"]["active_rules"] = ["walls", "goal", "checkpoints"]
+        s2["truth"]["new_rule"] = "checkpoints"
+        s2["reasoning"] = "Stepped on the second ring and HUD pips cleared."
+
+        failed_run = _make_run("r-fail-cp", "verda-kimi-k3-1-pro", "model", [s0, s1, s2])
+        failed_run["meta"]["outcome"] = "BUDGET"
+        failed_run["meta"]["levels_completed"] = 0
+
+        pkts = build_failure_packets([failed_run], repo_root=REPO_ROOT)
+        self.assertEqual(len(pkts), 1)
+        est = estimate_judge_cost(pkts)
+        self.assertEqual(est["failed_levels"], 1)
+        self.assertTrue(est["within_decisions_sweep_cap"])
+
+        # Deterministic auditor
+        exp_doc = build_explanations([failed_run], repo_root=REPO_ROOT)
+        validate_against_schema(exp_doc, REPO_ROOT / "contracts" / "derived.schema.json")
+        self.assertEqual(len(exp_doc["explanations"]), 1)
+        item = exp_doc["explanations"][0]
+        self.assertEqual(item["rule"], "checkpoints")
+        self.assertEqual(item["verdict"], "hazard_loss")
+        self.assertEqual(item["step"], 2)
+        self.assertEqual(item["evidence_quote"], "Stepped on the second ring and HUD pips cleared.")
+
+        # External judge returning a non-verbatim hallucinated quote falls back to verified verbatim quote
+        fake_llm = lambda _pkt: {
+            "step": 2,
+            "rule": "checkpoints",
+            "verdict": "wrong_hypothesis",
+            "explanation": "Touched later checkpoint out of order.",
+            "evidence_quote": "THIS QUOTE DOES NOT EXIST IN STEPS",
+            "judge_model": "mock-judge-v1",
+        }
+        exp_llm = build_explanations([failed_run], repo_root=REPO_ROOT, judge_fn=fake_llm)
+        validate_against_schema(exp_llm, REPO_ROOT / "contracts" / "derived.schema.json")
+        self.assertEqual(exp_llm["explanations"][0]["judge_model"], "mock-judge-v1")
+        self.assertEqual(exp_llm["explanations"][0]["evidence_quote"], "Stepped on the second ring and HUD pips cleared.")
 
 
 if __name__ == "__main__":
