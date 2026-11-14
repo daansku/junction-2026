@@ -23,28 +23,30 @@ from .loader import now_iso
 DEFAULT_RESAMPLES = 10_000
 DEFAULT_SEED = 20261114
 
-# Canonical row ordering across PROTOCOL v3 + Thinking-On RL re-plan
+# Canonical row ordering across PROTOCOL v3 + Thinking-On RL re-plan (incl. B200 think-gridbranch)
 ROW_ORDER: dict[str, int] = {
     "base": 0,
     "think-ctrl": 1,
-    "think-games": 2,
-    "finalist": 3,
-    "final": 3,
-    "ctrl": 4,
-    "sft-ctrl": 4,
-    "games": 5,
-    "sft-games": 5,
-    "mix": 6,
-    "sft-mix": 6,
-    "rl-nothink": 7,
-    "sft-v1": 8,
-    "games-dev": 9,
+    "think-gridbranch": 2,
+    "think-games": 3,
+    "finalist": 4,
+    "final": 4,
+    "ctrl": 5,
+    "sft-ctrl": 5,
+    "games": 6,
+    "sft-games": 6,
+    "mix": 7,
+    "sft-mix": 7,
+    "rl-nothink": 8,
+    "sft-v1": 9,
+    "games-dev": 10,
 }
 
-RL_FAMILY_PREFIXES: tuple[tuple[str, str], ...] = (
-    ("think-games", "rl-think-games-"),
-    ("think-ctrl", "rl-think-ctrl-"),
-    ("rl-nothink", "rl-grpo-"),
+RL_FAMILY_PREFIXES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("think-gridbranch", ("think-gridbranch-", "rl-think-gridbranch-")),
+    ("think-games", ("think-games-", "rl-think-games-")),
+    ("think-ctrl", ("think-ctrl-", "rl-think-ctrl-")),
+    ("rl-nothink", ("rl-grpo-", "grpo-")),
 )
 
 FT_BENCHMARKS_SUITE: list[dict[str, Any]] = [
@@ -167,6 +169,7 @@ def _normalize_row_id(name: str) -> str:
         "sft_v1": "sft-v1",
         "sftv1": "sft-v1",
         "think_games": "think-games",
+        "think_gridbranch": "think-gridbranch",
         "think_ctrl": "think-ctrl",
         "base-dev": "base-dev",
     }
@@ -328,7 +331,7 @@ def _load_bench_run_dir(run_dir: Path, ci_resamples: int = 2_000) -> dict[str, A
     inferred_dev_slice = bool(
         summary.get("dev_slice", False)
         or "dev" in raw_name.lower()
-        or raw_name.lower().startswith("rl-")
+        or raw_name.lower().startswith(("rl-", "think-", "grpo-"))
         or (0 < bbh_n <= 700 and sum(x.get("n", 0) for x in benches_out.values() if x["tier"] == "primary") <= 1100)
     )
 
@@ -376,9 +379,9 @@ def _promote_canonical_families(loaded_runs: list[dict[str, Any]]) -> None:
             if r["row_id"] == "games-dev":
                 r["is_checkpoint"] = True
 
-    # For each RL family prefix, promote the highest-headline checkpoint to the family's canonical `row_id`
-    for canonical_id, prefix in RL_FAMILY_PREFIXES:
-        family_runs = [r for r in loaded_runs if r["raw_name"].lower().startswith(prefix)]
+    # For each RL family prefix tuple, promote the highest-headline checkpoint to the family's canonical `row_id`
+    for canonical_id, prefixes in RL_FAMILY_PREFIXES:
+        family_runs = [r for r in loaded_runs if r["raw_name"].lower().startswith(prefixes)]
         if not family_runs:
             continue
         if canonical_id in existing_ids:
@@ -663,7 +666,10 @@ def build_bench_summary(
 
         if rid in ("base", "base-dev", "ctrl", "think-ctrl"):
             continue
-        is_think_rl = rid == "think-games" or r["raw_name"].lower().startswith("rl-think-games-")
+        is_think_rl = (
+            rid in ("think-games", "think-gridbranch")
+            or r["raw_name"].lower().startswith(("think-games-", "rl-think-games-", "think-gridbranch-", "rl-think-gridbranch-"))
+        )
         matched_ctrl = (think_ctrl_run or sft_ctrl_run) if is_think_rl else sft_ctrl_run
         if matched_ctrl is not None and r is not matched_ctrl:
             comparisons_vs_ctrl.append(_compute_comparison(matched_ctrl, r, resamples=resamples))
