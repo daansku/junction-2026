@@ -21,7 +21,7 @@ def _load(name):
     return json.loads(p.read_text(encoding="utf-8"))
 
 
-@pytest.mark.parametrize("name", ["dev", "eval-v1", "eval-v2", "probe-v1", "eval-v3"])
+@pytest.mark.parametrize("name", ["dev", "eval-v1", "eval-v2", "probe-v1", "eval-v3", "eval-v3b"])
 def test_frozen_collections_regenerate_identically(name):
     col = _load(name)
     bad = [(g["game_id"], e) for g in col["games"] if (e := verify_game(g, regen=True))]
@@ -81,3 +81,36 @@ def test_eval_v3_forces_every_new_rule():
             lv = Level.from_dict(ld)
             if lv.new_rule and I.scored(lv.new_rule):
                 assert I.rule_forced(lv, lv.new_rule), (g["game_id"], lv.new_rule)
+
+
+# ---- gridbranch (A7, branching.py): loopy, more complex levels; gridforce stays as it is ----
+
+def test_branch_flag_only_on_branch_family():
+    from engine.generator import branching as B
+    assert B.enabled("gridbranch") and not B.enabled("gridforce") and not B.enabled("gridworld")
+
+
+def test_topology_counts_real_loops_not_open_floor():
+    from engine.generator import branching as B
+    from engine.generator.layout import border
+    open_room = border(6, 6)                                   # 4x4 open floor: no real loop
+    assert B.topology(6, 6, open_room, [])["real_loops"] == 0
+    ring = border(5, 5) | {(2, 2)}                             # corridor ring round one pillar
+    t = B.topology(5, 5, ring, [(1, 1), (2, 1), (3, 1), (3, 2), (3, 3)])
+    assert t["real_loops"] == 1 and t["bypass"] == 1.0
+    corridor = border(7, 3)
+    assert B.topology(7, 3, corridor, [(1, 1), (2, 1), (3, 1), (4, 1), (5, 1)])["bypass"] == 0.0
+
+
+@pytest.mark.parametrize("d,n,seed", [(1, 6, 7201), (2, 6, 7202), (3, 6, 7203)])
+def test_gridbranch_levels_have_loops_and_force_new_rule(d, n, seed):
+    from engine.generator import branching as B
+    g = make_game(GameSpec(family="gridbranch", seed=seed, difficulty=d, n_levels=n))
+    assert g.game_id.startswith(f"gridbranch-s{seed}-d{d}-l{n}-")
+    assert not verify_game(g.to_dict(), regen=True)
+    for i, lv in enumerate(g.levels):
+        topo = B.topology(lv.w, lv.h, lv.walls, B.path_cells(lv, lv.optimal_path))
+        assert topo["real_loops"] >= max(1, B.targets(d, i)[0] - 2), (g.game_id, i, topo)
+        assert len(lv.rules) <= I.MAX_RULES[d]
+        if lv.new_rule and I.scored(lv.new_rule):
+            assert I.rule_forced(lv, lv.new_rule), (g.game_id, lv.new_rule)
