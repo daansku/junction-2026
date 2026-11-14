@@ -79,8 +79,8 @@ def cmd_collection(a) -> int:
 
 def cmd_tasks(a) -> int:
     """A1-20: auxiliary verifiable tasks for post-training, as chat JSONL."""
-    from .tasks import TASKS, write_jsonl
-    names = list(TASKS) if a.task == "all" else a.task.split(",")
+    from .tasks import DEFAULT_ALL, write_jsonl
+    names = list(DEFAULT_ALL) if a.task == "all" else a.task.split(",")
     t0 = time.time()
     counts = write_jsonl(a.out, names, a.n, a.seed)
     print(f"wrote {a.out}: {counts} ({time.time() - t0:.1f}s)", file=sys.stderr)

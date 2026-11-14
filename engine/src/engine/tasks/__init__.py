@@ -15,7 +15,11 @@ from typing import Iterator
 
 from .auxtasks import TASKS
 from .common import SYSTEM, Sample
-from .rewards import episode_score, reward
+from .rewards import RAW_TASKS, episode_score, reward
+
+# `--task all`: the single-turn tasks that need only the engine. game_turn needs arena (A3's
+# harness prompt) at generation time, so it is requested by name.
+DEFAULT_ALL = [t for t in TASKS if t not in RAW_TASKS]
 
 
 def generate(task: str, n: int, seed: int = 0, max_skips: int = 1000) -> Iterator[Sample]:
@@ -46,4 +50,4 @@ def write_jsonl(path: str | Path, tasks: list[str], n: int, seed: int = 0) -> di
     return counts
 
 
-__all__ = ["TASKS", "SYSTEM", "Sample", "generate", "reward", "episode_score", "write_jsonl"]
+__all__ = ["TASKS", "DEFAULT_ALL", "RAW_TASKS", "SYSTEM", "Sample", "generate", "reward", "episode_score", "write_jsonl"]
