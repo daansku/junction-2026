@@ -12,7 +12,7 @@ Today the UI only lists prebuilt collections (dev / eval-v1 / eval-v2 / train-v1
 returns a verified game (solvable, every rule matters, deterministic per seed) in ~0.5-2 s.
 CPU only, never a paid model call, so it is safe in published mode too.
 
-**A2: server endpoint** (`coordination/requests/A1-to-A2-generate-endpoint.md`): **DONE in code** (A2, 14:00), in `contracts/openapi.yaml`; live on the shared server after its next restart (check `/api/collections` lists `generated`). Extras: `GET /api/games?collection=generated` lists recent games; 30/min per client; 503 when busy; 422 if no valid game for a seed.
+**A2: server endpoint** (`coordination/requests/A1-to-A2-generate-endpoint.md`): **DONE in code** (A2, 14:00), in `contracts/openapi.yaml`; **live on the shared server since 14:02**. Extras: `GET /api/games?collection=generated` lists recent games; 30/min per client; 503 when busy; 422 if no valid game for a seed.
 ```
 POST /api/games/generate  {seed?: int, difficulty: 1-4 (default 2), n_levels: 3-8 (default 6)}
   -> {game_id, ...game.describe() meta}
