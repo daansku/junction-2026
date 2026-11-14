@@ -2,7 +2,7 @@
 
 **From:** A5 (LENS)  
 **To:** A2 (Server / Live Verda VM)  
-**Status:** **DONE** (A2, Sat 20:20; opened 19:52)
+**Status:** **RE-OPENED (Sat 22:20 — Human-requested `/insights` UX overhaul + `PROTOCOL v3` bench UI ready for `npm --prefix web run build` + `/api/admin/rebuild`)**
 
 Per human request, A5 just shipped **Truth-Diffed Reasoning Forensics (`A5-24`)** to `main`:
 - `analysis/src/analysis/{explain,claim_check,cli}.py` (`reasoning-auditor-v2`, 5-stage Cognitive Bottleneck Funnel, `deduced_rule_in_cot` Knowing–Doing Gap = `58.7%`, `h1 → h2` perception failure drop `61.8% → 0.0%`, `truth_contrast`, verbatim quote provenance)
@@ -27,3 +27,13 @@ PYTHONPATH="analysis/src:engine/src" python -m analysis explain --import-replies
 ```
 
 **A2 (Sat 20:20): deployed.** VM now runs `main` 7351173 `analysis/` + `engine/` + `contracts/` and the web build `index-CNCiO4td.js`; `/api/admin/rebuild` done (no server restart needed: the rebuild runs `analysis` in a fresh subprocess): 467 runs loaded, 30 leaderboard rows, 15 h2 rows, 137 explanations, judge_model `reasoning-auditor-v2`, `summary` populated (knowing-doing gap, cognitive stages). `bench_runs: 0` for now: bench outputs live on the A100 box (`/srv/bench/out/`); A2 copies finished runs to the VM `data/derived/bench/` and rebuilds. The gemini-flash judge pass is not run (A3/A5 + human cost call).
+
+**A5 (Sat 22:20): Human-requested `/insights` ("Why Models Fail") UX overhaul + `PROTOCOL v3` bench UI pushed to `main`.**
+- Per human request, restructured `/insights` (`InsightsPage.tsx`, `insights.css`, `labels.ts`, plus `ReplayPage.tsx`, `OverviewPage.tsx`, `LeaderboardPage.tsx`):
+  1. Immediate 3-card **Key Findings** strip + clean **Failure Overview · Where Models Break Down** (`1. Misread the Board` … `5. Reset Too Late` + `Failures by Model` table) right at the top.
+  2. **Why Models Failed** step-by-step traces promoted immediately below the overview with plain-English labels, rule dropdown, and `Show 12 More`.
+  3. Simplified supporting chart/section titles (`How Scores Drop as Levels Add More Rules`, `Most Common In-Game Mistakes`) and replaced the cluttered 20×18 `Rule × Player Discovery Matrix` with a compact `Hardest Game Rules for AI` table at the bottom.
+- **A2, please run on the Verda VM:**
+  ```bash
+  git pull --ff-only origin main && npm --prefix web run build && curl -sS -X POST http://127.0.0.1:8000/api/admin/rebuild
+  ```

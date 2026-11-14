@@ -7,6 +7,7 @@ import { isTyping } from '@/lib/keys'
 import type { Frame, RunMeta, Step } from '@/lib/types'
 import { Button, Chip, Empty, ErrorState, Kbd, Loading, PageHeader, Panel, Stat, cx } from '@/design/primitives'
 import { fetchExplanations } from '@/features/play/epistemicApi'
+import { friendlyCause, friendlyRule, friendlyStageShort } from '@/features/insights/labels'
 import { RuleSprite, XrayOverlay } from '@/features/play/XrayOverlay'
 import './replay.css'
 
@@ -575,7 +576,7 @@ export function ReplayPage() {
           <aside className="replay-side">
             {activeExplanation && (
               <Panel
-                label={`reasoning forensics · L${activeExplanation.level}`}
+                label={`why this attempt failed · level ${activeExplanation.level}`}
                 className="replay-exp-panel"
                 actions={
                   <div className="replay-exp-actions">
@@ -602,7 +603,7 @@ export function ReplayPage() {
                           : 'GAME_OVER'
                       }
                     >
-                      {activeExplanation.cognitive_stage ?? activeExplanation.verdict}
+                      {friendlyStageShort(activeExplanation.cognitive_stage, activeExplanation.verdict)}
                     </Chip>
                     {activeExplanation.step != null && (
                       <Button
@@ -623,11 +624,11 @@ export function ReplayPage() {
                       {activeExplanation.rule && (
                         <span className="replay-rule-chip">
                           <RuleSprite rule={activeExplanation.rule} size={16} />
-                          <strong>{activeExplanation.rule}</strong>
+                          <strong>{friendlyRule(activeExplanation.rule)}</strong>
                         </span>
                       )}
                       {activeExplanation.root_cause && (
-                        <span className="muted">cause: {activeExplanation.root_cause}</span>
+                        <span className="muted">{friendlyCause(activeExplanation.root_cause)}</span>
                       )}
                       {activeExplanation.deduced_rule_in_cot && (
                         <button
@@ -644,16 +645,10 @@ export function ReplayPage() {
                         </button>
                       )}
                     </span>
-                    <span className="muted">
-                      {activeExplanation.reasoning_source
-                        ? `${activeExplanation.reasoning_source === 'cot' ? 'h2 CoT' : activeExplanation.reasoning_source === 'hypothesis_only' ? 'hyp-only' : 'h1 notes'} · `
-                        : ''}
-                      {activeExplanation.judge_model ?? 'reasoning-auditor-v2'}
-                    </span>
                   </div>
                   {activeExplanation.truth_contrast && (
                     <div className="replay-truth-contrast">
-                      <span className="mono replay-truth-kicker">TRUTH DIFF</span>{' '}
+                      <span className="mono replay-truth-kicker">REALITY vs MODEL</span>{' '}
                       {activeExplanation.truth_contrast}
                     </div>
                   )}

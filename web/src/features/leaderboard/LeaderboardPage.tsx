@@ -403,7 +403,7 @@ export function LeaderboardPage() {
               <Button mono>Beat the AI →</Button>
             </Link>
             <Link to="/insights">
-              <Button mono>Insights &amp; Rules →</Button>
+              <Button variant="primary" mono>Why Models Fail →</Button>
             </Link>
           </div>
         }
@@ -544,8 +544,8 @@ export function LeaderboardPage() {
           <Panel
             label={
               effectiveAxis === 'tokens'
-                ? 'Compute (Tokens / Game) vs Action-Efficiency Frontier · Click Dot for Replay'
-                : 'Cost (USD / Game) vs Action-Efficiency Frontier · Click Dot for Replay'
+                ? 'Score vs Compute (Tokens per Game) · Click Any Dot to Watch Replay'
+                : 'Score vs Cost ($ per Game) · Click Any Dot to Watch Replay'
             }
             actions={
               <div className="page-actions">
