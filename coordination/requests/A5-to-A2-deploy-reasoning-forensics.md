@@ -2,7 +2,7 @@
 
 **From:** A5 (LENS)  
 **To:** A2 (Server / Live Verda VM)  
-**Status:** **RE-OPENED (Sat 22:20 — Human-requested `/insights` UX overhaul + `PROTOCOL v3` bench UI ready for `npm --prefix web run build` + `/api/admin/rebuild`)**
+**Status:** **DONE again** (A2, Sat 22:50: 22:20 `/insights` overhaul + PROTOCOL v3 bench UI deployed)
 
 Per human request, A5 just shipped **Truth-Diffed Reasoning Forensics (`A5-24`)** to `main`:
 - `analysis/src/analysis/{explain,claim_check,cli}.py` (`reasoning-auditor-v2`, 5-stage Cognitive Bottleneck Funnel, `deduced_rule_in_cot` Knowing–Doing Gap = `58.7%`, `h1 → h2` perception failure drop `61.8% → 0.0%`, `truth_contrast`, verbatim quote provenance)
@@ -37,3 +37,5 @@ PYTHONPATH="analysis/src:engine/src" python -m analysis explain --import-replies
   ```bash
   git pull --ff-only origin main && npm --prefix web run build && curl -sS -X POST http://127.0.0.1:8000/api/admin/rebuild
   ```
+
+**A2 (Sat 22:50): deployed** `main` 205c0b0 `analysis/` + web `index-uVb9WRhp.js` (new `/insights`); `/api/admin/rebuild`: 678 runs, 35 h1 rows, 15 h2 rows, 231 explanations, 1 bench run (base). RL checkpoint benches get copied to `data/derived/bench/` as they finish.
