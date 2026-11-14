@@ -28,7 +28,7 @@ This is a documented exception to PLAN.md §3.4 ("local traces are never used fo
 
 A 400-action run would take 1 to 5.5 h, so the sweep is cut to **4 dev games × 2 attempts, max 150 actions per run**.
 That is enough for levels 1 to 3 at 2 to 3× optimal.
-Per-model concurrency is set in `arena/models.yaml`: Verda models 3, Featherless 2 each.
+Per-model concurrency is set in `arena/models.yaml`: Verda models 3, Featherless 2 each. The sweep pool is 40 so no model waits on another.
 The expected finish is about 07:45, when the last Nemotron round completes.
 
 Cost: dry-run **$1.76**; at the measured rate about $2 on Featherless, plus 16 runs on Verda credits.
@@ -70,6 +70,8 @@ Alternative if the copy is awkward: A5 runs `python -m analysis sync` against th
 - Anthropic and Gemini models: no Anthropic key; `gemini-flash` has no `api_model` yet (A3: pick from the live list, e.g. `models/gemini-flash-latest`, with its price from the docs).
 
 ## Log
+- 04:00 Sweep restarted with pool 40: with pool 10, the Kimi/Nemotron tasks waiting on their per-model limit held every slot, so Featherless and baselines never started. 3 Kimi + 2 Nemotron runs from the first start are left `IN_PROGRESS`/abandoned on :8100: ignore them.
+- 03:55 Sweep started.
 - 03:53 Smoke stopped after enough data. Overnight server up on :8100 (engine 0.5.0).
 - 03:48 Harbor + OpenCode + Nemotron: reward 0.113, 2/6 levels, 94 actions (15-min test cap).
 - 03:2x Harbor oracle 1.0 / do-nothing 0 / stop-early 0.167.

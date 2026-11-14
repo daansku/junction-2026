@@ -8,7 +8,7 @@ name: overnight-dev
 collection: dev
 games: {first: 4}
 attempts: 2
-concurrency: 10
+concurrency: 40           # pool > total runs: tasks wait on per-model max_concurrency, not on pool slots
 est_steps_per_game: 150
 models:
   - {id: verda-kimi-k3-1-pro}
