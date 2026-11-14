@@ -1,0 +1,14 @@
+# DeepSeek 4.1 Flash on all 30 eval-v3b games, harness h2 (human request: Daniel, Sat ~23:20; run from A1's machine).
+# Replaces h2-eval-v3b-kimi (stopped at the human's request to save Verda credits). eval-v3b is A7's gridbranch
+# draft (unfrozen). Baselines included because the Kimi sweep stopped after 8 of 30 baseline games.
+name: h2-eval-v3b-deepseek
+harness: h2
+collection: eval-v3b
+games: all
+attempts: 1
+concurrency: 6
+est_steps_per_game: 200
+models:
+  - {id: verda-deepseek-4-1-flash, effort: high, max_concurrency: 6}
+baselines: [random, optimal, noop, stop_early]
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 18.0, max_wall_s: 14400}
