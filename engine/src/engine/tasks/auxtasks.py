@@ -371,9 +371,112 @@ def grade_full_plan(s: dict, ans: str) -> float:
     return score_plan(Level.from_dict(s["meta"]["level_data"]), acts)
 
 
+# ---- perception grounding (A3: SFT v1 bumps walls ~65% of moves, misreads the level) ----------
+def _context(rng):
+    """Mid-level state plus the transition that led to it (so 'you' = what moved)."""
+    st = sample_state(rng, min_prefix=1, max_prefix=20)
+    if st is None:
+        return None
+    g, prev_frame, prev_action = st
+    if prev_frame == g.frame():
+        return None
+    return g, (f"{RLE_HELP}\nActions: {ACTIONS_HELP}. The player controls one object.\n\n"
+               f"Frame A:\n{to_rle(prev_frame)}\n\nThe player pressed {prev_action}, which gave frame B:\n"
+               f"{to_rle(g.frame())}\n\n")
+
+
+def make_blocked_moves(seed: int, i: int) -> Sample | None:
+    rng = task_rng("blocked_moves", seed, i)
+    ctx = _context(rng)
+    if ctx is None:
+        return None
+    g, head = ctx
+    blocked = []
+    for a in MOVES:
+        c = g.clone()
+        c.step(a)
+        if c.events == ["bump"]:
+            blocked.append(a.value)
+    # flatten the answer distribution so a constant answer can't farm reward
+    keep = {0: 0.5, 1: 0.45, 2: 1.0, 3: 1.0}.get(len(blocked), 1.0)
+    if rng.random() > keep:
+        return None
+    ans = " ".join(blocked) if blocked else "NONE"
+    prompt = (head + "In frame B, which of ACTION1, ACTION2, ACTION3, ACTION4 would leave the player where it is "
+              "(blocked by something)? After 'ANSWER:' list them separated by spaces in any order, or write NONE.")
+    return Sample("blocked_moves", f"blocked_moves-{seed}-{i}", prompt, ans,
+                  {"game_id": g.game_id, "level": g.idx + 1, "blocked": blocked})
+
+
+def grade_blocked_moves(s: dict, ans: str) -> float:
+    toks = ans.replace(",", " ").upper().split()
+    if toks == ["NONE"]:
+        got: set | None = set()
+    elif toks and all(re.fullmatch(r"ACTION[1-4]", t) for t in toks) and len(set(toks)) == len(toks):
+        got = set(toks)
+    else:
+        got = None
+    return 1.0 if got is not None and got == set(s["meta"]["blocked"]) else 0.0
+
+
+def _player_pixel(g) -> tuple[int, int] | None:
+    """Top-left pixel (row, col) of the player's square in the play area (rows 6-63)."""
+    col = "%x" % g.skin["player"][0]
+    f = g.frame()
+    pts = [(y, x) for y in range(6, 64) for x in range(64) if f[y][x] == col]
+    if not pts:
+        return None
+    return min(y for y, _ in pts), min(x for _, x in pts)
+
+
+def make_locate_player(seed: int, i: int) -> Sample | None:
+    rng = task_rng("locate_player", seed, i)
+    ctx = _context(rng)
+    if ctx is None:
+        return None
+    g, head = ctx
+    px = _player_pixel(g)
+    if px is None:
+        return None
+    prompt = (head + "In frame B, where is the player? After 'ANSWER:' write the row and column (0-based, row 0 = top "
+              "line, column 0 = left) of the top-left cell of the player's square, as 'row,col'.")
+    return Sample("locate_player", f"locate_player-{seed}-{i}", prompt, f"{px[0]},{px[1]}",
+                  {"game_id": g.game_id, "level": g.idx + 1})
+
+
+def grade_pair(s: dict, ans: str) -> float:
+    m = re.fullmatch(r"\s*\(?\s*(\d{1,2})\s*[,/ ]\s*(\d{1,2})\s*\)?\s*", ans)
+    return 1.0 if m and f"{int(m.group(1))},{int(m.group(2))}" == s["answer"] else 0.0
+
+
+def make_level_index(seed: int, i: int) -> Sample | None:
+    rng = task_rng("level_index", seed, i)
+    g = pick_game(rng)
+    li = rng.randrange(len(g.levels))
+    g.goto_level(li + 1)
+    path = list(g.level.optimal_path)
+    for _ in range(rng.randint(0, max(0, min(10, len(path) - 1)))):
+        g.step(rng.choice(MOVES))
+        if g.status != "NOT_FINISHED" or g.idx != li:
+            return None
+    prompt = (f"{RLE_HELP}\n\nScreen:\n{to_rle(g.frame())}\n\nThe game has several levels; the row of small "
+              "squares near the top shows progress through them. Which level is being played, and how many levels "
+              "are there? After 'ANSWER:' write 'current/total', e.g. '2/6'.")
+    return Sample("level_index", f"level_index-{seed}-{i}", prompt, f"{li + 1}/{len(g.levels)}",
+                  {"game_id": g.game_id, "level": li + 1})
+
+
+def grade_fraction(s: dict, ans: str) -> float:
+    m = re.fullmatch(r"\s*(\d{1,2})\s*(?:/|of)\s*(\d{1,2})\s*", ans, re.I)
+    return 1.0 if m and f"{int(m.group(1))}/{int(m.group(2))}" == s["answer"] else 0.0
+
+
 TASKS = {
     "next_frame": (make_next_frame, grade_next_frame),
     "rule_effect": (make_rule_effect, grade_letter),
     "min_moves": (make_min_moves, grade_min_moves),
     "full_plan": (make_full_plan, grade_full_plan),
+    "blocked_moves": (make_blocked_moves, grade_blocked_moves),
+    "locate_player": (make_locate_player, grade_pair),
+    "level_index": (make_level_index, grade_fraction),
 }

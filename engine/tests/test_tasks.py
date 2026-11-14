@@ -132,3 +132,19 @@ def test_probe_levels_are_novel():
         for n in g["probe_levels"]:
             assert frozenset(g["levels"][n - 1]["rules"]) not in seen
         assert all(tiers[r] < 3 for lv in g["levels"] for r in lv["rules"])
+
+
+@pytest.mark.parametrize("task", ["blocked_moves", "locate_player", "level_index", "min_moves", "rule_effect"])
+def test_constant_answer_cannot_farm(task):
+    from collections import Counter
+    d = [s.to_dict() for s in generate(task, 300, seed=8)]
+    top = Counter(x["answer"] for x in d).most_common(1)[0][1]
+    assert top / len(d) <= 0.3
+
+
+def test_blocked_moves_matches_engine():
+    for d in (s.to_dict() for s in generate("blocked_moves", 20, seed=9)):
+        assert reward(d, "ANSWER: " + " ".join(reversed(d["answer"].split()))) == 1.0  # order-free
+        if d["meta"]["blocked"]:
+            assert reward(d, "ANSWER: NONE") == 0.0
+            assert reward(d, "ANSWER: ACTION1 ACTION2 ACTION3 ACTION4") == (1.0 if len(d["meta"]["blocked"]) == 4 else 0.0)
