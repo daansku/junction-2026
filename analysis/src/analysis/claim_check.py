@@ -38,6 +38,16 @@ def check_claims(derived_dir: Path, repo_root: Path | None = None) -> dict[str, 
         except Exception as exc:
             errors.append(f"{name}.json failed schema validation: {exc}")
 
+    exp_path = derived_dir / "explanations.json"
+    if exp_path.exists():
+        try:
+            obj = json.loads(exp_path.read_text(encoding="utf-8"))
+            validate_against_schema(obj, schema_path)
+            docs["explanations"] = obj
+            checked.append("explanations")
+        except Exception as exc:
+            errors.append(f"explanations.json failed schema validation: {exc}")
+
     # Cross-check invariants
     if "leaderboard" in docs:
         for row in docs["leaderboard"].get("rows", []):
@@ -63,6 +73,22 @@ def check_claims(derived_dir: Path, repo_root: Path | None = None) -> dict[str, 
         for ins in docs["insights"].get("insights", []):
             if not ins.get("evidence"):
                 errors.append(f"Insight {ins.get('id')} has empty evidence array")
+
+    if "explanations" in docs:
+        seen_pairs: set[tuple[str, int]] = set()
+        for idx, exp in enumerate(docs["explanations"].get("explanations", [])):
+            rid = str(exp.get("run_id") or "").strip()
+            lv = int(exp.get("level") or 0)
+            verdict = str(exp.get("verdict") or "").strip()
+            step = exp.get("step")
+            if not rid or lv < 1 or not verdict:
+                errors.append(f"Explanation #{idx} missing run_id/level/verdict: {exp}")
+            pair = (rid, lv)
+            if pair in seen_pairs:
+                errors.append(f"Duplicate explanation for ({rid}, L{lv})")
+            seen_pairs.add(pair)
+            if step is not None and (not isinstance(step, int) or step < 0):
+                errors.append(f"Invalid step index on ({rid}, L{lv}): {step}")
 
     return {
         "ok": len(errors) == 0,

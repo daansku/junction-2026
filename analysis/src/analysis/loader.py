@@ -30,9 +30,16 @@ RULE_EVENTS: dict[str, tuple[str, ...]] = {
     "stamina": ("refilled",),
     "cracked_floor": ("floor_collapsed",),
     "beacon_goal": ("decoy", "level_complete", "game_won"),
-    "conveyors": ("carried:", "level_complete"),
-    "enemies": ("caught", "level_complete"),
-    "gravity": ("gravity_on", "gravity_off"),
+    "conveyors": ("carried:", "conveyor:", "level_complete"),
+    "enemies": ("caught", "enemy_hit", "level_complete"),
+    "gravity": ("gravity_on", "gravity_off", "fell:"),
+    "checkpoints": ("checkpoint", "checkpoints_reset"),
+    "no_reverse": ("bump", "level_complete"),
+    "pits": ("pit_filled", "pushed"),
+    "momentum": ("momentum:", "slid:"),
+    "boulders": ("boulder:", "crushed"),
+    "shadow": ("shadow_hit", "pressed_plate", "level_complete"),
+    "board_flip": ("flipped",),
 }
 
 RULE_KEYWORDS: dict[str, tuple[str, ...]] = {
@@ -53,10 +60,17 @@ RULE_KEYWORDS: dict[str, tuple[str, ...]] = {
     "twin": ("twin", "mirror", "copy", "second", "both", "coupled", "partner"),
     "stamina": ("stamina", "energy", "refill", "recharge", "meter", "pad"),
     "cracked_floor": ("crack", "collapse", "hole", "pit", "brittle", "once", "bridge"),
-    "beacon_goal": ("beacon", "decoy", "fake goal", "real goal", "match", "hud"),
+    "beacon_goal": ("beacon", "decoy", "fake goal", "real goal", "hud"),
     "conveyors": ("conveyor", "belt", "carry", "drift", "current"),
     "enemies": ("enemy", "patrol", "guard", "moving", "caught", "avoid"),
     "gravity": ("gravity", "fall", "drop", "downward"),
+    "checkpoints": ("checkpoint", "order", "sequence", "azure", "out of turn"),
+    "no_reverse": ("no reverse", "u-turn", "uturn", "backtrack", "trail", "violet"),
+    "pits": ("pit", "fill", "sink", "bridge", "push block into"),
+    "momentum": ("momentum", "coast", "slide", "until blocked"),
+    "boulders": ("boulder", "roll", "fall", "crush"),
+    "shadow": ("shadow", "follower", "delay", "repeat"),
+    "board_flip": ("flip", "reverse side", "other side", "memory"),
 }
 
 TIER_0_RULES = frozenset({"walls", "goal", "move_budget"})
@@ -207,6 +221,8 @@ def filter_benchmark_runs(
         end_reason = str(meta.get("end_reason") or "").strip().lower()
         gid = str(meta.get("game_id") or "")
 
+        if meta.get("start_level") is not None or meta.get("takeover_of") is not None:
+            continue
         if kind == "human" and name in PRACTICE_HUMAN_NAMES:
             continue
         if kind == "baseline" and (name.startswith("smoke") or mid.startswith("smoke")):
@@ -452,6 +468,8 @@ def extract_level_segments(run: dict[str, Any], game_desc: dict[str, Any] | None
             "no_effect": is_no_effect,
             "belief": belief,
             "expected_belief": _expected_belief(post_truth.get("state")),
+            "hypothesis": step.get("hypothesis"),
+            "reasoning": step.get("reasoning"),
         })
         prev_step = step
 
