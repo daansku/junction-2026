@@ -80,7 +80,7 @@ def test_build_writes_jsonl(tmp_path):
     out = tmp_path / "sft.jsonl"
     stats = build([(f"m{s}", lambda s=s: MockGame(s, 2)) for s in range(3)], out, n_recover=1, log=lambda *_: None)
     lines = out.read_text().splitlines()
-    assert len(lines) == stats["optimal"] + stats["recover"] and stats["games"] == 3
+    assert len(lines) == stats["optimal"] + stats["recover"] + stats["gameover"] and stats["games"] == 3
     json.loads(lines[0])
 
 
@@ -106,3 +106,14 @@ def test_refuses_eval_collection():
     from arena.dataset import games_from
     with pytest.raises(SystemExit):
         list(games_from(None, "eval-v1", None))
+
+
+@pytest.mark.parametrize("name,make", engines())
+def test_gameover_trajectory_teaches_reset(name, make):
+    for seed in range(4):
+        g = make(seed)
+        exs = game_examples(g, random.Random(seed), "gameover")
+        assert g.truth()["state"] == "WIN"
+        resets = [e for e in exs if '"RESET"' in e["messages"][2]["content"]]
+        assert len(resets) == 1
+        assert "Available actions: RESET." in resets[0]["messages"][1]["content"] or name == "mock"

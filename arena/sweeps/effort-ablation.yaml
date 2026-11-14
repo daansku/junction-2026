@@ -1,0 +1,11 @@
+# A3-12 effort ablation on 2 models, 10 eval-v1 games.
+name: effort-ablation
+collection: eval-v1
+games: {first: 10}
+attempts: 1
+concurrency: 6
+est_steps_per_game: 250
+models:
+  - {id: claude-haiku-5-5, efforts: [low, medium, high]}
+  - {id: claude-sonnet-5-5, efforts: [low, high]}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 2.00, max_wall_s: 3600}

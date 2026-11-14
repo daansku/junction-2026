@@ -1,0 +1,18 @@
+# A3-10 main sweep on eval-v1 (human approves the dry-run estimate at 13:00).
+# Expensive models get a subset (games.first) and that is recorded in each row's sweep name.
+name: main
+collection: eval-v1
+games: all
+attempts: 3            # AfterQuery judges rerun 3 agent runs; we report mean and spread
+concurrency: 8
+est_steps_per_game: 250
+models:
+  - {id: claude-haiku-5-5, effort: medium}
+  - {id: claude-sonnet-5-5, effort: medium}
+  - {id: gemini-flash, effort: medium}
+  - {id: gemini-pro, effort: medium}
+  - {id: nvidia-open-large}
+  - {id: featherless-open}
+  - {id: verda-small}
+baselines: [random, optimal, noop, stop_early]
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 2.00, max_wall_s: 3600}

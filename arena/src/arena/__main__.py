@@ -47,6 +47,7 @@ def main(argv=None):
     d.add_argument("--seeds", help="spec seeds instead of a collection, e.g. 0-199")
     d.add_argument("--levels", type=int, default=6)
     d.add_argument("--recover", type=int, default=2, help="recover-from-mistake trajectories per game")
+    d.add_argument("--gameover", type=int, default=1, help="blow-a-level-then-RESET trajectories per game")
     d.add_argument("--out", required=True)
     a = ap.parse_args(argv)
 
@@ -59,7 +60,7 @@ def main(argv=None):
         if a.seeds:
             lo, _, hi = a.seeds.partition("-")
             seeds = list(range(int(lo), int(hi or lo) + 1))
-        build(games_from(eng, a.collection, seeds, a.levels), Path(a.out).expanduser(), n_recover=a.recover)
+        build(games_from(eng, a.collection, seeds, a.levels), Path(a.out).expanduser(), n_recover=a.recover, n_gameover=a.gameover)
         return
 
     if a.cmd == "run":

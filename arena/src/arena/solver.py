@@ -16,12 +16,14 @@ def solve_level(game, max_states: int = 200_000, actions=None) -> list[str] | No
     action so a doomed position can still be recovered."""
     start_t = game.truth()
     level0 = start_t["level"]
-    acts = list(actions or [a for a in _available(game) if a in MOVE_ACTIONS]) + ["RESET"]
+    acts = list(actions or [a for a in _available(game) if a in MOVE_ACTIONS])
     seen = {game.state_hash()}
     q = deque([(game, [])])
     while q:
         g, path = q.popleft()
-        for a in acts:
+        # RESET only as the very first action: later resets never shorten a plan, and engines
+        # that count resets in state_hash would otherwise make the search space infinite.
+        for a in (acts + ["RESET"] if not path else acts):
             n = g.clone()
             n.step(a)
             t = n.truth()
@@ -38,7 +40,18 @@ def solve_level(game, max_states: int = 200_000, actions=None) -> list[str] | No
 
 
 def _available(game) -> list[str]:
+    """The game's full action set. available_actions() can shrink to [RESET] in GAME_OVER, so prefer
+    describe()['available_actions'], which lists what the game uses at all."""
     try:
-        return [getattr(a, "value", a) for a in game.available_actions()]
+        acts = game.describe().get("available_actions")
+        if acts:
+            return [getattr(a, "value", a) for a in acts]
+    except Exception:
+        pass
+    try:
+        acts = [getattr(a, "value", a) for a in game.available_actions()]
+        if any(a in MOVE_ACTIONS for a in acts):
+            return acts
     except AttributeError:
-        return ["ACTION1", "ACTION2", "ACTION3", "ACTION4"]
+        pass
+    return ["ACTION1", "ACTION2", "ACTION3", "ACTION4"]

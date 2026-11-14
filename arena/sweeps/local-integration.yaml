@@ -1,0 +1,14 @@
+# Harness <-> real server check with no keys: mock model + all baselines on the dev collection.
+#   python -m arena run arena/sweeps/local-integration.yaml --api http://localhost:8000
+name: local-integration
+collection: dev
+games: {first: 3}
+attempts: 1
+concurrency: 4
+allow_test_models: true
+models:
+  - id: mock-random
+baselines: [random, optimal, noop, stop_early]
+budgets:
+  max_actions: 40
+  max_turns: 50

@@ -1,0 +1,15 @@
+# A3-08 pilot on 5 eval-v1 games: find harness problems before freezing h1 at 12:00.
+name: pilot
+collection: eval-v1
+games: {first: 5}
+attempts: 1
+concurrency: 6
+est_steps_per_game: 200
+models:
+  - {id: claude-haiku-5-5, effort: medium}
+  - {id: claude-sonnet-5-5, effort: medium}
+  - {id: gemini-flash, effort: medium}
+  - {id: nvidia-open-large}
+  - {id: featherless-open}
+baselines: [random, optimal, noop, stop_early]
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 1.50, max_wall_s: 2400}

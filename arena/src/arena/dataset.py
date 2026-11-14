@@ -3,6 +3,8 @@
 Each example = one harness turn: (system, user prompt built by agent_loop.build_parts, assistant JSON).
 Trajectories:
   optimal  - follow the shortest path every turn
+  gameover - wander on one random level until the budget runs out (context only), then RESET and
+             play well: teaches recovery from GAME_OVER
   recover  - with probability p take a random detour move (context only, NOT a training target),
              then the target is the BFS replan from wherever that left us; GAME_OVER -> RESET.
 So the model learns to act well from imperfect states, not just to replay perfect runs.
@@ -107,10 +109,20 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
     notes, history, out = "", [], []
     plan: list[str] = []
     detour, before = None, []
+    blow_level = rng.randint(1, game.truth()["levels_total"]) if kind == "gameover" else None
     for step in range(1, MAX_STEPS_PER_GAME + 1):
         t = game.truth()
         if t["state"] == "WIN":
             break
+        if blow_level is not None and t["state"] == "GAME_OVER":
+            blow_level, detour = None, None  # blown once; from here on: RESET, then play well
+        if blow_level is not None and t["level"] == blow_level and t["state"] != "GAME_OVER":
+            a = rng.choice(moves)  # wander (context only) until the budget runs out
+            plan = []
+            prev = frame
+            frame = game.step(a)
+            history.append((a, diff_count(prev, frame)))
+            continue
         take_detour = kind == "recover" and t["state"] != "GAME_OVER" and detour is None and rng.random() < p_detour
         example = None
         if take_detour:
@@ -127,7 +139,8 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
                         break  # unsolvable from here (should not happen with RESET allowed)
                 a = plan[0]
                 new_notes, hyp = _notes(t, plan, detour)
-            prompt = parts_to_text(build_parts(frame, notes, history, allowed, MODES, step))
+            allowed_now = [getattr(x, "value", x) for x in game.available_actions()] or allowed
+            prompt = parts_to_text(build_parts(frame, notes, history, allowed_now, MODES, step))
             example = (prompt, new_notes, hyp, a, t["level"])
             notes, detour, before = new_notes, None, []
             plan = plan[1:] if plan and plan[0] == a else []
@@ -146,14 +159,14 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
     return out
 
 
-def build(games, out_path: Path, n_recover: int = 2, seed: int = 0, log=print) -> Counter:
+def build(games, out_path: Path, n_recover: int = 2, n_gameover: int = 1, seed: int = 0, log=print) -> Counter:
     """games: iterable of (game_id, factory) where factory() returns a fresh Game."""
     rng = random.Random(seed)
     stats = Counter()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8") as f:
         for gid, factory in games:
-            for kind in ["optimal"] + ["recover"] * n_recover:
+            for kind in ["optimal"] + ["recover"] * n_recover + ["gameover"] * n_gameover:
                 exs = game_examples(factory(), rng, kind, game_id=gid)
                 for e in exs:
                     f.write(json.dumps(e) + "\n")

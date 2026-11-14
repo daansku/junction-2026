@@ -91,7 +91,7 @@ def plan(sw: dict, client, models: dict) -> tuple[list[Job], list[str]]:
         for eff in efforts:
             for g in games:
                 for att in range(sw["attempts"]):
-                    tin, tout = est_tokens_per_step(m, "both" if len(modes) > 1 else modes[0], eff)
+                    tin, tout = est_tokens_per_step(m, modes, eff)
                     steps = min(b.max_actions, sw.get("est_steps_per_game", 150))
                     est = price(m, tin * steps, tout * steps)
                     if est is not None:

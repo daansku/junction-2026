@@ -18,14 +18,10 @@ def price(model: dict, tokens_in: int, tokens_out: int) -> float | None:
     return tokens_in / 1e6 * pi + tokens_out / 1e6 * po
 
 
-def est_tokens_per_step(model: dict, input_mode: str, effort: str | None) -> tuple[int, int]:
-    tin = EST_PROMPT_TOKENS
-    if input_mode in ("text", "both"):
-        tin += EST_TEXT_GRID_TOKENS
-    if input_mode in ("image", "both"):
-        tin += EST_IMAGE_TOKENS
-    if input_mode == "rle":
-        tin += EST_RLE_TOKENS
+def est_tokens_per_step(model: dict, input_modes, effort: str | None) -> tuple[int, int]:
+    modes = [input_modes] if isinstance(input_modes, str) else list(input_modes)
+    per = {"text": EST_TEXT_GRID_TOKENS, "image": EST_IMAGE_TOKENS, "rle": EST_RLE_TOKENS}
+    tin = EST_PROMPT_TOKENS + sum(per.get(m, 0) for m in modes)
     return tin, EST_OUT_TOKENS.get(effort, EST_OUT_TOKENS[None])
 
 

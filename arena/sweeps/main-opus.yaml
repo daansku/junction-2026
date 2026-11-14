@@ -1,0 +1,10 @@
+# Opus on a subset of eval-v1 (cost). Same harness h1, separate sweep name so the subset is visible.
+name: main-opus-subset
+collection: eval-v1
+games: {first: 10}
+attempts: 3
+concurrency: 4
+est_steps_per_game: 250
+models:
+  - {id: claude-opus-5-5, effort: medium}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 4.00, max_wall_s: 3600}
