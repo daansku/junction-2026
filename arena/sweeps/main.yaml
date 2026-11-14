@@ -11,7 +11,7 @@ models:
   - {id: claude-sonnet-5-5, effort: medium}
   - {id: gemini-flash, effort: medium}
   - {id: gemini-pro, effort: medium}
-  - {id: nvidia-open-large}
+  - {id: nemotron-3-5-super-vl}
   - {id: featherless-open}
   - {id: verda-small}
 baselines: [random, optimal, noop, stop_early]

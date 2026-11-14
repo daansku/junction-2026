@@ -9,3 +9,9 @@
 **Why:** human wants featherless models in the sweeps. `arena/tests` still pass (51).
 
 **By when:** informational. Adjust ids/selection freely — it is your file.
+
+## Update: NVIDIA model = Nemotron 3.5 Super VL on Verda (human request)
+- `nvidia-open-large` placeholder replaced by `nemotron-3-5-super-vl`: provider `verda`, `base_url: https://containers.datacrunch.io/nemotron-3-5-super-vl-b300/v1`, `api_model: nemotron-3.5-super-vl`, `input_modes: [image, rle]`, key `VERDA_INFERENCE_KEY`. Source: organisers' opencode config.
+- `sweeps/pilot.yaml` and `sweeps/main.yaml` now reference `nemotron-3-5-super-vl`.
+- Endpoint returns 404 for every path without a key (incl. `/v1/models`), so it is untested here; no Verda key on A4's machine.
+- Model returns reasoning in `reasoning_content`; the adapter reads only `content`, which is fine as long as the JSON answer is in `content`. Max output 32,768.

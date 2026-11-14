@@ -9,7 +9,7 @@ models:
   - {id: claude-haiku-5-5, effort: medium}
   - {id: claude-sonnet-5-5, effort: medium}
   - {id: gemini-flash, effort: medium}
-  - {id: nvidia-open-large}
+  - {id: nemotron-3-5-super-vl}
   - {id: featherless-open}
 baselines: [random, optimal, noop, stop_early]
 budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 1.50, max_wall_s: 2400}
