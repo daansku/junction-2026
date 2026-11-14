@@ -104,7 +104,8 @@ def plan(sw: dict, client, models: dict) -> tuple[list[Job], list[str]]:
                     if est is not None:
                         est = min(est, b.max_cost_usd)
                     jobs.append(Job("model", m["id"], eff, g, att,
-                                    run_key(sw["collection"], g, m["id"], eff, HARNESS_VERSION, att), est))
+                                    run_key(sw["collection"], g, m["id"], eff, sw.get("harness", HARNESS_VERSION), att),
+                                    est))
     for name in sw["baselines"]:
         if name not in BASELINES:
             warnings.append(f"unknown baseline {name}")
@@ -195,13 +196,18 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
         if j.kind == "model":
             m = models[j.model_id]
             with sems[j.model_id]:
-                res = play_model(client, j.game_id, get_provider(m), m, effort=j.effort, run_key=j.key,
-                                 budgets=budgets, input_modes=None)
+                if sw.get("harness", HARNESS_VERSION) == "h2":
+                    from .agent_h2 import play_model_h2
+                    res = play_model_h2(client, j.game_id, m, effort=j.effort, run_key=j.key, budgets=budgets)
+                else:
+                    res = play_model(client, j.game_id, get_provider(m), m, effort=j.effort, run_key=j.key,
+                                     budgets=budgets, input_modes=None)
         else:
             res = BASELINES[j.kind](client, j.game_id, run_key=j.key, seed=j.attempt,
                                     max_actions=budgets.max_actions)
         row = {"sweep": sw["name"], "collection": sw["collection"], "model_id": j.model_id, "effort": j.effort,
-               "attempt": j.attempt, "run_key": j.key, "harness_version": HARNESS_VERSION, **asdict(res)}
+               "attempt": j.attempt, "run_key": j.key, "harness_version": sw.get("harness", HARNESS_VERSION),
+               **asdict(res)}
         with lock:
             rows.append(row)
             with results_path.open("a") as f:

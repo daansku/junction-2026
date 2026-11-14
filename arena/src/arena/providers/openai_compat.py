@@ -40,6 +40,16 @@ def make_client(provider: str, base_url: str | None = None, api_key_env: str | N
     return OpenAI(base_url=url, api_key=os.environ.get(key_env) or "EMPTY", timeout=timeout, max_retries=0)
 
 
+def billed_tokens(u) -> tuple[int, int]:
+    """(input, output) tokens as billed. Gemini's OpenAI-compatible endpoint leaves thinking tokens out of
+    `completion_tokens` but counts them in `total_tokens` (measured 2026-11-14: 89 reported vs 1878 real), so the
+    output is max(completion_tokens, total_tokens - prompt_tokens)."""
+    tin = getattr(u, "prompt_tokens", 0) or 0
+    comp = getattr(u, "completion_tokens", 0) or 0
+    total = getattr(u, "total_tokens", 0) or 0
+    return tin, max(comp, total - tin)
+
+
 class OpenAICompatProvider:
     def __init__(self, model: dict):
         self.model = model
@@ -67,8 +77,9 @@ class OpenAICompatProvider:
             messages=[{"role": "system", "content": system}, {"role": "user", "content": content}], **kw))
         ch = resp.choices[0]
         u = resp.usage
-        return Reply(text=ch.message.content or "", tokens_in=getattr(u, "prompt_tokens", 0) or 0,
-                     tokens_out=getattr(u, "completion_tokens", 0) or 0,
+        tin, tout = billed_tokens(u)
+        return Reply(text=ch.message.content or "", tokens_in=tin,
+                     tokens_out=tout,
                      latency_ms=int((time.time() - t0) * 1000),
                      refused=ch.finish_reason == "content_filter", raw_stop=ch.finish_reason)
 
