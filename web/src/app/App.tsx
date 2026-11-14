@@ -9,6 +9,7 @@ import { LiveWall } from '@/features/replay/LiveWall'
 import { ComparePage } from '@/features/compare/ComparePage'
 import { LeaderboardPage } from '@/features/leaderboard/LeaderboardPage'
 import { InsightsPage } from '@/features/insights/InsightsPage'
+import { ChallengePage } from '@/features/challenge/ChallengePage'
 import { NotFound } from './NotFound'
 
 const queryClient = new QueryClient({
@@ -16,10 +17,13 @@ const queryClient = new QueryClient({
 })
 
 const router = createBrowserRouter([
+  // Booth kiosk: the challenge without the top bar (PLAN.md §3.4).
+  { path: '/kiosk', element: <ChallengePage kiosk /> },
   {
     element: <Layout />,
     children: [
       { index: true, element: <OverviewPage /> },
+      { path: 'challenge', element: <ChallengePage /> },
       { path: 'play', element: <PlayPage /> },
       { path: 'play/:gameId', element: <PlayPage /> },
       { path: 'gallery', element: <GalleryPage /> },
