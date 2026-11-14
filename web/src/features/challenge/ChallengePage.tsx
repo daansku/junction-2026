@@ -18,6 +18,7 @@ import {
   DEFAULT_GAME,
   DEFAULT_LEVELS,
   fetchBoard,
+  fetchChallengeGhosts,
   loadStats,
   NAME_MAX,
   submitScore,
@@ -127,7 +128,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
   const ghostQs = useQueries({
     queries: levelList.map((lv) => ({
       queryKey: ['ghosts', gameId, lv, 'challenge'],
-      queryFn: () => fetchGhosts(gameId, lv, 3),
+      queryFn: () => fetchChallengeGhosts(gameId, lv, 4),
       staleTime: 10 * 60_000,
     })),
   })

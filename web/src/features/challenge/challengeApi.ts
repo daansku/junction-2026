@@ -4,6 +4,9 @@
 // labelled as such. Visitor plays never go to the research board: sessions carry player.mode
 // "challenge" (coordination/requests/A4-to-A5-challenge-runs-filter.md).
 import { API } from '@/lib/config'
+import { api } from '@/lib/api'
+import { fetchGhosts, type GhostSlice, type GhostsResponse } from '@/features/play/epistemicApi'
+import type { Frame, RunMeta, Step } from '@/lib/types'
 
 /**
  * Challenge set (human decision Sat ~19:30, "for now"): eval-v1 games a person has beaten, with the most models
@@ -161,5 +164,81 @@ export function clearLocalBoard(gameId: string) {
     localStorage.removeItem(localKey(gameId))
   } catch {
     /* ignore */
+  }
+}
+
+// ---- ghosts incl. runs still playing
+// The server's /games/{id}/ghosts uses finished runs only. A run still in progress that has already cleared a
+// level holds a complete attempt on that level, so the challenge adds those (one per model, best progress first).
+
+
+function sliceLevel(meta: RunMeta, steps: Step[], level: number): GhostSlice | null {
+  let start: Frame | null = null
+  const out: GhostSlice['steps'] = []
+  let solved = false
+  let prevLevel = 1
+  for (const st of steps) {
+    const lv = st.truth?.level ?? prevLevel
+    if (st.action === null) {
+      if (lv === level && !start) start = st.frame
+      prevLevel = lv
+      continue
+    }
+    if (prevLevel === level) {
+      out.push({ i: st.i, action: st.action, hypothesis: st.hypothesis ?? null, belief: st.belief ?? null, frame: st.frame, events: st.truth?.events ?? [] })
+      if (lv > level || st.truth?.state === 'WIN') {
+        solved = true
+        break
+      }
+    } else if (lv === level && !start) {
+      start = st.frame // the step that entered this level shows its first frame
+    }
+    prevLevel = lv
+  }
+  if (!out.length) return null
+  const hv = (meta.harness_version as string | undefined) ?? 'h1'
+  const name = meta.player?.name || meta.player?.model_id || 'model'
+  return {
+    run_id: meta.run_id,
+    player: { ...meta.player, name: hv === 'h1' ? name : `${name} · ${hv}` },
+    solved,
+    actions: out.length,
+    first_step: out[0].i,
+    start_frame: start,
+    steps: out,
+  }
+}
+
+export async function fetchChallengeGhosts(gameId: string, level: number, limit = 3): Promise<GhostsResponse> {
+  const base = await fetchGhosts(gameId, level, limit)
+  try {
+    const have = new Set(base.ghosts.map((g) => g.run_id))
+    const runs = await api.listRuns({ game_id: gameId, kind: 'model' })
+    const seen = new Set<string>()
+    const live = runs
+      .filter((r) => r.outcome === 'IN_PROGRESS' && (r.levels_completed ?? 0) >= level && !r.start_level && !r.takeover_of)
+      .sort((a, b) => (b.levels_completed ?? 0) - (a.levels_completed ?? 0))
+      .filter((r) => {
+        const id = `${r.player?.model_id || r.player?.name}::${r.harness_version ?? 'h1'}`
+        if (seen.has(id) || have.has(r.run_id)) return false
+        seen.add(id)
+        return true
+      })
+      .slice(0, limit)
+    const extra = await Promise.all(
+      live.map(async (r) => {
+        try {
+          return sliceLevel(r, await api.getRunSteps(r.run_id), level)
+        } catch {
+          return null
+        }
+      }),
+    )
+    const ghosts = [...base.ghosts, ...extra.filter((g): g is GhostSlice => !!g)]
+    // solvers first (fewest moves), then failed attempts, so a level never shows only failures when someone solved it
+    ghosts.sort((a, b) => Number(b.solved) - Number(a.solved) || a.actions - b.actions)
+    return { ...base, ghosts: ghosts.slice(0, limit) }
+  } catch {
+    return base
   }
 }
