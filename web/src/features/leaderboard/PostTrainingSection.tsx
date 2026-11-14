@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Chip, Empty, Loading, Panel, Stat, Swatch, cx } from '@/design/primitives'
 import { cssVar, seriesColors } from '@/lib/PlotFigure'
+import { ModelCardDialog, cardLabel } from './ModelCardDialog'
 import type {
   BenchComparison,
   BenchDeltaCell,
@@ -29,15 +30,8 @@ function fmtPct(v: number | null | undefined): string {
 function fmtUsd(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return '—'
   if (v === 0) return '$0.00'
-  if (v < 0.01) return `$${v.toFixed(4)}`
+  if (v < 0.01) return '<$0.01'
   return `$${v.toFixed(2)}`
-}
-
-function fmtTokens(v: number | null | undefined): string {
-  if (v == null || Number.isNaN(v) || v <= 0) return '—'
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(2)}M`
-  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k`
-  return `${Math.round(v)}`
 }
 
 function seriesColorFor(row: LeaderboardRow, fallbackIdx: number): string {
@@ -63,13 +57,29 @@ function formatReasoningMode(mode?: string | null): string {
   return mode
 }
 
+type H2SortKey = 'score' | 'level_solve_rate' | 'game_win_rate' | 'median_actions' | 'cost_per_game'
+type H2KindFilter = 'all' | 'model' | 'baseline' | 'human'
+
+const H2_HIGHER_IS_BETTER = new Set<H2SortKey>(['score', 'level_solve_rate', 'game_win_rate'])
+const H2_DEFAULT_COLLECTION = 'eval-v2'
+
+/** "Evaluated on 1/6 games in eval-v1 · …" -> "1/6" */
+function subsetCoverage(note: string | null | undefined): string | null {
+  const m = note?.match(/(\d+\/\d+)\s+games/)
+  return m ? m[1] : null
+}
+
 export function LeaderboardH2View(props: {
   doc?: LeaderboardH2Document
   isLoading?: boolean
   resolveRunFallback: (row: LeaderboardRow) => string | null
 }) {
   const { doc, isLoading, resolveRunFallback } = props
-  const [collection, setCollection] = useState<string>('all')
+  const [collectionPick, setCollection] = useState<string | null>(null)
+  const [kindFilter, setKindFilter] = useState<H2KindFilter>('all')
+  const [sortKey, setSortKey] = useState<H2SortKey>('score')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [cardRow, setCardRow] = useState<LeaderboardRow | null>(null)
 
   const allRows = doc?.rows ?? []
   const collections = useMemo(() => {
@@ -77,256 +87,228 @@ export function LeaderboardH2View(props: {
     for (const r of allRows) s.add(r.collection || 'eval-v1')
     return ['all', ...Array.from(s).sort()]
   }, [allRows])
+  const collection =
+    collectionPick ?? (collections.includes(H2_DEFAULT_COLLECTION) ? H2_DEFAULT_COLLECTION : 'all')
 
-  const filteredRows = useMemo(() => {
-    if (collection === 'all') return allRows
-    return allRows.filter((r) => r.collection === collection)
-  }, [allRows, collection])
+  const collectionRows = useMemo(
+    () => (collection === 'all' ? allRows : allRows.filter((r) => r.collection === collection)),
+    [allRows, collection],
+  )
+
+  const sortedRows = useMemo(() => {
+    const rows = kindFilter === 'all' ? collectionRows : collectionRows.filter((r) => r.kind === kindFilter)
+    return [...rows].sort((a, b) => {
+      const av = a[sortKey]
+      const bv = b[sortKey]
+      if (av == null && bv == null) return 0
+      if (av == null) return 1
+      if (bv == null) return -1
+      const cmp = Number(av) - Number(bv)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [collectionRows, kindFilter, sortKey, sortDir])
+
+  const bestValues = useMemo(() => {
+    const out: Partial<Record<H2SortKey, number>> = {}
+    for (const k of ['score', 'level_solve_rate', 'game_win_rate', 'median_actions', 'cost_per_game'] as H2SortKey[]) {
+      const vals = sortedRows.map((r) => r[k]).filter((v): v is number => typeof v === 'number' && !Number.isNaN(v))
+      if (vals.length) out[k] = H2_HIGHER_IS_BETTER.has(k) ? Math.max(...vals) : Math.min(...vals)
+    }
+    return out
+  }, [sortedRows])
+
+  const isBest = (row: LeaderboardRow, key: H2SortKey) => {
+    const v = row[key]
+    const best = bestValues[key]
+    return typeof v === 'number' && best != null && Math.abs(v - best) < 1e-6
+  }
+
+  const handleSort = (key: H2SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))
+    else {
+      setSortKey(key)
+      setSortDir(H2_HIGHER_IS_BETTER.has(key) ? 'desc' : 'asc')
+    }
+  }
+
+  const sortTh = (key: H2SortKey, label: string) => (
+    <th className="num">
+      <button className={cx('lb-sort-btn', sortKey === key && 'active')} onClick={() => handleSort(key)}>
+        {label}
+        {sortKey === key ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
+      </button>
+    </th>
+  )
+
+  const label = (r: LeaderboardRow) => (collection === 'all' ? rowLabel(r) : cardLabel(r))
 
   const kpi = useMemo(() => {
-    const models = filteredRows.filter((r) => r.kind === 'model')
-    const best = models.reduce<LeaderboardRow | null>(
-      (acc, cur) => (!acc || cur.score > acc.score ? cur : acc),
-      null,
-    )
-    const fullSetBest = models
-      .filter((r) => r.games >= 2)
-      .reduce<LeaderboardRow | null>((acc, cur) => (!acc || cur.score > acc.score ? cur : acc), null)
-    const human = filteredRows.find((r) => r.kind === 'human')
+    const models = collectionRows.filter((r) => r.kind === 'model')
+    const pickBest = (rows: LeaderboardRow[]) =>
+      rows.reduce<LeaderboardRow | null>((acc, cur) => (!acc || cur.score > acc.score ? cur : acc), null)
+    // Prefer rows evaluated on more than one game so a lucky single game doesn't headline.
+    const best = pickBest(models.filter((r) => r.games >= 2)) ?? pickBest(models)
+    const human = collectionRows.find((r) => r.kind === 'human')
+    const optimal = collectionRows.find((r) => r.player_id === 'optimal')
     const totalGames = models.reduce((acc, r) => acc + (r.games || 0), 0)
-    return { modelsCount: models.length, best, fullSetBest: fullSetBest ?? best, human, totalGames }
-  }, [filteredRows])
+    return { modelsCount: models.length, best, human, optimal, totalGames }
+  }, [collectionRows])
 
   if (isLoading && !doc) {
-    return <Loading what="Loading lab-standard h2 leaderboard" />
+    return <Loading what="Loading h2 leaderboard" />
+  }
+
+  if (allRows.length === 0) {
+    return <Empty>No h2 runs published yet.</Empty>
   }
 
   return (
-    <div className="lb-stack">
-      <Panel
-        label="Lab-Standard Evaluation Protocol (h2 · PLAN §3.1)"
-        actions={<span className="mono muted">strictly separated from h1 · zero hidden-rule leakage</span>}
-      >
-        <div className="lb-h2-rules-grid">
-          {(doc?.h2_rules ?? []).map((rule, i) => {
-            const colon = rule.indexOf(':')
-            const head = colon > 0 ? rule.slice(0, colon) : `Rule ${i + 1}`
-            const body = colon > 0 ? rule.slice(colon + 1).trim() : rule
-            return (
-              <div key={i} className="lb-h2-rule-cell">
-                <span className="mono lb-h2-rule-head">
-                  {String(i + 1).padStart(2, '0')} · {head}
-                </span>
-                <span className="lb-h2-rule-body">{body}</span>
-              </div>
-            )
-          })}
+    <>
+      <div className="lb-kpi-grid">
+        <div className="lb-kpi-cell">
+          <Stat
+            label="Best Model"
+            value={kpi.best ? fmtFloat(kpi.best.score, 3) : '—'}
+            sub={kpi.best ? label(kpi.best) : undefined}
+          />
+        </div>
+        <div className="lb-kpi-cell">
+          <Stat
+            label="Human"
+            value={fmtFloat(kpi.human?.score, 3)}
+            sub={`optimal ${fmtFloat(kpi.optimal?.score ?? 1, 3)}`}
+          />
+        </div>
+        <div className="lb-kpi-cell">
+          <Stat label="Games Evaluated" value={kpi.totalGames} sub={`${kpi.modelsCount} models`} />
+        </div>
+      </div>
+
+      <div className="lb-controls">
+        <div className="lb-filter-group" role="group" aria-label="Filter h2 collection">
+          <span className="kicker lb-filter-label">Collection</span>
+          {collections.map((c) => (
+            <Button key={c} mono active={collection === c} onClick={() => setCollection(c)}>
+              {c}
+            </Button>
+          ))}
+        </div>
+        <div className="lb-filter-group">
+          <span className="kicker lb-filter-label">Player</span>
+          {(['all', 'model', 'baseline', 'human'] as H2KindFilter[]).map((k) => (
+            <Button key={k} mono active={kindFilter === k} onClick={() => setKindFilter(k)}>
+              {k}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <Panel label="Leaderboard" actions={<span className="mono muted">click a name for its model card</span>}>
+        <div className="table-wrap">
+          <table className="table lb-ledger-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th className="num">Games</th>
+                {sortTh('score', 'Score')}
+                {sortTh('level_solve_rate', 'Levels Solved')}
+                {sortTh('game_win_rate', 'Games Won')}
+                {sortTh('median_actions', 'Med. Actions')}
+                {sortTh('cost_per_game', 'Cost / Game')}
+                <th className="num">Replay</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedRows.map((row, idx) => {
+                const color = seriesColorFor(row, idx)
+                const runId = row.best_run_id ?? resolveRunFallback(row)
+                const coverage = subsetCoverage(row.subset_note)
+                const showCi = row.score_ci_low != null && row.score_ci_high != null && row.games > 1
+                return (
+                  <tr key={`${row.player_id}-${row.collection}-${row.effort ?? 'none'}`}>
+                    <td>
+                      <button type="button" className="lb-name-btn" onClick={() => setCardRow(row)}>
+                        <Swatch color={color} />
+                        <span>{label(row)}</span>
+                        {row.kind !== 'model' && <span className="lb-tag">{row.kind}</span>}
+                      </button>
+                    </td>
+                    <td className="num" title={row.subset_note ?? undefined}>
+                      {coverage ?? row.games}
+                      {coverage && <span className="lb-tag lb-tag-warn lb-tag-inline">subset</span>}
+                    </td>
+                    <td
+                      className={cx('num', 'lb-score-td', isBest(row, 'score') && 'lb-best')}
+                      title={showCi ? `95% CI ${fmtFloat(row.score_ci_low, 3)} – ${fmtFloat(row.score_ci_high, 3)}` : undefined}
+                    >
+                      <div className="lb-score-wrap">
+                        <span>{fmtFloat(row.score, 3)}</span>
+                        <div className="lb-score-track" aria-hidden="true">
+                          <div
+                            className="lb-score-fill"
+                            style={{
+                              width: `${Math.max(0, Math.min(100, row.score * 100))}%`,
+                              background: color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td className={cx('num', isBest(row, 'level_solve_rate') && 'lb-best')}>
+                      {fmtPct(row.level_solve_rate)}
+                    </td>
+                    <td className={cx('num', isBest(row, 'game_win_rate') && 'lb-best')}>
+                      {fmtPct(row.game_win_rate)}
+                    </td>
+                    <td className={cx('num', isBest(row, 'median_actions') && 'lb-best')}>
+                      {row.median_actions != null ? Math.round(row.median_actions) : '—'}
+                    </td>
+                    <td className={cx('num', isBest(row, 'cost_per_game') && 'lb-best')}>
+                      {row.cost_per_game != null ? (
+                        fmtUsd(row.cost_per_game)
+                      ) : row.kind === 'model' ? (
+                        <span className="muted" title="Run on sponsored GPU credits">credits</span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="num mono">
+                      {runId ? (
+                        <Link to={`/replay/${encodeURIComponent(runId)}`} className="lb-replay-pill">
+                          ▶
+                        </Link>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </Panel>
 
-      {allRows.length === 0 ? (
-        <Panel label="Lab-Standard h2 Ledger">
-          <Empty>
-            No h2 runs are published on this snapshot yet. Run{' '}
-            <code className="mono">python -m analysis build</code> or wait for A2 to refresh{' '}
-            <code className="mono">/api/derived/leaderboard_h2.json</code>.
-          </Empty>
-        </Panel>
-      ) : (
-        <>
-          <div className="lb-kpi-grid">
-            <div className="lb-kpi-cell">
-              <Stat
-                label="Best Multi-Game h2 Model"
-                value={kpi.fullSetBest ? fmtFloat(kpi.fullSetBest.score, 3) : '—'}
-                sub={
-                  kpi.fullSetBest
-                    ? `${rowLabel(kpi.fullSetBest)} · 95% CI [${fmtFloat(kpi.fullSetBest.score_ci_low, 3)}, ${fmtFloat(kpi.fullSetBest.score_ci_high, 3)}]`
-                    : 'No h2 model rows'
-                }
-              />
-            </div>
-            <div className="lb-kpi-cell">
-              <Stat
-                label="Human First-Attempt Ref"
-                value={kpi.human ? fmtFloat(kpi.human.score, 3) : '—'}
-                sub={
-                  kpi.human
-                    ? `${kpi.human.display_name || 'Human'} · ${fmtPct(kpi.human.level_solve_rate)} lvl solve`
-                    : 'Matched h2 subset'
-                }
-              />
-            </div>
-            <div className="lb-kpi-cell">
-              <Stat
-                label="Optimal BFS Ceiling"
-                value="1.000"
-                sub="Exact solver shortest path · noop / stop_early = 0.000"
-              />
-            </div>
-            <div className="lb-kpi-cell">
-              <Stat
-                label="h2 Model Game Runs"
-                value={kpi.totalGames}
-                unit="games"
-                sub={`${kpi.modelsCount} model row(s) · 95% bootstrap CIs`}
-              />
-            </div>
-          </div>
-
-          <div className="lb-controls">
-            <div className="lb-filter-group" role="group" aria-label="Filter h2 collection">
-              <span className="kicker lb-filter-label">Collection</span>
-              {collections.map((c) => (
-                <Button
-                  key={c}
-                  mono
-                  active={collection === c}
-                  onClick={() => setCollection(c)}
-                >
-                  {c}
-                </Button>
-              ))}
-            </div>
-            <span className="mono muted">
-              single-attempt rows badged <code className="mono">k=1</code> · pre-17:35 budget-bug runs excluded
-            </span>
-          </div>
-
-          <Panel
-            label="Lab-Standard h2 Benchmark Ledger"
-            actions={<span className="mono muted">{filteredRows.length} rows · 10,000-resample bootstrap 95% CI</span>}
-          >
-            <div className="table-wrap">
-              <table className="table lb-ledger-table">
-                <thead>
-                  <tr className="lb-group-row">
-                    <th colSpan={4} className="lb-group-th">ENTITY &amp; HARNESS RETENTION</th>
-                    <th colSpan={4} className="lb-group-th lb-group-sep">OUTCOME &amp; UNCERTAINTY</th>
-                    <th colSpan={4} className="lb-group-th lb-group-sep">EFFICIENCY &amp; DIAGNOSTICS</th>
-                  </tr>
-                  <tr>
-                    <th>Player</th>
-                    <th>Collection</th>
-                    <th>Effort</th>
-                    <th>Reasoning Retention</th>
-                    <th className="num lb-group-sep">Games</th>
-                    <th className="num">Score [95% CI]</th>
-                    <th className="num">Lvl Solve</th>
-                    <th className="num">Game Win</th>
-                    <th className="num lb-group-sep">Med Act</th>
-                    <th className="num">Tokens (In / Out)</th>
-                    <th className="num">Cost / Game</th>
-                    <th className="num">Trace</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((row, idx) => {
-                    const color = seriesColorFor(row, idx)
-                    const runId = row.best_run_id ?? resolveRunFallback(row)
-                    const showCi =
-                      row.score_ci_low != null &&
-                      row.score_ci_high != null &&
-                      row.games > 1
-                    return (
-                      <tr key={`${row.player_id}-${row.collection}-${row.effort ?? 'none'}`}>
-                        <td>
-                          <div className="lb-player-stack">
-                            <div className="lb-player-cell">
-                              <Swatch color={color} />
-                              <span>{rowLabel(row)}</span>
-                              {row.kind === 'model' && (
-                                <span
-                                  className={cx('lb-tag', row.single_attempt && 'lb-tag-warn')}
-                                  title={
-                                    row.single_attempt
-                                      ? 'Single-attempt evaluation (k=1 run per game)'
-                                      : `${row.attempts_per_game ?? 1} attempts per game`
-                                  }
-                                >
-                                  {row.single_attempt ? 'k=1' : `k=${row.attempts_per_game ?? 1}`}
-                                </span>
-                              )}
-                              {row.subset_note && row.subset_note.includes('/') && (
-                                <span className="lb-tag" title={row.subset_note}>
-                                  subset
-                                </span>
-                              )}
-                            </div>
-                            <span className="lb-provider mono">
-                              {row.provider || row.kind}
-                              {row.max_tokens ? ` · cap ${Math.round(row.max_tokens / 1000)}k` : ''}
-                              {row.image_turns ? ` · last-${row.image_turns} frames` : ''}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="mono">{row.collection}</td>
-                        <td className="mono">{row.effort || '—'}</td>
-                        <td className="mono">{formatReasoningMode(row.reasoning_mode)}</td>
-                        <td className="num lb-group-sep">
-                          {row.games}
-                          <span className="muted mono"> ({row.levels_solved}/{row.levels_attempted})</span>
-                        </td>
-                        <td className="num lb-score-td">
-                          <div className="lb-score-wrap">
-                            <span>{fmtFloat(row.score, 3)}</span>
-                            <div className="lb-score-track" aria-hidden="true">
-                              <div
-                                className="lb-score-fill"
-                                style={{
-                                  width: `${Math.max(0, Math.min(100, row.score * 100))}%`,
-                                  background: color,
-                                }}
-                              />
-                            </div>
-                            <span className="mono lb-ci-sub">
-                              {showCi
-                                ? `[${fmtFloat(row.score_ci_low, 3)}, ${fmtFloat(row.score_ci_high, 3)}]`
-                                : row.games === 1 && row.kind === 'model'
-                                  ? 'n=1 game'
-                                  : '\u00a0'}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="num">{fmtPct(row.level_solve_rate)}</td>
-                        <td className="num">{fmtPct(row.game_win_rate)}</td>
-                        <td className="num lb-group-sep">
-                          {row.median_actions != null ? Math.round(row.median_actions) : '—'}
-                        </td>
-                        <td className="num mono">
-                          {row.tokens_in || row.tokens_out
-                            ? `${fmtTokens(row.tokens_in)} / ${fmtTokens(row.tokens_out)}`
-                            : '—'}
-                        </td>
-                        <td className="num mono">
-                          {row.cost_per_game != null
-                            ? fmtUsd(row.cost_per_game)
-                            : row.kind === 'model'
-                              ? 'credits'
-                              : '—'}
-                        </td>
-                        <td className="num mono">
-                          {runId ? (
-                            <Link to={`/replay/${encodeURIComponent(runId)}`} className="lb-replay-pill">
-                              #{runId.slice(-6)} →
-                            </Link>
-                          ) : (
-                            <span className="muted">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <div className="lb-subset-note mono">
-              Even under lab-standard multi-turn retention (h2, effort high/max, 32k–64k output cap, preserved thinking), frontier models trail first-attempt unassisted humans on full 6-game eval-v1 (0.671 vs 0.795) and 8-level eval-v2 (0.463 vs 0.637, 0% vs 100% game wins).
-            </div>
-          </Panel>
-        </>
+      {cardRow && (
+        <ModelCardDialog
+          row={cardRow}
+          color={seriesColorFor(cardRow, sortedRows.indexOf(cardRow))}
+          extra={[
+            [
+              '95% CI',
+              cardRow.score_ci_low != null && cardRow.score_ci_high != null && cardRow.games > 1
+                ? `${fmtFloat(cardRow.score_ci_low, 3)} – ${fmtFloat(cardRow.score_ci_high, 3)}`
+                : null,
+            ],
+            ['Attempts / game', cardRow.kind === 'model' ? `k=${cardRow.attempts_per_game ?? 1}` : null],
+            ['Reasoning', cardRow.reasoning_mode ? formatReasoningMode(cardRow.reasoning_mode) : null],
+            ['Output cap', cardRow.max_tokens ? `${Math.round(cardRow.max_tokens / 1000)}k tokens` : null],
+            ['Image history', cardRow.image_turns ? `last ${cardRow.image_turns} frames` : null],
+          ]}
+          onClose={() => setCardRow(null)}
+        />
       )}
-    </div>
+    </>
   )
 }
 

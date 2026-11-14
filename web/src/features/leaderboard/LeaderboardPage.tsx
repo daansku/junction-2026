@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Button,
-  Chip,
   Empty,
   ErrorState,
   Loading,
@@ -18,40 +17,28 @@ import { api } from '@/lib/api'
 import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
 import type { RunMeta } from '@/lib/types'
 import { fetchBenchSummary, fetchDecisionPoints, fetchLeaderboardH2 } from './phase2Api'
+import { ModelCardDialog } from './ModelCardDialog'
 import { LeaderboardH2View, PostTrainingBenchView } from './PostTrainingSection'
 import type { LeaderboardDocument, LeaderboardRow } from './types'
 import './leaderboard.css'
 
 type BoardView = 'h1' | 'h2' | 'bench'
 
-type SortKey =
-  | 'score'
-  | 'level_solve_rate'
-  | 'game_win_rate'
-  | 'median_actions'
-  | 'cost_per_game'
-  | 'cost_per_solved_level'
-  | 'latency_ms_median'
-  | 'resets_total'
-  | 'no_effect_rate'
-  | 'belief_accuracy'
+type SortKey = 'score' | 'level_solve_rate' | 'game_win_rate' | 'median_actions' | 'cost_per_game'
+
+const SORT_KEYS: SortKey[] = ['score', 'level_solve_rate', 'game_win_rate', 'median_actions', 'cost_per_game']
 
 type KindFilter = 'all' | 'model' | 'baseline' | 'human'
 
-const EFFORT_RANK: Record<string, number> = {
-  low: 0,
-  medium: 1,
-  high: 2,
-  xhigh: 3,
-  max: 4,
-}
+const DEFAULT_COLLECTION = 'eval-v2'
 
-const HIGHER_IS_BETTER = new Set<SortKey>([
-  'score',
-  'level_solve_rate',
-  'game_win_rate',
-  'belief_accuracy',
-])
+const HIGHER_IS_BETTER = new Set<SortKey>(['score', 'level_solve_rate', 'game_win_rate'])
+
+/** "Evaluated on 8/23 games in eval-v2 · …" -> "8/23" */
+function subsetCoverage(note: string | null | undefined): string | null {
+  const m = note?.match(/(\d+\/\d+)\s+games/)
+  return m ? m[1] : null
+}
 
 function fmtFloat(v: number | null | undefined, digits = 3): string {
   if (v == null || Number.isNaN(v)) return '—'
@@ -65,7 +52,8 @@ function fmtPct(v: number | null | undefined): string {
 
 function fmtUsd(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return '—'
-  return `$${v.toFixed(v < 0.01 ? 4 : 3)}`
+  if (v > 0 && v < 0.01) return '<$0.01'
+  return `$${v.toFixed(2)}`
 }
 
 function fmtInt(v: number | null | undefined): string {
@@ -79,18 +67,10 @@ function fmtTokensCompact(v: number): string {
   return String(Math.round(v))
 }
 
-function rowModes(row: LeaderboardRow): string {
-  const modes = row.input_modes ?? row.model?.input_modes
-  return modes && modes.length ? modes.join('+') : '—'
-}
-
-function rowLabel(row: LeaderboardRow): string {
-  const base = row.display_name || row.model?.display_name || row.player_id
+function rowLabel(row: LeaderboardRow, hideCollection = false): string {
+  let base = row.display_name || row.model?.display_name || row.player_id
+  if (hideCollection) base = base.replace(` [${row.collection}]`, '')
   return row.effort ? `${base} (${row.effort})` : base
-}
-
-function rowProvider(row: LeaderboardRow): string | null {
-  return row.model?.provider || row.provider || null
 }
 
 export function seriesColorFor(row: LeaderboardRow, fallbackIndex: number): string {
@@ -142,13 +122,13 @@ export function LeaderboardPage() {
     staleTime: 60_000,
   })
 
-  const [collection, setCollection] = useState<string>('all')
+  const [collectionPick, setCollection] = useState<string | null>(null)
   const [kindFilter, setKindFilter] = useState<KindFilter>('all')
   const [sortKey, setSortKey] = useState<SortKey>('score')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [frontierMode, setFrontierMode] = useState<'chart' | 'table'>('chart')
   const [frontierAxis, setFrontierAxis] = useState<'auto' | 'tokens' | 'usd'>('auto')
-  const [effortMode, setEffortMode] = useState<'chart' | 'table'>('chart')
+  const [cardRow, setCardRow] = useState<LeaderboardRow | null>(null)
 
   const allRows = lb.data?.rows ?? []
 
@@ -186,6 +166,9 @@ export function LeaderboardPage() {
     return ['all', ...Array.from(set).sort()]
   }, [allRows])
 
+  const collection =
+    collectionPick ?? (collections.includes(DEFAULT_COLLECTION) ? DEFAULT_COLLECTION : 'all')
+
   const collectionRows = useMemo(() => {
     if (collection === 'all') return allRows
     return allRows.filter((r) => r.collection === collection)
@@ -211,20 +194,8 @@ export function LeaderboardPage() {
   }, [filteredRows, sortKey, sortDir])
 
   const bestValues = useMemo(() => {
-    const keys: SortKey[] = [
-      'score',
-      'level_solve_rate',
-      'game_win_rate',
-      'median_actions',
-      'cost_per_game',
-      'cost_per_solved_level',
-      'latency_ms_median',
-      'resets_total',
-      'no_effect_rate',
-      'belief_accuracy',
-    ]
     const out: Partial<Record<SortKey, number>> = {}
-    for (const k of keys) {
+    for (const k of SORT_KEYS) {
       const vals = sortedRows
         .map((r) => r[k])
         .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v))
@@ -244,12 +215,7 @@ export function LeaderboardPage() {
     const humanRow = collectionRows.find((r) => r.kind === 'human' || r.player_id === 'human')
     const randomRow = collectionRows.find((r) => r.player_id === 'random')
     const noopRow = collectionRows.find((r) => r.player_id === 'noop')
-    const stopRow = collectionRows.find((r) => r.player_id === 'stop_early')
     const totalGames = collectionRows.reduce((acc, r) => acc + (r.games || 0), 0)
-    const integrityOk =
-      (noopRow == null || noopRow.score === 0) &&
-      (stopRow == null || stopRow.score === 0) &&
-      (optRow == null || optRow.score >= 0.999)
 
     return {
       totalGames,
@@ -259,8 +225,6 @@ export function LeaderboardPage() {
       humanScore: humanRow?.score ?? null,
       randomScore: randomRow?.score ?? null,
       noopScore: noopRow?.score ?? null,
-      stopScore: stopRow?.score ?? null,
-      integrityOk,
     }
   }, [collectionRows])
 
@@ -287,7 +251,7 @@ export function LeaderboardPage() {
           const xVal = effectiveAxis === 'usd' ? (row.cost_per_game ?? 0) : tokensPerGame
           return {
             row,
-            label: rowLabel(row),
+            label: rowLabel(row, collection !== 'all'),
             xVal,
             cost: row.cost_per_game ?? null,
             tokensPerGame,
@@ -297,65 +261,8 @@ export function LeaderboardPage() {
           }
         })
         .filter((pt) => pt.row.kind === 'model' && pt.xVal > 0),
-    [collectionRows, effectiveAxis, bestRunByPlayer],
+    [collectionRows, collection, effectiveAxis, bestRunByPlayer],
   )
-
-  const hasHoldout = useMemo(
-    () =>
-      sortedRows.some(
-        (r) =>
-          r.seen_score != null || r.unseen_pair_score != null || r.unseen_skin_score != null,
-      ),
-    [sortedRows],
-  )
-
-  const effortSeries = useMemo(() => {
-    const grouped = new Map<string, LeaderboardRow[]>()
-    for (const r of collectionRows) {
-      if (r.kind !== 'model' || !r.effort) continue
-      const key = `${r.player_id}::${r.collection}`
-      const list = grouped.get(key) ?? []
-      list.push(r)
-      grouped.set(key, list)
-    }
-    const multi: Array<{
-      player_id: string
-      label: string
-      effort: string
-      effortRank: number
-      score: number
-      cost: number | null
-    }> = []
-    for (const items of grouped.values()) {
-      if (items.length < 2) continue
-      const sorted = [...items].sort(
-        (a, b) => (EFFORT_RANK[a.effort || ''] ?? 99) - (EFFORT_RANK[b.effort || ''] ?? 99),
-      )
-      for (const it of sorted) {
-        multi.push({
-          player_id: it.player_id,
-          label: it.display_name || it.player_id,
-          effort: it.effort || 'default',
-          effortRank: EFFORT_RANK[it.effort || ''] ?? 99,
-          score: it.score,
-          cost: it.cost_per_game ?? null,
-        })
-      }
-    }
-    return multi
-  }, [collectionRows])
-
-  const registeredCards = useMemo(() => {
-    const seen = new Set<string>()
-    const list: Array<{ row: LeaderboardRow; color: string }> = []
-    collectionRows.forEach((r, idx) => {
-      if (r.kind !== 'model') return
-      if (seen.has(r.player_id)) return
-      seen.add(r.player_id)
-      list.push({ row: r, color: seriesColorFor(r, idx) })
-    })
-    return list
-  }, [collectionRows])
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -385,29 +292,24 @@ export function LeaderboardPage() {
     }
   }
 
-  const holdoutCols = hasHoldout ? 3 : 0
+  const sortTh = (key: SortKey, label: string) => (
+    <th className="num">
+      <button className={cx('lb-sort-btn', sortKey === key && 'active')} onClick={() => handleSort(key)}>
+        {label}
+        {sortArrow(key)}
+      </button>
+    </th>
+  )
+
+  const isBest = (row: LeaderboardRow, key: SortKey) => {
+    const v = row[key]
+    const best = bestValues[key]
+    return typeof v === 'number' && best != null && Math.abs(v - best) < 1e-6
+  }
 
   return (
     <div className="lb-stack">
-      <PageHeader
-        title="Benchmark Leaderboard"
-        sub="Action-efficiency scoring across stateless rolling-notes (h1), lab-standard multi-turn (h2), and post-training transfer."
-        actions={
-          <div className="page-actions">
-            {lb.data?.generated_at && (
-              <span className="mono muted">
-                built {lb.data.generated_at.replace('T', ' ').replace('Z', ' UTC')}
-              </span>
-            )}
-            <Link to="/challenge">
-              <Button mono>Beat the AI →</Button>
-            </Link>
-            <Link to="/insights">
-              <Button variant="primary" mono>Why Models Fail →</Button>
-            </Link>
-          </div>
-        }
-      />
+      <PageHeader title="Benchmark Leaderboard" />
 
       <div className="lb-view-tabs" role="tablist" aria-label="Evaluation harness and post-training views">
         <button
@@ -467,48 +369,16 @@ export function LeaderboardPage() {
           <div className="lb-kpi-grid" aria-label="Headline benchmark summary">
             <div className="lb-kpi-cell">
               <Stat
-                label="Best Evaluated Model"
+                label="Best Model"
                 value={kpi.bestModel ? fmtFloat(kpi.bestModel.score, 3) : '—'}
-                unit="eff."
-                sub={
-                  kpi.bestModel
-                    ? `${rowLabel(kpi.bestModel)} · gap ${(kpi.optScore - kpi.bestModel.score).toFixed(3)} to optimal`
-                    : 'No LLM runs scored yet'
-                }
+                sub={kpi.bestModel ? rowLabel(kpi.bestModel, collection !== 'all') : undefined}
               />
             </div>
             <div className="lb-kpi-cell">
-              <Stat
-                label="Reference Ceiling"
-                value={fmtFloat(kpi.optScore, 3)}
-                unit="optimal"
-                sub={
-                  kpi.humanScore != null
-                    ? `Human ${fmtFloat(kpi.humanScore, 3)} · Random ${fmtFloat(kpi.randomScore, 3)}`
-                    : `Random baseline ${fmtFloat(kpi.randomScore, 3)}`
-                }
-              />
+              <Stat label="Human" value={fmtFloat(kpi.humanScore, 3)} sub={`optimal ${fmtFloat(kpi.optScore, 3)}`} />
             </div>
             <div className="lb-kpi-cell">
-              <Stat
-                label="Evaluated Volume"
-                value={kpi.totalGames}
-                unit="game runs"
-                sub={`${collectionRows.length} entries · ${kpi.modelCount} model configs`}
-              />
-            </div>
-            <div className="lb-kpi-cell">
-              <div className="stat">
-                <span className="kicker">Reward Integrity</span>
-                <div style={{ marginTop: 4 }}>
-                  <Chip outcome={kpi.integrityOk ? 'WIN' : 'GAME_OVER'}>
-                    {kpi.integrityOk ? 'VERIFIED ZERO-EXPLOIT' : 'CHECK FAILED'}
-                  </Chip>
-                </div>
-                <span className="stat-sub mono">
-                  noop {fmtFloat(kpi.noopScore, 3)} · stop_early {fmtFloat(kpi.stopScore, 3)}
-                </span>
-              </div>
+              <Stat label="Games Evaluated" value={kpi.totalGames} sub={`${kpi.modelCount} models`} />
             </div>
           </div>
 
@@ -516,25 +386,15 @@ export function LeaderboardPage() {
             <div className="lb-filter-group">
               <span className="kicker lb-filter-label">Collection</span>
               {collections.map((c) => (
-                <Button
-                  key={c}
-                  mono
-                  active={collection === c}
-                  onClick={() => setCollection(c)}
-                >
+                <Button key={c} mono active={collection === c} onClick={() => setCollection(c)}>
                   {c}
                 </Button>
               ))}
             </div>
             <div className="lb-filter-group">
-              <span className="kicker lb-filter-label">Player kind</span>
+              <span className="kicker lb-filter-label">Player</span>
               {(['all', 'model', 'baseline', 'human'] as KindFilter[]).map((k) => (
-                <Button
-                  key={k}
-                  mono
-                  active={kindFilter === k}
-                  onClick={() => setKindFilter(k)}
-                >
+                <Button key={k} mono active={kindFilter === k} onClick={() => setKindFilter(k)}>
                   {k}
                 </Button>
               ))}
@@ -542,33 +402,111 @@ export function LeaderboardPage() {
           </div>
 
           <Panel
-            label={
-              effectiveAxis === 'tokens'
-                ? 'Score vs Compute (Tokens per Game) · Click Any Dot to Watch Replay'
-                : 'Score vs Cost ($ per Game) · Click Any Dot to Watch Replay'
-            }
+            label="Leaderboard"
+            actions={<span className="mono muted">click a name for its model card</span>}
+          >
+            <div className="table-wrap">
+              <table className="table lb-ledger-table">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th className="num">Games</th>
+                    {sortTh('score', 'Score')}
+                    {sortTh('level_solve_rate', 'Levels Solved')}
+                    {sortTh('game_win_rate', 'Games Won')}
+                    {sortTh('median_actions', 'Med. Actions')}
+                    {sortTh('cost_per_game', 'Cost / Game')}
+                    <th className="num">Replay</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRows.map((row, idx) => {
+                    const color = seriesColorFor(row, idx)
+                    const bestRunId = resolveBestRun(row)
+                    const coverage = subsetCoverage(row.subset_note)
+                    return (
+                      <tr key={`${row.player_id}-${row.effort ?? 'none'}-${row.collection}-${row.harness_version ?? 'h1'}`}>
+                        <td>
+                          <button type="button" className="lb-name-btn" onClick={() => setCardRow(row)}>
+                            <Swatch color={color} />
+                            <span>{rowLabel(row, collection !== 'all')}</span>
+                            {row.kind !== 'model' && <span className="lb-tag">{row.kind}</span>}
+                          </button>
+                        </td>
+                        <td className="num" title={row.subset_note ?? undefined}>
+                          {coverage ?? row.games}
+                          {coverage && <span className="lb-tag lb-tag-warn lb-tag-inline">subset</span>}
+                        </td>
+                        <td className={cx('num', 'lb-score-td', isBest(row, 'score') && 'lb-best')}>
+                          <div className="lb-score-wrap">
+                            <span>{fmtFloat(row.score, 3)}</span>
+                            <div className="lb-score-track" aria-hidden="true">
+                              <div
+                                className="lb-score-fill"
+                                style={{
+                                  width: `${Math.max(0, Math.min(100, row.score * 100))}%`,
+                                  background: color,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className={cx('num', isBest(row, 'level_solve_rate') && 'lb-best')}>
+                          {fmtPct(row.level_solve_rate)}
+                        </td>
+                        <td className={cx('num', isBest(row, 'game_win_rate') && 'lb-best')}>
+                          {fmtPct(row.game_win_rate)}
+                        </td>
+                        <td className={cx('num', isBest(row, 'median_actions') && 'lb-best')}>
+                          {fmtInt(row.median_actions)}
+                        </td>
+                        <td className={cx('num', isBest(row, 'cost_per_game') && 'lb-best')}>
+                          <span
+                            className="lb-cost-cell"
+                            title={
+                              row.cost_underreported
+                                ? row.cost_note ||
+                                  'Thinking tokens excluded from this run; true API cost ~3.6x higher.'
+                                : undefined
+                            }
+                          >
+                            {fmtUsd(row.cost_per_game)}
+                            {row.cost_underreported && <span className="lb-tag lb-tag-warn">~3.6× low</span>}
+                          </span>
+                        </td>
+                        <td className="num mono">
+                          {bestRunId ? (
+                            <Link to={`/replay/${encodeURIComponent(bestRunId)}`} className="lb-replay-pill">
+                              ▶
+                            </Link>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+
+          <Panel
+            label={effectiveAxis === 'tokens' ? 'Score vs Tokens / Game' : 'Score vs Cost / Game'}
             actions={
               <div className="page-actions">
-                <Button
-                  mono
-                  active={effectiveAxis === 'tokens'}
-                  onClick={() => setFrontierAxis('tokens')}
-                >
-                  Tokens / Game
+                <Button mono active={effectiveAxis === 'tokens'} onClick={() => setFrontierAxis('tokens')}>
+                  Tokens
                 </Button>
-                <Button
-                  mono
-                  active={effectiveAxis === 'usd'}
-                  onClick={() => setFrontierAxis('usd')}
-                >
-                  USD / Game
+                <Button mono active={effectiveAxis === 'usd'} onClick={() => setFrontierAxis('usd')}>
+                  USD
                 </Button>
                 <Button
                   mono
                   active={frontierMode === 'table'}
                   onClick={() => setFrontierMode((m) => (m === 'chart' ? 'table' : 'chart'))}
                 >
-                  {frontierMode === 'chart' ? 'Show Table' : 'Show Plot'}
+                  {frontierMode === 'chart' ? 'Table' : 'Plot'}
                 </Button>
               </div>
             }
@@ -579,40 +517,31 @@ export function LeaderboardPage() {
                   <thead>
                     <tr>
                       <th>Player</th>
-                      <th>Kind</th>
-                      <th>Input</th>
+                      <th className="num">Score</th>
                       <th className="num">Cost / Game</th>
-                      <th className="num">Cost / Solved Lvl</th>
-                      <th className="num">Eff. Score</th>
-                      <th className="num">Tokens In</th>
-                      <th className="num">Tokens Out</th>
+                      <th className="num">Tokens / Game</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {collectionRows.map((r, i) => (
-                      <tr key={`${r.player_id}-${r.effort ?? 'none'}-${r.collection}-${i}`}>
+                    {frontierPoints.map((pt, i) => (
+                      <tr key={`${pt.row.player_id}-${pt.row.effort ?? 'none'}-${i}`}>
                         <td>
                           <span className="lb-player-cell">
-                            <Swatch color={seriesColorFor(r, i)} />
-                            <span>{rowLabel(r)}</span>
+                            <Swatch color={pt.color} />
+                            <span>{pt.label}</span>
                           </span>
                         </td>
-                        <td className="mono">{r.kind}</td>
-                        <td className="mono">{rowModes(r)}</td>
-                        <td className="num">{fmtUsd(r.cost_per_game)}</td>
-                        <td className="num">{fmtUsd(r.cost_per_solved_level)}</td>
-                        <td className="num">{fmtFloat(r.score, 3)}</td>
-                        <td className="num">{fmtInt(r.tokens_in)}</td>
-                        <td className="num">{fmtInt(r.tokens_out)}</td>
+                        <td className="num">{fmtFloat(pt.score, 3)}</td>
+                        <td className="num">{fmtUsd(pt.cost)}</td>
+                        <td className="num">{fmtTokensCompact(pt.tokensPerGame)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : frontierPoints.length === 0 ? (
-              <Empty>No model compute/cost runs available for the log frontier.</Empty>
+              <Empty>No model cost data for this collection.</Empty>
             ) : (
-              <>
                 <div className="lb-plot-box lb-plot-clickable" onClick={onScatterClick}>
                   <PlotFigure
                     deps={[frontierPoints, effectiveAxis, kpi.optScore, kpi.humanScore, kpi.randomScore, kpi.noopScore, collectionRows]}
@@ -639,7 +568,7 @@ export function LeaderboardPage() {
                       if (effectiveAxis === 'usd') {
                         for (const r of collectionRows) {
                           if (r.kind === 'model' && (r.cost_per_game == null || r.cost_per_game <= 0) && r.score > 0) {
-                            rawRefs.push({ y: r.score, name: `${rowLabel(r)} [credits]`, style: 'long-dash' })
+                            rawRefs.push({ y: r.score, name: `${rowLabel(r, collection !== 'all')} (credits)`, style: 'long-dash' })
                           }
                         }
                       }
@@ -649,12 +578,12 @@ export function LeaderboardPage() {
                       for (const item of rawRefs) {
                         const prev = refLines[refLines.length - 1]
                         if (prev && Math.abs(prev.y - item.y) < 0.038) {
-                          const baseNames = prev.label.replace(/\s*\([0-9.]+\)$/, '')
-                          prev.label = `${baseNames} / ${item.name} (${prev.y.toFixed(3)})`
+                          const baseNames = prev.label.replace(/\s+[0-9.]+$/, '')
+                          prev.label = `${baseNames} / ${item.name} ${prev.y.toFixed(2)}`
                         } else {
                           refLines.push({
                             y: item.y,
-                            label: `${item.name} (${item.y.toFixed(3)})`,
+                            label: `${item.name} ${item.y.toFixed(2)}`,
                             style: item.style,
                           })
                         }
@@ -664,29 +593,107 @@ export function LeaderboardPage() {
                       const dashRefs = refLines.filter((r) => r.style === 'long-dash')
                       const dotRefs = refLines.filter((r) => r.style === 'dotted')
 
-                      const primaryLabelPoints = frontierPoints.filter((_, idx) => !(idx % 2 === 1 && frontierPoints[idx]?.score === 0))
-                      const staggeredLabelPoints = frontierPoints.filter((_, idx) => idx % 2 === 1 && frontierPoints[idx]?.score === 0)
+                      // Layout in pixels so labels can be placed without overlapping each other or the dots.
+                      const height = 280
+                      const mL = 44
+                      const mR = 118
+                      const mT = 24
+                      const mB = 40
+                      const innerW = width - mL - mR
+                      const innerH = height - mT - mB
+                      const yMax = 1.06
+                      const lnMin = Math.log(xMin)
+                      const lnMax = Math.log(xMax)
+                      const px = (x: number) => mL + ((Math.log(x) - lnMin) / (lnMax - lnMin)) * innerW
+                      const py = (y: number) => mT + (1 - y / yMax) * innerH
+                      const dataX = (p: number) => Math.exp(lnMin + ((p - mL) / innerW) * (lnMax - lnMin))
+                      const dataY = (p: number) => yMax * (1 - (p - mT) / innerH)
+
+                      const sameEffort = new Set(frontierPoints.map((p) => p.row.effort ?? '')).size <= 1
+                      const shortLabel = (p: (typeof frontierPoints)[number]) =>
+                        sameEffort && p.row.effort ? p.label.replace(` (${p.row.effort})`, '') : p.label
+
+                      type Anchor = 'start' | 'middle' | 'end'
+                      type Box = { x0: number; x1: number; y0: number; y1: number }
+                      const CANDIDATES: Array<[number, number, Anchor]> = [
+                        [0, -14, 'middle'],
+                        [0, 15, 'middle'],
+                        [11, 0, 'start'],
+                        [-11, 0, 'end'],
+                        [8, -12, 'start'],
+                        [-8, -12, 'end'],
+                        [8, 13, 'start'],
+                        [-8, 13, 'end'],
+                        [0, -27, 'middle'],
+                        [0, 28, 'middle'],
+                      ]
+                      const overlap = (a: Box, b: Box) =>
+                        Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) *
+                        Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0))
+                      const dotBoxes: Box[] = frontierPoints.map((p) => ({
+                        x0: px(p.xVal) - 8,
+                        x1: px(p.xVal) + 8,
+                        y0: py(p.score) - 8,
+                        y1: py(p.score) + 8,
+                      }))
+                      const placed: Box[] = []
+                      const labels: Array<{ x: number; y: number; text: string; anchor: Anchor }> = []
+                      const order = frontierPoints
+                        .map((_, i) => i)
+                        .sort((a, b) => frontierPoints[b].score - frontierPoints[a].score)
+                      for (const i of order) {
+                        const p = frontierPoints[i]
+                        const text = shortLabel(p)
+                        const w = text.length * 6 + 4
+                        const cx0 = px(p.xVal)
+                        const cy0 = py(p.score)
+                        let best: { cost: number; x: number; y: number; anchor: Anchor; box: Box } | null = null
+                        for (const [dx, dy, anchor] of CANDIDATES) {
+                          const x = cx0 + dx
+                          const y = cy0 + dy
+                          const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2
+                          const box = { x0, x1: x0 + w, y0: y - 6, y1: y + 6 }
+                          let cost = 0
+                          for (const b of placed) cost += overlap(box, b)
+                          dotBoxes.forEach((b, j) => {
+                            if (j !== i) cost += overlap(box, b)
+                          })
+                          if (box.x0 < mL || box.x1 > width - mR + 4) cost += 500
+                          if (box.y0 < 2 || box.y1 > height - mB) cost += 500
+                          if (!best || cost < best.cost) best = { cost, x, y, anchor, box }
+                          if (cost === 0) break
+                        }
+                        // No free spot: leave the dot unlabeled (hover still names it) rather than overlap.
+                        if (best && best.cost === 0) {
+                          placed.push(best.box)
+                          labels.push({ x: dataX(best.x), y: dataY(best.y), text, anchor: best.anchor })
+                        }
+                      }
+                      const labelMark = (anchor: Anchor) =>
+                        Plot.text(
+                          labels.filter((l) => l.anchor === anchor),
+                          { x: 'x', y: 'y', text: 'text', textAnchor: anchor, fill: cssVar('--text-1') },
+                        )
 
                       return {
                         width,
-                        height: 245,
-                        marginRight: 156,
-                        marginBottom: 38,
+                        height,
+                        marginLeft: mL,
+                        marginRight: mR,
+                        marginTop: mT,
+                        marginBottom: mB,
                         x: {
                           type: 'log',
                           domain: [xMin, xMax],
-                          label:
-                            effectiveAxis === 'usd'
-                              ? 'Cost per game (USD, log scale)'
-                              : 'Total tokens per game (in + out, log scale)',
+                          label: effectiveAxis === 'usd' ? 'Cost per game (USD, log)' : 'Tokens per game (log)',
                           tickFormat: (d: number) =>
                             effectiveAxis === 'usd'
                               ? `$${d < 0.01 ? d.toFixed(3) : d.toFixed(2)}`
                               : fmtTokensCompact(d),
                         },
                         y: {
-                          domain: [0, 1.06],
-                          label: 'Action-efficiency score',
+                          domain: [0, yMax],
+                          label: 'Score',
                         },
                         marks: [
                           Plot.ruleY(solidRefs, {
@@ -721,371 +728,38 @@ export function LeaderboardPage() {
                             r: 7,
                             tip: true,
                             title: (d: (typeof frontierPoints)[number]) =>
-                              `${d.label} [${rowModes(d.row)}]\nScore: ${d.score.toFixed(3)}\nSolve rate: ${(d.row.level_solve_rate * 100).toFixed(1)}%\nTokens/game: ${fmtTokensCompact(d.tokensPerGame)}${d.cost != null ? `\nCost/game: $${d.cost.toFixed(4)}` : '\nCost/game: sponsored GPU credits'}${d.runId ? '\nClick dot to open best replay →' : ''}`,
+                              [
+                                d.label,
+                                `Score ${d.score.toFixed(3)}`,
+                                effectiveAxis === 'usd'
+                                  ? d.cost != null
+                                    ? `${fmtUsd(d.cost)} per game`
+                                    : 'No USD price (GPU credits)'
+                                  : `${fmtTokensCompact(d.tokensPerGame)} tokens per game`,
+                                d.runId ? 'Click to watch replay' : null,
+                              ]
+                                .filter(Boolean)
+                                .join('\n'),
                           }),
-                          Plot.text(primaryLabelPoints, {
-                            x: 'xVal',
-                            y: 'score',
-                            text: 'label',
-                            dy: -12,
-                            fill: cssVar('--text-1'),
-                          }),
-                          Plot.text(staggeredLabelPoints, {
-                            x: 'xVal',
-                            y: 'score',
-                            text: 'label',
-                            dy: -24,
-                            fill: cssVar('--text-1'),
-                          }),
+                          labelMark('middle'),
+                          labelMark('start'),
+                          labelMark('end'),
                         ],
                       }
                     }}
                   />
                 </div>
-                <div className="lb-ref-legend mono">
-                  <span>
-                    <span className="lb-line-sample lb-line-solid" /> optimal ({fmtFloat(kpi.optScore, 3)})
-                  </span>
-                  {kpi.humanScore != null && (
-                    <span>
-                      <span className="lb-line-sample lb-line-dash" /> human ({fmtFloat(kpi.humanScore, 3)})
-                    </span>
-                  )}
-                  <span>
-                    <span className="lb-line-sample lb-line-dot" /> random / noop ({fmtFloat(kpi.randomScore ?? 0, 3)} / {fmtFloat(kpi.noopScore ?? 0, 3)})
-                  </span>
-                </div>
-              </>
             )}
           </Panel>
-
-          <Panel
-            label="Benchmark Ledger"
-            actions={<span className="mono muted">{sortedRows.length} rows · click column headers to sort</span>}
-          >
-            <div className="table-wrap">
-              <table className="table lb-ledger-table">
-                <thead>
-                  <tr className="lb-group-row">
-                    <th colSpan={4} className="lb-group-th">ENTITY &amp; MODALITY</th>
-                    <th colSpan={4 + holdoutCols} className="lb-group-th lb-group-sep">OUTCOME</th>
-                    <th colSpan={3} className="lb-group-th lb-group-sep">EFFICIENCY</th>
-                    <th colSpan={4} className="lb-group-th lb-group-sep">BEHAVIOUR</th>
-                  </tr>
-                  <tr>
-                    <th>Player</th>
-                    <th>Kind</th>
-                    <th>Input</th>
-                    <th>Harness</th>
-                    <th className="num lb-group-sep">Games</th>
-                    <th className="num">
-                      <button className={cx('lb-sort-btn', sortKey === 'score' && 'active')} onClick={() => handleSort('score')}>
-                        Score{sortArrow('score')}
-                      </button>
-                    </th>
-                    {hasHoldout && <th className="num">Seen</th>}
-                    {hasHoldout && <th className="num">Unseen Pair</th>}
-                    {hasHoldout && <th className="num">Unseen Skin</th>}
-                    <th className="num">
-                      <button className={cx('lb-sort-btn', sortKey === 'level_solve_rate' && 'active')} onClick={() => handleSort('level_solve_rate')}>
-                        Lvl Solve{sortArrow('level_solve_rate')}
-                      </button>
-                    </th>
-                    <th className="num">
-                      <button className={cx('lb-sort-btn', sortKey === 'game_win_rate' && 'active')} onClick={() => handleSort('game_win_rate')}>
-                        Game Win{sortArrow('game_win_rate')}
-                      </button>
-                    </th>
-                    <th className="num lb-group-sep">
-                      <button className={cx('lb-sort-btn', sortKey === 'median_actions' && 'active')} onClick={() => handleSort('median_actions')}>
-                        Med Act{sortArrow('median_actions')}
-                      </button>
-                    </th>
-                    <th className="num">
-                      <button className={cx('lb-sort-btn', sortKey === 'cost_per_game' && 'active')} onClick={() => handleSort('cost_per_game')}>
-                        Cost/Game{sortArrow('cost_per_game')}
-                      </button>
-                    </th>
-                    <th className="num">
-                      <button className={cx('lb-sort-btn', sortKey === 'latency_ms_median' && 'active')} onClick={() => handleSort('latency_ms_median')}>
-                        Latency{sortArrow('latency_ms_median')}
-                      </button>
-                    </th>
-                    <th className="num lb-group-sep">
-                      <button className={cx('lb-sort-btn', sortKey === 'resets_total' && 'active')} onClick={() => handleSort('resets_total')}>
-                        Resets{sortArrow('resets_total')}
-                      </button>
-                    </th>
-                    <th className="num">
-                      <button className={cx('lb-sort-btn', sortKey === 'no_effect_rate' && 'active')} onClick={() => handleSort('no_effect_rate')}>
-                        No-Effect{sortArrow('no_effect_rate')}
-                      </button>
-                    </th>
-                    <th className="num">
-                      <button className={cx('lb-sort-btn', sortKey === 'belief_accuracy' && 'active')} onClick={() => handleSort('belief_accuracy')}>
-                        Belief{sortArrow('belief_accuracy')}
-                      </button>
-                    </th>
-                    <th className="num">Trace</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedRows.map((row, idx) => {
-                    const color = seriesColorFor(row, idx)
-                    const prov = rowProvider(row)
-                    const bestRunId = resolveBestRun(row)
-                    const bestScore = bestValues.score != null && Math.abs(row.score - bestValues.score) < 1e-6
-                    const bestSolve =
-                      bestValues.level_solve_rate != null &&
-                      Math.abs(row.level_solve_rate - bestValues.level_solve_rate) < 1e-6
-                    const bestWin =
-                      bestValues.game_win_rate != null &&
-                      Math.abs(row.game_win_rate - bestValues.game_win_rate) < 1e-6
-                    const bestMedAct =
-                      row.median_actions != null &&
-                      bestValues.median_actions != null &&
-                      Math.abs(row.median_actions - bestValues.median_actions) < 1e-6
-                    const bestCost =
-                      row.cost_per_game != null &&
-                      bestValues.cost_per_game != null &&
-                      Math.abs(row.cost_per_game - bestValues.cost_per_game) < 1e-6
-                    const bestLat =
-                      row.latency_ms_median != null &&
-                      bestValues.latency_ms_median != null &&
-                      Math.abs(row.latency_ms_median - bestValues.latency_ms_median) < 1e-6
-                    const bestResets =
-                      row.resets_total != null &&
-                      bestValues.resets_total != null &&
-                      Math.abs(row.resets_total - bestValues.resets_total) < 1e-6
-                    const bestNoEff =
-                      row.no_effect_rate != null &&
-                      bestValues.no_effect_rate != null &&
-                      Math.abs(row.no_effect_rate - bestValues.no_effect_rate) < 1e-6
-                    const bestBelief =
-                      row.belief_accuracy != null &&
-                      bestValues.belief_accuracy != null &&
-                      Math.abs(row.belief_accuracy - bestValues.belief_accuracy) < 1e-6
-
-                    return (
-                      <tr key={`${row.player_id}-${row.effort ?? 'none'}-${row.collection}-${row.harness_version ?? 'h1'}`}>
-                        <td>
-                          <div className="lb-player-stack">
-                            <div className="lb-player-cell">
-                              <Swatch color={color} />
-                              <span>{rowLabel(row)}</span>
-                              {row.subset_note && (
-                                <span className="lb-tag" title={row.subset_note}>
-                                  subset
-                                </span>
-                              )}
-                            </div>
-                            {prov && <span className="lb-provider mono">{prov}</span>}
-                          </div>
-                        </td>
-                        <td className="mono">{row.tier || row.kind}</td>
-                        <td className="mono">{rowModes(row)}</td>
-                        <td className="mono">{row.harness_version || '—'}</td>
-                        <td className="num lb-group-sep">{row.games}</td>
-                        <td className={cx('num', 'lb-score-td', bestScore && 'lb-best')}>
-                          <div className="lb-score-wrap">
-                            <span>{fmtFloat(row.score, 3)}</span>
-                            <div className="lb-score-track" aria-hidden="true">
-                              <div
-                                className="lb-score-fill"
-                                style={{
-                                  width: `${Math.max(0, Math.min(100, row.score * 100))}%`,
-                                  background: color,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        {hasHoldout && <td className="num">{fmtFloat(row.seen_score, 3)}</td>}
-                        {hasHoldout && <td className="num">{fmtFloat(row.unseen_pair_score, 3)}</td>}
-                        {hasHoldout && <td className="num">{fmtFloat(row.unseen_skin_score, 3)}</td>}
-                        <td className={cx('num', bestSolve && 'lb-best')}>
-                          {fmtPct(row.level_solve_rate)}
-                        </td>
-                        <td className={cx('num', bestWin && 'lb-best')}>
-                          {fmtPct(row.game_win_rate)}
-                        </td>
-                        <td className={cx('num', 'lb-group-sep', bestMedAct && 'lb-best')}>
-                          {fmtInt(row.median_actions)}
-                        </td>
-                        <td className={cx('num', bestCost && 'lb-best')}>
-                          <span className="lb-cost-cell">
-                            <span>{fmtUsd(row.cost_per_game)}</span>
-                            {row.cost_underreported && (
-                              <span
-                                className="lb-tag lb-tag-warn"
-                                title={
-                                  row.cost_note ||
-                                  'Pre-17:15 Gemini run: thinking tokens excluded from completion_tokens; true API cost ~3.6x higher.'
-                                }
-                              >
-                                ~3.6× low
-                              </span>
-                            )}
-                          </span>
-                        </td>
-                        <td className={cx('num', bestLat && 'lb-best')}>
-                          {row.latency_ms_median != null ? `${Math.round(row.latency_ms_median)} ms` : '—'}
-                        </td>
-                        <td className={cx('num', 'lb-group-sep', bestResets && 'lb-best')}>
-                          {row.resets_total ?? '—'}
-                        </td>
-                        <td className={cx('num', bestNoEff && 'lb-best')}>
-                          {fmtPct(row.no_effect_rate)}
-                        </td>
-                        <td className={cx('num', bestBelief && 'lb-best')}>
-                          {fmtPct(row.belief_accuracy)}
-                        </td>
-                        <td className="num mono">
-                          {bestRunId ? (
-                            <Link to={`/replay/${encodeURIComponent(bestRunId)}`} className="lb-replay-pill">
-                              #{bestRunId.slice(-6)} →
-                            </Link>
-                          ) : (
-                            <span className="muted">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <div className="lb-subset-note mono">
-              Modality note: harness h1 sends lossless 64×64 run-length grids (rle) to all models plus PNG frames (image+rle) to vision-capable models.
-              {sortedRows.some((r) => r.subset_note) && (
-                <>
-                  {' · '}Subset evaluations:{' '}
-                  {sortedRows
-                    .filter((r) => r.subset_note)
-                    .map((r) => `${rowLabel(r)}: ${r.subset_note}`)
-                    .join(' · ')}
-                </>
-              )}
-            </div>
-          </Panel>
-
-          <div className="lb-two-col">
-            <Panel
-              label="Thinking-Effort Ablation"
-              actions={
-                effortSeries.length > 0 && (
-                  <Button
-                    mono
-                    active={effortMode === 'table'}
-                    onClick={() => setEffortMode((m) => (m === 'chart' ? 'table' : 'chart'))}
-                  >
-                    {effortMode === 'chart' ? 'Show Table' : 'Show Plot'}
-                  </Button>
-                )
-              }
-            >
-              {effortSeries.length === 0 ? (
-                <Empty>
-                  Effort ablation compares a single model across multiple reasoning budgets (low → medium → high). Currently only single-effort rows are loaded for this collection.
-                </Empty>
-              ) : effortMode === 'table' ? (
-                <div className="table-wrap">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Model</th>
-                        <th>Effort</th>
-                        <th className="num">Score</th>
-                        <th className="num">Cost / Game</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {effortSeries.map((pt) => (
-                        <tr key={`${pt.player_id}-${pt.effort}`}>
-                          <td>{pt.label}</td>
-                          <td className="mono">{pt.effort}</td>
-                          <td className="num">{fmtFloat(pt.score, 3)}</td>
-                          <td className="num">{fmtUsd(pt.cost)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <PlotFigure
-                  deps={[effortSeries]}
-                  make={(width) => ({
-                    width,
-                    height: 220,
-                    marginBottom: 34,
-                    x: {
-                      label: 'Reasoning effort',
-                      domain: ['low', 'medium', 'high', 'xhigh', 'max'].filter((e) =>
-                        effortSeries.some((p) => p.effort === e),
-                      ),
-                    },
-                    y: { domain: [0, 1], label: 'Action-efficiency score' },
-                    color: { legend: true, range: seriesColors() },
-                    marks: [
-                      Plot.lineY(effortSeries, {
-                        x: 'effort',
-                        y: 'score',
-                        stroke: 'label',
-                        strokeWidth: 2,
-                      }),
-                      Plot.dot(effortSeries, {
-                        x: 'effort',
-                        y: 'score',
-                        fill: 'label',
-                        stroke: cssVar('--surface-1'),
-                        strokeWidth: 2,
-                        r: 6,
-                        tip: true,
-                      }),
-                    ],
-                  })}
-                />
-              )}
-            </Panel>
-
-            <Panel label="Evaluated Model Cards &amp; Baselines">
-              {registeredCards.length === 0 ? (
-                <Empty>Only reference baselines are present in this collection.</Empty>
-              ) : (
-                <div className="lb-model-list">
-                  {registeredCards.map(({ row, color }) => {
-                    const card = row.model
-                    return (
-                      <div key={row.player_id} className="lb-model-card">
-                        <div className="lb-player-cell">
-                          <Swatch color={color} />
-                          <strong>{row.display_name || row.player_id}</strong>
-                          <span className="lb-tag">{card?.tier || row.kind}</span>
-                        </div>
-                        <div className="lb-model-meta mono">
-                          <span>id: {row.player_id}</span>
-                          <span>provider: {card?.provider || row.provider || '—'}</span>
-                          <span>input: {rowModes(row)}</span>
-                          <span>effort: {row.effort || card?.default_effort || '—'}</span>
-                        </div>
-                        <div className="lb-model-meta mono">
-                          <span>solved: {row.levels_solved}/{row.levels_attempted}</span>
-                          <span>rhae vs human: {row.rhae_vs_human != null ? fmtFloat(row.rhae_vs_human, 3) : 'pending human'}</span>
-                          {row.seen_score != null && <span>seen: {fmtFloat(row.seen_score, 3)}</span>}
-                          {row.unseen_pair_score != null && <span>unseen pair: {fmtFloat(row.unseen_pair_score, 3)}</span>}
-                          {row.unseen_skin_score != null && <span>unseen skin: {fmtFloat(row.unseen_skin_score, 3)}</span>}
-                        </div>
-                        {(card?.params || card?.notes) && (
-                          <span className="muted">{[card?.params, card?.notes].filter(Boolean).join(' · ')}</span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </Panel>
-          </div>
         </>
+      )}
+
+      {cardRow && (
+        <ModelCardDialog
+          row={cardRow}
+          color={seriesColorFor(cardRow, sortedRows.indexOf(cardRow))}
+          onClose={() => setCardRow(null)}
+        />
       )}
     </div>
   )
