@@ -20,7 +20,8 @@ from pathlib import Path
 import modal
 
 REPO = Path(__file__).resolve().parents[1]
-GPU = os.environ.get("GRPO_GPU", "H100")  # GRPO_GPU=A100-80GB if the account has no payment method (H100 needs one)
+GPU = os.environ.get("GRPO_GPU", "H100")
+TIMEOUT_H = float(os.environ.get("GRPO_TIMEOUT_H", "4"))  # function timeout in hours (think runs: 6.5)
 app = modal.App("junction-grpo")
 vol = modal.Volume.from_name("junction-grpo", create_if_missing=True)
 hf_cache = modal.Volume.from_name("junction-hf-cache", create_if_missing=True)
@@ -30,7 +31,7 @@ image = (
     .apt_install("git")
     # vllm 0.33.0 = bench's pin, inside TRL 1.18's supported range; versions as on the Verda H100 (verified there)
     .uv_pip_install("vllm==0.33.0", "trl==1.18.0", "peft==0.21.3", "accelerate", "datasets", "pyyaml",
-                    "hf_transfer")
+                    "hf_transfer", "reasoning-gym==0.1.25")
     .env({"HF_HOME": "/hf", "HF_HUB_ENABLE_HF_TRANSFER": "1", "PYTHONUNBUFFERED": "1",
           "PYTHONPATH": "/repo/engine/src:/repo/posttrain/src"})
     .add_local_dir(REPO / "engine" / "src", "/repo/engine/src", ignore=["**/__pycache__"])
@@ -40,7 +41,7 @@ image = (
 )
 
 
-@app.function(image=image, gpu=GPU, timeout=4 * 3600, volumes={"/vol": vol, "/hf": hf_cache})
+@app.function(image=image, gpu=GPU, timeout=int(TIMEOUT_H * 3600), volumes={"/vol": vol, "/hf": hf_cache})
 def train(sft: str, tasks: str, run: str, steps: int, save_every: int, config: str, extra: str):
     import shlex
     import subprocess
@@ -60,7 +61,8 @@ def train(sft: str, tasks: str, run: str, steps: int, save_every: int, config: s
 
     threading.Thread(target=committer, daemon=True).start()
     cmd = ["accelerate", "launch", "--num_processes", "1", "--mixed_precision", "bf16", "-m", "posttrain.grpo",
-           "--config", f"/repo/posttrain/configs/{config}", "--sft-lora", f"/vol/sft/{sft}",
+           "--config", f"/repo/posttrain/configs/{config}",
+           *(["--sft-lora", f"/vol/sft/{sft}"] if sft and sft != "none" else []),  # "none": base + fresh LoRA
            "--tasks", f"/vol/tasks/{tasks}", "--out", str(out), "--steps", str(steps),
            "--save-every", str(save_every), *shlex.split(extra)]
     print("[modal] " + " ".join(cmd), flush=True)

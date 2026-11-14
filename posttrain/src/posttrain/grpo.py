@@ -67,23 +67,50 @@ def _text(completion) -> str:
     return "".join(m.get("content") or "" for m in completion if m.get("role") == "assistant")  # conversational
 
 
-def make_reward(fake: bool = False):
+THINK_END = "</think>"
+
+
+def make_reward(fake: bool = False, thinking: bool = False, tok=None):
+    """Reward = verifier on the reply. With `thinking`: ONLY the text after the last `</think>` is graded, and a reply
+    without `</think>` (never closed / truncated) scores 0, so the policy is paid for conclusions reached after
+    thinking. The raw `completion_ids` are decoded here (not TRL's parsed message, which may move the thinking into a
+    separate field and hide whether it was closed). Tasks named `rg:<dataset>` are graded by reasoning-gym."""
     if fake:
         def score(sample: dict, reply: str) -> float:  # toy: answer line present + shorter is better
             return (0.5 if "ANSWER:" in reply else 0.0) + 0.5 / (1 + len(reply) / 50)
     else:
         from engine.tasks import reward as score  # A1-22, exploit-tested; do not wrap with partial credit
 
+    def grade(sample: dict, reply: str) -> float:
+        if sample["task"].startswith("rg:"):
+            from posttrain.rg_tasks import score as rg_score
+            return rg_score(sample, reply)
+        return score(sample, reply)
+
     def engine_reward(prompts, completions, task, sample_id, answer, meta_json, **kw):
-        out = []
-        for c, t, i, a, m in zip(completions, task, sample_id, answer, meta_json):
-            out.append(float(score({"task": t, "id": i, "answer": a, "meta": json.loads(m)}, _text(c))))
+        ids = kw.get("completion_ids")
+        if tok is not None and ids is not None:
+            texts = tok.batch_decode(ids, skip_special_tokens=True)  # think tags are not special: they stay
+        else:
+            texts = [_text(c) for c in completions]
+        out, closed = [], []
+        for x, t, i, a, m in zip(texts, task, sample_id, answer, meta_json):
+            if thinking:
+                ok = THINK_END in x
+                closed.append(ok)
+                if not ok:
+                    out.append(0.0)
+                    continue
+                x = x.rsplit(THINK_END, 1)[1]
+            out.append(float(grade({"task": t, "id": i, "answer": a, "meta": json.loads(m)}, x)))
         log_metric = kw.get("log_metric")
         if log_metric:  # per-task mean reward in the trainer's logs
             for t in sorted(set(task)):
                 vals = [r for r, tt in zip(out, task) if tt == t]
                 log_metric(f"reward_task/{t}", sum(vals) / len(vals))
-            log_metric("answer_rate", sum("ANSWER:" in _text(c) for c in completions) / len(completions))
+            log_metric("answer_rate", sum("ANSWER:" in x for x in texts) / len(texts))
+            if thinking:
+                log_metric("think_closed_rate", sum(closed) / len(closed))
         return out
 
     return engine_reward
@@ -303,7 +330,7 @@ def main(argv=None):
     if cfg.use_vllm and patch_vllm_names_for_vl(a.base, policy):
         print("[grpo] VL checkpoint loaded text-only: weight names pushed to vLLM get the model.language_model. prefix",
               flush=True)
-    trainer = GRPOTrainer(model=policy, reward_funcs=make_reward(a.fake_reward), args=cfg,
+    trainer = GRPOTrainer(model=policy, reward_funcs=make_reward(a.fake_reward, bool(a.enable_thinking), tok), args=cfg,
                           train_dataset=ds, processing_class=tok, callbacks=make_callbacks(a, tok))
     if trainer.is_world_process_zero():
         prompts_per_step = a.per_device_batch * a.grad_accum * trainer.accelerator.num_processes // a.num_generations

@@ -50,6 +50,28 @@ GPU=1 RUN=/root/ckpt/grpo-1 EVERY=50 BASE_RUN=<base dev-slice run dir>   nohup b
 GPU (bench's vLLM takes 88%) and a python with `bench[gpu]` (`BENCH_PY`); newest unbenched checkpoint first.
 Prompts over `max_prompt_tokens` (3072) are dropped: `rule_effect` has 12k-token outliers (~3% of all prompts).
 
+## RL v2: thinking ON (think-games, think-ctrl), human-approved Sat 20:20
+
+grpo-1/grpo-2 (thinking off, from the no-think SFT) were stopped at 20:52: they teach answering without reasoning.
+v2 starts from **base Qwen3.5-9B + a fresh LoRA** (r16, alpha 32, language-model linears; no SFT adapter) with
+`enable_thinking: true` and up to 3,072 completion tokens (`configs/grpo-think.yaml`). **Reward = verifier on the text
+after the last `</think>` only; a reply that never closes `</think>` (or is truncated) scores 0** (`grpo.make_reward`
+decodes the raw completion ids, so TRL's message parsing cannot hide an unclosed thinking block). Logged per step:
+reward, per-task reward, `think_closed_rate`, `completions/mean_length`, `completions/clipped_ratio`, KL.
+
+| Run | Data (1,200 prompts) | Reward |
+|---|---|---|
+| `think-games` | 70% A1 `game_turn` (seed 3, h1 JSON after the thinking block) + 30% aux (blocked_moves, full_plan, rule_effect; seed 3) | `engine.tasks.reward` |
+| `think-ctrl` | reasoning-gym knights_knaves, zebra_puzzles, shortest_path, maze, 300 each, seed 7 (`posttrain.rg_tasks`) | reasoning-gym `score_answer` |
+
+**think-ctrl touches the bench's SECONDARY reasoning-gym tier (near transfer: those datasets are in the bench, drawn
+there with seed 20261114, here with seed 7, so no item overlap), not the primary FT_BENCHMARKS suite.** It is the
+"generic puzzles instead of our games" control for the primary-suite comparison.
+
+Modal: `GRPO_TIMEOUT_H=6.5 modal run --detach posttrain/modal_grpo.py --sft none --config grpo-think.yaml ...`, one H100
+each, checkpoint every 15 steps, each benched (merged, thinking-on bench settings) and rescored with
+`posttrain.rescore_answer`.
+
 CPU smoke test (proves loop, reward plumbing, ref-adapter KL, saving; 2-3 steps, tiny model):
 ```bash
 PYTHONPATH=engine/src python -m engine tasks --task all --n 4 --seed 0 --out /tmp/t.jsonl
