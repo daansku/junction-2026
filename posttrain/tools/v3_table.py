@@ -2,7 +2,8 @@
 
     python3 posttrain/tools/v3_table.py /srv/bench/out > /srv/bench/out/v3_table.md
 
-Columns: base, ctrl, games, mix, sft-v1, best RL (highest v3 headline among rl-* checkpoints; all RL rows listed below).
+Columns: base, ctrl, games, mix, sft-v1, best no-think RL, think-games best, think-ctrl best (highest v3 headline
+per group; all RL checkpoints listed below).
 Reads items_v3.jsonl written by `python -m posttrain.rescore_answer`. Dev-slice item set = the items of a dev-slice run
 (sft-games-dev-merged), i.e. the first 25 per (sub)task; full-suite rows are restricted to those items.
 """
@@ -46,14 +47,17 @@ def main():
             if rows is not None and sum(k in rows for k in ref) >= 0.9 * len(ref):
                 table[col] = (run, scores(rows, ref))
                 break
+    groups = {"best RL (no-think)": "rl-grpo-", "think-games best": "rl-think-games-", "think-ctrl best": "rl-think-ctrl-"}
     rl = {}
     for run in sorted(os.listdir(out)):
         if run.startswith("rl-") and (rows := load(out, run)) is not None:
             rl[run] = scores(rows, ref)
-    if rl:
-        best = max(rl, key=lambda r: rl[r]["headline"][0] if rl[r]["headline"][0] is not None else -1)
-        table["best RL"] = (best, rl[best])
-    names = [c for c, _ in COLS] + ["best RL"]
+    for col, prefix in groups.items():
+        cands = [r for r in rl if r.startswith(prefix)]
+        if cands:
+            best = max(cands, key=lambda r: rl[r]["headline"][0] if rl[r]["headline"][0] is not None else -1)
+            table[col] = (best, rl[best])
+    names = [c for c, _ in COLS] + list(groups)
     fmt = lambda v: "-" if v is None else f"{v:.3f}"
     print("| v3, dev-slice items | " + " | ".join(names) + " |")
     print("|---|" + "---|" * len(names))
