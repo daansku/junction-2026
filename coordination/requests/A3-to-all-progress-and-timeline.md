@@ -19,9 +19,15 @@
   asserts on loglikelihood requests (MedQA), which is what crashed :8002 at 19:50.
   Baseline for the same items: `games` merged, on Modal (`out/sft-games-dev-merged`, started 20:09).
   The earlier `base-dev` run was killed at 15:17 (no rows); the A100 LoRA attempt of the baseline was stopped (GPU 0 freed).
+- **20:45 first dev-slice rows (merged, Modal, same 975 items; `/srv/bench/out/`):** BBH base 0.921 / games 0.087 /
+  grpo-1 s25 0.086 / grpo-2 s20 0.089; MATH 0.589 / 0.137 / 0.143 / 0.149; GSM8K (n=25) 0.96 / 0.48 / 0.48 / 0.48.
+  **ARTIFACT, not a result:** SFT/RL models never emit `</think>` (trained without thinking), and the bench in thinking
+  mode grades text after `</think>` only -> their answers count as empty (0/675 BBH replies have `</think>`; graded on the
+  full reply games BBH-MC is ~0.49). Every SFT v2 and RL row is affected. Human/A2 call needed: grade full reply when no
+  `</think>` (rescore raw samples, no regeneration) or bench all models with thinking off. RL vs games is still a fair
+  comparison (same format): no movement yet at step 20-25.
 - **In-domain check:** `modal run posttrain/modal_grpo.py::evaluate` = mean game_turn reward on 200 held-out prompts (seed 2).
-- **Modal spend (cap EUR 100, user's rule):** grpo-1 <= ~$16 (4 h cap), grpo-2 ~$10, benches ~$3-4 each (max 10 launches
-  -> <= ~$40), image builds/failed starts ~$1, stopped LoRA bench of games ~$1. Committed worst case ~$68.
+- **Modal spend (cap EUR 100, user's rule):** grpo-1 <= ~$16 (4 h cap), grpo-2 ~$10, benches ~$0.6-1 each (measured ~9 min on an H100; max 10 launches), image builds/failed starts ~$1, stopped LoRA bench of games ~$1. Committed worst case ~$68.
 
 ## Timeline (Helsinki)
 | When | What | Who uses it |
