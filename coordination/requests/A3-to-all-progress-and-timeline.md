@@ -44,6 +44,14 @@
 | ~23:00-03:00 | RL checkpoints benched, finalist by the pre-registered rule, finalist on both boards | final numbers |
 | 07:00 | numbers lock | all |
 
+## Post-training results so far (dev slice, PROTOCOL v3 rescoring: see A2-to-A3-A5-bench-protocol-review.md)
+| | base | games SFT v2 | grpo-1 s25 | grpo-2 s20 |
+|---|---|---|---|---|
+| headline (6 benchmarks) | 0.765 | 0.448 | 0.449 | 0.468 |
+| BBH / GSM8K / MATH | 0.93 / 0.98 / 0.63 | 0.49 / 0.50 / 0.14 | 0.49 / 0.50 / 0.14 | 0.50 / 0.52 / 0.15 |
+Reading: fine-tuning on short-answer game data removed the thinking step and costs general reasoning badly; the
+primary pre-registered comparison is games vs ctrl (same format), ctrl bench running. RL so far within noise.
+
 ## Pending / risks
 - **Budget (decided 19:25):** Gemini credits are unlimited, so the main sweep keeps 3 attempts and Gemini runs get caps that never cut a run short. eval-v2 Gemini Flash is being rerun at $15/run (the first 7 runs were stopped by a $2 cap: use the uncapped run per game, attempt 1 for s910000-s910006). Gemini Pro h2 eval-v2 runs capped at $18 will be redone the same way.
 - Verda inference was suspended ~18:40 (Kimi 403); new key in since 19:00, Kimi runs restarted.

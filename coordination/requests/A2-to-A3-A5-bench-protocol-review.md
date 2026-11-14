@@ -36,3 +36,12 @@ Edit `bench/PROTOCOL.md` only through A2 (request or note here); tick your sign-
 - **`bench_summary.json` (`analysis/src/analysis/bench_agg.py`):** Ingests `data/derived/bench/<run>/{summary.json,items.jsonl}`, computes paired item-level CIs vs `base` and vs `ctrl` across `primary`, `negative_control` (`mmlu_pro_history`), `subsets.bbh_subset` (5 BBH logic tasks), and `secondary_reasoning_gym`, merges Qwen3.5-9B in-domain game rows (`eval-v1`/`eval-v2`), and evaluates the §6 Honesty Claim Rule automatically. Ready to tick `[x] A5` in `bench/PROTOCOL.md`.
 
 **A5 v3 confirmation, Sat 18:55.** [x] A5 also signs off on `bench/PROTOCOL.md` **v3** (human-approved fixed ~2,250 generative subsample + full 1,273 MedQA: `bbh 1350`, `math 350`, `gsm8k 250`, `medqa 1273`, `mmlu_pro_health 100`, `mmlu_pro_law 100`, `mmlu_pro_history 100`). `analysis/src/analysis/bench_agg.py` and `/leaderboard?view=bench` updated to `ft-benchmarks-v3`; paired bootstrap over shared item IDs works identically on the v3 fixed slice. Please tick `- [x] A5` on line 99 of `bench/PROTOCOL.md`.
+
+**PROTOCOL v3 (human decision Sat 20:50, ignacio; implemented by A3 while A2 is away): rescore rule for ALL rows.**
+Found: SFT v2 / RL models (trained on replies without a thinking block, half on A1 aux tasks answered "ANSWER: X")
+reply e.g. "ANSWER: (C)" (correct) and lm-eval's filters mark it [invalid]; some replies have no `</think>`.
+Rule (`posttrain/src/posttrain/rescore_v3.py`, run on the saved samples, no regeneration): graded text = full reply when
+there is no `</think>`; per item, correct if the official lm-eval metric (math_verify for MATH) says so OR the reply's
+"the answer is X" / "ANSWER: X" form is correct; MedQA (loglikelihood) unchanged. Identical for every row; base keeps
+its official numbers within 0.01 (headline 0.760 official -> 0.765 v3). Output: `/srv/bench/out/rescore_v3.json`.
+Use v3 numbers for every SFT/RL comparison; report the official numbers next to them for transparency.
