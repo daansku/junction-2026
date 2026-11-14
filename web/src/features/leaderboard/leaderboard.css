@@ -47,43 +47,6 @@
   cursor: pointer;
 }
 
-.lb-ref-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s4);
-  margin-top: var(--s2);
-  padding-top: var(--s2);
-  border-top: 1px solid var(--line);
-  font-size: 11px;
-  color: var(--text-2);
-}
-
-.lb-line-sample {
-  display: inline-block;
-  width: 22px;
-  height: 0;
-  vertical-align: middle;
-  margin-right: 6px;
-}
-.lb-line-solid { border-top: 1.5px solid var(--text-2); }
-.lb-line-dash { border-top: 1.5px dashed var(--text-2); }
-.lb-line-dot { border-top: 1.5px dotted var(--text-3); }
-
-.lb-group-row .lb-group-th {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--text-3);
-  padding-top: 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--line);
-}
-
-.lb-group-sep {
-  border-left: 1px solid var(--line);
-}
-
 .lb-sort-btn {
   background: transparent;
   border: 0;
@@ -102,22 +65,10 @@
   color: var(--text-1);
 }
 
-.lb-player-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
 .lb-player-cell {
   display: inline-flex;
   align-items: center;
   gap: var(--s2);
-}
-
-.lb-provider {
-  font-size: 10px;
-  color: var(--text-3);
-  padding-left: 18px;
 }
 
 .lb-tag {
@@ -178,43 +129,6 @@
   color: var(--text-2);
 }
 
-.lb-two-col {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--s3);
-}
-
-@media (min-width: 1024px) {
-  .lb-two-col {
-    grid-template-columns: 1.15fr 1fr;
-  }
-}
-
-.lb-model-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-}
-
-.lb-model-card {
-  background: var(--surface-1);
-  padding: var(--s3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--s1);
-}
-
-.lb-model-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s2);
-  font-size: 12px;
-  color: var(--text-2);
-}
-
-
 /* Phase 2: Harness View Tabs (h1 | h2 | bench) + Honesty Rule + CI bars */
 .lb-view-tabs {
   display: grid;
@@ -271,42 +185,6 @@
   gap: 6px;
 }
 
-.lb-ci-sub {
-  font-size: 10px;
-  line-height: 1.2;
-  min-height: 12px;
-  color: var(--text-3);
-}
-
-.lb-h2-rules-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-}
-
-.lb-h2-rule-cell {
-  background: var(--surface-1);
-  padding: var(--s2) var(--s3);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.lb-h2-rule-head {
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.lb-h2-rule-body {
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-2);
-}
-
 .lb-claim-banner {
   display: flex;
   flex-direction: column;
@@ -335,5 +213,95 @@
   padding-top: var(--s2);
   border-top: 1px solid var(--line);
   font-size: 11px;
+  color: var(--text-2);
+}
+
+/* Clickable player name -> model card dialog */
+.lb-name-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lb-name-btn:hover span:not(.lb-tag):not(.swatch) {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lb-tag-inline {
+  margin-left: 6px;
+}
+
+.lb-card-dialog {
+  width: min(520px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+  color: var(--text-1);
+}
+.lb-card-dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.lb-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+}
+
+.lb-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 15px;
+}
+
+.lb-card-close {
+  margin-left: auto;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.lb-card-close:hover {
+  color: var(--text-1);
+}
+
+.lb-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--s2) var(--s3);
+  margin: 0;
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+.lb-card-grid dt {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.lb-card-grid dd {
+  margin: 2px 0 0;
+  color: var(--text-1);
+}
+
+.lb-card-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--text-2);
 }
