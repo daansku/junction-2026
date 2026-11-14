@@ -22,25 +22,24 @@
 
 ## Short Pitch (Portal Summary — ~65 words)
 
-We built a procedurally seeded 64×64 pixel RL game factory (`engine 0.5.0`, 15 live + 3 Tier-3 mechanics) where agents receive zero prose rules, object colors permute per game (`skin_shuffle`), and hidden rules are introduced one per level before multi-rule and held-out pair exams (`eval-v1`). Graded inside isolated Harbor MCP sidecars against exact BFS shortest paths, on the frozen difficulty-4 set the reference scores `1.000`, first-attempt humans `0.693`, Gemini 4 Argon `0.494`, Kimi K3.1 Pro `0.398`, and do-nothing `0.000`; humans beat every model on every shared game.
+We built a procedurally seeded 64×64 pixel RL game factory (runtime engine `0.6.0`) where agents receive zero prose rules, object colors permute per game (`skin_shuffle`), and hidden rules are introduced through a multi-level curriculum. Frozen `eval-v1` and `eval-v2` collections are graded against exact BFS shortest paths. The historical `eval-v2` snapshot below reports reference `1.000`, first-attempt humans `0.693`, Gemini 4 Argon `0.494`, Kimi K3.1 Pro `0.398`, and do-nothing `0.000`; see the dated snapshot caveat before quoting these results.
 
 ---
 
 ## How It Maps to the AfterQuery Judging Rubric (100 Points)
 
 ### 1. The Gap (30 pts)
-- **Frozen eval-v2 (difficulty 4, 8 levels, 3 unseen rules per game), board built Sat 19:19 UTC from 1,006 runs:**
+- **Historical frozen eval-v2 snapshot** (difficulty 4, 8 levels, 3 Tier 3 rules per game), board built Sat 14.11 19:19 UTC from 1,006 runs. Raw runs and `data/derived/` are absent from this clone; figures below are copied from that recorded snapshot and have not been revalidated here:
   optimal **1.000**; first-attempt humans **0.693** (20 games, 150/160 levels, 75% full wins, CI 0.632-0.749);
   Gemini 4 Argon h1 **0.494** (7 games, CI 0.372-0.621); Gemini 3.1 Pro h2 **0.439**; Kimi K3.1 h2 **0.398**;
   Gemini 3.8 Flash h1 **0.028**; random / stop-early / do-nothing **0.000**.
 - **Paired, same games:** humans ahead on every shared game: Argon 6/6, Flash 7/7, Gemini Pro h2 4/4, Kimi h2 4/4.
-- **Honest caveats:** Gemini 4 Carbon's first finished eval-v2 game scored 0.789 (above the humans on that game;
-  sweep still running). eval-v1 is the easy set (Gemini 4 models 0.82-0.93 on its game 1).
+- **Snapshot caveats:** Gemini 4 Carbon had one finished eval-v2 game at 0.789 when the snapshot was built; its sweep was then still running. eval-v1 is the easier set. Single-game results are not cohort estimates.
 - **On the judges' harness (Harbor + OpenCode):** reference 1.000 on eval-v2 game 1; OpenCode + Nemotron k=3 mean
   0.067 (dev game). Frontier OpenCode runs: `make judge MODEL=<selector> K=3`.
 
 ### 2. Meaningful Difficulty (30 pts)
-- **Full Pixel Observability, Zero Prose Leakage:** 15 live composable rules across Tiers 0–2 (`keys_doors`, `plates_gates`, `teleporters`, `hazards`, `push_blocks`, `ice`, `one_way`, `collect_all`, `phase_walls`, `rotation`, `remap`, `twin`, `stamina`, `cracked_floor`, `beacon_goal`) plus 3 opt-in Tier-3 mechanics (`conveyors`, `enemies`, `gravity`), rendered in `rules/img/all_rules.png` with HUD budget bar (`rows 0–1`) and level/inventory/health pips (`rows 3–4`).
+- **Full Pixel Observability, Zero Prose Leakage:** 15 mechanics across Tiers 1–2 plus 3 opt-in Tier 3 mechanics and 3 difficulty-4 mechanics (`no_reverse`, `checkpoints`, `pits`), rendered in `rules/img/all_rules.png` with HUD budget bar (`rows 0–1`) and level/inventory/health pips (`rows 3–4`).
 - **Four Mathematical Fairness Proofs:** BFS shortest path (`optimal_moves`), rule-necessity ablation, `< 2%` random-walk win ceiling, and `ceil(optimal_moves × slack)` move budget.
 - **Unseen Composition (`eval-v1`):** Holds out 6 unseen rule pairs (`(ice, teleporters)`, `(hazards, push_blocks)`, `(collect_all, one_way)`, `(phase_walls, plates_gates)`, `(cracked_floor, keys_doors)`, `(beacon_goal, twin)`) and disjoint visual palettes (`engine/src/engine/splits.py`).
 
@@ -62,7 +61,7 @@ We built a procedurally seeded 64×64 pixel RL game factory (`engine 0.5.0`, 15 
 
 | Agent | Package | Responsibility |
 |---|---|---|
-| **A1 (FORGE)** | `engine/` + `rules/` | Procedural gridworld generator (`0.5.0`), 18 composable mechanics, BFS solver, `eval-v1` hold-out splits, rule visuals |
+| **A1 (FORGE)** | `engine/` + `rules/` | Procedural gridworld generator (runtime engine `0.6.0`), BFS solver, frozen evaluation collections, hold-out splits, rule visuals |
 | **A2 (GATEWAY)** | `server/` + `contracts/` | FastAPI server, crash-safe trace recorder, WebSocket live feed, published snapshot mode, JSON/OpenAPI contracts |
 | **A3 (ARENA)** | `arena/` | Official Harbor task exporter (`harbor-export` + sidecar/verifier), `h1` multi-provider harness, baselines & sweeps |
 | **A4 (STUDIO)** | `web/` (`overview`, `play`, `gallery`, `replay`, `compare`, `live`) | Dark pixel-ledger UI, human play canvas, multi-run comparison, Harbor Docker + OpenCode verification |

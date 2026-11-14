@@ -42,7 +42,9 @@ harbor run -p "$TASK" -a opencode -m gemini/gemini-4-argon -k 3 -n 1 \
   --ae 'GOOGLE_GENERATIVE_AI_API_KEY=${GEMINI_API_KEY}'              # Gemini: OpenCode reads this name, not GEMINI_API_KEY
 ```
 
-### Verified Harbor Results (Docker 29.8.1 + Harbor 0.26.0)
+### Harbor Results Recorded in the Evaluation Snapshot (Docker 29.8.1 + Harbor 0.26.0)
+
+These are recorded results from the evaluation snapshot described below, not a fresh run of the current workspace. The live run store and rebuilt `data/derived/` leaderboard are not included in this clone.
 
 | Run | Task | Actions | Levels | Reward |
 |---|---|---:|---:|---:|
@@ -79,11 +81,11 @@ cd web && npm install && npm run typecheck && npm run build
 
 ## What Makes This Environment Meaningful & Exploit-Resistant
 
-1. **Zero Text Hints + Per-Game `skin_shuffle` (`engine 0.5.0`, [rules/CATALOG.md](rules/CATALOG.md)):**
+1. **Zero Text Hints + Per-Game `skin_shuffle` (runtime engine `0.6.0`, [rules/CATALOG.md](rules/CATALOG.md)):**
    Agents observe only a `64×64` frame of palette indices `0..15` ([contracts/palette.json](contracts/palette.json)) and `available_actions` (`RESET`, `ACTION1..4`; `ACTION5` interact is listed only in games that use it, none in the frozen sets; phase walls advance with every counted action). Colors and non-directional glyphs permute per game seed.
    - **HUD (`rows 0–1`):** move-budget bar shrinking per step.
    - **HUD (`rows 3–4`):** level progress pips + held-key / health / gem / stamina state indicators.
-   - **Playfield (`rows 6–63`):** **15 live mechanics** across Tiers 0–2 (`walls`, `goal`, `move_budget`, `keys_doors`, `plates_gates`, `teleporters`, `hazards`, `push_blocks`, `ice`, `one_way`, `collect_all`, `phase_walls`, `rotation`, `remap`, `twin`, `stamina`, `cracked_floor`, `beacon_goal` — 3 base + 15 composable rules) plus **3 opt-in Tier-3 mechanics** (`conveyors`, `enemies`, `gravity`) ready for `eval-v2`.
+   - **Playfield (`rows 6–63`):** 15 Tier 1–2 rules, 3 opt-in Tier 3 rules (`conveyors`, `enemies`, `gravity`), and 3 additional difficulty-4 rules (`no_reverse`, `checkpoints`, `pits`). The three base mechanics are walls, goal, and move budget. See the catalog for difficulty and collection coverage.
 2. **Four Generation-Time Fairness Proofs:**
    Every level passes exact BFS shortest-path verification (`optimal_moves`, `optimal_path`), rule-necessity ablation (removing any active rule alters optimal path or solvability), bounded budget slack (`ceil(optimal_moves × slack)`), and `< 2%` random-walk win rejection. Held-out `eval-v1` adds **unseen rule pairs** and **held-out visual skins** (`engine/src/engine/splits.py`).
 3. **Action-Efficiency Reward Integrity ([analysis/METRICS.md](analysis/METRICS.md)):**
@@ -96,7 +98,7 @@ cd web && npm install && npm run typecheck && npm run build
 
 ## The Gap: Frozen `eval-v2` (Difficulty 4, `h1` / `h2` Harnesses)
 
-Board built Sat 14.11 19:19 UTC from the shared server's `1,006` runs (`python -m analysis sync && python -m analysis build`; practice, smoke and aborted runs filtered). Score = mean over levels of `min(1, optimal / actions)` for solved levels, 0 otherwise; humans play each game once (first attempt).
+Historical snapshot built Sat 14.11 19:19 UTC from the shared server's `1,006` runs (`python -m analysis sync && python -m analysis build`; practice, smoke and aborted runs filtered). The run data and derived leaderboard are not present in this clone, so these figures have not been revalidated here. Score = mean over levels of `min(1, optimal / actions)` for solved levels, 0 otherwise; humans play each game once (first attempt).
 
 | Player | Harness | Games | Levels Solved | Full Wins | Score | 95% CI |
 |---|---|---:|---:|---:|---:|---|
@@ -110,7 +112,7 @@ Board built Sat 14.11 19:19 UTC from the shared server's `1,006` runs (`python -
 
 **Paired on the same eval-v2 games (human vs model, per game):** humans score higher on every shared game for Gemini 4 Argon (6 / 6; 0.656 vs 0.442), Gemini 3.8 Flash (7 / 7), Gemini 3.1 Pro h2 (4 / 4; 0.661 vs 0.439) and Kimi K3.1 h2 (4 / 4; 0.661 vs 0.398).
 
-*Still running at build time (single games, not yet a row to trust):* Gemini 4 Carbon finished 1 eval-v2 game at **0.789** (8/8, above the humans' 0.635 on that game); Claude Sonnet 5.5 1 game at 0.044. The Gemini 4 sweep over all 30 eval-v2 games is in progress; rebuild before quoting.
+*At the time of that snapshot,* Gemini 4 Carbon had one finished eval-v2 game at **0.789** (8/8); Claude Sonnet 5.5 had one at 0.044. The Gemini 4 sweep was then still in progress. These single-game observations are not cohort estimates.
 
 **eval-v1 is the easy set:** on the one eval-v1 game they played, Gemini 4 Carbon / Argon / Hydrogen score 0.925 / 0.900 / 0.820, near the optimum and above humans. Use eval-v2 for the gap.
 
