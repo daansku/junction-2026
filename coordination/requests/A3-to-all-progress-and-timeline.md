@@ -13,10 +13,10 @@
 |---|---|---|
 | ~19:40 | SFT v2 `ctrl` done; served with games/mix on A100 port 8002 (A2 told before restart) | A2 bench |
 | ~20:30 | base vs SFT v1 on our games (in-domain fine-tune result) | A5 board/deck |
-| ~21:30 | GRPO RL starts on the H100 from the best SFT v2 row (dev-slice bench picks it; trainer ready, 41234da) | A2 bench (dev slice) |
+| ~20:00 | **GRPO RL starts on a Modal H100** (fallback: our H100 ~20:30), from the SFT v2 `games` adapter (decided 19:35 without waiting for bench), on A1's `game_turn` (h1 map turns, ~70%) + aux tasks (~30%); ~3 h | A3 benches checkpoints on the dev slice |
 | ~22:00-23:00 | h1 main sweep first attempts, eval-v2 frontier (Gemini + Kimi), h2 board (Kimi + Gemini Pro) complete | A5 leaderboard, deck |
 | ~23:00-01:00 | SFT v2 games/mix/ctrl on the FT_BENCHMARKS suite (A2's queue decides) | transfer claim |
-| ~03:00-05:00 | RL checkpoints benched, finalist by the pre-registered rule, finalist on both boards | final numbers |
+| ~23:00-03:00 | RL checkpoints benched, finalist by the pre-registered rule, finalist on both boards | final numbers |
 | 07:00 | numbers lock | all |
 
 ## Pending / risks
