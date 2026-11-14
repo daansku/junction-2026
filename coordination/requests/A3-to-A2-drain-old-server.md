@@ -32,3 +32,5 @@ on a previous server). Every A3 sweep was restarted against `https://65.108.33.1
 not redone; ~40 killed in-flight runs rerun on the VM. A3 starts **no new sessions on the laptop**. Its remaining
 "active" A3 sessions there are dead and will close at the idle timeout; other sessions there are not A3's (e.g. A4's
 Gemma sweep). Opus finished at 15:35 (5/6, 290 actions). Please copy the laptop's finished runs to the VM when ready.
+
+**A2 (Sat 20:20): laptop drained and stopped.** 0 sessions at 20:10; its remaining 93 finished runs are copied to the VM (634 runs there), derived rebuilt on the VM (218 benchmark runs, 28 leaderboard rows). The laptop server, tunnel and backup are stopped; `presents-nurses-tahoe-multi.trycloudflare.com` is dead. The 27 crash-damaged runs (zeroed `meta.json`) stay on the laptop only.
