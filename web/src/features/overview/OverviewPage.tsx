@@ -168,10 +168,11 @@ export function OverviewPage() {
     return {
       optScore: optRow?.score ?? 1.0,
       humanScore: humanRow?.score ?? null,
+      humanColor: humanRow ? getRowColor(humanRow) : null,
       randomScore: randomRow?.score ?? null,
       noopScore: noopRow?.score ?? null,
     }
-  }, [collectionRows])
+  }, [collectionRows, getRowColor])
 
   const hasUnpricedTokenModels = useMemo(
     () =>
@@ -390,6 +391,7 @@ export function OverviewPage() {
                   effectiveAxis,
                   refScores.optScore,
                   refScores.humanScore,
+                  refScores.humanColor,
                   refScores.randomScore,
                   refScores.noopScore,
                   collectionRows,
@@ -402,11 +404,16 @@ export function OverviewPage() {
                   const xMax = maxX * 1.85
 
                   type LineStyle = 'solid' | 'long-dash' | 'dotted'
-                  const rawRefs: Array<{ y: number; name: string; style: LineStyle }> = [
+                  const rawRefs: Array<{ y: number; name: string; style: LineStyle; color?: string }> = [
                     { y: refScores.optScore, name: 'optimal', style: 'solid' },
                   ]
                   if (refScores.humanScore != null) {
-                    rawRefs.push({ y: refScores.humanScore, name: 'human', style: 'long-dash' })
+                    rawRefs.push({
+                      y: refScores.humanScore,
+                      name: 'human',
+                      style: 'long-dash',
+                      color: refScores.humanColor ?? undefined,
+                    })
                   }
                   if (refScores.randomScore != null) {
                     rawRefs.push({ y: refScores.randomScore, name: 'random', style: 'dotted' })
@@ -417,23 +424,30 @@ export function OverviewPage() {
                   if (effectiveAxis === 'usd') {
                     for (const r of collectionRows) {
                       if (r.kind === 'model' && (r.cost_per_game == null || r.cost_per_game <= 0) && r.score > 0) {
-                        rawRefs.push({ y: r.score, name: `${rowLabel(r, hasEvalV2)} (credits)`, style: 'long-dash' })
+                        rawRefs.push({
+                          y: r.score,
+                          name: `${rowLabel(r, hasEvalV2)} (credits)`,
+                          style: 'long-dash',
+                          color: getRowColor(r),
+                        })
                       }
                     }
                   }
 
                   rawRefs.sort((a, b) => b.y - a.y)
-                  const refLines: Array<{ y: number; label: string; style: LineStyle }> = []
+                  const refLines: Array<{ y: number; label: string; style: LineStyle; color?: string }> = []
                   for (const item of rawRefs) {
                     const prev = refLines[refLines.length - 1]
                     if (prev && Math.abs(prev.y - item.y) < 0.038) {
                       const baseNames = prev.label.replace(/\s+[0-9.]+$/, '')
                       prev.label = `${baseNames} / ${item.name} ${prev.y.toFixed(2)}`
+                      if (!prev.color && item.color) prev.color = item.color
                     } else {
                       refLines.push({
                         y: item.y,
                         label: `${item.name} ${item.y.toFixed(2)}`,
                         style: item.style,
+                        color: item.color,
                       })
                     }
                   }
@@ -548,7 +562,7 @@ export function OverviewPage() {
                       }),
                       Plot.ruleY(dashRefs, {
                         y: 'y',
-                        stroke: cssVar('--text-2'),
+                        stroke: (d: (typeof refLines)[number]) => d.color ?? cssVar('--text-2'),
                         strokeDasharray: '9,5',
                       }),
                       Plot.ruleY(dotRefs, {
@@ -562,7 +576,7 @@ export function OverviewPage() {
                         text: 'label',
                         textAnchor: 'start',
                         dx: 6,
-                        fill: cssVar('--text-2'),
+                        fill: (d: (typeof refLines)[number]) => d.color ?? cssVar('--text-2'),
                       }),
                       Plot.dot(frontierPoints, {
                         x: 'xVal',

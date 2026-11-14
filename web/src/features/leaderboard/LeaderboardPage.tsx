@@ -555,7 +555,7 @@ export function LeaderboardPage() {
             ) : (
                 <div className="lb-plot-box lb-plot-clickable" onClick={onScatterClick}>
                   <PlotFigure
-                    deps={[frontierPoints, effectiveAxis, kpi.humanScore, collectionRows]}
+                    deps={[frontierPoints, effectiveAxis, kpi.humanScore, kpi.humanRow, collectionRows, colorForRow]}
                     make={(width) => {
                       const xs = frontierPoints.map((p) => p.xVal)
                       const minX = Math.min(...xs)
@@ -564,30 +564,42 @@ export function LeaderboardPage() {
                       const xMax = maxX * 1.85
 
                       type LineStyle = 'solid' | 'long-dash' | 'dotted'
-                      const rawRefs: Array<{ y: number; name: string; style: LineStyle }> = []
+                      const rawRefs: Array<{ y: number; name: string; style: LineStyle; color?: string }> = []
                       if (kpi.humanScore != null) {
-                        rawRefs.push({ y: kpi.humanScore, name: 'human', style: 'long-dash' })
+                        rawRefs.push({
+                          y: kpi.humanScore,
+                          name: 'human',
+                          style: 'long-dash',
+                          color: kpi.humanRow ? colorForRow(kpi.humanRow) : undefined,
+                        })
                       }
                       if (effectiveAxis === 'usd') {
                         for (const r of collectionRows) {
                           if (r.kind === 'model' && (r.cost_per_game == null || r.cost_per_game <= 0) && r.score > 0) {
-                            rawRefs.push({ y: r.score, name: `${rowLabel(r, collection !== 'all')} (credits)`, style: 'long-dash' })
+                            rawRefs.push({
+                              y: r.score,
+                              name: `${rowLabel(r, collection !== 'all')} (credits)`,
+                              style: 'long-dash',
+                              color: colorForRow(r),
+                            })
                           }
                         }
                       }
 
                       rawRefs.sort((a, b) => b.y - a.y)
-                      const refLines: Array<{ y: number; label: string; style: LineStyle }> = []
+                      const refLines: Array<{ y: number; label: string; style: LineStyle; color?: string }> = []
                       for (const item of rawRefs) {
                         const prev = refLines[refLines.length - 1]
                         if (prev && Math.abs(prev.y - item.y) < 0.038) {
                           const baseNames = prev.label.replace(/\s+[0-9.]+$/, '')
                           prev.label = `${baseNames} / ${item.name} ${prev.y.toFixed(2)}`
+                          if (!prev.color && item.color) prev.color = item.color
                         } else {
                           refLines.push({
                             y: item.y,
                             label: `${item.name} ${item.y.toFixed(2)}`,
                             style: item.style,
+                            color: item.color,
                           })
                         }
                       }
@@ -706,7 +718,7 @@ export function LeaderboardPage() {
                           }),
                           Plot.ruleY(dashRefs, {
                             y: 'y',
-                            stroke: cssVar('--text-2'),
+                            stroke: (d: (typeof refLines)[number]) => d.color ?? cssVar('--text-2'),
                             strokeDasharray: '9,5',
                           }),
                           Plot.ruleY(dotRefs, {
@@ -720,7 +732,7 @@ export function LeaderboardPage() {
                             text: 'label',
                             textAnchor: 'start',
                             dx: 6,
-                            fill: cssVar('--text-2'),
+                            fill: (d: (typeof refLines)[number]) => d.color ?? cssVar('--text-2'),
                           }),
                           Plot.dot(frontierPoints, {
                             x: 'xVal',
