@@ -103,3 +103,24 @@ s910000 2/1/1, s910001 6/4/2, s910002 5/5/1, s910003 4/4/2.
 | Kimi K3.1 | 0/12 | - | >= 37/96 at cutoff (Verda suspended); see row above | 12 |
 Every game was won by at least one model; Carbon won all 4 games in all 3 attempts. Crashed runs are not losses.
 Same caveat as 23:10: h1/h2 on these games had 0 wins; the interaction protocol, not the rules alone, drives the gap.
+
+## FINAL h2b on all 30 eval-v2 games (Sun 00:57). A3-35 done.
+Board score = mean over games of (mean over levels of min(1, optimal/actions) on solved levels); same formula as the
+site (reproduces its h2 rows: Gemini Pro 0.439, Kimi 0.398). Games s910000-03: 3 attempts, effort high (22:32 sweep);
+s910004-29: 1 attempt (00:14 sweep), Flash high, Argon/Carbon/Pro **medium**; hard stop ~00:55.
+| player | games | score | completed runs | wins | wall-capped | crashed (not rerun) |
+|---|---|---|---|---|---|---|
+| **Gemini 4 Carbon** | 30 | **0.891** | 38 | **38 (100%)** | 0 | 0 |
+| **Gemini 4 Argon** | 30 | **0.853** | 34 | **34 (100%)** | 0 | 4 |
+| **Gemini Flash** | 30 | **0.731** | 35 | 20 | 13 | 3 |
+| Humans | 15 | 0.682 | 23 | 17 | - | - |
+| Gemini Pro | 30 | 0.226 (lower bound) | 22 | 0 | 16 | 16 |
+| Kimi K3.1 | 4 | 0.339 (lower bound, partial) | 0 | 0 | - | 12 (Verda suspended) |
+- Carbon and Argon won **every** run they completed, on every one of the 30 games, mostly at medium effort.
+- **Gemini Pro row is not a real score:** at high its 12 runs (4 games) all died to 429 when the 104-run sweep
+  started; at medium most runs were cut by the 01:00 deadline (median 3/8 levels). Show it as "incomplete".
+- Humans: completed human runs on the 15 eval-v2 games humans played.
+- Contrast (same games, one action per call): h2 Gemini Pro 0.439 / Kimi 0.398 with 0 wins; h1 Gemini Flash 22% of
+  levels, 0 wins. **The win/fail outcome is decided by the interaction protocol** (h2b = up to 5 actions per call).
+- The website's h2 board does not read h2b runs (filter `harness == "h2"`, and h2b runs have no collection tag).
+  Owner of `analysis/aggregate.py`: add an h2b board; collection = eval-v2 for game ids gridworld-s9100xx.
