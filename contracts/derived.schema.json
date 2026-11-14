@@ -12,7 +12,7 @@
         "provider": {"type": "string"},
         "api_model": {"type": "string"},
         "tier": {"enum": ["frontier", "open", "finetuned", "baseline"]},
-        "input_modes": {"type": "array", "items": {"enum": ["image", "text"]}},
+        "input_modes": {"type": "array", "items": {"type": "string"}, "description": "image | text | rle (lossless run-length text), extendable"},
         "efforts": {"type": "array", "items": {"type": "string"}},
         "price_in": {"type": ["number", "null"]},
         "price_out": {"type": ["number", "null"]},
