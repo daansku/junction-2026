@@ -28,7 +28,12 @@ while true; do
     [ -f "$OUT/$name/.pulled" ] && continue
     modal volume ls junction-grpo "/bench/$name" 2>/dev/null | grep -q summary.json || continue
     modal volume get --force junction-grpo "/bench/$name" "$OUT/" >/dev/null 2>&1 && echo "$(date -u +%H:%M) pulled $name"
-    grep -qE "App completed|Stopping app|stopped" "/root/modal-bench-$name.log" 2>/dev/null && touch "$OUT/$name/.pulled"
+    if grep -qE "App completed|Stopping app|stopped" "/root/modal-bench-$name.log" 2>/dev/null; then
+      touch "$OUT/$name/.pulled"
+      # PROTOCOL v3 (human decision 20:50): official rescore, one rule for every row
+      (cd /root/posttrain && /srv/bench/.venv/bin/python -m posttrain.rescore_v3 "$OUT/$name" \
+         --out "$OUT/rescore_v3-$name.json" 2>&1 | tail -1 | sed "s/^/$(date -u +%H:%M) /" >> /root/rl-v3-headlines.txt)
+    fi
   done
   sleep "$POLL"
 done
