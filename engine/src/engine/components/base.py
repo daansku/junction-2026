@@ -75,6 +75,10 @@ class Component:
         """True if the player keeps moving in `d` after entering `pos` (ice)."""
         return False
 
+    def drift(self, level: "Level", state: "State", pos: "Pos") -> tuple[int, int] | None:
+        """Forced move after the player's own move settles (conveyors, gravity). None = none."""
+        return None
+
     def interact(self, level: "Level", state: "State", events: list[str]) -> None: ...
 
     def on_step(self, level: "Level", state: "State", events: list[str]) -> None:

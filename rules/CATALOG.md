@@ -23,6 +23,11 @@ Colours below are defaults; skin shuffle permutes object colours per game, so ne
 | stamina | `stamina.py` | 2 | live | every action costs 1; 0 = lost; refill pads restore to max (single use); HUD meter | refills off the path | `test_stamina_and_refill` |
 | cracked floor | `cracked_floor.py` | 2 | live | X tile; holds once, collapses to a dark hole when you step off | on the way to a key/gem/plate; **taught only with collect_all, keys_doors or plates_gates** (`requires`) | `test_cracked_floor_*` |
 | beacon goal | `beacon_goal.py` | 2 | live | extra goal rings; real goal wears a fresh colour, a decoy wears the game's usual goal colour; HUD beacon pip = real colour; decoy sends you to start | decoy on the shortest path | `test_beacon_decoy_sends_home` |
+| conveyor belts | `conveyors.py` | 3 | opt-in | arrows; after your move settles on a belt it carries you along (chains) | belt runs across the path, often against travel | `test_conveyor_carries` |
+| patrolling enemies | `enemies.py` | 3 | opt-in | X; walks back and forth on a 3-5 cell straight track, moves with you; same cell or swap = lost | tracks crossing the path | `test_enemy_*` |
+| gravity switch | `gravity.py` | 3 | opt-in | horizontal bar; toggles gravity: you fall straight down after every action; HUD pip while on | switch on the path + a second one to turn it off | `test_gravity_falls` |
+
+Tier 3 is **not** in the default curriculum pool (existing collections unchanged). Use `GameSpec(rules=[...])` or the eval-v2 build.
 
 Proposals: `a5-decoy-and-camouflage` -> beacon_goal; `a5-delayed-state-switch` -> phase_walls; `auto-01` -> cracked_floor; `auto-02` -> collect_all; `auto-03` -> twin. `a5-sokoban-deadlock-box`: covered by push_blocks + the necessity check (the rule-ignorant plan must fail); no dedicated deadlock generator yet.
 

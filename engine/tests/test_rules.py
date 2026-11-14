@@ -207,3 +207,39 @@ def test_skin_shuffle_shapes_and_colours_distinct():
         movable = [r for r in sk if r not in FIXED and r not in FIXED_SHAPE]
         assert len({sk[r][1] for r in movable}) == len(movable)
     assert make_skin(1, "gridworld", True, rules) == a
+
+
+# ---- tier 3 (opt-in via rules=, not in the default curriculum pool) ----------------
+def test_conveyor_carries():
+    lv = corridor(7, ["conveyors"], {"conveyors": {"belts": [[3, 1, "right"], [4, 1, "right"]]}}, rows=1)
+    s, _, ev = run(lv, [R, R])
+    assert s.pos == (5, 1) and "drifted:2" in ev
+
+
+def test_enemy_catches():
+    lv = corridor(7, ["enemies"], {"enemies": {"tracks": [[[3, 1], [4, 1], [5, 1]]]}}, rows=1)
+    s, out, ev = run(lv, [R, R])        # enemy t0 (3,1) t1 (4,1) t2 (5,1); player (3,1): safe
+    assert out == PLAYING
+    s, out, ev = run(lv, [R, R, R])     # t3 enemy back at (4,1) = player
+    assert out == LOST and "caught" in ev
+
+
+def test_enemy_swap_catches():
+    lv = corridor(6, ["enemies"], {"enemies": {"tracks": [[[2, 1], [3, 1]]]}}, rows=1)
+    s, out, _ = run(lv, [R])            # enemy leaves (2,1) as player enters: safe
+    assert out == PLAYING
+    s, out, ev = run(lv, [R, R])        # player (2,1)->(3,1) while enemy (3,1)->(2,1): swap
+    assert out == LOST
+
+
+def test_gravity_falls():
+    lv = corridor(5, ["gravity"], {"gravity": {"switches": [[2, 1]]}}, rows=4)
+    s, _, ev = run(lv, [R])
+    assert "gravity_on" in ev and s.pos == (2, 4)
+    s2, _, _ = step_level(lv, s, U)   # can't climb: falls straight back
+    assert s2.pos == (2, 4)
+
+
+def test_tier3_not_in_default_pool():
+    assert not {"conveyors", "enemies", "gravity"} & set(rule_pool(2))
+    assert {"conveyors", "enemies", "gravity"} <= set(rule_pool(3))

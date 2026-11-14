@@ -39,6 +39,18 @@ def _try_move(level: Level, s: State, d: tuple[int, int], events: list[str]) -> 
     return True
 
 
+def _drift(level: Level, s: State, events: list[str]) -> None:
+    drifters = comps.hooks(level, "drift")
+    n = 0
+    while drifters and n < MAX_SLIDE:
+        d = next((v for c in drifters if (v := c.drift(level, s, s.pos)) is not None), None)
+        if d is None or not _try_move(level, s, d, events):
+            break
+        n += 1
+    if n:
+        events.append(f"drifted:{n}")
+
+
 def step_level(level: Level, state: State, action: Action) -> tuple[State, list[str], str]:
     """Apply one counted action. Caller handles RESET and ignores unavailable actions."""
     H = comps.hooks
@@ -65,6 +77,7 @@ def step_level(level: Level, state: State, action: Action) -> tuple[State, list[
     elif action == Action.ACTION5:
         for c in H(level, "interact"):
             c.interact(level, s, events)
+    _drift(level, s, events)
 
     s.moves += 1
     for c in H(level, "on_step"):
