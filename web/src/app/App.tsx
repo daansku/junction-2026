@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Layout } from './Layout'
 import { PlayPage } from '@/features/play/PlayPage'
 import { GalleryPage } from '@/features/gallery/GalleryPage'
 import { ReplayPage, ReplayIndexPage } from '@/features/replay/ReplayPage'
+import { OverviewPage } from '@/features/overview/OverviewPage'
 import { LiveWall } from '@/features/replay/LiveWall'
 import { ComparePage } from '@/features/compare/ComparePage'
 import { LeaderboardPage } from '@/features/leaderboard/LeaderboardPage'
@@ -18,7 +19,7 @@ const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { index: true, element: <Navigate to="/play" replace /> },
+      { index: true, element: <OverviewPage /> },
       { path: 'play', element: <PlayPage /> },
       { path: 'play/:gameId', element: <PlayPage /> },
       { path: 'gallery', element: <GalleryPage /> },

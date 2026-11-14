@@ -380,7 +380,7 @@ export function ReplayPage() {
       ) : (
         <div className="replay-grid">
           <div className="replay-stage">
-            <FrameCanvas frame={step?.frame} scale="fit" maxScale={10} />
+            <FrameCanvas frame={step?.frame} scale="fit" maxScale={10} viewportReserve={110} />
             <div className="scrubber">
               <Button mono onClick={() => setPlaying((p) => !p)} variant="primary">
                 {playing ? 'pause' : 'play'}

@@ -45,7 +45,8 @@
 }
 
 @media (max-width: 720px) {
-  .topbar { gap: var(--s3); }
+  .topbar { gap: var(--s2); }
+  .topbar-right .btn-ghost { display: none; }
   .brand .mono { display: none; }
   .api-pick .kicker { display: none; }
 }

@@ -10,6 +10,8 @@ interface Props {
   /** Minimum scale in fit mode. */
   minScale?: number
   maxScale?: number
+  /** In fit mode, also keep the frame inside the viewport height, leaving this many px below it. Null disables. */
+  viewportReserve?: number | null
   /** Draw 1px lines between frame cells (debug / gallery detail). */
   grid?: boolean
   /** Absolutely positioned layer above the frame, same size (e.g. truth overlay, path). */
@@ -27,6 +29,7 @@ export function FrameCanvas({
   scale = 'fit',
   minScale = 2,
   maxScale = 16,
+  viewportReserve = null,
   grid = false,
   overlay,
   className,
@@ -44,14 +47,23 @@ export function FrameCanvas({
       // Width only: the parent's height usually depends on the canvas itself.
       const cs = getComputedStyle(el)
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
-      const s = Math.floor(w / FRAME_SIZE)
+      let s = Math.floor(w / FRAME_SIZE)
+      if (viewportReserve != null) {
+        const top = el.getBoundingClientRect().top + window.scrollY
+        const avail = window.innerHeight - Math.min(top, window.innerHeight / 3) - viewportReserve
+        s = Math.min(s, Math.floor(avail / FRAME_SIZE))
+      }
       setFitScale(Math.max(minScale, Math.min(maxScale, s || minScale)))
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
-    return () => ro.disconnect()
-  }, [scale, minScale, maxScale])
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [scale, minScale, maxScale, viewportReserve])
 
   const s = typeof scale === 'number' ? scale : fitScale
   const cssSize = FRAME_SIZE * s

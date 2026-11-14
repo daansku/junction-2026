@@ -250,7 +250,17 @@ export function PlayPage() {
         <div className="play-stage">
           {frame ? (
             <div className="play-frame-wrap">
-              <FrameCanvas frame={frame} scale="fit" maxScale={12} label="Game frame" />
+              <FrameCanvas frame={frame} scale="fit" maxScale={12} viewportReserve={24} label="Game frame" />
+              <div className="dpad" aria-label="On-screen controls">
+                <button type="button" className="dpad-up" onClick={() => act('ACTION1')} aria-label="Up">↑</button>
+                <button type="button" className="dpad-left" onClick={() => act('ACTION3')} aria-label="Left">←</button>
+                <button type="button" className="dpad-right" onClick={() => act('ACTION4')} aria-label="Right">→</button>
+                <button type="button" className="dpad-down" onClick={() => act('ACTION2')} aria-label="Down">↓</button>
+                {available.includes('ACTION5') && (
+                  <button type="button" className="dpad-act" onClick={() => act('ACTION5')} aria-label="Interact">␣</button>
+                )}
+                <button type="button" className="dpad-reset" onClick={() => act('RESET')} aria-label="Restart level">R</button>
+              </div>
               {finished && (
                 <div className="play-done" role="status">
                   <Chip outcome="WIN">ALL LEVELS SOLVED</Chip>
