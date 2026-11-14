@@ -1,6 +1,7 @@
 """bench CLI.
 
   python -m bench run --model <hf id | local dir> [--lora <adapter dir>] --out data/derived/bench/<run> [--dev-slice]
+  python -m bench run --api http://127.0.0.1:8001/v1 --served-name arena-base --tokenizer Qwen/Qwen3.5-9B --out ...
   python -m bench compare --ref data/derived/bench/base --cand data/derived/bench/sft-mix [--out delta.json]
   python -m bench list          # print the frozen benchmark list
 
@@ -59,8 +60,11 @@ def cmd_list(a) -> int:
     b, g = load_configs()
     for tier, t in b["tiers"].items():
         print(f"[{tier}]")
-        for bm in t["benchmarks"]:
+        if "from" in t:
+            print(f"  (subset of {t['from']}: {', '.join(t['subtasks'])})")
+        for bm in t.get("benchmarks") or []:
             print(f"  {bm['id']:28s} {bm['kind']:14s} {bm.get('task') or bm.get('dataset')}"
+                  f"{'  fewshot ' + str(bm['fewshot']) if bm.get('fewshot') is not None else ''}"
                   f"{'  limit ' + str(bm['limit']) if bm.get('limit') else ''}{'  n ' + str(bm['n']) if bm.get('n') else ''}")
     print("dev slice:", ", ".join(b["dev_slice"]), f"(<= {b['dev_slice_limit']} items each)")
     return 0
@@ -70,7 +74,11 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="bench")
     sub = p.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run", help="score one model (GPU)")
-    r.add_argument("--model", required=True, help="HF id or local dir of the (merged) model")
+    r.add_argument("--model", help="HF id or local dir of the (merged) model, loaded in-process with vLLM")
+    r.add_argument("--api", help="OpenAI-compatible base URL ending in /v1 of a vLLM server already serving the model")
+    r.add_argument("--served-name", help="model name on that server (with --api)")
+    r.add_argument("--tokenizer", help="HF id or dir of the tokenizer (with --api; loglikelihood tasks need it)")
+    r.add_argument("--concurrency", type=int, default=48, help="parallel requests to the server (with --api)")
     r.add_argument("--lora", help="LoRA adapter dir on top of --model")
     r.add_argument("--out", required=True)
     r.add_argument("--name")
