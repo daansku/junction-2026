@@ -372,13 +372,14 @@ export function PostTrainingBenchView(props: {
       return bench.claim_evaluation.winning_candidate
     }
     return (
+      candidates.find((c) => c.row_id === 'think-gridbranch')?.row_id ??
       candidates.find((c) => c.row_id === 'think-games')?.row_id ??
       candidates.find((c) => c.row_id === 'finalist')?.row_id ??
       candidates.find((c) => c.row_id === 'mix')?.row_id ??
       candidates.find((c) => c.row_id === 'games')?.row_id ??
       candidates.find((c) => c.row_id === 'rl-nothink')?.row_id ??
       candidates[0]?.row_id ??
-      'think-games'
+      'think-gridbranch'
     )
   }, [selectedCand, candidates, bench])
 
@@ -394,8 +395,14 @@ export function PostTrainingBenchView(props: {
   const candRun = runs.find((r) => r.row_id === activeCand)
   const vsCtrl = findComp(bench?.comparisons_vs_ctrl ?? [], activeCand)
   const vsBase = findComp(bench?.comparisons_vs_base ?? [], activeCand)
+  const rawLower = (candRun?.raw_name ?? '').toLowerCase()
   const isThinkCand =
-    activeCand === 'think-games' || (candRun?.raw_name ?? '').toLowerCase().startsWith('rl-think-games')
+    activeCand === 'think-games' ||
+    activeCand === 'think-gridbranch' ||
+    rawLower.startsWith('think-games-') ||
+    rawLower.startsWith('rl-think-games-') ||
+    rawLower.startsWith('think-gridbranch-') ||
+    rawLower.startsWith('rl-think-gridbranch-')
   const ctrlRun =
     (vsCtrl ? runs.find((r) => r.row_id === vsCtrl.ref) : undefined) ??
     (isThinkCand
