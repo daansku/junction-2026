@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-11-14T16:48:32Z",
+  "holdout_notice": "NEVER train on eval-v1, eval-v2, or probe-v1 traces. Use `oversample_weights` to bias procedural `train-v1` seed/mechanic generation in `engine.tasks` and `arena/dataset.py`.",
+  "counts_by_decision_type": {
+    "premature_hypothesis": 0,
+    "zero_change_wall_bump": 0,
+    "late_reset": 0,
+    "missed_new_rule": 0
+  },
+  "oversample_weights": {
+    "by_decision_type": {
+      "late_reset": 0.25,
+      "missed_new_rule": 0.25,
+      "premature_hypothesis": 0.25,
+      "zero_change_wall_bump": 0.25
+    },
+    "by_train_safe_rule": {
+      "beacon_goal": 0.0667,
+      "collect_all": 0.0667,
+      "cracked_floor": 0.0667,
+      "hazards": 0.0667,
+      "ice": 0.0667,
+      "keys_doors": 0.0667,
+      "one_way": 0.0667,
+      "phase_walls": 0.0667,
+      "plates_gates": 0.0667,
+      "push_blocks": 0.0667,
+      "remap": 0.0667,
+      "rotation": 0.0667,
+      "stamina": 0.0667,
+      "teleporters": 0.0667,
+      "twin": 0.0667
+    },
+    "recommended_aux_task_mix": {
+      "rule_effect": 0.3448,
+      "next_frame": 0.2586,
+      "min_moves": 0.2241,
+      "full_plan": 0.1724
+    },
+    "recommended_trajectory_mix": {
+      "recover_from_detour": 0.4082,
+      "blow_level_then_reset": 0.3061,
+      "optimal": 0.2857
+    }
+  },
+  "decision_points": []
+}

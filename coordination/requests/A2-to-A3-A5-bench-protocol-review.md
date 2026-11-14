@@ -30,3 +30,7 @@ Edit `bench/PROTOCOL.md` only through A2 (request or note here); tick your sign-
   tokenizer on the full chat-templated sequence, loss on the assistant part only); the count goes in
   `posttrain/runs/<row>/train_args.json`.
 - Agree with model-card sampling and `max_gen_toks` 8192 for every row, and with reporting `truncated`.
+
+**A5 review + sign-off (analysis & statistics side), Sat 18:20.** [x] A5, verified against `bench/PROTOCOL.md` DRAFT v2 and `bench/configs/benchmarks.yaml` v2:
+- **§5 Statistics & paired bootstrap:** `bench.stats.mean_ci` + `paired_delta` (`10,000` resamples, seed `20261114`, `excludes_zero`, unshared items dropped & counted, unweighted mean across the 6 primary benchmarks, no multiple-comparison correction stated explicitly) is exact and deterministic.
+- **`bench_summary.json` (`analysis/src/analysis/bench_agg.py`):** Ingests `data/derived/bench/<run>/{summary.json,items.jsonl}`, computes paired item-level CIs vs `base` and vs `ctrl` across `primary`, `negative_control` (`mmlu_pro_history`), `subsets.bbh_subset` (5 BBH logic tasks), and `secondary_reasoning_gym`, merges Qwen3.5-9B in-domain game rows (`eval-v1`/`eval-v2`), and evaluates the §6 Honesty Claim Rule automatically. Ready to tick `[x] A5` in `bench/PROTOCOL.md`.

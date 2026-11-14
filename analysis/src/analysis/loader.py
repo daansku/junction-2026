@@ -223,6 +223,13 @@ def filter_benchmark_runs(
 
         if meta.get("start_level") is not None or meta.get("takeover_of") is not None:
             continue
+        if bool(player.get("assisted")) or bool(meta.get("assisted")):
+            continue
+        # Drop /challenge kiosk visitor plays so they never pollute human baselines or leaderboards (PLAN.md §3.4)
+        p_mode = str(player.get("mode") or meta.get("mode") or "").strip().lower()
+        p_purpose = str(player.get("purpose") or meta.get("purpose") or "").strip().lower()
+        if p_mode == "challenge" or p_purpose == "challenge":
+            continue
         if kind == "human" and name in PRACTICE_HUMAN_NAMES:
             continue
         if kind == "baseline" and (name.startswith("smoke") or mid.startswith("smoke")):
@@ -230,6 +237,15 @@ def filter_benchmark_runs(
         if end_reason in ("idle_timeout", "server_shutdown", "error"):
             continue
         if kind == "model" and outcome == "ABORTED":
+            continue
+
+        # Backfill harness_version from player dict when recorded by agent_h2 via POST /sessions
+        raw_harness = str(meta.get("harness_version") or player.get("harness_version") or "").strip()
+        if raw_harness and not meta.get("harness_version"):
+            meta["harness_version"] = raw_harness
+        # Drop early h2 runs cut off by the 3M cached-context token bug before A3's 17:35 (15:35Z) fix
+        started_at = str(meta.get("started_at") or "")
+        if raw_harness == "h2" and end_reason == "budget_tokens" and (not started_at or started_at < "2026-11-14T15:35:00Z"):
             continue
         actions_taken = int(meta.get("actions") if meta.get("actions") is not None else max(0, len(run.get("steps") or []) - 1))
         if kind == "human" and outcome == "ABORTED" and end_reason in ("switched_game", "left_page") and actions_taken == 0:

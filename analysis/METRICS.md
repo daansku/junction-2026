@@ -128,3 +128,47 @@ For every attempted failed level (`actions_used > 0` and `solved == False`) on a
   - `evidence_quote` (`string | null`): **verbatim** contiguous substring copied from the model's `hypothesis` or `reasoning` on that level (verified by `_verify_quote_in_steps`; non-verbatim LLM quotes are rejected in favour of verified substrings)
   - `judge_model` (`string`): model identifier (or `"trace-auditor-v1"` when synthesized deterministically offline)
 
+
+---
+
+## 7. Lab-Standard Evaluation & Confidence Intervals (`leaderboard_h2.json`, Phase 2 `A5-20`)
+
+### Strict Harness Separation (`PLAN.md` §1.1 & §3.1)
+- `leaderboard.json` aggregates **only** `h1` model runs (`harness_filter == "h1"`, stateless rolling-notes harness) plus reference baselines/humans.
+- `leaderboard_h2.json` aggregates **only** `h2` model runs (`harness_filter == "h2"`, multi-turn conversation + preserved reasoning blocks + native `act(action, hypothesis, belief)` tool + `high`/`max` effort + `64k`/`32k` output cap + last-5 image frames with prompt caching) plus reference `Optimal` and `Human` rows matched to the `h2` game subset per collection.
+- **Additional Phase 2 Run Hygiene (`loader.py`):**
+  - Visitor kiosk runs from `/challenge` (`player.mode == "challenge"` or `player.purpose == "challenge"`) and assisted `/play` runs (`assisted == True`) are excluded from benchmark tables.
+  - Pre-`2026-11-14T15:35:00Z` `h2` runs ending with `end_reason == "budget_tokens"` (3M cached-context token counter bug) are dropped.
+  - Pre-`2026-11-14T15:15:00Z` Gemini `h1` rows are flagged with `cost_underreported = true` and `cost_note` (`~3.6x` undercount before `billed_tokens` included thinking tokens).
+
+### Bootstrap 95% Confidence Intervals
+For any row with $G \ge 2$ game runs and per-game scores $s_1, \dots, s_G$:
+- Draw $B = 10{,}000$ bootstrap resamples of size $G$ with replacement (deterministic seed `20261114`).
+- `score_ci_low` and `score_ci_high` are the 2.5th and 97.5th percentiles of the resampled mean game score.
+- Single-attempt evaluations (`attempts_per_game == 1.0`) set `single_attempt = true` and append `"single-attempt (k=1)"` to `subset_note`.
+
+---
+
+## 8. Post-Training & Outside-Benchmark Transfer (`bench_summary.json`, Phase 2 `A5-20`)
+
+Built by `analysis/src/analysis/bench_agg.py` from `data/derived/bench/<run>/{summary.json,items.jsonl}` (`bench/PROTOCOL.md` v2 & `FT_BENCHMARKS.md`):
+
+- **Primary Far-Transfer Suite (6 benchmarks, unweighted mean = headline):**
+  1. `bbh` (`bbh_cot_fewshot`, all 27 tasks, 3-shot CoT, ~6,511 items)
+  2. `math` (`minerva_math`, 0-shot CoT, 5,000 items)
+  3. `gsm8k` (`gsm8k_cot`, 8-shot CoT, 1,319 items)
+  4. `medqa` (`medqa_4options`, 0-shot 4-option loglikelihood, 1,273 items)
+  5. `mmlu_pro_health` (5-shot CoT)
+  6. `mmlu_pro_law` (5-shot CoT)
+- **Negative Control (`negative_control`):** `mmlu_pro_history` (5-shot CoT, knowledge recall — must not rise like the primary suite).
+- **Pre-Declared BBH Logic Subset (`bbh_logic_secondary`):** `tracking_shuffled_objects`, `navigate`, `logical_deduction`, `web_of_lies`, `temporal_sequences` (sliced directly from `bbh` items).
+- **Paired Item-Level Bootstrap (`paired_delta_ci`):** For candidate $C$ vs reference $R \in \{\text{base}, \text{ctrl}\}$ over shared items $I = I_C \cap I_R$ ($n = |I|$), bootstrap $d_k = c_k - r_k$ $10{,}000$ times (seed `20261114`); `excludes_zero = (ci_low > 0) or (ci_high < 0)`. Unshared items are dropped and counted (`n_only_ref`, `n_only_cand`), never imputed.
+- **Pre-Registered Honesty Claim Rule (`_evaluate_honesty_rule`):** Sets `transfer_shown = true` (`status = "transfer_supported"`) **if and only if** a trained candidate (`games`, `mix`, or `rl-*` finalist) beats equal-token `ctrl` on the primary suite mean **and** on $\ge 2$ primary benchmarks with 95% CIs excluding zero, **and** its `mmlu_pro_history` delta vs `ctrl` is strictly smaller than its primary headline delta (with no $>2$ pp significant guard drop vs `base`). Otherwise reports `null_transfer_in_domain_only` or `pending_bench_runs` plainly.
+
+---
+
+## 9. Failure-Targeted Decision Points & Oversampling (`decision_points.json`, Phase 2 `A5-21`)
+
+Built by `analysis/src/analysis/sampling_export.py` (with holdout-safe `dev`-only target weights committed at `analysis/decision_point_targets.json` for `A1` and `A3`):
+- Extracts crisp failure decision points across `premature_hypothesis`, `zero_change_wall_bump`, `late_reset`, and `missed_new_rule`.
+- Computes normalized oversampling mixture weights over `dev`-only failures, explicitly excluding `eval-v1`, `eval-v2`, `probe-v1`, and Tier-3 holdout mechanics (`conveyors`, `enemies`, `gravity`) so training data synthesis never leaks held-out evaluation distributions.

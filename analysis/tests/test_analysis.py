@@ -392,6 +392,94 @@ class AnalysisPipelineTests(unittest.TestCase):
         self.assertEqual(exp_arena["explanations"][0]["step"], 1)
         self.assertEqual(exp_arena["explanations"][0]["evidence_quote"], "Blue hollow ring looks like the immediate exit.")
 
+    def test_phase2_h2_bench_and_sampling_export(self) -> None:
+        from analysis.aggregate import aggregate_h2_runs
+        from analysis.bench_agg import build_bench_summary
+        from analysis.sampling_export import build_decision_points_export
+
+        dev_games = json.loads((REPO_ROOT / "data" / "collections" / "dev.json").read_text(encoding="utf-8"))["games"]
+        valid_gid = dev_games[0]["game_id"]
+
+        # 1) /challenge visitor runs + early h2 budget_tokens bug runs are dropped
+        r_chal = _make_run("r-chal", "visitor", "human", [_make_step(0, None), _make_step(1, "ACTION1", state="WIN")])
+        r_chal["meta"]["game_id"] = valid_gid
+        r_chal["meta"]["player"]["mode"] = "challenge"
+        r_chal["meta"]["player"]["purpose"] = "challenge"
+
+        r_h2_bug = _make_run("r-h2-bug", "claude-haiku-5-5", "model", [_make_step(0, None), _make_step(1, "ACTION1")])
+        r_h2_bug["meta"]["game_id"] = valid_gid
+        r_h2_bug["meta"]["harness_version"] = None
+        r_h2_bug["meta"]["player"]["harness_version"] = "h2"
+        r_h2_bug["meta"]["end_reason"] = "budget_tokens"
+        r_h2_bug["meta"]["started_at"] = "2026-11-14T14:50:19Z"
+
+        r_h2_ok = _make_run(
+            "r-h2-ok",
+            "verda-kimi-k3-1-pro",
+            "model",
+            [_make_step(0, None, optimal_moves=1), _make_step(1, "ACTION1", state="WIN", events=["level_complete", "game_won"], optimal_moves=1, frame_row6="1" + "0" * 63)],
+        )
+        r_h2_ok["meta"]["game_id"] = valid_gid
+        r_h2_ok["meta"]["harness_version"] = None
+        r_h2_ok["meta"]["player"]["harness_version"] = "h2"
+        r_h2_ok["meta"]["player"]["effort"] = "max"
+        r_h2_ok["meta"]["player"]["reasoning_mode"] = "assistant-message-returned-verbatim"
+        r_h2_ok["meta"]["started_at"] = "2026-11-14T15:57:22Z"
+
+        r_gem_h1 = _make_run("r-gem-h1", "gemini-flash", "model", [_make_step(0, None, optimal_moves=2), _make_step(1, "ACTION1", events=["bump"], optimal_moves=2), _make_step(2, "ACTION1", events=["bump"], optimal_moves=2)])
+        r_gem_h1["meta"]["game_id"] = valid_gid
+        r_gem_h1["meta"]["outcome"] = "BUDGET"
+        r_gem_h1["meta"]["cost_usd"] = 0.05
+        r_gem_h1["meta"]["started_at"] = "2026-11-14T13:00:00Z"
+
+        cleaned = filter_benchmark_runs([r_chal, r_h2_bug, r_h2_ok, r_gem_h1], REPO_ROOT)
+        self.assertEqual([r["meta"]["run_id"] for r in cleaned], ["r-h2-ok", "r-gem-h1"])
+        self.assertEqual(r_h2_ok["meta"]["harness_version"], "h2")
+
+        # 2) Strict h1 vs h2 board separation + Gemini pre-17:15 cost underreport flag
+        models_reg = load_models(REPO_ROOT)
+        lb_h1 = aggregate_runs(cleaned, models_registry=models_reg, game_descs={})
+        lb_h2 = aggregate_h2_runs(cleaned, models_registry=models_reg, game_descs={})
+        validate_against_schema(lb_h1, REPO_ROOT / "contracts" / "derived.schema.json")
+        validate_against_schema(lb_h2, REPO_ROOT / "contracts" / "derived.schema.json")
+        self.assertEqual([r["player_id"] for r in lb_h1["rows"]], ["gemini-flash"])
+        self.assertTrue(lb_h1["rows"][0]["cost_underreported"])
+        self.assertEqual([r["player_id"] for r in lb_h2["rows"]], ["verda-kimi-k3-1-pro"])
+        self.assertEqual(lb_h2["rows"][0]["reasoning_mode"], "assistant-message-returned-verbatim")
+        self.assertTrue(lb_h2["rows"][0]["single_attempt"])
+
+        # 3) Bench paired bootstrap CIs + Honesty Rule
+        with tempfile.TemporaryDirectory() as td:
+            bdir = Path(td) / "bench"
+            for name, bbh_sc, gsm_sc, hist_sc in (("base", 0.40, 0.50, 0.50), ("ctrl", 0.42, 0.51, 0.50), ("sft-mix", 0.68, 0.72, 0.51)):
+                rdir = bdir / name
+                rdir.mkdir(parents=True)
+                items_lines = []
+                for idx in range(40):
+                    items_lines.append(json.dumps({"bench": "bbh", "item": f"q{idx}", "score": 1.0 if idx < int(40 * bbh_sc) else 0.0}))
+                    items_lines.append(json.dumps({"bench": "gsm8k", "item": f"m{idx}", "score": 1.0 if idx < int(40 * gsm_sc) else 0.0}))
+                    items_lines.append(json.dumps({"bench": "mmlu_pro_history", "item": f"h{idx}", "score": 1.0 if idx < int(40 * hist_sc) else 0.0}))
+                (rdir / "items.jsonl").write_text("\n".join(items_lines) + "\n", encoding="utf-8")
+                (rdir / "summary.json").write_text(json.dumps({
+                    "name": name,
+                    "model": "Qwen/Qwen3.5-9B",
+                    "config_hash": "hash1",
+                    "benchmarks": {
+                        "bbh": {"tier": "primary", "n": 40, "mean": bbh_sc, "ci_low": bbh_sc - 0.1, "ci_high": bbh_sc + 0.1, "truncated": 0},
+                        "gsm8k": {"tier": "primary", "n": 40, "mean": gsm_sc, "ci_low": gsm_sc - 0.1, "ci_high": gsm_sc + 0.1, "truncated": 0},
+                        "mmlu_pro_history": {"tier": "negative_control", "n": 40, "mean": hist_sc, "ci_low": hist_sc - 0.1, "ci_high": hist_sc + 0.1, "truncated": 0},
+                    },
+                }), encoding="utf-8")
+            bs = build_bench_summary(bdir, lb_h1=lb_h1, lb_h2=lb_h2, resamples=500)
+            self.assertEqual(bs["claim_evaluation"]["status"], "transfer_supported")
+            self.assertEqual(bs["claim_evaluation"]["winning_candidate"], "mix")
+
+        # 4) Decision-point export excludes Tier-3 rules from train-v1 weights
+        dp = build_decision_points_export(cleaned, repo_root=REPO_ROOT)
+        self.assertGreaterEqual(len(dp["decision_points"]), 1)
+        self.assertNotIn("conveyors", dp["oversample_weights"]["by_train_safe_rule"])
+        self.assertNotIn("checkpoints", dp["oversample_weights"]["by_train_safe_rule"])
+
 
 if __name__ == "__main__":
     unittest.main()

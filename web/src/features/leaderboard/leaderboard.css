@@ -213,3 +213,127 @@
   font-size: 12px;
   color: var(--text-2);
 }
+
+
+/* Phase 2: Harness View Tabs (h1 | h2 | bench) + Honesty Rule + CI bars */
+.lb-view-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.lb-view-tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  padding: 9px var(--s3);
+  background: var(--surface-1);
+  color: var(--text-2);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+
+.lb-view-tab:hover {
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+.lb-view-tab.active {
+  color: var(--text-1);
+  background: var(--surface-2);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.lb-tab-count {
+  padding: 1px 6px;
+  font-size: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  color: var(--text-2);
+}
+
+.lb-tag-warn {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.lb-cost-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.lb-ci-sub {
+  font-size: 10px;
+  line-height: 1.2;
+  min-height: 12px;
+  color: var(--text-3);
+}
+
+.lb-h2-rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.lb-h2-rule-cell {
+  background: var(--surface-1);
+  padding: var(--s2) var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lb-h2-rule-head {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.lb-h2-rule-body {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.lb-claim-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.lb-claim-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 14px;
+}
+
+.lb-claim-detail {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+
+.lb-claim-gates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding-top: var(--s2);
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--text-2);
+}
