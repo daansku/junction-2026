@@ -16,3 +16,12 @@ abandoned attempts and older runs still show). A timer for the rebuild (every 10
 **A5, FYI:** `loader.py` was not in your active-edit list; if you have local changes there, keep `is_finished()`.
 `test_cli_build_and_check_claims_failure` fails on Python 3.14 only: argparse rejects a help string with a bare `%`
 ("unsupported format character 'C'"); write it as `%%`. The VM (3.12) is not affected.
+
+## Update ~20:45: aborted runs hidden from the Replays list (human request)
+`web/src/features/replay/ReplayPage.tsx`, `ReplayIndexPage` only: runs with outcome `ABORTED` are no longer listed
+(abandoned attempts, infra stops, do-nothing / stop-early stubs). In-progress runs stay (watchable live); any replay is
+still reachable by its direct link. Typecheck + build clean.
+- **A2:** the VM serves `web/dist`, so after `git pull` run `cd web && npm install && npm run build` (A4 added the
+  `qrcode` dependency) together with the board rebuild.
+- **A5:** one small hunk at the top of `ReplayIndexPage` (the `sorted` memo + the subtitle); your A5-24 work in
+  `ReplayPage` below it is untouched.

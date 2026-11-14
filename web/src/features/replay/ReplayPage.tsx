@@ -62,8 +62,13 @@ export function ReplayIndexPage() {
     queryFn: () => api.listRuns({ game_id: gameId, kind }),
     refetchInterval: 10_000,
   })
+  // Aborted runs (abandoned attempts, infra stops, the do-nothing / stop-early stubs) are not listed;
+  // their replays stay reachable by direct link. Runs in progress stay, so they can be watched live.
   const sorted = useMemo(
-    () => [...(runs.data ?? [])].sort((a, b) => (b.started_at ?? '').localeCompare(a.started_at ?? '')),
+    () =>
+      (runs.data ?? [])
+        .filter((r) => r.outcome !== 'ABORTED')
+        .sort((a, b) => (b.started_at ?? '').localeCompare(a.started_at ?? '')),
     [runs.data],
   )
   const setParam = (k: string, v: string) => {
@@ -77,7 +82,7 @@ export function ReplayIndexPage() {
     <>
       <PageHeader
         title="Replays"
-        sub={gameId ? <span className="mono">{gameId}</span> : 'Every recorded run, newest first.'}
+        sub={gameId ? <span className="mono">{gameId}</span> : 'Every finished or live run, newest first.'}
         actions={
           <>
             <label className="field">
