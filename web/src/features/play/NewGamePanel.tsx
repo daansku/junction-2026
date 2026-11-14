@@ -23,7 +23,10 @@ function explain(e: unknown) {
   if (e instanceof HttpError) {
     if (e.status === 404 || e.status === 405) return 'This server cannot generate games yet. Pick a game from the list for now.'
     if (e.status === 403) return 'That seed range is reserved for evaluation games. Try another seed.'
-    if (e.status === 422 || e.status === 400) return 'The server rejected these settings. Check the seed and try again.'
+    if (e.status === 422) return 'No valid game could be built from this seed and settings. Try another seed.'
+    if (e.status === 400) return 'The server rejected these settings. Check the seed and try again.'
+    if (e.status === 429) return 'Too many new games in the last minute. Wait a moment, then try again.'
+    if (e.status === 503) return 'The generator is busy. Try again in a few seconds.'
   }
   return e instanceof Error ? e.message : String(e)
 }
