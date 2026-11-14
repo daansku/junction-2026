@@ -1,9 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { API, setApiMode, SHARED_URL } from '@/lib/config'
+import { API } from '@/lib/config'
 import { PALETTE_SOURCE } from '@/lib/palette'
 import { useServerInfo } from '@/lib/server'
 import { Wordmark } from './Wordmark'
-import { ThemeToggle } from './ThemeToggle'
 import './layout.css'
 
 const NAV = [
@@ -33,18 +32,6 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="topbar-right">
-          <label className="api-pick" title={API.base ?? 'in-browser mock backend'}>
-            <span className="kicker">data</span>
-            <select value={API.mode === 'same-origin' || API.mode === 'custom' ? 'other' : API.mode} onChange={(e) => setApiMode(e.target.value)}>
-              <option value="mock">mock</option>
-              <option value="local">localhost</option>
-              <option value="shared" disabled={!SHARED_URL}>shared{SHARED_URL ? '' : ' (no URL yet)'}</option>
-              {(API.mode === 'same-origin' || API.mode === 'custom') && <option value="other">{API.label}</option>}
-            </select>
-          </label>
-          <ThemeToggle />
-        </div>
       </header>
       {API.mode === 'mock' && (
         <div className="mock-banner mono">
