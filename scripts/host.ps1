@@ -5,7 +5,7 @@
 #   powershell -File scripts\host.ps1 restart-server   # pull-free restart of the server only (tunnel URL unchanged)
 #   powershell -File scripts\host.ps1 stop
 #   powershell -File scripts\host.ps1 status           # pids + current tunnel URL
-param([ValidateSet("start", "stop", "restart-server", "status")][string]$cmd = "status")
+param([ValidateSet("start", "stop", "restart-server", "restart-tunnel", "status")][string]$cmd = "status")
 
 $repo = Split-Path -Parent $PSScriptRoot
 $py = Join-Path $repo ".venv\Scripts\python.exe"
@@ -56,6 +56,17 @@ switch ($cmd) {
         Stop-Bg "server"
         Start-Sleep -Seconds 1
         Start-Bg "server" $py @("-m", "server", "serve", "--port", "8000")
+    }
+    "restart-tunnel" {
+        Stop-Bg "tunnel"
+        Remove-Item (Join-Path $logs "tunnel.err.log") -ErrorAction SilentlyContinue
+        Start-Bg "tunnel" "cloudflared" @("tunnel", "--no-autoupdate", "--url", "http://localhost:8000")
+        $url = $null
+        for ($i = 0; $i -lt 30 -and -not $url; $i++) { Start-Sleep -Seconds 1; $url = Tunnel-Url }
+        if ($url) {
+            $url | Out-File -Encoding ascii -NoNewline (Join-Path $repo "coordination\API_URL")
+            "tunnel url: $url  (written to coordination/API_URL; commit and push it)"
+        } else { "tunnel did not report a URL; see $logs\tunnel.err.log" }
     }
     "stop" { Stop-Bg "server"; Stop-Bg "tunnel"; Stop-Bg "backup" }
     "status" {
