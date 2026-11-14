@@ -277,7 +277,7 @@ export function InsightsPage() {
               <span className="ins-stat-num mono">
                 {h1PerceptionPct}% → {h2PerceptionPct}%
               </span>
-              <span className="ins-stat-title">Board misreads (h1 → h2)</span>
+              <span className="ins-stat-title">Board misreads: standard → extended</span>
               <span className="ins-stat-sub mono muted">Multi-turn memory fixes vision</span>
             </button>
 
@@ -298,8 +298,8 @@ export function InsightsPage() {
                 <div className="ins-funnel-legend mono muted">
                   <span>Where attempts break</span>
                   <span>
-                    <i className="ins-swatch-h1" /> h1 ({expSummary.by_harness.h1?.total ?? 0}) ·{' '}
-                    <i className="ins-swatch-h2" /> h2 ({expSummary.by_harness.h2?.total ?? 0})
+                    <i className="ins-swatch-h1" /> standard ({expSummary.by_harness.h1?.total ?? 0}) ·{' '}
+                    <i className="ins-swatch-h2" /> extended ({expSummary.by_harness.h2?.total ?? 0})
                   </span>
                 </div>
                 <div className="ins-funnel-list">
@@ -328,7 +328,7 @@ export function InsightsPage() {
                         </div>
                         <div className="ins-funnel-bars">
                           <div className="ins-funnel-bar-line mono">
-                            <span className="muted">h1</span>
+                            <span className="muted">standard</span>
                             <div className="ins-failure-bar-track">
                               <div
                                 className="ins-failure-bar-fill"
@@ -341,7 +341,7 @@ export function InsightsPage() {
                             <span className="num muted">{h1Pct}%</span>
                           </div>
                           <div className="ins-funnel-bar-line mono">
-                            <span className="ins-h2-tag">h2</span>
+                            <span className="ins-h2-tag">extended</span>
                             <div className="ins-failure-bar-track">
                               <div
                                 className="ins-failure-bar-fill"
@@ -401,7 +401,7 @@ export function InsightsPage() {
                             </td>
                             <td className="mono">
                               <span className={m.harness_version === 'h2' ? 'ins-h2-tag' : 'muted'}>
-                                {m.harness_version}
+                                {m.harness_version === 'h2' ? 'extended' : 'standard'}
                               </span>
                             </td>
                             <td className="num mono">{m.total}</td>
@@ -443,7 +443,7 @@ export function InsightsPage() {
               {[
                 { id: 'all', label: 'All' },
                 { id: 'knowing_doing', label: 'Knew rule' },
-                { id: 'h2', label: 'h2 only' },
+                { id: 'h2', label: 'extended only' },
                 { id: 'perception', label: 'Misread' },
                 { id: 'rule_induction', label: 'Missed rule' },
                 { id: 'belief_updating', label: 'Looping' },

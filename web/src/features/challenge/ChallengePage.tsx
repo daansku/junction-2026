@@ -522,7 +522,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           </div>
           <aside className="ch-side">
             <section className="ch-card">
-              <span className="kicker">pick a game · eval-v1, levels 1–{nLevels}</span>
+              <span className="kicker">pick a challenge · {nLevels} levels</span>
               <div className="ch-tabs" role="radiogroup" aria-label="Game">
                 {CHALLENGE_GAMES.map((g) => (
                   <Button key={g.id} variant="ghost" mono active={g.id === gameId} onClick={() => pickGame(g.id)} role="radio" aria-checked={g.id === gameId} title={g.id}>
@@ -995,7 +995,7 @@ function EndScreen(props: {
           </tbody>
         </table>
         <p className="muted ch-note">
-          Score and solve rates for people and models are averages over every recorded attempt (h1 harness). You beat the AI when your
+          Scores and win rates for people and models are averages over every recorded attempt. You beat the AI when your
           score is above the best model average.
           {stats ? ` Data: ${stats.generated_at.slice(0, 16).replace('T', ' ')} UTC.` : ''}
         </p>

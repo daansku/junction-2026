@@ -675,7 +675,7 @@ export function ReplayPage() {
                 {step?.reasoning && (
                   <div>
                     <span className="kicker">
-                      {m?.harness_version === 'h2' ? 'reasoning · h2 CoT' : 'reasoning · notes'}
+                      {m?.harness_version === 'h2' ? 'extended reasoning' : 'recorded notes'}
                     </span>
                     <p className="mono model-text">
                       {highlightEvidenceSubstring(step.reasoning, activeExplanation?.evidence_quote)}

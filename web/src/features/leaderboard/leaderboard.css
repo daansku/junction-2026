@@ -123,6 +123,13 @@
   border-color: var(--accent);
 }
 
+.lb-human-row td:first-child {
+  box-shadow: inset 2px 0 var(--accent);
+}
+.lb-human-row .lb-name-btn {
+  font-weight: 600;
+}
+
 .lb-subset-note {
   margin-top: var(--s2);
   font-size: 11px;
@@ -171,11 +178,6 @@
   border: 1px solid var(--line);
   background: var(--surface-1);
   color: var(--text-2);
-}
-
-.lb-tag-warn {
-  border-color: var(--accent);
-  color: var(--accent);
 }
 
 .lb-cost-cell {
@@ -233,10 +235,6 @@
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-
-.lb-tag-inline {
-  margin-left: 6px;
 }
 
 .lb-card-dialog {

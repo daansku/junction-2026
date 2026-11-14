@@ -581,7 +581,7 @@ export function PlayPage() {
 
               {finished && (
                 <div className="play-done" role="status">
-                  <Chip outcome="WIN">ALL LEVELS SOLVED</Chip>
+                  <Chip outcome="WIN">ALL LEVELS WON</Chip>
                   <div className="play-done-stats">
                     <Stat label="actions" value={log.length} />
                     <Stat label="resets" value={resets} />

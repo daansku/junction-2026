@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import * as Plot from '@observablehq/plot'
+import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button, Chip, Empty, Loading, Panel, Stat, Swatch, cx } from '@/design/primitives'
-import { cssVar, seriesColors } from '@/lib/PlotFigure'
+import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
 import { ModelCardDialog, cardLabel } from './ModelCardDialog'
 import type {
   BenchComparison,
@@ -34,6 +35,12 @@ function fmtUsd(v: number | null | undefined): string {
   return `$${v.toFixed(2)}`
 }
 
+function fmtTokensCompact(v: number): string {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`
+  if (v >= 1_000) return `${Math.round(v / 1_000)}k`
+  return String(Math.round(v))
+}
+
 function seriesColorFor(row: LeaderboardRow, fallbackIdx: number): string {
   if (row.kind === 'baseline') return cssVar('--text-3') || '#76756f'
   if (row.kind === 'human') return cssVar('--text-1') || '#f3f2ee'
@@ -58,7 +65,7 @@ function formatReasoningMode(mode?: string | null): string {
 }
 
 type H2SortKey = 'score' | 'level_solve_rate' | 'game_win_rate' | 'median_actions' | 'cost_per_game'
-type H2KindFilter = 'all' | 'model' | 'baseline' | 'human'
+type H2KindFilter = 'all' | 'model' | 'human'
 
 const H2_HIGHER_IS_BETTER = new Set<H2SortKey>(['score', 'level_solve_rate', 'game_win_rate'])
 const H2_DEFAULT_COLLECTION = 'eval-v2'
@@ -75,13 +82,14 @@ export function LeaderboardH2View(props: {
   resolveRunFallback: (row: LeaderboardRow) => string | null
 }) {
   const { doc, isLoading, resolveRunFallback } = props
+  const navigate = useNavigate()
   const [collectionPick, setCollection] = useState<string | null>(null)
   const [kindFilter, setKindFilter] = useState<H2KindFilter>('all')
   const [sortKey, setSortKey] = useState<H2SortKey>('score')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [cardRow, setCardRow] = useState<LeaderboardRow | null>(null)
 
-  const allRows = doc?.rows ?? []
+  const allRows = (doc?.rows ?? []).filter((row) => row.kind !== 'baseline')
   const collections = useMemo(() => {
     const s = new Set<string>()
     for (const r of allRows) s.add(r.collection || 'eval-v1')
@@ -117,6 +125,30 @@ export function LeaderboardH2View(props: {
     return out
   }, [sortedRows])
 
+  const tokenRows = useMemo(
+    () =>
+      collectionRows
+        .filter((row) => row.kind === 'model')
+        .map((row, idx) => {
+          const tokensPerGame = row.games > 0 ? ((row.tokens_in ?? 0) + (row.tokens_out ?? 0)) / row.games : 0
+          return { row, idx, tokensPerGame }
+        })
+        .filter((item) => item.tokensPerGame > 0)
+        .sort((a, b) => b.row.score - a.row.score),
+    [collectionRows],
+  )
+
+  const onTokensPlotClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const target = e.target as Element | null
+    const circle = target?.closest('circle')
+    const group = circle?.parentElement
+    if (!circle || !group) return
+    const idx = Array.from(group.querySelectorAll('circle')).indexOf(circle)
+    const row = tokenRows[idx]?.row
+    const runId = row?.best_run_id ?? (row ? resolveRunFallback(row) : null)
+    if (runId) navigate(`/replay/${encodeURIComponent(runId)}`)
+  }
+
   const isBest = (row: LeaderboardRow, key: H2SortKey) => {
     const v = row[key]
     const best = bestValues[key]
@@ -149,17 +181,16 @@ export function LeaderboardH2View(props: {
     // Prefer rows evaluated on more than one game so a lucky single game doesn't headline.
     const best = pickBest(models.filter((r) => r.games >= 2)) ?? pickBest(models)
     const human = collectionRows.find((r) => r.kind === 'human')
-    const optimal = collectionRows.find((r) => r.player_id === 'optimal')
     const totalGames = models.reduce((acc, r) => acc + (r.games || 0), 0)
-    return { modelsCount: models.length, best, human, optimal, totalGames }
+    return { modelsCount: models.length, best, human, totalGames }
   }, [collectionRows])
 
   if (isLoading && !doc) {
-    return <Loading what="Loading h2 leaderboard" />
+    return <Loading what="Loading extended evaluation" />
   }
 
   if (allRows.length === 0) {
-    return <Empty>No h2 runs published yet.</Empty>
+    return <Empty>No extended evaluation runs published yet.</Empty>
   }
 
   return (
@@ -176,7 +207,6 @@ export function LeaderboardH2View(props: {
           <Stat
             label="Human"
             value={fmtFloat(kpi.human?.score, 3)}
-            sub={`optimal ${fmtFloat(kpi.optimal?.score ?? 1, 3)}`}
           />
         </div>
         <div className="lb-kpi-cell">
@@ -195,7 +225,7 @@ export function LeaderboardH2View(props: {
         </div>
         <div className="lb-filter-group">
           <span className="kicker lb-filter-label">Player</span>
-          {(['all', 'model', 'baseline', 'human'] as H2KindFilter[]).map((k) => (
+          {(['all', 'model', 'human'] as H2KindFilter[]).map((k) => (
             <Button key={k} mono active={kindFilter === k} onClick={() => setKindFilter(k)}>
               {k}
             </Button>
@@ -211,7 +241,7 @@ export function LeaderboardH2View(props: {
                 <th>Player</th>
                 <th className="num">Games</th>
                 {sortTh('score', 'Score')}
-                {sortTh('level_solve_rate', 'Levels Solved')}
+                {sortTh('level_solve_rate', 'Levels Won')}
                 {sortTh('game_win_rate', 'Games Won')}
                 {sortTh('median_actions', 'Med. Actions')}
                 {sortTh('cost_per_game', 'Cost / Game')}
@@ -225,17 +255,19 @@ export function LeaderboardH2View(props: {
                 const coverage = subsetCoverage(row.subset_note)
                 const showCi = row.score_ci_low != null && row.score_ci_high != null && row.games > 1
                 return (
-                  <tr key={`${row.player_id}-${row.collection}-${row.effort ?? 'none'}`}>
+                  <tr
+                    key={`${row.player_id}-${row.collection}-${row.effort ?? 'none'}`}
+                    className={row.kind === 'human' ? 'lb-human-row' : undefined}
+                    aria-label={row.kind === 'human' ? 'Human result' : undefined}
+                  >
                     <td>
                       <button type="button" className="lb-name-btn" onClick={() => setCardRow(row)}>
                         <Swatch color={color} />
                         <span>{label(row)}</span>
-                        {row.kind !== 'model' && <span className="lb-tag">{row.kind}</span>}
                       </button>
                     </td>
                     <td className="num" title={row.subset_note ?? undefined}>
                       {coverage ?? row.games}
-                      {coverage && <span className="lb-tag lb-tag-warn lb-tag-inline">subset</span>}
                     </td>
                     <td
                       className={cx('num', 'lb-score-td', isBest(row, 'score') && 'lb-best')}
@@ -287,6 +319,153 @@ export function LeaderboardH2View(props: {
             </tbody>
           </table>
         </div>
+      </Panel>
+
+      <Panel label="Score vs Tokens / Game">
+        {tokenRows.length ? (
+          <div className="lb-plot-box lb-plot-clickable" onClick={onTokensPlotClick}>
+            <PlotFigure
+              deps={[tokenRows, kpi.human?.score, collection, resolveRunFallback]}
+              make={(width) => {
+                const xs = tokenRows.map((point) => point.tokensPerGame)
+                const xMin = Math.min(...xs) * 0.55
+                const xMax = Math.max(...xs) * 1.85
+                const height = 280
+                const mL = 44
+                const mR = 118
+                const mT = 24
+                const mB = 40
+                const innerW = width - mL - mR
+                const innerH = height - mT - mB
+                const yMax = 1.06
+                const lnMin = Math.log(xMin)
+                const lnMax = Math.log(xMax)
+                const px = (x: number) => mL + ((Math.log(x) - lnMin) / (lnMax - lnMin)) * innerW
+                const py = (y: number) => mT + (1 - y / yMax) * innerH
+                const dataX = (x: number) => Math.exp(lnMin + ((x - mL) / innerW) * (lnMax - lnMin))
+                const dataY = (y: number) => yMax * (1 - (y - mT) / innerH)
+
+                type Anchor = 'start' | 'middle' | 'end'
+                type Box = { x0: number; x1: number; y0: number; y1: number }
+                const candidates: Array<[number, number, Anchor]> = [
+                  [0, -14, 'middle'],
+                  [0, 15, 'middle'],
+                  [11, 0, 'start'],
+                  [-11, 0, 'end'],
+                  [8, -12, 'start'],
+                  [-8, -12, 'end'],
+                  [8, 13, 'start'],
+                  [-8, 13, 'end'],
+                  [0, -27, 'middle'],
+                  [0, 28, 'middle'],
+                ]
+                const overlap = (a: Box, b: Box) =>
+                  Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) *
+                  Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0))
+                const dotBoxes: Box[] = tokenRows.map((point) => ({
+                  x0: px(point.tokensPerGame) - 8,
+                  x1: px(point.tokensPerGame) + 8,
+                  y0: py(point.row.score) - 8,
+                  y1: py(point.row.score) + 8,
+                }))
+                const placed: Box[] = []
+                const labels: Array<{ x: number; y: number; text: string; anchor: Anchor }> = []
+                const order = tokenRows.map((_, i) => i).sort((a, b) => tokenRows[b].row.score - tokenRows[a].row.score)
+                for (const i of order) {
+                  const point = tokenRows[i]
+                  const text = label(point.row)
+                  const w = text.length * 6 + 4
+                  const cx = px(point.tokensPerGame)
+                  const cy = py(point.row.score)
+                  let best: { cost: number; x: number; y: number; anchor: Anchor; box: Box } | null = null
+                  for (const [dx, dy, anchor] of candidates) {
+                    const x = cx + dx
+                    const y = cy + dy
+                    const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2
+                    const box = { x0, x1: x0 + w, y0: y - 6, y1: y + 6 }
+                    let cost = 0
+                    for (const other of placed) cost += overlap(box, other)
+                    dotBoxes.forEach((other, j) => {
+                      if (j !== i) cost += overlap(box, other)
+                    })
+                    if (box.x0 < mL || box.x1 > width - mR + 4 || box.y0 < 2 || box.y1 > height - mB) cost += 500
+                    if (!best || cost < best.cost) best = { cost, x, y, anchor, box }
+                    if (cost === 0) break
+                  }
+                  if (best && best.cost === 0) {
+                    placed.push(best.box)
+                    labels.push({ x: dataX(best.x), y: dataY(best.y), text, anchor: best.anchor })
+                  }
+                }
+                const labelMark = (anchor: Anchor) =>
+                  Plot.text(labels.filter((item) => item.anchor === anchor), {
+                    x: 'x',
+                    y: 'y',
+                    text: 'text',
+                    textAnchor: anchor,
+                    fill: cssVar('--text-1'),
+                  })
+
+                const human = kpi.human?.score
+                const humanLine = human == null ? [] : [{ score: human, label: `human ${human.toFixed(2)}` }]
+                return {
+                  width,
+                  height,
+                  marginLeft: mL,
+                  marginRight: mR,
+                  marginTop: mT,
+                  marginBottom: mB,
+                  x: {
+                    type: 'log',
+                    domain: [xMin, xMax],
+                    label: 'Tokens per game (log)',
+                    tickFormat: (value: number) => fmtTokensCompact(value),
+                  },
+                  y: { domain: [0, yMax], label: 'Score' },
+                  marks: [
+                    Plot.ruleY(humanLine, {
+                      y: 'score',
+                      stroke: cssVar('--text-2'),
+                      strokeDasharray: '9,5',
+                    }),
+                    Plot.text(humanLine, {
+                      x: xMax,
+                      y: 'score',
+                      text: 'label',
+                      textAnchor: 'start',
+                      dx: 6,
+                      fill: cssVar('--text-2'),
+                    }),
+                    Plot.dot(tokenRows, {
+                      x: 'tokensPerGame',
+                      y: (point: (typeof tokenRows)[number]) => point.row.score,
+                      fill: (point: (typeof tokenRows)[number]) => seriesColorFor(point.row, point.idx),
+                      stroke: cssVar('--surface-1'),
+                      strokeWidth: 2,
+                      r: 7,
+                      tip: true,
+                      title: (point: (typeof tokenRows)[number]) =>
+                        [
+                          label(point.row),
+                          `Score ${point.row.score.toFixed(3)}`,
+                          `${fmtTokensCompact(point.tokensPerGame)} tokens per game`,
+                          point.row.cost_per_game == null ? 'No USD price (GPU credits)' : `${fmtUsd(point.row.cost_per_game)} per game`,
+                          (point.row.best_run_id ?? resolveRunFallback(point.row)) ? 'Click to watch replay' : null,
+                        ]
+                          .filter(Boolean)
+                          .join('\n'),
+                    }),
+                    labelMark('middle'),
+                    labelMark('start'),
+                    labelMark('end'),
+                  ],
+                }
+              }}
+            />
+          </div>
+        ) : (
+          <Empty>No model token data for this collection.</Empty>
+        )}
       </Panel>
 
       {cardRow && (
@@ -449,7 +628,7 @@ export function PostTrainingBenchView(props: {
                   <th>Collection</th>
                   <th>Harness</th>
                   <th className="num">Games</th>
-                  <th className="num">Levels Solved</th>
+                  <th className="num">Levels Won</th>
                   <th className="num">Solve Rate</th>
                   <th className="num">Score [95% CI]</th>
                   <th className="num">No-Effect Loop</th>

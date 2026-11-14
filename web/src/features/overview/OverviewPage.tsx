@@ -281,9 +281,8 @@ export function OverviewPage() {
             <Link to={firstGame ? `/play/${encodeURIComponent(firstGame)}` : '/play'}>
               <Button>Play &amp; Race Ghosts</Button>
             </Link>
-            <Link to="/leaderboard">h1 Board</Link>
-            <Link to="/leaderboard?view=h2">h2 Lab Board</Link>
-            <Link to="/leaderboard?view=bench">Post-Training</Link>
+            <Link to="/leaderboard">Leaderboard</Link>
+            <Link to="/leaderboard?view=h2">Extended results</Link>
             <Link to="/insights">Why Models Fail</Link>
             <Link to="/gallery">Gallery</Link>
             {!server.published && <Link to="/live">Live</Link>}
@@ -308,7 +307,7 @@ export function OverviewPage() {
                     <th className="num">#</th>
                     <th>player</th>
                     <th className="num">score</th>
-                    <th className="num">lvl solve</th>
+                    <th className="num">levels won</th>
                     <th className="num">game win</th>
                     <th className="num">$/game</th>
                   </tr>

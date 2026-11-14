@@ -16,19 +16,19 @@ import {
 import { api } from '@/lib/api'
 import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
 import type { RunMeta } from '@/lib/types'
-import { fetchBenchSummary, fetchDecisionPoints, fetchLeaderboardH2 } from './phase2Api'
+import { fetchLeaderboardH2 } from './phase2Api'
 import { ModelCardDialog } from './ModelCardDialog'
-import { LeaderboardH2View, PostTrainingBenchView } from './PostTrainingSection'
+import { LeaderboardH2View } from './PostTrainingSection'
 import type { LeaderboardDocument, LeaderboardRow } from './types'
 import './leaderboard.css'
 
-type BoardView = 'h1' | 'h2' | 'bench'
+type BoardView = 'h1' | 'h2'
 
 type SortKey = 'score' | 'level_solve_rate' | 'game_win_rate' | 'median_actions' | 'cost_per_game'
 
 const SORT_KEYS: SortKey[] = ['score', 'level_solve_rate', 'game_win_rate', 'median_actions', 'cost_per_game']
 
-type KindFilter = 'all' | 'model' | 'baseline' | 'human'
+type KindFilter = 'all' | 'model' | 'human'
 
 const DEFAULT_COLLECTION = 'eval-v2'
 
@@ -91,7 +91,7 @@ export function LeaderboardPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const rawView = searchParams.get('view')
-  const view: BoardView = rawView === 'h2' || rawView === 'bench' ? rawView : 'h1'
+  const view: BoardView = rawView === 'h2' ? 'h2' : 'h1'
 
   const setView = (next: BoardView) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -108,14 +108,6 @@ export function LeaderboardPage() {
     queryKey: ['derived', 'leaderboard_h2'],
     queryFn: fetchLeaderboardH2,
   })
-  const benchQ = useQuery({
-    queryKey: ['derived', 'bench_summary'],
-    queryFn: fetchBenchSummary,
-  })
-  const decisionPtsQ = useQuery({
-    queryKey: ['derived', 'decision_points'],
-    queryFn: fetchDecisionPoints,
-  })
   const runsQ = useQuery({
     queryKey: ['runs', 'lb-best-lookup'],
     queryFn: () => api.listRuns(),
@@ -130,7 +122,7 @@ export function LeaderboardPage() {
   const [frontierAxis, setFrontierAxis] = useState<'auto' | 'tokens' | 'usd'>('auto')
   const [cardRow, setCardRow] = useState<LeaderboardRow | null>(null)
 
-  const allRows = lb.data?.rows ?? []
+  const allRows = (lb.data?.rows ?? []).filter((row) => row.kind !== 'baseline')
 
   // Map each player_id (and effort) to its best finished recorded run for 1-click scatter/ledger replay navigation
   const bestRunByPlayer = useMemo(() => {
@@ -211,20 +203,14 @@ export function LeaderboardPage() {
       (best, cur) => (!best || cur.score > best.score ? cur : best),
       null,
     )
-    const optRow = collectionRows.find((r) => r.player_id === 'optimal')
     const humanRow = collectionRows.find((r) => r.kind === 'human' || r.player_id === 'human')
-    const randomRow = collectionRows.find((r) => r.player_id === 'random')
-    const noopRow = collectionRows.find((r) => r.player_id === 'noop')
     const totalGames = collectionRows.reduce((acc, r) => acc + (r.games || 0), 0)
 
     return {
       totalGames,
       modelCount: modelRows.length,
       bestModel,
-      optScore: optRow?.score ?? 1.0,
       humanScore: humanRow?.score ?? null,
-      randomScore: randomRow?.score ?? null,
-      noopScore: noopRow?.score ?? null,
     }
   }, [collectionRows])
 
@@ -311,7 +297,7 @@ export function LeaderboardPage() {
     <div className="lb-stack">
       <PageHeader title="Benchmark Leaderboard" />
 
-      <div className="lb-view-tabs" role="tablist" aria-label="Evaluation harness and post-training views">
+      <div className="lb-view-tabs" role="tablist" aria-label="Leaderboard views">
         <button
           type="button"
           role="tab"
@@ -319,7 +305,7 @@ export function LeaderboardPage() {
           className={cx('lb-view-tab mono', view === 'h1' && 'active')}
           onClick={() => setView('h1')}
         >
-          <span>h1 · Stateless Rolling-Notes</span>
+          <span>Standard evaluation</span>
           <span className="lb-tab-count">{allRows.length}</span>
         </button>
         <button
@@ -329,18 +315,8 @@ export function LeaderboardPage() {
           className={cx('lb-view-tab mono', view === 'h2' && 'active')}
           onClick={() => setView('h2')}
         >
-          <span>h2 · Lab-Standard Multi-Turn</span>
+          <span>Extended evaluation</span>
           <span className="lb-tab-count">{lbH2.data?.rows.length ?? '—'}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'bench'}
-          className={cx('lb-view-tab mono', view === 'bench' && 'active')}
-          onClick={() => setView('bench')}
-        >
-          <span>Post-Training &amp; Reasoning Transfer</span>
-          <span className="lb-tab-count">Qwen3.5-9B</span>
         </button>
       </div>
 
@@ -349,12 +325,6 @@ export function LeaderboardPage() {
           doc={lbH2.data}
           isLoading={lbH2.isLoading}
           resolveRunFallback={resolveBestRun}
-        />
-      ) : view === 'bench' ? (
-        <PostTrainingBenchView
-          bench={benchQ.data}
-          decisionPoints={decisionPtsQ.data}
-          isLoading={benchQ.isLoading}
         />
       ) : lb.isLoading ? (
         <Loading what="Loading leaderboard" />
@@ -375,7 +345,7 @@ export function LeaderboardPage() {
               />
             </div>
             <div className="lb-kpi-cell">
-              <Stat label="Human" value={fmtFloat(kpi.humanScore, 3)} sub={`optimal ${fmtFloat(kpi.optScore, 3)}`} />
+              <Stat label="Human" value={fmtFloat(kpi.humanScore, 3)} />
             </div>
             <div className="lb-kpi-cell">
               <Stat label="Games Evaluated" value={kpi.totalGames} sub={`${kpi.modelCount} models`} />
@@ -393,7 +363,7 @@ export function LeaderboardPage() {
             </div>
             <div className="lb-filter-group">
               <span className="kicker lb-filter-label">Player</span>
-              {(['all', 'model', 'baseline', 'human'] as KindFilter[]).map((k) => (
+              {(['all', 'model', 'human'] as KindFilter[]).map((k) => (
                 <Button key={k} mono active={kindFilter === k} onClick={() => setKindFilter(k)}>
                   {k}
                 </Button>
@@ -412,7 +382,7 @@ export function LeaderboardPage() {
                     <th>Player</th>
                     <th className="num">Games</th>
                     {sortTh('score', 'Score')}
-                    {sortTh('level_solve_rate', 'Levels Solved')}
+                    {sortTh('level_solve_rate', 'Levels Won')}
                     {sortTh('game_win_rate', 'Games Won')}
                     {sortTh('median_actions', 'Med. Actions')}
                     {sortTh('cost_per_game', 'Cost / Game')}
@@ -425,17 +395,19 @@ export function LeaderboardPage() {
                     const bestRunId = resolveBestRun(row)
                     const coverage = subsetCoverage(row.subset_note)
                     return (
-                      <tr key={`${row.player_id}-${row.effort ?? 'none'}-${row.collection}-${row.harness_version ?? 'h1'}`}>
+                      <tr
+                        key={`${row.player_id}-${row.effort ?? 'none'}-${row.collection}-${row.harness_version ?? 'h1'}`}
+                        className={row.kind === 'human' ? 'lb-human-row' : undefined}
+                        aria-label={row.kind === 'human' ? 'Human result' : undefined}
+                      >
                         <td>
                           <button type="button" className="lb-name-btn" onClick={() => setCardRow(row)}>
                             <Swatch color={color} />
                             <span>{rowLabel(row, collection !== 'all')}</span>
-                            {row.kind !== 'model' && <span className="lb-tag">{row.kind}</span>}
                           </button>
                         </td>
                         <td className="num" title={row.subset_note ?? undefined}>
                           {coverage ?? row.games}
-                          {coverage && <span className="lb-tag lb-tag-warn lb-tag-inline">subset</span>}
                         </td>
                         <td className={cx('num', 'lb-score-td', isBest(row, 'score') && 'lb-best')}>
                           <div className="lb-score-wrap">
@@ -471,7 +443,6 @@ export function LeaderboardPage() {
                             }
                           >
                             {fmtUsd(row.cost_per_game)}
-                            {row.cost_underreported && <span className="lb-tag lb-tag-warn">~3.6× low</span>}
                           </span>
                         </td>
                         <td className="num mono">
@@ -544,7 +515,7 @@ export function LeaderboardPage() {
             ) : (
                 <div className="lb-plot-box lb-plot-clickable" onClick={onScatterClick}>
                   <PlotFigure
-                    deps={[frontierPoints, effectiveAxis, kpi.optScore, kpi.humanScore, kpi.randomScore, kpi.noopScore, collectionRows]}
+                    deps={[frontierPoints, effectiveAxis, kpi.humanScore, collectionRows]}
                     make={(width) => {
                       const xs = frontierPoints.map((p) => p.xVal)
                       const minX = Math.min(...xs)
@@ -553,17 +524,9 @@ export function LeaderboardPage() {
                       const xMax = maxX * 1.85
 
                       type LineStyle = 'solid' | 'long-dash' | 'dotted'
-                      const rawRefs: Array<{ y: number; name: string; style: LineStyle }> = [
-                        { y: kpi.optScore, name: 'optimal', style: 'solid' },
-                      ]
+                      const rawRefs: Array<{ y: number; name: string; style: LineStyle }> = []
                       if (kpi.humanScore != null) {
                         rawRefs.push({ y: kpi.humanScore, name: 'human', style: 'long-dash' })
-                      }
-                      if (kpi.randomScore != null) {
-                        rawRefs.push({ y: kpi.randomScore, name: 'random', style: 'dotted' })
-                      }
-                      if (kpi.noopScore != null) {
-                        rawRefs.push({ y: kpi.noopScore, name: 'noop', style: 'dotted' })
                       }
                       if (effectiveAxis === 'usd') {
                         for (const r of collectionRows) {
