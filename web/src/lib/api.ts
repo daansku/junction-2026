@@ -27,6 +27,8 @@ export interface Api {
   listCollections(): Promise<string[]>
   listGames(collection?: string): Promise<GameMeta[]>
   getGame(gameId: string): Promise<GameDescribe>
+  /** POST /games/generate: a new verified game from a seed (random when omitted). */
+  generateGame(body: GenerateBody): Promise<GameDescribe>
   thumbnailUrl(game: GameMeta): string | null
   createSession(body: { game_id: string; player: Player; run_key?: string }): Promise<SessionStart>
   act(sessionId: string, body: ActBody): Promise<ActResponse>
@@ -38,6 +40,12 @@ export interface Api {
   derived<T = unknown>(name: string): Promise<T>
   /** WebSocket URL for /live, or null when unsupported (mock). */
   liveUrl(): string | null
+}
+
+export interface GenerateBody {
+  seed?: number
+  difficulty: number
+  n_levels: number
 }
 
 export class HttpError extends Error {
@@ -78,6 +86,9 @@ class HttpApi implements Api {
   }
   getGame(id: string) {
     return this.req<GameDescribe>(`/games/${encodeURIComponent(id)}`)
+  }
+  generateGame(body: GenerateBody) {
+    return this.post<GameDescribe>('/games/generate', body)
   }
   thumbnailUrl(game: GameMeta) {
     const t = game.thumbnail_url

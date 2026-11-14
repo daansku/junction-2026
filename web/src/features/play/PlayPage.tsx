@@ -8,6 +8,7 @@ import { FrameCanvas } from '@/lib/FrameCanvas'
 import { isTyping } from '@/lib/keys'
 import type { ActionName, Frame, GameMeta, Truth } from '@/lib/types'
 import { Button, Chip, ErrorState, Kbd, Loading, PageHeader, Panel, Stat } from '@/design/primitives'
+import { NewGamePanel, parseGameId } from './NewGamePanel'
 import './play.css'
 
 const KEYMAP: Record<string, ActionName> = {
@@ -221,6 +222,34 @@ export function PlayPage() {
     navigate({ pathname: `/play/${encodeURIComponent(id)}`, search: params.toString() })
   }
 
+  // A freshly generated game starts as soon as the route points at it.
+  const pendingStart = useRef<string | null>(null)
+  const onGenerated = (id: string) => {
+    pendingStart.current = id
+    pickGame(id)
+  }
+  useEffect(() => {
+    if (gameId && pendingStart.current === gameId) {
+      pendingStart.current = null
+      start()
+    }
+  }, [gameId, start])
+
+  const ident = parseGameId(gameId)
+  const listed = !!games.data?.some((g) => g.game_id === gameId)
+  const [copied, setCopied] = useState(false)
+  const copyLink = () => {
+    if (!gameId) return
+    const url = `${window.location.origin}/play/${encodeURIComponent(gameId)}`
+    navigator.clipboard?.writeText(url).then(
+      () => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+      },
+      () => {},
+    )
+  }
+
   const resets = log.filter((a) => a === 'RESET').length
 
   return (
@@ -267,6 +296,11 @@ export function PlayPage() {
             <label className="field">
               <span className="kicker">game</span>
               <select value={gameId ?? ''} onChange={(e) => pickGame(e.target.value)}>
+                {gameId && games.data && !listed && (
+                  <option value={gameId}>
+                    {ident ? `new game · seed ${ident.seed} · d${ident.difficulty} · ${ident.levels} lv` : gameId}
+                  </option>
+                )}
                 {games.data?.map((g) => (
                   <option key={g.game_id} value={g.game_id}>
                     {gameLabel(g)}
@@ -334,6 +368,19 @@ export function PlayPage() {
         </div>
 
         <aside className="play-side">
+          <NewGamePanel onGenerated={onGenerated} />
+          {ident && (
+            <Panel label="this game">
+              <div className="game-ident">
+                <span className="mono">
+                  seed <strong>{ident.seed}</strong> · d{ident.difficulty} · {ident.levels} levels
+                </span>
+                <Button variant="ghost" onClick={copyLink} title="Copy a link that opens this exact game">
+                  {copied ? 'Copied' : 'Copy link'}
+                </Button>
+              </div>
+            </Panel>
+          )}
           <Panel label="controls">
             <div className="controls">
               <span>

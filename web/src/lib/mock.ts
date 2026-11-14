@@ -1,7 +1,7 @@
 // Mock backend: reads committed fixtures from data/fixtures/ (A2, A5) and
 // fills gaps with a tiny in-browser fake engine (walls + goal + budget), so
 // every page works with no server. Never used for results.
-import type { Api } from './api'
+import type { Api, GenerateBody } from './api'
 import { encodeFrame, FRAME_SIZE } from './frame'
 import type {
   ActBody,
@@ -198,11 +198,7 @@ interface MockGame {
   levels: MockLevel[]
 }
 
-const MOCK_GAMES: MockGame[] = [
-  { seed: 1234, d: 1, n: 3 },
-  { seed: 4242, d: 2, n: 4 },
-  { seed: 9001, d: 3, n: 5 },
-].map(({ seed, d, n }) => {
+function mockGame({ seed, d, n, collection = 'mock' }: { seed: number; d: number; n: number; collection?: string }): MockGame {
   const levels = Array.from({ length: n }, (_, i) => makeLevel(seed, i))
   const game_id = `mock-s${seed}-d${d}-l${n}`
   const lv: LevelDescribe[] = levels.map((l, i) => ({
@@ -217,7 +213,7 @@ const MOCK_GAMES: MockGame[] = [
     levels,
     meta: {
       game_id,
-      collection: 'mock',
+      collection,
       family: 'gridworld',
       seed,
       difficulty: d,
@@ -228,7 +224,13 @@ const MOCK_GAMES: MockGame[] = [
       engine_version: 'mock-0',
     },
   }
-})
+}
+
+const MOCK_GAMES: MockGame[] = [
+  { seed: 1234, d: 1, n: 3 },
+  { seed: 4242, d: 2, n: 4 },
+  { seed: 9001, d: 3, n: 5 },
+].map(mockGame)
 
 interface SimState {
   game: MockGame
@@ -439,6 +441,18 @@ export class MockApi implements Api {
     const fx = await loadFixtures()
     const all = [...fx.games, ...MOCK_GAMES.map((g) => g.meta)]
     return delay(collection ? all.filter((g) => !g.collection || g.collection === collection) : all)
+  }
+
+  /** Mock of POST /games/generate: a fresh in-browser game (walls + goal only). */
+  async generateGame(body: GenerateBody): Promise<GameDescribe> {
+    const seed = body.seed ?? 1_000_000 + Math.floor(Math.random() * 9_000_000)
+    const id = `mock-s${seed}-d${body.difficulty}-l${body.n_levels}`
+    let g = MOCK_GAMES.find((m) => m.meta.game_id === id)
+    if (!g) {
+      g = mockGame({ seed, d: body.difficulty, n: body.n_levels, collection: 'generated' })
+      MOCK_GAMES.push(g)
+    }
+    return delay(g.meta, 300)
   }
 
   async getGame(id: string) {
