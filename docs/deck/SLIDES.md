@@ -13,8 +13,8 @@ Timing target: 10 minutes including the live demo. Rewrite the notes in your own
 | 2 | **The problem**: a benchmark that ends up in training data measures memory. | Leakage; agents meet rules without a manual; we need unseen tests with provable answers. | 0:45 |
 | 3 | **The environment**: 21 rules, 2,035 training games, 60 frozen test games; every level checked (search, every rule matters, random <2%). GIFs = real teaching levels. | Point at one GIF (ice or teleporters) and say what the player has to discover. | 1:00 |
 | 4 | **Live demo** `/challenge` + QR. | Hand a phone to a judge or play one level live; show the AI replays appear. Fallback: `web/screenshots/video/challenge-full-run.mp4` (scripted optimal player, say so). | 2:00 |
-| 5 | **The gap (h1, eval-v2)**: optimal 1.000 · humans 0.699, 8 of 13 won · Gemini 4 Argon 0.442, 0 of 6 · Gemini Flash 0.020 · random / do nothing 0. | Headline sentence. Explain the score in one line. | 1:00 |
-| 6 | **Run the lab way (h2)**: humans 0.660 (4 of 4) · Kimi K3.1 max 0.523 (0 of 3) · Gemini Pro high 0.242 (0 of 2); on easy d1 games h2 closes the gap (98–131 moves vs 86–92 optimal). | Pre-empt "you crippled the models": full history, reasoning kept, native tools, max effort. Be honest that easy games close. | 1:00 |
+| 5 | **The gap (h1, eval-v2)**: optimal 1.000 · humans 0.699, 10 of 15 won · Gemini 4 Argon 0.442, 0 of 6 · Gemini Flash 0.020 · random / do nothing 0. | Headline sentence. Explain the score in one line. | 1:00 |
+| 6 | **Run the lab way (h2)**: humans 0.660 (4 of 4) · Kimi K3.1 max 0.398 (0 of 4) · Gemini Pro high 0.376 (0 of 3); on easy d1 games h2 closes the gap (98–131 moves vs 86–92 optimal). | Pre-empt "you crippled the models": full history, reasoning kept, native tools, max effort. Be honest that easy games close. | 1:00 |
 | 7 | **Why they fail**: 50% repeating moves that change nothing, 44% not restarting a doomed level (194 failure points). | Show one replay if time allows (`/replay`). | 0:45 |
 | 8 | **Reward integrity**: Harbor reference 1.000, do nothing 0.000, stop-early 0.167 / 0.500, OpenCode + Nemotron 0.067; 9 of 9 container attacks 0.0. | "Judges: the only way to score is to play well. Try us." | 0:45 |
 | 9 | **Post-training**: SFT v1 4 of 180 levels; SFT v2 three-way + RL (incl. game_turn on the maps); outside benchmarks with pre-registered rule. **Result box is a placeholder until 07:00.** | Replace the dashed box with base / ctrl / ours and CIs. If no transfer, say so (honesty rule). | 1:00 |
@@ -27,8 +27,8 @@ Timing target: 10 minutes including the live demo. Rewrite the notes in your own
 |---|---|
 | 21 rules, engine 0.6.0, 1,000/1,000 fuzz | `engine/src/engine/components/`, `rules/CATALOG.md`, A1 status |
 | 2,035 training games; 30 + 30 frozen test games | `data/collections/train-v1.json`, `eval-v1.json`, `eval-v2.json` |
-| Slide 5 bars and CIs | `leaderboard.json` (h1), built 18:35 UTC by `analysis.cli.build_all` from `/api/runs/export`, finished attempts only |
-| Slide 6 bars and CIs | `leaderboard_h2.json`, same build; d1 wins from `/api/runs` metas (h2) |
+| Slide 5 bars and CIs | `/api/derived/leaderboard.json` (h1), live board built Sat 20:29, finished attempts only |
+| Slide 6 bars and CIs | `/api/derived/leaderboard_h2.json`, live board built Sat 20:29; d1 wins from `/api/runs` metas (h2) |
 | 50% / 44% / 194 failure points | `decision_points.json`, same build |
 | Harbor rows, red team | `coordination/JUDGING.md` (Results, Red team) |
 | SFT v1 4/180 levels | `coordination/status/A3.md` (A3-20 finetune-eval, 30 games) |

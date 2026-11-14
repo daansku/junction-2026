@@ -252,7 +252,7 @@ body.present .slide.current .frame { width: min(100vw, 177.78vh); border: 0; bor
     <h2>On games with never-seen rules, humans finish. No model does.</h2>
     <div class="chart" role="img" aria-label="eval-v2 scores: optimal 1.000, human playtesters 0.699, Gemini 4 Argon 0.442, Gemini Flash 0.020, random 0, do nothing 0">
       <div class="row"><div class="who">Optimal<small>shortest solution</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">1.000<small>20 of 20 won</small></div></div>
-      <div class="row"><div class="who h">Human playtesters<small>first attempt</small></div><div class="track"><div class="fill h" style="--v:.699"></div><div class="ci" style="--lo:.617;--hi:.769"></div></div><div class="val">0.699<small>8 of 13 won</small></div></div>
+      <div class="row"><div class="who h">Human playtesters<small>first attempt</small></div><div class="track"><div class="fill h" style="--v:.699"></div><div class="ci" style="--lo:.630;--hi:.762"></div></div><div class="val">0.699<small>10 of 15 won</small></div></div>
       <div class="row"><div class="who m">Gemini 4 Argon<small>medium effort</small></div><div class="track"><div class="fill m" style="--v:.442"></div><div class="ci" style="--lo:.346;--hi:.526"></div></div><div class="val">0.442<small>0 of 6 won</small></div></div>
       <div class="row"><div class="who m">Gemini Flash<small>medium effort</small></div><div class="track"><div class="fill m" style="--v:.020"></div><div class="ci" style="--lo:0;--hi:.05"></div></div><div class="val">0.020<small>0 of 7 won</small></div></div>
       <div class="row"><div class="who">Random · Do nothing<small>baselines</small></div><div class="track"><div class="fill z"></div></div><div class="val">0.000<small>0 of 20 won</small></div></div>
@@ -260,7 +260,7 @@ body.present .slide.current .frame { width: min(100vw, 177.78vh); border: 0; bor
     </div>
     <p class="muted">Score per level = optimal moves ÷ moves used, 0 if unsolved, averaged over all 8 levels. Finished attempts only. Whiskers: 95% bootstrap CI.</p>
   </div>
-  <div class="src">eval-v2: 30 games × 8 levels, 3 never-trained rules each · harness h1 · leaderboard.json, built 18:35 UTC from the shared server's runs (finished attempts only)</div>
+  <div class="src">eval-v2: 30 games × 8 levels, 3 never-trained rules each · harness h1 · leaderboard.json, live board Sat 20:29 (finished attempts only)</div>
 </div></div></section>
 
 <!-- 6 -->
@@ -276,16 +276,16 @@ body.present .slide.current .frame { width: min(100vw, 177.78vh); border: 0; bor
       </ul>
     </div>
     <div class="body">
-      <div class="chart" role="img" aria-label="eval-v2 h2 subset scores: human 0.660, Kimi K3.1 max 0.523, Gemini Pro high 0.242">
+      <div class="chart" role="img" aria-label="eval-v2 h2 subset scores: human 0.660, Kimi K3.1 max 0.398, Gemini Pro high 0.376">
         <div class="row"><div class="who h">Humans<small>same 4 games</small></div><div class="track"><div class="fill h" style="--v:.660"></div><div class="ci" style="--lo:.586;--hi:.757"></div></div><div class="val">0.660<small>4 of 4 won</small></div></div>
-        <div class="row"><div class="who m">Kimi K3.1<small>max effort</small></div><div class="track"><div class="fill m" style="--v:.523"></div><div class="ci" style="--lo:.389;--hi:.644"></div></div><div class="val">0.523<small>0 of 3 won</small></div></div>
-        <div class="row"><div class="who m">Gemini Pro<small>high effort</small></div><div class="track"><div class="fill m" style="--v:.242"></div><div class="ci" style="--lo:.201;--hi:.284"></div></div><div class="val">0.242<small>0 of 2 won</small></div></div>
+        <div class="row"><div class="who m">Kimi K3.1<small>max effort</small></div><div class="track"><div class="fill m" style="--v:.398"></div><div class="ci" style="--lo:.150;--hi:.590"></div></div><div class="val">0.398<small>0 of 4 won</small></div></div>
+        <div class="row"><div class="who m">Gemini Pro<small>high effort</small></div><div class="track"><div class="fill m" style="--v:.376"></div><div class="ci" style="--lo:.201;--hi:.643"></div></div><div class="val">0.376<small>0 of 3 won</small></div></div>
         <div class="axis"><span></span><div><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span></div><span></span></div>
       </div>
       <p class="muted">eval-v2 h2 subset, one attempt per model and game. Best model run: 7 of 8 levels before the 400-move cap.</p>
     </div>
   </div>
-  <div class="src">leaderboard_h2.json, built 17:49 UTC · arena/src/arena/agent_h2.py · arena/sweeps/h2-subset-v2.yaml</div>
+  <div class="src">leaderboard_h2.json, live board Sat 20:29 · arena/src/arena/agent_h2.py · arena/sweeps/h2-subset-v2.yaml</div>
 </div></div></section>
 
 <!-- 7 -->
