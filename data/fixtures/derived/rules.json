@@ -1,0 +1,571 @@
+{
+  "generated_at": "2026-11-14T00:07:25Z",
+  "rules": [
+    "goal",
+    "move_budget",
+    "walls"
+  ],
+  "players": [
+    "mock-model",
+    "noop",
+    "optimal",
+    "random",
+    "stop_early"
+  ],
+  "cells": [
+    {
+      "rule": "goal",
+      "player_id": "mock-model",
+      "effort": "medium",
+      "intro_levels": 0,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": null,
+      "wasted_actions": null,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": null,
+      "belief_accuracy": null,
+      "intro_score": null,
+      "recombined_levels": 3,
+      "recombined_solve_rate": 0.6667
+    },
+    {
+      "rule": "goal",
+      "player_id": "optimal",
+      "effort": null,
+      "intro_levels": 0,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": null,
+      "wasted_actions": null,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": null,
+      "belief_accuracy": null,
+      "intro_score": null,
+      "recombined_levels": 15,
+      "recombined_solve_rate": 1.0
+    },
+    {
+      "rule": "goal",
+      "player_id": "random",
+      "effort": null,
+      "intro_levels": 0,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": null,
+      "wasted_actions": null,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": null,
+      "belief_accuracy": null,
+      "intro_score": null,
+      "recombined_levels": 4,
+      "recombined_solve_rate": 0.25
+    },
+    {
+      "rule": "goal",
+      "player_id": "stop_early",
+      "effort": null,
+      "intro_levels": 0,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": null,
+      "wasted_actions": null,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": null,
+      "belief_accuracy": null,
+      "intro_score": null,
+      "recombined_levels": 3,
+      "recombined_solve_rate": 0.0
+    },
+    {
+      "rule": "move_budget",
+      "player_id": "mock-model",
+      "effort": "medium",
+      "intro_levels": 0,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": null,
+      "wasted_actions": null,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": null,
+      "belief_accuracy": null,
+      "intro_score": null,
+      "recombined_levels": 3,
+      "recombined_solve_rate": 0.6667
+    },
+    {
+      "rule": "move_budget",
+      "player_id": "optimal",
+      "effort": null,
+      "intro_levels": 0,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": null,
+      "wasted_actions": null,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": null,
+      "belief_accuracy": null,
+      "intro_score": null,
+      "recombined_levels": 15,
+      "recombined_solve_rate": 1.0
+    },
+    {
+      "rule": "move_budget",
+      "player_id": "random",
+      "effort": null,
+      "intro_levels": 0,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": null,
+      "wasted_actions": null,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": null,
+      "belief_accuracy": null,
+      "intro_score": null,
+      "recombined_levels": 4,
+      "recombined_solve_rate": 0.25
+    },
+    {
+      "rule": "move_budget",
+      "player_id": "stop_early",
+      "effort": null,
+      "intro_levels": 0,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": null,
+      "wasted_actions": null,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": null,
+      "belief_accuracy": null,
+      "intro_score": null,
+      "recombined_levels": 3,
+      "recombined_solve_rate": 0.0
+    },
+    {
+      "rule": "walls",
+      "player_id": "mock-model",
+      "effort": "medium",
+      "intro_levels": 1,
+      "intro_solve_rate": 1.0,
+      "actions_to_first_use": 7,
+      "wasted_actions": 2.0,
+      "hypothesis_match_rate": 1.0,
+      "repeated_no_effect_actions": 0.0,
+      "belief_accuracy": 1.0,
+      "intro_score": 0.7143,
+      "recombined_levels": 2,
+      "recombined_solve_rate": 0.5
+    },
+    {
+      "rule": "walls",
+      "player_id": "optimal",
+      "effort": null,
+      "intro_levels": 3,
+      "intro_solve_rate": 1.0,
+      "actions_to_first_use": 7,
+      "wasted_actions": 0.0,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": 0.0,
+      "belief_accuracy": null,
+      "intro_score": 1.0,
+      "recombined_levels": 12,
+      "recombined_solve_rate": 1.0
+    },
+    {
+      "rule": "walls",
+      "player_id": "random",
+      "effort": null,
+      "intro_levels": 3,
+      "intro_solve_rate": 0.3333,
+      "actions_to_first_use": 3,
+      "wasted_actions": 146.0,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": 51.67,
+      "belief_accuracy": null,
+      "intro_score": 0.0388,
+      "recombined_levels": 1,
+      "recombined_solve_rate": 0.0
+    },
+    {
+      "rule": "walls",
+      "player_id": "stop_early",
+      "effort": null,
+      "intro_levels": 3,
+      "intro_solve_rate": 0.0,
+      "actions_to_first_use": 2,
+      "wasted_actions": 5.0,
+      "hypothesis_match_rate": null,
+      "repeated_no_effect_actions": 2.0,
+      "belief_accuracy": null,
+      "intro_score": 0.0,
+      "recombined_levels": 0,
+      "recombined_solve_rate": null
+    }
+  ],
+  "level_curve": [
+    {
+      "level": 1,
+      "player_id": "mock-model",
+      "tier": "model",
+      "attempts": 1,
+      "solve_rate": 1.0,
+      "mean_score": 0.7143,
+      "mean_actions": 7.0,
+      "mean_optimal": 5.0
+    },
+    {
+      "level": 1,
+      "player_id": "noop",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 6.67
+    },
+    {
+      "level": 1,
+      "player_id": "optimal",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 1.0,
+      "mean_score": 1.0,
+      "mean_actions": 6.67,
+      "mean_optimal": 6.67
+    },
+    {
+      "level": 1,
+      "player_id": "random",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.3333,
+      "mean_score": 0.0388,
+      "mean_actions": 147.67,
+      "mean_optimal": 6.67
+    },
+    {
+      "level": 1,
+      "player_id": "stop_early",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": 5.0,
+      "mean_optimal": 6.67
+    },
+    {
+      "level": 2,
+      "player_id": "mock-model",
+      "tier": "model",
+      "attempts": 1,
+      "solve_rate": 1.0,
+      "mean_score": 0.8,
+      "mean_actions": 20.0,
+      "mean_optimal": 16.0
+    },
+    {
+      "level": 2,
+      "player_id": "noop",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 9.33
+    },
+    {
+      "level": 2,
+      "player_id": "optimal",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 1.0,
+      "mean_score": 1.0,
+      "mean_actions": 9.33,
+      "mean_optimal": 9.33
+    },
+    {
+      "level": 2,
+      "player_id": "random",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": 157.0,
+      "mean_optimal": 9.33
+    },
+    {
+      "level": 2,
+      "player_id": "stop_early",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 9.33
+    },
+    {
+      "level": 3,
+      "player_id": "mock-model",
+      "tier": "model",
+      "attempts": 1,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": 3.0,
+      "mean_optimal": 19.0
+    },
+    {
+      "level": 3,
+      "player_id": "noop",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 14.33
+    },
+    {
+      "level": 3,
+      "player_id": "optimal",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 1.0,
+      "mean_score": 1.0,
+      "mean_actions": 14.33,
+      "mean_optimal": 14.33
+    },
+    {
+      "level": 3,
+      "player_id": "random",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 14.33
+    },
+    {
+      "level": 3,
+      "player_id": "stop_early",
+      "tier": "baseline",
+      "attempts": 3,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 14.33
+    },
+    {
+      "level": 4,
+      "player_id": "mock-model",
+      "tier": "model",
+      "attempts": 1,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 18.0
+    },
+    {
+      "level": 4,
+      "player_id": "noop",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 12.5
+    },
+    {
+      "level": 4,
+      "player_id": "optimal",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 1.0,
+      "mean_score": 1.0,
+      "mean_actions": 12.5,
+      "mean_optimal": 12.5
+    },
+    {
+      "level": 4,
+      "player_id": "random",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 12.5
+    },
+    {
+      "level": 4,
+      "player_id": "stop_early",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 12.5
+    },
+    {
+      "level": 5,
+      "player_id": "mock-model",
+      "tier": "model",
+      "attempts": 1,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 11.0
+    },
+    {
+      "level": 5,
+      "player_id": "noop",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 10.0
+    },
+    {
+      "level": 5,
+      "player_id": "optimal",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 1.0,
+      "mean_score": 1.0,
+      "mean_actions": 10.0,
+      "mean_optimal": 10.0
+    },
+    {
+      "level": 5,
+      "player_id": "random",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 10.0
+    },
+    {
+      "level": 5,
+      "player_id": "stop_early",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 10.0
+    },
+    {
+      "level": 6,
+      "player_id": "mock-model",
+      "tier": "model",
+      "attempts": 1,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 10.0
+    },
+    {
+      "level": 6,
+      "player_id": "noop",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 9.5
+    },
+    {
+      "level": 6,
+      "player_id": "optimal",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 1.0,
+      "mean_score": 1.0,
+      "mean_actions": 9.5,
+      "mean_optimal": 9.5
+    },
+    {
+      "level": 6,
+      "player_id": "random",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 9.5
+    },
+    {
+      "level": 6,
+      "player_id": "stop_early",
+      "tier": "baseline",
+      "attempts": 2,
+      "solve_rate": 0.0,
+      "mean_score": 0.0,
+      "mean_actions": null,
+      "mean_optimal": 9.5
+    }
+  ],
+  "failure_modes": [
+    {
+      "mode": "budget_exhaustion",
+      "count": 4,
+      "examples": [
+        {
+          "run_id": "fixture-run-0001",
+          "step": 30,
+          "player_id": "mock-model",
+          "actions": 30
+        },
+        {
+          "run_id": "fixture-baseline-random-4d157334",
+          "step": 200,
+          "player_id": "random",
+          "actions": 200
+        },
+        {
+          "run_id": "fixture-baseline-random-f978fc99",
+          "step": 200,
+          "player_id": "random",
+          "actions": 200
+        },
+        {
+          "run_id": "fixture-baseline-random-a71c9950",
+          "step": 200,
+          "player_id": "random",
+          "actions": 200
+        }
+      ]
+    },
+    {
+      "mode": "no_effect_loop",
+      "count": 1,
+      "examples": [
+        {
+          "run_id": "fixture-run-0001",
+          "step": 10,
+          "player_id": "mock-model",
+          "level": 2,
+          "rule": null,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "mode": "late_reset",
+      "count": 1,
+      "examples": [
+        {
+          "run_id": "fixture-run-0001",
+          "step": 11,
+          "player_id": "mock-model",
+          "level": 2,
+          "rule": null
+        }
+      ]
+    },
+    {
+      "mode": "unsolved_level",
+      "count": 1,
+      "examples": [
+        {
+          "run_id": "fixture-run-0001",
+          "step": 30,
+          "player_id": "mock-model",
+          "level": 3,
+          "rule": null
+        }
+      ]
+    }
+  ]
+}

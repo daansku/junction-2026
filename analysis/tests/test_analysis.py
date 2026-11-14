@@ -1,0 +1,258 @@
+"""Unit and integration tests for the LENS analysis package."""
+from __future__ import annotations
+
+import io
+import json
+import sys
+import tarfile
+import tempfile
+import unittest
+from pathlib import Path
+
+import jsonschema
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ANALYSIS_SRC = REPO_ROOT / "analysis" / "src"
+if str(ANALYSIS_SRC) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_SRC))
+
+from analysis.aggregate import aggregate_runs  # noqa: E402
+from analysis.claim_check import check_claims, validate_against_schema  # noqa: E402
+from analysis.cli import main as cli_main  # noqa: E402
+from analysis.compare import build_comparisons  # noqa: E402
+from analysis.loader import (  # noqa: E402
+    extract_level_segments,
+    load_collections,
+    load_models,
+    load_runs,
+)
+from analysis.sync import _safe_extract_tar_bytes  # noqa: E402
+
+
+def _make_step(
+    i: int,
+    action: str | None,
+    *,
+    level: int = 1,
+    state: str = "PLAYING",
+    events: list[str] | None = None,
+    optimal_moves: int = 4,
+    frame_row6: str = "0" * 64,
+    belief: str | None = None,
+) -> dict:
+    frame = ["0" * 64 for _ in range(64)]
+    frame[6] = frame_row6
+    return {
+        "i": i,
+        "t_ms": i * 25,
+        "action": action,
+        "frame": frame,
+        "truth": {
+            "level": level,
+            "state": state,
+            "events": list(events or []),
+            "optimal_moves": optimal_moves,
+            "move_budget": optimal_moves * 3,
+            "active_rules": ["walls", "goal", "move_budget"],
+            "new_rule": None if level == 1 else "walls",
+        },
+        "reasoning": None,
+        "hypothesis": None,
+        "belief": belief,
+        "usage": {"in": 100, "out": 20, "cost_usd": 0.001},
+        "latency_ms": 50 if action else None,
+    }
+
+
+def _make_run(run_id: str, player_id: str, kind: str, steps: list[dict], *, effort: str | None = None) -> dict:
+    return {
+        "meta": {
+            "run_id": run_id,
+            "game_id": "synthetic-game-0001",
+            "collection": "dev",
+            "levels_total": 1,
+            "levels_completed": 1 if steps and steps[-1]["truth"]["state"] == "WIN" else 0,
+            "outcome": "WIN" if steps and steps[-1]["truth"]["state"] == "WIN" else "ABORTED",
+            "harness_version": "h1",
+            "player": {
+                "kind": kind,
+                "id": player_id,
+                "name": player_id,
+                "effort": effort,
+            },
+        },
+        "steps": steps,
+    }
+
+
+class AnalysisPipelineTests(unittest.TestCase):
+    def test_fixture_run_0001_exact_attribution(self) -> None:
+        runs = load_runs(REPO_ROOT / "data" / "fixtures" / "runs")
+        self.assertEqual(len(runs), 1)
+        run = runs[0]
+        self.assertEqual(run["meta"]["run_id"], "fixture-run-0001")
+
+        games = load_collections(REPO_ROOT)
+        seg_info = extract_level_segments(run, games.get(run["meta"]["game_id"]))
+        self.assertEqual(seg_info["levels_total"], 6)
+        self.assertEqual(seg_info["levels_solved"], 2)
+
+        segs = seg_info["segments"]
+        self.assertTrue(segs[1]["solved"])
+        self.assertAlmostEqual(segs[1]["level_score"], 5 / 7, places=6)
+        self.assertTrue(segs[2]["solved"])
+        self.assertEqual(segs[2]["resets"], 1)
+        self.assertEqual(segs[2]["no_effect_actions"], 1)
+        self.assertAlmostEqual(segs[2]["level_score"], 16 / 20, places=6)
+        for lv in (3, 4, 5, 6):
+            self.assertFalse(segs[lv]["solved"])
+            self.assertEqual(segs[lv]["level_score"], 0.0)
+
+        self.assertAlmostEqual(seg_info["game_score"], (5 / 7 + 16 / 20) / 6, places=6)
+
+        lb = aggregate_runs(runs, models_registry=load_models(REPO_ROOT), game_descs=games)
+        self.assertEqual(len(lb["rows"]), 1)
+        row = lb["rows"][0]
+        self.assertAlmostEqual(row["score"], 0.252381, places=6)
+        self.assertEqual(row["belief_accuracy"], 1.0)
+        self.assertAlmostEqual(row["no_effect_rate"], round(1 / 30, 4), places=4)
+
+    def test_fixture_derived_matches_schema(self) -> None:
+        derived_dir = REPO_ROOT / "data" / "fixtures" / "derived"
+        schema_path = REPO_ROOT / "contracts" / "derived.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        for name in ("leaderboard", "rules", "insights"):
+            payload = json.loads((derived_dir / f"{name}.json").read_text(encoding="utf-8"))
+            validate_against_schema(payload, schema_path)
+            sub_schema = {
+                "$schema": schema["$schema"],
+                "$defs": schema["$defs"],
+                **schema["$defs"][name],
+            }
+            jsonschema.validate(instance=payload, schema=sub_schema)
+
+        res = check_claims(derived_dir, repo_root=REPO_ROOT)
+        self.assertTrue(res["ok"], msg=f"check_claims failed: {res['errors']}")
+        self.assertEqual(res["errors"], [])
+
+    def test_reward_integrity_and_reset_penalty(self) -> None:
+        noop_run = _make_run(
+            "syn-noop",
+            "baseline:noop",
+            "baseline",
+            [_make_step(0, None)],
+        )
+        stop_early_run = _make_run(
+            "syn-stop",
+            "baseline:stop_early",
+            "baseline",
+            [
+                _make_step(0, None),
+                _make_step(1, "ACTION1", frame_row6="1" + "0" * 63),
+                _make_step(2, "ACTION2", frame_row6="2" + "0" * 63),
+            ],
+        )
+        optimal_steps = [_make_step(0, None)]
+        for i in range(1, 5):
+            is_last = i == 4
+            optimal_steps.append(
+                _make_step(
+                    i,
+                    "ACTION4",
+                    state="WIN" if is_last else "PLAYING",
+                    events=["game_won"] if is_last else [],
+                    frame_row6=f"{i}" + "0" * 63,
+                )
+            )
+        optimal_run = _make_run("syn-opt", "baseline:optimal", "baseline", optimal_steps)
+
+        reset_steps = [
+            _make_step(0, None),
+            _make_step(1, "ACTION1", frame_row6="1" + "0" * 63),
+            _make_step(2, "RESET", events=["reset"], frame_row6="0" * 64),
+        ]
+        for i in range(3, 7):
+            is_last = i == 6
+            reset_steps.append(
+                _make_step(
+                    i,
+                    "ACTION4",
+                    state="WIN" if is_last else "PLAYING",
+                    events=["game_won"] if is_last else [],
+                    frame_row6=f"{i}" + "0" * 63,
+                )
+            )
+        reset_model = _make_run("syn-model-reset", "m-reset", "model", reset_steps, effort="low")
+        clean_model = _make_run("syn-model-clean", "m-reset", "model", optimal_steps, effort="high")
+
+        lb = aggregate_runs(
+            [noop_run, stop_early_run, optimal_run, reset_model, clean_model],
+            models_registry={},
+            game_descs={},
+        )
+        by_key = {(r["player_id"], r["effort"]): r for r in lb["rows"]}
+        self.assertEqual(by_key[("noop", None)]["score"], 0.0)
+        self.assertEqual(by_key[("stop_early", None)]["score"], 0.0)
+        self.assertEqual(by_key[("optimal", None)]["score"], 1.0)
+
+        reset_score = by_key[("m-reset", "low")]["score"]
+        clean_score = by_key[("m-reset", "high")]["score"]
+        self.assertAlmostEqual(reset_score, 4 / 6, places=6)
+        self.assertEqual(clean_score, 1.0)
+        self.assertLess(reset_score, clean_score)
+
+        comp = build_comparisons(lb)
+        self.assertTrue(comp["reward_integrity"]["passed"])
+        self.assertEqual(len(comp["effort_ablations"]), 1)
+        self.assertEqual([p["effort"] for p in comp["effort_ablations"][0]["points"]], ["low", "high"])
+
+    def test_sync_tar_extraction_and_traversal_guard(self) -> None:
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+            payload = b'{"run_id": "run-1"}\n'
+            info = tarfile.TarInfo("run-1/meta.json")
+            info.size = len(payload)
+            tar.addfile(info, io.BytesIO(payload))
+        with tempfile.TemporaryDirectory() as td:
+            count = _safe_extract_tar_bytes(buf.getvalue(), Path(td))
+            self.assertEqual(count, 1)
+            self.assertTrue((Path(td) / "run-1" / "meta.json").exists())
+
+        bad_buf = io.BytesIO()
+        with tarfile.open(fileobj=bad_buf, mode="w:gz") as tar:
+            info = tarfile.TarInfo("../escape.txt")
+            info.size = 4
+            tar.addfile(info, io.BytesIO(b"nope"))
+        with tempfile.TemporaryDirectory() as td:
+            with self.assertRaises(ValueError):
+                _safe_extract_tar_bytes(bad_buf.getvalue(), Path(td))
+
+    def test_cli_build_and_check_claims_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            out_dir = Path(td) / "derived"
+            rc = cli_main(
+                [
+                    "build",
+                    "--runs",
+                    str(REPO_ROOT / "data" / "fixtures" / "runs"),
+                    "--out",
+                    str(out_dir),
+                    "--with-fixture-baselines",
+                ]
+            )
+            self.assertEqual(rc, 0)
+            self.assertEqual(cli_main(["check-claims", "--derived", str(out_dir)]), 0)
+
+            # Corrupt noop score to verify check-claims catches reward integrity tampering
+            lb_path = out_dir / "leaderboard.json"
+            lb_data = json.loads(lb_path.read_text(encoding="utf-8"))
+            for row in lb_data["rows"]:
+                if row["player_id"] == "noop":
+                    row["score"] = 0.25
+            lb_path.write_text(json.dumps(lb_data, indent=2), encoding="utf-8")
+            self.assertEqual(cli_main(["check-claims", "--derived", str(out_dir)]), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

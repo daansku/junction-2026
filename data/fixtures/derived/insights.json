@@ -1,0 +1,119 @@
+{
+  "generated_at": "2026-11-14T00:07:25Z",
+  "insights": [
+    {
+      "id": "efficiency-gap",
+      "title": "Action-Efficiency Gap Against Optimal and Human Play",
+      "summary": "Evaluated model (Mock Model) achieved 0.252 action-efficiency score, leaving a 0.748 gap behind BFS optimal (1.000) due to exploration overhead and budget exhaustion.",
+      "category": "gap",
+      "severity": "high",
+      "evidence": [
+        {
+          "label": "Mock Model Efficiency Score",
+          "value": 0.252381,
+          "run_id": "fixture-run-0001",
+          "step": 1
+        },
+        {
+          "label": "Optimal Reference Score",
+          "value": 1.0,
+          "run_id": null,
+          "step": null
+        },
+        {
+          "label": "Level 1 Solved",
+          "value": "step 7",
+          "run_id": "fixture-run-0001",
+          "step": 7
+        }
+      ]
+    },
+    {
+      "id": "no-effect-thrashing",
+      "title": "Models Spend Budget on Repeated No-Effect Actions and Detours",
+      "summary": "Across observed model steps, agents lose move budget bumping into walls or repeating actions whose playfield diff is zero instead of updating spatial constraints immediately.",
+      "category": "failure_mode",
+      "severity": "medium",
+      "evidence": [
+        {
+          "label": "No-Effect / Bump Actions Observed",
+          "value": 1,
+          "run_id": "fixture-run-0001",
+          "step": 10
+        },
+        {
+          "label": "Mean Wasted Actions on Intro Levels",
+          "value": 2.0,
+          "run_id": "fixture-run-0001",
+          "step": 1
+        },
+        {
+          "label": "No-Effect Action Rate",
+          "value": 0.0333,
+          "run_id": "fixture-run-0001",
+          "step": 10
+        }
+      ]
+    },
+    {
+      "id": "reset-and-budget-horizon",
+      "title": "Reset Timing and Multi-Level Budget Horizon Limit Game Completion",
+      "summary": "Models struggle to detect wasted trajectories early: calling RESET only after walking deep into dead-ends consumes irrecoverable per-level and per-game action budget.",
+      "category": "planning",
+      "severity": "high",
+      "evidence": [
+        {
+          "label": "Hardest Rule Intro Solve Rate (walls)",
+          "value": 1.0,
+          "run_id": "fixture-run-0001",
+          "step": 1
+        },
+        {
+          "label": "Late Reset Triggered",
+          "value": "level 2",
+          "run_id": "fixture-run-0001",
+          "step": 11
+        },
+        {
+          "label": "Action Budget Exhausted Runs",
+          "value": 4,
+          "run_id": "fixture-run-0001",
+          "step": 30
+        }
+      ]
+    },
+    {
+      "id": "reward-integrity-verified",
+      "title": "Reward Integrity: Zero-Effort Baselines Score Strictly Zero",
+      "summary": "Action-efficiency scoring (`min(1, optimal_moves / actions_used)` per solved level) assigns 0.000 to `noop` and `stop_early`, penalizes reset farming, and rewards only genuine level completion.",
+      "category": "reward_integrity",
+      "severity": "info",
+      "evidence": [
+        {
+          "label": "noop Score",
+          "value": 0.0,
+          "run_id": null,
+          "step": null
+        },
+        {
+          "label": "stop_early Score",
+          "value": 0.0,
+          "run_id": null,
+          "step": null
+        },
+        {
+          "label": "random Score",
+          "value": 0.007752,
+          "run_id": null,
+          "step": null
+        },
+        {
+          "label": "optimal Score",
+          "value": 1.0,
+          "run_id": null,
+          "step": null
+        }
+      ]
+    }
+  ]
+}

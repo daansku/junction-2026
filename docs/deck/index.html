@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Junction 2026 — Pixels-Only RL Curriculum &amp; LENS Benchmark</title>
+  <style>
+    :root {
+      --bg: #0e0e0f;
+      --surface-1: #161617;
+      --surface-2: #1f1f21;
+      --line: #2c2c2f;
+      --line-strong: #3d3d42;
+      --text-1: #efefec;
+      --text-2: #a9a8a2;
+      --text-3: #76756f;
+      --accent: #ffdc00;
+      --good: #0ca30c;
+      --warn: #fab219;
+      --bad: #d03b3b;
+      --s1: #3987e5;
+      --s2: #d95926;
+      --s3: #199e70;
+      --font-sans: "IBM Plex Sans", "Inter", system-ui, -apple-system, sans-serif;
+      --font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.45;
+      overflow: hidden;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 40px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-2);
+      flex: none;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .accent-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      display: inline-block;
+    }
+
+    .stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 40px;
+      overflow: auto;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1180px;
+      min-height: 580px;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .slide.active { display: flex; }
+
+    .kicker {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 8px 0 0 0;
+      font-size: 40px;
+      line-height: 1.15;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      margin: 6px 0 0 0;
+      font-size: 30px;
+      line-height: 1.2;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .sub {
+      color: var(--text-2);
+      font-size: 18px;
+      margin-top: 8px;
+      max-width: 880px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .panel {
+      background: var(--surface-1);
+      border: 1px solid var(--line);
+      padding: 20px;
+    }
+
+    .cell {
+      background: var(--surface-1);
+      padding: 20px;
+    }
+
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .muted { color: var(--text-2); }
+    .dim { color: var(--text-3); }
+
+    .big-stat {
+      font-family: var(--font-mono);
+      font-size: 34px;
+      font-weight: 600;
+      line-height: 1.1;
+      margin: 8px 0 6px 0;
+    }
+
+    .palette-bar {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 2px;
+      margin-top: 14px;
+    }
+
+    .swatch {
+      height: 22px;
+      border: 1px solid var(--line);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+
+    th {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-2);
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    th.num, td.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    .bar-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bar-track {
+      width: 90px;
+      height: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+
+    .bar-fill { height: 100%; background: var(--accent); }
+    .bar-fill.muted-bar { background: var(--text-3); }
+
+    .formula {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      padding: 14px 18px;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--text-1);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      border: 1px solid var(--line-strong);
+      background: var(--surface-2);
+      color: var(--text-1);
+    }
+
+    .tag.good { border-color: var(--good); color: var(--good); }
+    .tag.warn { border-color: var(--warn); color: var(--warn); }
+    .tag.bad { border-color: var(--bad); color: var(--bad); }
+
+    ul { margin: 8px 0 0 0; padding-left: 18px; }
+    li { margin-bottom: 8px; color: var(--text-2); }
+    li strong { color: var(--text-1); }
+
+    .code-box {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      white-space: pre-wrap;
+      color: var(--text-1);
+    }
+
+    .footer {
+      height: 42px;
+      border-top: 1px solid var(--line);
+      background: var(--surface-1);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-2);
+      flex: none;
+    }
+
+    .nav-btns { display: flex; gap: 8px; align-items: center; }
+
+    button {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text-1);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--line-strong); }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="accent-dot"></span>
+        <span>JUNCTION 2026 // AFTERQUERY CHALLENGE</span>
+      </div>
+      <span id="slide-label" class="mono">SLIDE 1 / 8</span>
+    </header>
+
+    <main class="stage">
+      <!-- Slide 1 -->
+      <section class="slide active" data-title="Title">
+        <div>
+          <div class="kicker">Pixels-Only Inductive World-Modeling Benchmark</div>
+          <h1>Can AI Agents Discover Hidden Game Rules Without Text Instructions?</h1>
+          <p class="sub">
+            A procedurally seeded 64x64 pixel RL curriculum with color-shuffled sprites, exact BFS optimal baselines, and step-level failure attribution.
+          </p>
+        </div>
+
+        <div class="grid-3">
+          <div class="cell">
+            <div class="kicker">Observation Space</div>
+            <div class="big-stat">64×64×16</div>
+            <div class="muted">Zero prose rules. HUD budget bar + pips only. Per-game <span class="mono">skin_shuffle</span>.</div>
+          </div>
+          <div class="cell">
+            <div class="kicker">Optimal Ceiling</div>
+            <div class="big-stat">1.000</div>
+            <div class="muted">Verified BFS shortest path for every level + &lt;2% random-walk win ceiling.</div>
+          </div>
+          <div class="cell">
+            <div class="kicker">Reward Integrity</div>
+            <div class="big-stat">0.000</div>
+            <div class="muted">Exact score assigned to <span class="mono">noop</span> and <span class="mono">stop_early</span> baselines.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="mono dim" style="font-size: 12px;">16-COLOR INDEXED FRAME PALETTE (contracts/palette.json) — SHUFFLED PER GAME SEED</div>
+          <div class="palette-bar">
+            <div class="swatch" style="background:#000000" title="0 black"></div>
+            <div class="swatch" style="background:#1E5BD8" title="1 blue"></div>
+            <div class="swatch" style="background:#E5383B" title="2 red"></div>
+            <div class="swatch" style="background:#2FB54A" title="3 green"></div>
+            <div class="swatch" style="background:#F5C518" title="4 yellow"></div>
+            <div class="swatch" style="background:#8A8F98" title="5 grey"></div>
+            <div class="swatch" style="background:#D63AAF" title="6 magenta"></div>
+            <div class="swatch" style="background:#F2832B" title="7 orange"></div>
+            <div class="swatch" style="background:#6FD3F2" title="8 azure"></div>
+            <div class="swatch" style="background:#7A1F2B" title="9 maroon"></div>
+            <div class="swatch" style="background:#FFFFFF" title="10 white"></div>
+            <div class="swatch" style="background:#3A3F47" title="11 dark_grey"></div>
+            <div class="swatch" style="background:#8E5CE6" title="12 violet"></div>
+            <div class="swatch" style="background:#1FA39A" title="13 teal"></div>
+            <div class="swatch" style="background:#A8D94A" title="14 lime"></div>
+            <div class="swatch" style="background:#8B5A2B" title="15 brown"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 2 -->
+      <section class="slide" data-title="The Problem">
+        <div>
+          <div class="kicker">Why Static Benchmarks Fail</div>
+          <h2>Instruction-Following Masks World-Modeling Failure</h2>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>What Traditional RL / Text Benchmarks Leak</h3>
+            <ul>
+              <li><strong>Text manuals give away mechanics:</strong> telling an LLM "step on plates to toggle gates" tests comprehension, not scientific discovery.</li>
+              <li><strong>Fixed layouts leak across pretraining:</strong> memorizable mazes reward recall instead of genuine exploration.</li>
+              <li><strong>Hardcoded RGB priors:</strong> agents assume green = goal and red = lava without probing consequences.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h3>Our Solution: Empirical Induction Only</h3>
+            <ul>
+              <li><strong>Rows 0–1 (Budget Bar):</strong> shrinks on every action until level completion or <span class="mono">GAME_OVER</span>.</li>
+              <li><strong>Rows 3–4 (Level &amp; State HUD):</strong> green done pips, white active pip, inventory/health icons.</li>
+              <li><strong>Rows 6–63 (Playfield):</strong> spatial grid where rules must be inferred from <span class="mono">(frame_t, action, frame_{t+1})</span> transitions.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel mono" style="font-size: 13px; color: var(--text-2);">
+          STATELESS HARNESS CONTRACT (arena/src/arena/agent_loop.py): Agent outputs structured JSON {notes, hypothesis, belief, action}. Ground-truth server Truth never enters prompts or MCP responses.
+        </div>
+      </section>
+
+      <!-- Slide 3 -->
+      <section class="slide" data-title="Meaningful Difficulty">
+        <div>
+          <div class="kicker">AfterQuery Rubric §2 — Meaningful Difficulty (30 pts)</div>
+          <h2>One New Mechanic per Level + Mathematical Fairness Proofs</h2>
+        </div>
+
+        <div class="panel">
+          <h3>Live Engine Mechanics (`engine 0.2.0` — `rules/CATALOG.md`)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Rule</th>
+                <th>Visual Encoding</th>
+                <th>Curriculum Teaching Pattern</th>
+                <th>HUD / Trigger</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">keys_doors</td><td>Small square key + vertical-bar door</td><td>Door blocks chokepoint; key placed off-path</td><td>Held key pip in rows 3–4</td></tr>
+              <tr><td class="mono">plates_gates</td><td>Checker plate + horizontal-bar gate</td><td>Plate toggles gates; gates may start open</td><td>State toggle on step</td></tr>
+              <tr><td class="mono">teleporters</td><td>Paired X sprites</td><td>Walled goal reachable only via pair (+ decoy)</td><td>Coordinate jump event</td></tr>
+              <tr><td class="mono">hazards</td><td>Plus-sign tiles</td><td>Hazard corridor exceeds health → detour needed</td><td>Health pips decrement</td></tr>
+              <tr><td class="mono">push_blocks</td><td>Ring with center dot</td><td>Block obstacle pushed along path (not into goal)</td><td>Sokoban displacement</td></tr>
+              <tr><td class="mono">one_way &amp; ice</td><td>Directional arrow / diagonal stripes</td><td>Counter-arrow walling &amp; slide-until-blocked momentum</td><td><span class="mono">bump</span> / <span class="mono">slid:*</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-4">
+          <div class="cell"><div class="kicker">Proof 1</div><strong>BFS Solvable</strong><br/><span class="muted">Exact <span class="mono">optimal_moves</span> recorded</span></div>
+          <div class="cell"><div class="kicker">Proof 2</div><strong>Rule Necessity</strong><br/><span class="muted">Ablation proves every rule alters optimal path</span></div>
+          <div class="cell"><div class="kicker">Proof 3</div><strong>Bounded Slack</strong><br/><span class="muted"><span class="mono">ceil(optimal * slack)</span> fair budget</span></div>
+          <div class="cell"><div class="kicker">Proof 4</div><strong>Low Guessing</strong><br/><span class="muted">Random walk win rate &lt; 2% enforced</span></div>
+        </div>
+      </section>
+
+      <!-- Slide 4 -->
+      <section class="slide" data-title="Reward Integrity">
+        <div>
+          <div class="kicker">AfterQuery Rubric §3 — Reward Integrity (25 pts)</div>
+          <h2>Action-Efficiency Scoring Cannot Be Gamed by Doing Less or Resetting</h2>
+        </div>
+
+        <div class="formula">
+          level_score(L) = min(1.0, optimal_moves(L) / actions_used(L)) if solved else 0.0
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          game_score = mean(level_score(1..levels_total))
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Four Structural Exploit Defenses</h3>
+            <ul>
+              <li><strong>Early Stopping Fails (<span class="mono">0.000</span>):</strong> <span class="mono">levels_total</span> is fixed in the denominator; aborting after solving L1 caps score at <span class="mono">1/6</span>; quitting before L1 scores <span class="mono">0.000</span>.</li>
+              <li><strong>Zero-Effort (<span class="mono">noop</span>) Fails (<span class="mono">0.000</span>):</strong> Zero solved levels yields strictly zero reward.</li>
+              <li><strong>Reset Farming Hurts Score:</strong> <span class="mono">actions_used(L)</span> accumulates pre-reset moves and <span class="mono">RESET</span> itself (verified in <span class="mono">test_reward_integrity_and_reset_penalty</span>).</li>
+              <li><strong>No Intermediate Shaping:</strong> Picking keys, flipping plates, or bumping walls gives zero points without completion.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h3>Automated Integrity Audit (<span class="mono">analysis/claim_check.py</span>)</h3>
+            <div class="code-box">$env:PYTHONPATH="analysis/src"
+python -m unittest discover -s analysis/tests -v
+# -&gt; Ran 5 tests in 1.433s (OK)
+
+python -m analysis check-claims --derived data/fixtures/derived
+# -&gt; {"ok": true, "checked": ["leaderboard","rules","insights"], "errors": []}</div>
+            <p class="muted" style="margin-top: 12px; font-size: 13px;">
+              Tampering with <span class="mono">noop.score</span> causes <span class="mono">check-claims</span> to exit with code 1.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5 -->
+      <section class="slide" data-title="The Gap">
+        <div>
+          <div class="kicker">AfterQuery Rubric §1 — The Gap (30 pts)</div>
+          <h2>Verified Action-Efficiency Ledger (`data/fixtures/derived/leaderboard.json`)</h2>
+          <p class="sub">Computed identically over 13 fixture + deterministic baseline runs across the <span class="mono">dev</span> collection.</p>
+        </div>
+
+        <div class="panel">
+          <table>
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Kind</th>
+                <th class="num">Games</th>
+                <th class="num">Levels Solved</th>
+                <th class="num">Action-Eff Score</th>
+                <th class="num">No-Effect Rate</th>
+                <th class="num">Resets</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Optimal</strong></td>
+                <td class="mono">baseline</td>
+                <td class="num">3</td>
+                <td class="num">15 / 15</td>
+                <td class="num"><span class="bar-wrap"><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><strong>1.000</strong></span></td>
+                <td class="num">0.0%</td>
+                <td class="num">0</td>
+                <td class="muted">Exact BFS <span class="mono">optimal_path</span></td>
+              </tr>
+              <tr>
+                <td><strong>Mock Model (medium)</strong></td>
+                <td class="mono">model</td>
+                <td class="num">1</td>
+                <td class="num">2 / 6</td>
+                <td class="num"><span class="bar-wrap"><span class="bar-track"><span class="bar-fill" style="width:25.2%"></span></span><strong>0.252</strong></span></td>
+                <td class="num">3.3%</td>
+                <td class="num">1</td>
+                <td class="muted">Subset 1/3 dev games (<span class="mono">fixture-run-0001</span>)</td>
+              </tr>
+              <tr>
+                <td>Random</td>
+                <td class="mono">baseline</td>
+                <td class="num">3</td>
+                <td class="num">1 / 15</td>
+                <td class="num"><span class="bar-wrap"><span class="bar-track"><span class="bar-fill muted-bar" style="width:0.8%"></span></span>0.008</span></td>
+                <td class="num">32.2%</td>
+                <td class="num">31</td>
+                <td class="muted">Exhausts 200-action cap</td>
+              </tr>
+              <tr>
+                <td>Stop Early</td>
+                <td class="mono">baseline</td>
+                <td class="num">3</td>
+                <td class="num">0 / 15</td>
+                <td class="num"><span class="bar-wrap"><span class="bar-track"><span class="bar-fill muted-bar" style="width:0%"></span></span>0.000</span></td>
+                <td class="num">40.0%</td>
+                <td class="num">0</td>
+                <td class="muted">Aborts after 5 moves</td>
+              </tr>
+              <tr>
+                <td>Noop</td>
+                <td class="mono">baseline</td>
+                <td class="num">3</td>
+                <td class="num">0 / 15</td>
+                <td class="num"><span class="bar-wrap"><span class="bar-track"><span class="bar-fill muted-bar" style="width:0%"></span></span>0.000</span></td>
+                <td class="num">—</td>
+                <td class="num">0</td>
+                <td class="muted">Zero actions taken</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel mono" style="font-size: 13px; color: var(--text-2);">
+          LIVE REBUILD COMMAND: <span style="color:var(--text-1)">python -m analysis sync &amp;&amp; python -m analysis build --runs &lt;runs&gt; --out &lt;derived&gt;</span> swaps live frontier LLM + human traces straight into this table.
+        </div>
+      </section>
+
+      <!-- Slide 6 -->
+      <section class="slide" data-title="Forensics & Replay">
+        <div>
+          <div class="kicker">Pinpointed Failure Diagnostics</div>
+          <h2>Every Insight Chip Jumps Directly to <span class="mono">/replay/&lt;run_id&gt;?step=&lt;step&gt;</span></h2>
+        </div>
+
+        <div class="grid-3">
+          <div class="cell">
+            <span class="tag warn">no_effect_loop</span>
+            <h3 style="margin-top: 10px;">Unupdated Wall Collisions</h3>
+            <p class="muted" style="font-size: 14px;">Detects actions whose playfield diff (<span class="mono">rows 6..63</span>) is zero or triggers <span class="mono">bump</span>.</p>
+            <div class="mono" style="margin-top: 12px; font-size: 12px; color: var(--accent);">fixture-run-0001 @step 10 →</div>
+          </div>
+          <div class="cell">
+            <span class="tag bad">late_reset</span>
+            <h3 style="margin-top: 10px;">Delayed Dead-End Recovery</h3>
+            <p class="muted" style="font-size: 14px;">Calling <span class="mono">RESET</span> after spending excess optimal distance burns unrecoverable level budget.</p>
+            <div class="mono" style="margin-top: 12px; font-size: 12px; color: var(--accent);">fixture-run-0001 @step 11 →</div>
+          </div>
+          <div class="cell">
+            <span class="tag bad">budget_exhaustion</span>
+            <h3 style="margin-top: 10px;">Multi-Level Horizon Collapse</h3>
+            <p class="muted" style="font-size: 14px;">Fixture run completes L1 (<span class="mono">5/7</span>) and L2 (<span class="mono">16/20</span>) cleanly, then stalls at L3.</p>
+            <div class="mono" style="margin-top: 12px; font-size: 12px; color: var(--accent);">fixture-run-0001 @step 30 →</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Level-by-Level Attribution Proof on `fixture-run-0001`</h3>
+          <div class="mono" style="font-size: 13px; color: var(--text-2); margin-top: 6px;">
+            Level 1: 5/7 = 0.714286 &nbsp;|&nbsp; Level 2: 16/20 = 0.800000 (incl. 1 reset, 1 bump) &nbsp;|&nbsp; Levels 3..6: 0.000000<br/>
+            Game Score = (0.714286 + 0.800000 + 0 + 0 + 0 + 0) / 6 = <strong style="color:var(--accent)">0.252381</strong> &nbsp;|&nbsp; Belief Accuracy = <strong>100.0%</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7 -->
+      <section class="slide" data-title="Eval-v2 Loop">
+        <div>
+          <div class="kicker">Closed-Loop Environment Design</div>
+          <h2>Observed Trace Failures Automatically Propose <span class="mono">eval-v2</span> Mechanics</h2>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Auto-Generated Proposals (`rules/proposals/auto-*.md`)</h3>
+            <ul>
+              <li><strong><span class="mono">auto-01-wall-bump-cooldown.md</span>:</strong> Escalates penalty for repeated zero-diff movement attempts based on observed wall-bump loops.</li>
+              <li><strong><span class="mono">auto-02-false-goal-indicator.md</span>:</strong> Requires sub-goal token collection before unlocking the goal ring so agents cannot tunnel linearly.</li>
+              <li><strong><span class="mono">auto-03-commitment-corridor.md</span>:</strong> Places asymmetric detours testing early <span class="mono">RESET</span> detection before budget exhaustion.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h3>Hand-Designed Tier-2 Proposals</h3>
+            <ul>
+              <li><strong><span class="mono">a5-delayed-state-switch.md</span>:</strong> K-step latent timer toggle forcing causal lookahead beyond immediate 1-step pixel diffs.</li>
+              <li><strong><span class="mono">a5-decoy-and-camouflage.md</span>:</strong> Identical sprites differentiated solely by interaction feedback under skin shuffle.</li>
+              <li><strong><span class="mono">a5-sokoban-deadlock-box.md</span>:</strong> Irreversible corner deadlocks testing counterfactual planning before pushing.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel mono" style="font-size: 13px; color: var(--text-2);">
+          FINE-TUNE PIPELINE SPECIFICATION (<span class="mono">coordination/requests/a5-to-a3-harness-and-finetune.md</span>): Train smaller open models on a 70% optimal + 30% recovery/reset trajectory split without label leakage.
+        </div>
+      </section>
+
+      <!-- Slide 8 -->
+      <section class="slide" data-title="Reproduce & MCP">
+        <div>
+          <div class="kicker">AfterQuery Rubric §4 — Craft &amp; One-Command Eval (15 pts)</div>
+          <h2>Ready for Harbor + OpenCode over MCP &amp; Live Exploit Hunt</h2>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Reproduce Everything Locally</h3>
+            <div class="code-box"># Setup venv, packages, and web bundle
+make setup
+
+# Run unit tests + schema/claim checks
+make test
+python -m analysis build --fixtures --write-proposals
+python -m analysis check-claims --derived data/fixtures/derived
+
+# Start MCP stdio bridge for Harbor / OpenCode
+make server PORT=8000
+python -m server mcp --api http://localhost:8000</div>
+          </div>
+          <div class="panel">
+            <h3>Architecture Checklist Verified</h3>
+            <ul>
+              <li><span class="tag good">ENGINE 0.2.0</span> 7 Tier-1 composable mechanics, BFS proof, &lt;2% random walk, skin shuffle.</li>
+              <li><span class="tag good">SERVER + MCP</span> Crash-safe trace recorder, tar.gz sync, WS live feed, MCP stdio tools.</li>
+              <li><span class="tag good">ARENA + WEB</span> Stateless <span class="mono">h1</span> harness, Observable Plot ledger, rule heatmap, step replay.</li>
+              <li><span class="tag good">LENS ANALYSIS</span> <span class="mono">5/5</span> unit tests passing, Draft 2020-12 schema check clean (<span class="mono">0</span> errors).</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
+          <strong>Ready for 15-minute live exploit hunt &amp; Harbor + OpenCode rerun.</strong>
+          <span class="mono" style="color:var(--accent);">/leaderboard &nbsp;·&nbsp; /insights &nbsp;·&nbsp; /replay &nbsp;·&nbsp; /play</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Keyboard: ← / → or Space to navigate · Home / End to jump</span>
+      <div class="nav-btns">
+        <button id="prev-btn" type="button">← Prev</button>
+        <button id="next-btn" type="button">Next →</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const label = document.getElementById('slide-label');
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      let idx = 0;
+
+      function show(nextIdx) {
+        idx = Math.max(0, Math.min(nextIdx, slides.length - 1));
+        slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+        const title = slides[idx].getAttribute('data-title') || '';
+        label.textContent = `SLIDE ${idx + 1} / ${slides.length} — ${title.toUpperCase()}`;
+        history.replaceState(null, '', `#${idx + 1}`);
+      }
+
+      const initialHash = parseInt(location.hash.replace('#', ''), 10);
+      if (!Number.isNaN(initialHash) && initialHash >= 1 && initialHash <= slides.length) {
+        show(initialHash - 1);
+      } else {
+        show(0);
+      }
+
+      prevBtn.addEventListener('click', () => show(idx - 1));
+      nextBtn.addEventListener('click', () => show(idx + 1));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+          e.preventDefault();
+          show(idx + 1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          show(idx - 1);
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          show(0);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          show(slides.length - 1);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

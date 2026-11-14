@@ -1,27 +1,770 @@
-// Owned by A5 (PLAN.md §3.2). Stub from A4's shell — replace freely.
-// Data: api.derived('leaderboard'). Charts: PlotFigure from '@/lib/PlotFigure'. Rules: web/DESIGN.md.
+import * as Plot from '@observablehq/plot'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import {
+  Button,
+  Chip,
+  Empty,
+  ErrorState,
+  Loading,
+  PageHeader,
+  Panel,
+  Stat,
+  Swatch,
+  cx,
+} from '@/design/primitives'
 import { api } from '@/lib/api'
-import { Empty, ErrorState, Loading, PageHeader, Panel } from '@/design/primitives'
+import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
+import type { LeaderboardDocument, LeaderboardRow } from './types'
+import './leaderboard.css'
+
+type SortKey =
+  | 'score'
+  | 'level_solve_rate'
+  | 'game_win_rate'
+  | 'median_actions'
+  | 'cost_per_game'
+  | 'cost_per_solved_level'
+  | 'latency_ms_median'
+  | 'resets_total'
+  | 'no_effect_rate'
+  | 'belief_accuracy'
+
+type KindFilter = 'all' | 'model' | 'baseline' | 'human'
+
+const EFFORT_RANK: Record<string, number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  xhigh: 3,
+  max: 4,
+}
+
+const HIGHER_IS_BETTER = new Set<SortKey>([
+  'score',
+  'level_solve_rate',
+  'game_win_rate',
+  'belief_accuracy',
+])
+
+function fmtFloat(v: number | null | undefined, digits = 3): string {
+  if (v == null || Number.isNaN(v)) return '—'
+  return v.toFixed(digits)
+}
+
+function fmtPct(v: number | null | undefined): string {
+  if (v == null || Number.isNaN(v)) return '—'
+  return `${(v * 100).toFixed(1)}%`
+}
+
+function fmtUsd(v: number | null | undefined): string {
+  if (v == null || Number.isNaN(v)) return '—'
+  return `$${v.toFixed(v < 0.01 ? 4 : 3)}`
+}
+
+function fmtInt(v: number | null | undefined): string {
+  if (v == null || Number.isNaN(v)) return '—'
+  return Math.round(v).toLocaleString()
+}
+
+function rowLabel(row: LeaderboardRow): string {
+  const base = row.display_name || row.model?.display_name || row.player_id
+  return row.effort ? `${base} (${row.effort})` : base
+}
+
+function seriesColorFor(row: LeaderboardRow, fallbackIndex: number): string {
+  const colors = seriesColors()
+  const paletteIndex =
+    row.model_order != null && row.model_order < 900
+      ? Math.abs(row.model_order) % colors.length
+      : fallbackIndex % colors.length
+  return colors[paletteIndex] || cssVar('--accent')
+}
 
 export function LeaderboardPage() {
-  const q = useQuery({ queryKey: ['derived', 'leaderboard'], queryFn: () => api.derived('leaderboard') })
+  const lb = useQuery({
+    queryKey: ['derived', 'leaderboard'],
+    queryFn: () => api.derived<LeaderboardDocument>('leaderboard'),
+  })
+
+  const [collection, setCollection] = useState<string>('all')
+  const [kindFilter, setKindFilter] = useState<KindFilter>('all')
+  const [sortKey, setSortKey] = useState<SortKey>('score')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [frontierMode, setFrontierMode] = useState<'chart' | 'table'>('chart')
+  const [effortMode, setEffortMode] = useState<'chart' | 'table'>('chart')
+
+  const allRows = lb.data?.rows ?? []
+
+  const collections = useMemo(() => {
+    const set = new Set<string>()
+    for (const r of allRows) set.add(r.collection || 'dev')
+    return ['all', ...Array.from(set).sort()]
+  }, [allRows])
+
+  const collectionRows = useMemo(() => {
+    if (collection === 'all') return allRows
+    return allRows.filter((r) => r.collection === collection)
+  }, [allRows, collection])
+
+  const filteredRows = useMemo(() => {
+    if (kindFilter === 'all') return collectionRows
+    return collectionRows.filter((r) => r.kind === kindFilter)
+  }, [collectionRows, kindFilter])
+
+  const sortedRows = useMemo(() => {
+    const copy = [...filteredRows]
+    copy.sort((a, b) => {
+      const av = a[sortKey]
+      const bv = b[sortKey]
+      if (av == null && bv == null) return 0
+      if (av == null) return 1
+      if (bv == null) return -1
+      const cmp = Number(av) - Number(bv)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+    return copy
+  }, [filteredRows, sortKey, sortDir])
+
+  const bestValues = useMemo(() => {
+    const keys: SortKey[] = [
+      'score',
+      'level_solve_rate',
+      'game_win_rate',
+      'median_actions',
+      'cost_per_game',
+      'cost_per_solved_level',
+      'latency_ms_median',
+      'resets_total',
+      'no_effect_rate',
+      'belief_accuracy',
+    ]
+    const out: Partial<Record<SortKey, number>> = {}
+    for (const k of keys) {
+      const vals = sortedRows
+        .map((r) => r[k])
+        .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v))
+      if (!vals.length) continue
+      out[k] = HIGHER_IS_BETTER.has(k) ? Math.max(...vals) : Math.min(...vals)
+    }
+    return out
+  }, [sortedRows])
+
+  const kpi = useMemo(() => {
+    const modelRows = collectionRows.filter((r) => r.kind === 'model')
+    const bestModel = modelRows.reduce<LeaderboardRow | null>(
+      (best, cur) => (!best || cur.score > best.score ? cur : best),
+      null,
+    )
+    const optRow = collectionRows.find((r) => r.player_id === 'optimal')
+    const humanRow = collectionRows.find((r) => r.kind === 'human' || r.player_id === 'human')
+    const randomRow = collectionRows.find((r) => r.player_id === 'random')
+    const noopRow = collectionRows.find((r) => r.player_id === 'noop')
+    const stopRow = collectionRows.find((r) => r.player_id === 'stop_early')
+    const totalGames = collectionRows.reduce((acc, r) => acc + (r.games || 0), 0)
+    const integrityOk =
+      (noopRow == null || noopRow.score === 0) &&
+      (stopRow == null || stopRow.score === 0) &&
+      (optRow == null || optRow.score >= 0.999)
+
+    return {
+      totalGames,
+      modelCount: modelRows.length,
+      bestModel,
+      optScore: optRow?.score ?? 1.0,
+      humanScore: humanRow?.score ?? null,
+      randomScore: randomRow?.score ?? null,
+      noopScore: noopRow?.score ?? null,
+      stopScore: stopRow?.score ?? null,
+      integrityOk,
+    }
+  }, [collectionRows])
+
+  const costPoints = useMemo(
+    () =>
+      collectionRows
+        .map((row, idx) => ({
+          row,
+          label: rowLabel(row),
+          cost: row.cost_per_game ?? 0,
+          score: row.score,
+          color: seriesColorFor(row, idx),
+        }))
+        .filter((pt) => pt.cost > 0),
+    [collectionRows],
+  )
+
+  const effortSeries = useMemo(() => {
+    const grouped = new Map<string, LeaderboardRow[]>()
+    for (const r of collectionRows) {
+      if (r.kind !== 'model' || !r.effort) continue
+      const key = `${r.player_id}::${r.collection}`
+      const list = grouped.get(key) ?? []
+      list.push(r)
+      grouped.set(key, list)
+    }
+    const multi: Array<{
+      player_id: string
+      label: string
+      effort: string
+      effortRank: number
+      score: number
+      cost: number | null
+    }> = []
+    for (const items of grouped.values()) {
+      if (items.length < 2) continue
+      const sorted = [...items].sort(
+        (a, b) => (EFFORT_RANK[a.effort || ''] ?? 99) - (EFFORT_RANK[b.effort || ''] ?? 99),
+      )
+      for (const it of sorted) {
+        multi.push({
+          player_id: it.player_id,
+          label: it.display_name || it.player_id,
+          effort: it.effort || 'default',
+          effortRank: EFFORT_RANK[it.effort || ''] ?? 99,
+          score: it.score,
+          cost: it.cost_per_game ?? null,
+        })
+      }
+    }
+    return multi
+  }, [collectionRows])
+
+  const registeredCards = useMemo(() => {
+    const seen = new Set<string>()
+    const list: Array<{ row: LeaderboardRow; color: string }> = []
+    collectionRows.forEach((r, idx) => {
+      if (r.kind !== 'model') return
+      if (seen.has(r.player_id)) return
+      seen.add(r.player_id)
+      list.push({ row: r, color: seriesColorFor(r, idx) })
+    })
+    return list
+  }, [collectionRows])
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === 'desc' ? 'asc' : 'desc'))
+    } else {
+      setSortKey(key)
+      setSortDir(HIGHER_IS_BETTER.has(key) ? 'desc' : 'asc')
+    }
+  }
+
+  const sortArrow = (key: SortKey) =>
+    sortKey === key ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''
+
   return (
-    <>
-      <PageHeader title="Leaderboard" sub="Owned by A5. Stub until features/leaderboard lands." />
-      <Panel label="leaderboard.json">
-        {q.isLoading ? (
-          <Loading />
-        ) : q.error ? (
-          <ErrorState error={q.error} retry={() => q.refetch()} />
-        ) : q.data ? (
-          <pre className="mono" style={{ maxHeight: 480, overflow: 'auto', margin: 0 }}>
-            {JSON.stringify(q.data, null, 2).slice(0, 4000)}
-          </pre>
-        ) : (
-          <Empty>No data.</Empty>
-        )}
-      </Panel>
-    </>
+    <div className="lb-stack">
+      <PageHeader
+        title="Benchmark Leaderboard"
+        sub="Action-efficiency scoring against BFS optimal paths, human sessions, and trivial baselines."
+        actions={
+          <div className="page-actions">
+            {lb.data?.generated_at && (
+              <span className="mono muted">
+                built {lb.data.generated_at.replace('T', ' ').replace('Z', ' UTC')}
+              </span>
+            )}
+            <Link to="/insights">
+              <Button mono>Insights &amp; Rules →</Button>
+            </Link>
+          </div>
+        }
+      />
+
+      {lb.isLoading ? (
+        <Loading what="Loading leaderboard" />
+      ) : lb.error ? (
+        <ErrorState error={lb.error} retry={() => lb.refetch()} />
+      ) : !allRows.length ? (
+        <Empty action={<Link to="/play">Play a game</Link>}>
+          No evaluated runs found yet.
+        </Empty>
+      ) : (
+        <>
+          <div className="lb-kpi-grid" aria-label="Headline benchmark summary">
+            <div className="lb-kpi-cell">
+              <Stat
+                label="Best Evaluated Model"
+                value={kpi.bestModel ? fmtFloat(kpi.bestModel.score, 3) : '—'}
+                unit="eff."
+                sub={
+                  kpi.bestModel
+                    ? `${rowLabel(kpi.bestModel)} · gap ${(kpi.optScore - kpi.bestModel.score).toFixed(3)} to optimal`
+                    : 'No LLM runs scored yet'
+                }
+              />
+            </div>
+            <div className="lb-kpi-cell">
+              <Stat
+                label="Reference Ceiling"
+                value={fmtFloat(kpi.optScore, 3)}
+                unit="optimal"
+                sub={
+                  kpi.humanScore != null
+                    ? `Human ${fmtFloat(kpi.humanScore, 3)} · Random ${fmtFloat(kpi.randomScore, 3)}`
+                    : `Random baseline ${fmtFloat(kpi.randomScore, 3)}`
+                }
+              />
+            </div>
+            <div className="lb-kpi-cell">
+              <Stat
+                label="Evaluated Volume"
+                value={kpi.totalGames}
+                unit="game runs"
+                sub={`${collectionRows.length} leaderboard entries · ${kpi.modelCount} model configs`}
+              />
+            </div>
+            <div className="lb-kpi-cell">
+              <div className="stat">
+                <span className="kicker">Reward Integrity</span>
+                <div style={{ marginTop: 4 }}>
+                  <Chip outcome={kpi.integrityOk ? 'WIN' : 'GAME_OVER'}>
+                    {kpi.integrityOk ? 'VERIFIED ZERO-EXPLOIT' : 'CHECK FAILED'}
+                  </Chip>
+                </div>
+                <span className="stat-sub mono">
+                  noop {fmtFloat(kpi.noopScore, 3)} · stop_early {fmtFloat(kpi.stopScore, 3)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lb-controls">
+            <div className="lb-filter-group">
+              <span className="kicker lb-filter-label">Collection</span>
+              {collections.map((c) => (
+                <Button
+                  key={c}
+                  mono
+                  active={collection === c}
+                  onClick={() => setCollection(c)}
+                >
+                  {c}
+                </Button>
+              ))}
+            </div>
+            <div className="lb-filter-group">
+              <span className="kicker lb-filter-label">Player kind</span>
+              {(['all', 'model', 'baseline', 'human'] as KindFilter[]).map((k) => (
+                <Button
+                  key={k}
+                  mono
+                  active={kindFilter === k}
+                  onClick={() => setKindFilter(k)}
+                >
+                  {k}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Panel
+            label="Cost vs Action-Efficiency Frontier"
+            actions={
+              <Button
+                mono
+                active={frontierMode === 'table'}
+                onClick={() => setFrontierMode((m) => (m === 'chart' ? 'table' : 'chart'))}
+              >
+                {frontierMode === 'chart' ? 'Show Table' : 'Show Plot'}
+              </Button>
+            }
+          >
+            {frontierMode === 'table' ? (
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Player</th>
+                      <th>Kind</th>
+                      <th className="num">Cost / Game</th>
+                      <th className="num">Cost / Solved Lvl</th>
+                      <th className="num">Eff. Score</th>
+                      <th className="num">Tokens In</th>
+                      <th className="num">Tokens Out</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {collectionRows.map((r, i) => (
+                      <tr key={`${r.player_id}-${r.effort ?? 'none'}-${i}`}>
+                        <td>
+                          <span className="lb-player-cell">
+                            <Swatch color={seriesColorFor(r, i)} />
+                            <span>{rowLabel(r)}</span>
+                          </span>
+                        </td>
+                        <td className="mono">{r.kind}</td>
+                        <td className="num">{fmtUsd(r.cost_per_game)}</td>
+                        <td className="num">{fmtUsd(r.cost_per_solved_level)}</td>
+                        <td className="num">{fmtFloat(r.score, 3)}</td>
+                        <td className="num">{fmtInt(r.tokens_in)}</td>
+                        <td className="num">{fmtInt(r.tokens_out)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : costPoints.length === 0 ? (
+              <Empty>No positive-cost model runs available for the log-cost frontier.</Empty>
+            ) : (
+              <>
+                <div className="lb-plot-box">
+                  <PlotFigure
+                    deps={[costPoints, kpi.optScore, kpi.humanScore, kpi.randomScore]}
+                    make={(width) => {
+                      const costs = costPoints.map((p) => p.cost)
+                      const minCost = Math.min(...costs)
+                      const maxCost = Math.max(...costs)
+                      const xMin = minCost * 0.5
+                      const xMax = maxCost * 2.0
+
+                      const refLines: Array<{ y: number; label: string }> = [
+                        { y: kpi.optScore, label: `optimal (${kpi.optScore.toFixed(3)})` },
+                      ]
+                      if (kpi.humanScore != null) {
+                        refLines.push({ y: kpi.humanScore, label: `human (${kpi.humanScore.toFixed(3)})` })
+                      }
+                      if (kpi.randomScore != null) {
+                        refLines.push({ y: kpi.randomScore, label: `random (${kpi.randomScore.toFixed(3)})` })
+                      }
+
+                      return {
+                        width,
+                        height: 290,
+                        marginRight: 96,
+                        marginBottom: 40,
+                        x: {
+                          type: 'log',
+                          domain: [xMin, xMax],
+                          label: 'Cost per game (USD, log scale)',
+                        },
+                        y: {
+                          domain: [0, 1.04],
+                          label: 'Action-efficiency score',
+                        },
+                        marks: [
+                          Plot.ruleY(refLines, {
+                            y: 'y',
+                            stroke: cssVar('--text-2'),
+                            strokeDasharray: '4,4',
+                          }),
+                          Plot.text(refLines, {
+                            x: xMax,
+                            y: 'y',
+                            text: 'label',
+                            textAnchor: 'start',
+                            dx: 6,
+                            fill: cssVar('--text-2'),
+                          }),
+                          Plot.dot(costPoints, {
+                            x: 'cost',
+                            y: 'score',
+                            fill: (d: (typeof costPoints)[number]) => d.color,
+                            stroke: cssVar('--bg'),
+                            strokeWidth: 1.5,
+                            r: 6,
+                            tip: true,
+                            title: (d: (typeof costPoints)[number]) =>
+                              `${d.label}\nScore: ${d.score.toFixed(3)}\nCost/game: $${d.cost.toFixed(4)}\nSolve rate: ${(d.row.level_solve_rate * 100).toFixed(1)}%`,
+                          }),
+                          Plot.text(costPoints, {
+                            x: 'cost',
+                            y: 'score',
+                            text: 'label',
+                            dy: -12,
+                            fill: cssVar('--text-1'),
+                          }),
+                        ],
+                      }
+                    }}
+                  />
+                </div>
+                <div className="lb-ref-legend mono">
+                  <span>Dashed horizontal rules: zero-cost reference anchors</span>
+                  <span>Optimal: {fmtFloat(kpi.optScore, 3)}</span>
+                  {kpi.humanScore != null && <span>Human: {fmtFloat(kpi.humanScore, 3)}</span>}
+                  {kpi.randomScore != null && <span>Random: {fmtFloat(kpi.randomScore, 3)}</span>}
+                  <span>Noop / Stop Early: {fmtFloat(kpi.noopScore ?? 0, 3)}</span>
+                </div>
+              </>
+            )}
+          </Panel>
+
+          <Panel
+            label="Benchmark Ledger"
+            actions={<span className="mono muted">{sortedRows.length} rows · click headers to sort</span>}
+          >
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Kind</th>
+                    <th>Harness</th>
+                    <th className="num">Games</th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'score' && 'active')} onClick={() => handleSort('score')}>
+                        Score{sortArrow('score')}
+                      </button>
+                    </th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'level_solve_rate' && 'active')} onClick={() => handleSort('level_solve_rate')}>
+                        Lvl Solve{sortArrow('level_solve_rate')}
+                      </button>
+                    </th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'game_win_rate' && 'active')} onClick={() => handleSort('game_win_rate')}>
+                        Game Win{sortArrow('game_win_rate')}
+                      </button>
+                    </th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'median_actions' && 'active')} onClick={() => handleSort('median_actions')}>
+                        Med Actions{sortArrow('median_actions')}
+                      </button>
+                    </th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'cost_per_game' && 'active')} onClick={() => handleSort('cost_per_game')}>
+                        Cost/Game{sortArrow('cost_per_game')}
+                      </button>
+                    </th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'latency_ms_median' && 'active')} onClick={() => handleSort('latency_ms_median')}>
+                        Med Latency{sortArrow('latency_ms_median')}
+                      </button>
+                    </th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'resets_total' && 'active')} onClick={() => handleSort('resets_total')}>
+                        Resets{sortArrow('resets_total')}
+                      </button>
+                    </th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'no_effect_rate' && 'active')} onClick={() => handleSort('no_effect_rate')}>
+                        No-Effect{sortArrow('no_effect_rate')}
+                      </button>
+                    </th>
+                    <th className="num">
+                      <button className={cx('lb-sort-btn', sortKey === 'belief_accuracy' && 'active')} onClick={() => handleSort('belief_accuracy')}>
+                        Belief Acc{sortArrow('belief_accuracy')}
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRows.map((row, idx) => {
+                    const color = seriesColorFor(row, idx)
+                    const bestScore = bestValues.score != null && Math.abs(row.score - bestValues.score) < 1e-6
+                    const bestSolve =
+                      bestValues.level_solve_rate != null &&
+                      Math.abs(row.level_solve_rate - bestValues.level_solve_rate) < 1e-6
+                    const bestWin =
+                      bestValues.game_win_rate != null &&
+                      Math.abs(row.game_win_rate - bestValues.game_win_rate) < 1e-6
+                    const bestMedAct =
+                      row.median_actions != null &&
+                      bestValues.median_actions != null &&
+                      Math.abs(row.median_actions - bestValues.median_actions) < 1e-6
+                    const bestCost =
+                      row.cost_per_game != null &&
+                      bestValues.cost_per_game != null &&
+                      Math.abs(row.cost_per_game - bestValues.cost_per_game) < 1e-6
+                    const bestLat =
+                      row.latency_ms_median != null &&
+                      bestValues.latency_ms_median != null &&
+                      Math.abs(row.latency_ms_median - bestValues.latency_ms_median) < 1e-6
+                    const bestResets =
+                      row.resets_total != null &&
+                      bestValues.resets_total != null &&
+                      Math.abs(row.resets_total - bestValues.resets_total) < 1e-6
+                    const bestNoEff =
+                      row.no_effect_rate != null &&
+                      bestValues.no_effect_rate != null &&
+                      Math.abs(row.no_effect_rate - bestValues.no_effect_rate) < 1e-6
+                    const bestBelief =
+                      row.belief_accuracy != null &&
+                      bestValues.belief_accuracy != null &&
+                      Math.abs(row.belief_accuracy - bestValues.belief_accuracy) < 1e-6
+
+                    return (
+                      <tr key={`${row.player_id}-${row.effort ?? 'none'}-${row.collection}-${row.harness_version ?? 'h1'}`}>
+                        <td>
+                          <div className="lb-player-cell">
+                            <Swatch color={color} />
+                            <span>{rowLabel(row)}</span>
+                            {row.subset_note && (
+                              <span className="lb-tag" title={row.subset_note}>
+                                subset
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="mono">{row.tier || row.kind}</td>
+                        <td className="mono">{row.harness_version || '—'}</td>
+                        <td className="num">{row.games}</td>
+                        <td className={cx('num', bestScore && 'lb-best')}>
+                          <div className="lb-score-wrap">
+                            <div className="lb-score-track" aria-hidden="true">
+                              <div
+                                className={cx('lb-score-fill', row.kind === 'baseline' && 'baseline')}
+                                style={{ width: `${Math.max(0, Math.min(100, row.score * 100))}%` }}
+                              />
+                            </div>
+                            <span>{fmtFloat(row.score, 3)}</span>
+                          </div>
+                        </td>
+                        <td className={cx('num', bestSolve && 'lb-best')}>
+                          {fmtPct(row.level_solve_rate)}
+                        </td>
+                        <td className={cx('num', bestWin && 'lb-best')}>
+                          {fmtPct(row.game_win_rate)}
+                        </td>
+                        <td className={cx('num', bestMedAct && 'lb-best')}>
+                          {fmtInt(row.median_actions)}
+                        </td>
+                        <td className={cx('num', bestCost && 'lb-best')}>
+                          {fmtUsd(row.cost_per_game)}
+                        </td>
+                        <td className={cx('num', bestLat && 'lb-best')}>
+                          {row.latency_ms_median != null ? `${Math.round(row.latency_ms_median)} ms` : '—'}
+                        </td>
+                        <td className={cx('num', bestResets && 'lb-best')}>
+                          {row.resets_total ?? '—'}
+                        </td>
+                        <td className={cx('num', bestNoEff && 'lb-best')}>
+                          {fmtPct(row.no_effect_rate)}
+                        </td>
+                        <td className={cx('num', bestBelief && 'lb-best')}>
+                          {fmtPct(row.belief_accuracy)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {sortedRows.some((r) => r.subset_note) && (
+              <div className="lb-subset-note mono">
+                Subset evaluations:{' '}
+                {sortedRows
+                  .filter((r) => r.subset_note)
+                  .map((r) => `${rowLabel(r)}: ${r.subset_note}`)
+                  .join(' · ')}
+              </div>
+            )}
+          </Panel>
+
+          <div className="lb-two-col">
+            <Panel
+              label="Thinking-Effort Ablation"
+              actions={
+                effortSeries.length > 0 && (
+                  <Button
+                    mono
+                    active={effortMode === 'table'}
+                    onClick={() => setEffortMode((m) => (m === 'chart' ? 'table' : 'chart'))}
+                  >
+                    {effortMode === 'chart' ? 'Show Table' : 'Show Plot'}
+                  </Button>
+                )
+              }
+            >
+              {effortSeries.length === 0 ? (
+                <Empty>
+                  Effort ablation compares a single model across multiple reasoning budgets (low → medium → high). Currently only single-effort rows are loaded for this collection.
+                </Empty>
+              ) : effortMode === 'table' ? (
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>Effort</th>
+                        <th className="num">Score</th>
+                        <th className="num">Cost / Game</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {effortSeries.map((pt) => (
+                        <tr key={`${pt.player_id}-${pt.effort}`}>
+                          <td>{pt.label}</td>
+                          <td className="mono">{pt.effort}</td>
+                          <td className="num">{fmtFloat(pt.score, 3)}</td>
+                          <td className="num">{fmtUsd(pt.cost)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <PlotFigure
+                  deps={[effortSeries]}
+                  make={(width) => ({
+                    width,
+                    height: 240,
+                    marginBottom: 36,
+                    x: {
+                      label: 'Reasoning effort',
+                      domain: ['low', 'medium', 'high', 'xhigh', 'max'].filter((e) =>
+                        effortSeries.some((p) => p.effort === e),
+                      ),
+                    },
+                    y: { domain: [0, 1], label: 'Action-efficiency score' },
+                    color: { legend: true, range: seriesColors() },
+                    marks: [
+                      Plot.lineY(effortSeries, {
+                        x: 'effort',
+                        y: 'score',
+                        stroke: 'label',
+                        strokeWidth: 2,
+                      }),
+                      Plot.dot(effortSeries, {
+                        x: 'effort',
+                        y: 'score',
+                        fill: 'label',
+                        r: 5,
+                        tip: true,
+                      }),
+                    ],
+                  })}
+                />
+              )}
+            </Panel>
+
+            <Panel label="Evaluated Model Cards &amp; Baselines">
+              {registeredCards.length === 0 ? (
+                <Empty>Only reference baselines are present in this collection.</Empty>
+              ) : (
+                <div className="lb-model-list">
+                  {registeredCards.map(({ row, color }) => {
+                    const card = row.model
+                    return (
+                      <div key={row.player_id} className="lb-model-card">
+                        <div className="lb-player-cell">
+                          <Swatch color={color} />
+                          <strong>{row.display_name || row.player_id}</strong>
+                          <span className="lb-tag">{card?.tier || row.kind}</span>
+                        </div>
+                        <div className="lb-model-meta mono">
+                          <span>id: {row.player_id}</span>
+                          <span>provider: {card?.provider || row.provider || '—'}</span>
+                          <span>effort: {row.effort || card?.default_effort || '—'}</span>
+                        </div>
+                        <div className="lb-model-meta mono">
+                          <span>solved: {row.levels_solved}/{row.levels_attempted}</span>
+                          <span>rhae vs human: {row.rhae_vs_human != null ? fmtFloat(row.rhae_vs_human, 3) : 'pending human'}</span>
+                        </div>
+                        {card?.notes && <span className="muted">{card.notes}</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Panel>
+          </div>
+        </>
+      )}
+    </div>
   )
 }
