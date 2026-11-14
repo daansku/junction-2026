@@ -111,3 +111,7 @@
   .d-reset { grid-area: reset; color: var(--warn) !important; }
   .ch-title { font-size: 24px; }
 }
+
+.ch-review-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
+.ch-tabs { display: flex; gap: var(--s1); }
+.ch-end > .ch-review { grid-column: 1 / -1; }
