@@ -40,8 +40,17 @@ def _active(rules: tuple[str, ...]) -> tuple["Component", ...]:
 
 
 def hooks(level: "Level", hook: str) -> tuple["Component", ...]:
-    """Active components that actually override `hook` (skips no-op defaults; hot path)."""
-    return _hooks(tuple(level.rules), hook)
+    """Active components that actually override `hook` (skips no-op defaults; hot path).
+    Memoised per level object (keyed on the identity of `level.rules`, so a replaced rules
+    tuple is picked up); the solver calls this millions of times."""
+    memo = level.__dict__.get("_hooks")
+    if memo is None or memo[0] is not level.rules:
+        memo = (level.rules, {})
+        level.__dict__["_hooks"] = memo
+    t = memo[1].get(hook)
+    if t is None:
+        t = memo[1][hook] = _hooks(tuple(level.rules), hook)
+    return t
 
 
 @lru_cache(maxsize=None)

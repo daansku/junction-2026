@@ -250,12 +250,23 @@ def load_collection(collection: str | Path) -> dict[str, Any]:
 
 
 def list_games(collection: str | Path) -> list[dict[str, Any]]:
-    """Metadata for every game in a collection (contracts/engine_api.py)."""
-    return [Game.from_dict(g).meta() for g in load_collection(collection)["games"]]
+    """Metadata for every game in a collection (contracts/engine_api.py). Fresh dicts each call
+    (callers may annotate them); the expensive part is cached per collection file."""
+    return [dict(m) for m in _list_games(str(collection_path(collection).resolve()))]
+
+
+@lru_cache(maxsize=16)
+def _list_games(path: str) -> tuple[dict[str, Any], ...]:
+    return tuple(Game.from_dict(g).meta() for g in _load_collection(path)["games"])
+
+
+@lru_cache(maxsize=16)
+def _index(path: str) -> dict[str, dict[str, Any]]:
+    return {g["game_id"]: g for g in _load_collection(path)["games"]}
 
 
 def load_game(collection: str | Path, game_id: str) -> Game:
-    for g in load_collection(collection)["games"]:
-        if g["game_id"] == game_id:
-            return Game.from_dict(g)
-    raise KeyError(f"{game_id} not in collection {collection}")
+    g = _index(str(collection_path(collection).resolve())).get(game_id)
+    if g is None:
+        raise KeyError(f"{game_id} not in collection {collection}")
+    return Game.from_dict(g)

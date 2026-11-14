@@ -1,7 +1,9 @@
 """A1-22 reward functions: pure, deterministic `(sample, model_output) -> float in [0, 1]`.
 
 `sample` is the dict written by `python -m engine tasks` (Sample.to_dict()). The reply may
-contain reasoning; only the text after its LAST 'ANSWER:' is graded. No 'ANSWER:' -> 0.
+contain reasoning of any length; only the text after its LAST 'ANSWER:' is graded (single-line
+answers: first line only, so trailing prose is ignored). No 'ANSWER:' or an answer over 6,000
+characters -> 0.
 Partial credit exists only where PLAN-v1 §4.6 defines it (plan efficiency); everything else is
 exact match, so a policy cannot farm reward with empty, repeated or hedged answers.
 """
@@ -13,11 +15,10 @@ from ..core.step import LEVEL_WON, LOST, initial_state, step_level
 from .auxtasks import TASKS
 from .common import extract_answer
 
-MAX_REPLY_CHARS = 20_000
 
 
 def reward(sample: dict, output: str) -> float:
-    if not output or len(output) > MAX_REPLY_CHARS:
+    if not output:
         return 0.0
     ans = extract_answer(output)
     if ans is None:

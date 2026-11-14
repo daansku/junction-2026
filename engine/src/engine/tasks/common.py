@@ -153,15 +153,31 @@ def move_dir(a: Action) -> tuple[int, int] | None:
     return DIRS.get(a)
 
 
-_ANS = re.compile(r"ANSWER\s*:\s*(.*)\Z", re.S | re.I)
+_ANS = re.compile(r"ANSWER\s*:", re.I)
+_DECOR = " \t*`'\"_"
+MAX_ANSWER_CHARS = 6_000
 
 
 def extract_answer(output: str) -> str | None:
-    """Text after the LAST 'ANSWER:' (may span lines). None if there is none."""
+    """Text after the LAST 'ANSWER:' marker (case-insensitive; markdown like **ANSWER:** ok),
+    with code fences and leading/trailing emphasis removed. None if there is no marker or the
+    answer itself is absurdly long (reasoning before the marker may be any length)."""
     if not output:
         return None
-    idx = output.upper().rfind("ANSWER")
-    if idx < 0:
+    last = None
+    for last in _ANS.finditer(output):
+        pass
+    if last is None:
         return None
-    m = _ANS.match(output[idx:])
-    return m.group(1).strip() if m else None
+    ans = output[last.end():]
+    lines = [ln for ln in ans.splitlines() if not ln.strip().startswith("```")]
+    ans = "\n".join(lines).strip().strip(_DECOR).strip()
+    return ans if len(ans) <= MAX_ANSWER_CHARS else None
+
+
+def first_line(ans: str) -> str:
+    """Single-line answers: the first non-empty line, decoration stripped (trailing prose ignored)."""
+    for ln in ans.splitlines():
+        if ln.strip():
+            return ln.strip().strip(_DECOR).strip()
+    return ""

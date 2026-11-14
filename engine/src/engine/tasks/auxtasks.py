@@ -16,7 +16,7 @@ from ..core.actions import Action, parse_action
 from ..core.level import Level
 from ..core.step import LEVEL_WON, LOST, initial_state, step_level
 from .common import (ACTIONS_HELP, MOVES, RLE_HELP, Sample, apply_rle_patch, changed_rows_rle,
-                     pick_game, task_rng, to_rle, visible_roles)
+                     first_line, pick_game, task_rng, to_rle, visible_roles)
 
 LETTERS = "ABCD"
 
@@ -157,8 +157,21 @@ def _next_frame_sample(seed, i, g, prev_frame, prev_action, frame_b, a, frame_c,
                    "frame_before": frame_b, "frame_after": frame_c})
 
 
+_RLE_START = re.compile(r"^\s*r\d+(?:-\d+)?\s*:")
+
+
 def grade_next_frame(s: dict, ans: str) -> float:
-    patched = apply_rle_patch(s["meta"]["frame_before"], ans)
+    lines = ans.splitlines()
+    if ans.strip().upper() in ("NONE", "NO CHANGE"):
+        rows = ""
+    else:
+        k = 0
+        while k < len(lines) and (_RLE_START.match(lines[k]) or not lines[k].strip()):
+            k += 1
+        if any(ln.strip() for ln in lines[k:]) and k == 0:
+            return 0.0
+        rows = chr(10).join(lines[:k])
+    patched = apply_rle_patch(s["meta"]["frame_before"], rows)
     return 1.0 if patched is not None and patched == s["meta"]["frame_after"] else 0.0
 
 
@@ -199,6 +212,7 @@ def make_rule_effect(seed: int, i: int) -> Sample | None:
 
 
 def grade_letter(s: dict, ans: str) -> float:
+    ans = first_line(ans)
     m = re.fullmatch(r"\(?([A-Da-d])[).]?", ans.strip())
     return 1.0 if m and m.group(1).upper() == s["answer"] else 0.0
 
@@ -303,6 +317,7 @@ def make_min_moves(seed: int, i: int) -> Sample | None:
 
 
 def grade_min_moves(s: dict, ans: str) -> float:
+    ans = first_line(ans)
     m = re.fullmatch(r"\s*(\d{1,4})\s*\.?\s*", ans)
     return 1.0 if m and int(m.group(1)) == int(s["answer"]) else 0.0
 
@@ -365,6 +380,7 @@ def score_plan(lv: Level, actions: list[Action]) -> float:
 
 
 def grade_full_plan(s: dict, ans: str) -> float:
+    ans = first_line(ans)
     acts = parse_plan(ans)
     if acts is None:
         return 0.0
@@ -409,6 +425,7 @@ def make_blocked_moves(seed: int, i: int) -> Sample | None:
 
 
 def grade_blocked_moves(s: dict, ans: str) -> float:
+    ans = first_line(ans)
     toks = ans.replace(",", " ").upper().split()
     if toks == ["NONE"]:
         got: set | None = set()
@@ -445,6 +462,7 @@ def make_locate_player(seed: int, i: int) -> Sample | None:
 
 
 def grade_pair(s: dict, ans: str) -> float:
+    ans = first_line(ans)
     m = re.fullmatch(r"\s*\(?\s*(\d{1,2})\s*[,/ ]\s*(\d{1,2})\s*\)?\s*", ans)
     return 1.0 if m and f"{int(m.group(1))},{int(m.group(2))}" == s["answer"] else 0.0
 
@@ -467,6 +485,7 @@ def make_level_index(seed: int, i: int) -> Sample | None:
 
 
 def grade_fraction(s: dict, ans: str) -> float:
+    ans = first_line(ans)
     m = re.fullmatch(r"\s*(\d{1,2})\s*(?:/|of)\s*(\d{1,2})\s*", ans, re.I)
     return 1.0 if m and f"{int(m.group(1))}/{int(m.group(2))}" == s["answer"] else 0.0
 
