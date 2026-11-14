@@ -1,0 +1,56 @@
+# API keys: which variable is which
+
+Keys live only in `.env` in the repo root. Git ignores `.env`, so never `git add -f` it.
+Share key values only over a private channel, never in git, chat logs or issues.
+Sweeps that count run from A3's machine, so that `.env` needs every key. Other machines only need the keys they test with.
+
+## Setup
+
+```bash
+cp .env.example .env      # once per clone; then paste values after the `=`
+chmod 600 .env
+```
+
+The arena loads `.env` automatically (`python -m arena …`).
+
+## Variables
+
+| Variable | Provider / endpoint | Used by (`arena/models.yaml` ids) |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Anthropic API | `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5` |
+| `GEMINI_API_KEY` | Google Gemini, OpenAI-compatible layer | `gemini-flash`, `gemini-pro` |
+| `FEATHERLESS_API_KEY` | featherless.ai, `https://api.featherless.ai/v1` | `featherless-open` (DeepSeek V3.2), `featherless-kimi-k2-6`, `featherless-glm-5-3`, `featherless-qwen3-5-397b`, `featherless-gpt-oss-120b`, `featherless-qwen3-5-9b`, `featherless-qwen3-vl-30b` |
+| `NVIDIA_VERDA_INFERENCE_KEY` | Verda (DataCrunch) deployment of NVIDIA Nemotron, `https://containers.datacrunch.io/nemotron-3-5-super-vl-b300/v1` | `nemotron-3-5-super-vl` |
+| `VERDA_INFERENCE_KEY` + `VERDA_BASE_URL` | our *other* Verda deployment (URL ends in `/v1`) | `verda-small` |
+| `NVIDIA_API_KEY` | build.nvidia.com API | none at the moment |
+| `MODAL_BASE_URL`, `MODAL_API_KEY`, `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET` | Modal (fine-tune + serving) | fine-tuned model |
+| `OPENAI_BASE_URL`, `OPENAI_API_KEY` | any OpenAI-compatible endpoint (optional) | none at the moment |
+| `ADMIN_TOKEN` | our server's `/api/admin/*` | server only |
+
+## Common mistakes
+
+- **The Nemotron key is not `NVIDIA_API_KEY`.** Nemotron runs on Verda: its key goes in `NVIDIA_VERDA_INFERENCE_KEY`.
+- **A Verda key works only for its own deployment.** The Nemotron endpoint serves only `nemotron-3.5-super-vl`, and other model names return 404. A second Verda key goes in `VERDA_INFERENCE_KEY` with its own `VERDA_BASE_URL`.
+- **The Nemotron endpoint returns 404 without a valid key, on every path including `/v1/models`.** A 404 there usually means a missing or wrong key, not a wrong URL.
+- **Before 2026-11-14 ~03:30 the Nemotron key was read from `VERDA_INFERENCE_KEY`.** If you put it there, rename it to `NVIDIA_VERDA_INFERENCE_KEY`.
+
+## Check a key works
+
+```bash
+.venv/bin/python -m arena models --check     # lists live models per provider (not Nemotron: its /models needs the key)
+.venv/bin/python -m arena play --model nemotron-3-5-super-vl --game <game_id> --api http://localhost:8000
+```
+
+Use a local server (`--api http://localhost:8000`) for key tests, so test runs stay out of the shared results.
+
+## Adding a deployment with its own key
+
+In `arena/models.yaml`, a model entry can override the provider defaults:
+
+```yaml
+  provider: verda
+  base_url: https://<deployment>/v1
+  api_key_env: SOME_NEW_KEY_NAME
+```
+
+Then add `SOME_NEW_KEY_NAME=` to `.env.example` and a row to this table.
