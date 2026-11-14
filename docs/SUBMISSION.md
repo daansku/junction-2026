@@ -10,42 +10,34 @@
 - **Challenge / Track:** AfterQuery — *Build an RL Environment That Exposes Frontier Agent Failure Modes & Preserves Reward Integrity*
 - **Repository:** `junction-2026` (`main`)
 - **Live Server URL (`coordination/API_URL`):** Shared FastAPI + React 19 web app (`Play`, `Gallery`, `Replays`, `Compare`, `Live`, `Leaderboard`, `Insights`)
-- **Official Harbor + OpenCode Judge One-Liner (`arena/HARBOR.md`):**
+- **Official Harbor + OpenCode Judge One-Liner (`arena/HARBOR.md`, `arena/judge.sh`):**
   ```bash
-  python -m arena harbor-export --collection eval-v1 --out /tmp/junction-harbor --first 3 && \
-    TASK=$(ls -d /tmp/junction-harbor/gridworld-* | head -1) && \
-    harbor run -p "$TASK" -a oracle && \
-    harbor run -p "$TASK" -a nop && \
-    harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1
+  make judge                                     # eval-v2 game 1: reference 1.000, do-nothing 0.000, stop-early 0.125
+  make judge MODEL=gemini/gemini-4-argon K=3     # + 3 OpenCode agent runs; any OpenCode selector works
   ```
-- **OpenCode + Nemotron `k=3` Harbor Rerun:**
-  ```bash
-  set -a; . ./.env; set +a
-  harbor run -p "$TASK" -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
-    --ak "opencode_config=$(python3 -c 'import json;print(json.dumps(json.load(open("arena/opencode-nemotron.json"))))')" \
-    --ae 'NVIDIA_VERDA_INFERENCE_KEY=${NVIDIA_VERDA_INFERENCE_KEY}' -k 3 -n 1
-  ```
+  The agent phase can reach only the game (`http://localhost:8000/mcp`) and model APIs (egress allowlist); add another
+  API host with `EXTRA="--allow-agent-host <host>"`.
 
 ---
 
 ## Short Pitch (Portal Summary — ~65 words)
 
-We built a procedurally seeded 64×64 pixel RL game factory (`engine 0.5.0`, 15 live + 3 Tier-3 mechanics) where agents receive zero prose rules, object colors permute per game (`skin_shuffle`), and hidden rules are introduced one per level before multi-rule and held-out pair exams (`eval-v1`). Graded inside isolated Harbor MCP sidecars against exact BFS shortest paths, reference achieves `1.000`, humans `0.578`, Kimi K3.1 Pro `0.374`, OpenCode+Nemotron `0.067`, and `noop` `0.000`.
+We built a procedurally seeded 64×64 pixel RL game factory (`engine 0.5.0`, 15 live + 3 Tier-3 mechanics) where agents receive zero prose rules, object colors permute per game (`skin_shuffle`), and hidden rules are introduced one per level before multi-rule and held-out pair exams (`eval-v1`). Graded inside isolated Harbor MCP sidecars against exact BFS shortest paths, on the frozen difficulty-4 set the reference scores `1.000`, first-attempt humans `0.693`, Gemini 4 Argon `0.494`, Kimi K3.1 Pro `0.398`, and do-nothing `0.000`; humans beat every model on every shared game.
 
 ---
 
 ## How It Maps to the AfterQuery Judging Rubric (100 Points)
 
 ### 1. The Gap (30 pts)
-- **On the Judges' Own Harness (`Harbor 0.26.0 + OpenCode`, `gridworld-s1000-d1-l6-9b1065f8`, 6 levels, 92 optimal actions):**
-  - **Reference (`harbor run -a oracle`):** **`1.000`** (`6/6` levels, `92` actions).
-  - **OpenCode + Nemotron 3.5 Super VL (`k=3` rubric runs, 30-min cap):** **`0.020`** (`155` act, `1/6`), **`0.094`** (`135` act, `1/6`), **`0.087`** (`227` act, `1/6`) → **mean `0.067`** (plus `0.113` / `2/6` levels in 15-min run).
-- **Multi-Model Arena Sweep (`dev` split, Engine `0.5.0`, `67` clean runs, `data/derived/leaderboard.json`):**
-  - **BFS Optimal (`optimal`):** **`1.000`** (`24/24` levels, `100.0%`).
-  - **First-Attempt Human (`human`):** **`0.578`** on `dev` (`40/60` levels, `66.7%`, `40.0%` full-game win rate) and **`0.795`** on `eval-v1` (`6/6`).
-  - **Kimi K3.1 Pro (`[image, rle]`):** **`0.374`** (`25/48` levels, `52.1%`, `0%` full-game win, `RHAE = 0.647` vs human).
-  - **Nemotron 3.5 Super VL (`[image, rle]`):** **`0.061`** (`6/48` levels, `12.5%`, `76.8%` no-effect rate).
-  - **DeepSeek V3.2 & `gpt-oss-120b` (`[rle]` text-only):** **`0.000`** (`0/96` levels solved despite lossless 64×64 RLE grids — exposing a stark 2D spatial vision gap).
+- **Frozen eval-v2 (difficulty 4, 8 levels, 3 unseen rules per game), board built Sat 19:19 UTC from 1,006 runs:**
+  optimal **1.000**; first-attempt humans **0.693** (20 games, 150/160 levels, 75% full wins, CI 0.632-0.749);
+  Gemini 4 Argon h1 **0.494** (7 games, CI 0.372-0.621); Gemini 3.1 Pro h2 **0.439**; Kimi K3.1 h2 **0.398**;
+  Gemini 3.8 Flash h1 **0.028**; random / stop-early / do-nothing **0.000**.
+- **Paired, same games:** humans ahead on every shared game: Argon 6/6, Flash 7/7, Gemini Pro h2 4/4, Kimi h2 4/4.
+- **Honest caveats:** Gemini 4 Carbon's first finished eval-v2 game scored 0.789 (above the humans on that game;
+  sweep still running). eval-v1 is the easy set (Gemini 4 models 0.82-0.93 on its game 1).
+- **On the judges' harness (Harbor + OpenCode):** reference 1.000 on eval-v2 game 1; OpenCode + Nemotron k=3 mean
+  0.067 (dev game). Frontier OpenCode runs: `make judge MODEL=<selector> K=3`.
 
 ### 2. Meaningful Difficulty (30 pts)
 - **Full Pixel Observability, Zero Prose Leakage:** 15 live composable rules across Tiers 0–2 (`keys_doors`, `plates_gates`, `teleporters`, `hazards`, `push_blocks`, `ice`, `one_way`, `collect_all`, `phase_walls`, `rotation`, `remap`, `twin`, `stamina`, `cracked_floor`, `beacon_goal`) plus 3 opt-in Tier-3 mechanics (`conveyors`, `enemies`, `gravity`), rendered in `rules/img/all_rules.png` with HUD budget bar (`rows 0–1`) and level/inventory/health pips (`rows 3–4`).

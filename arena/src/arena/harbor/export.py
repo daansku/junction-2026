@@ -97,7 +97,7 @@ An MCP server named `game` (__GAME_URL__) runs a video game you have never seen.
 
 - `observe()` shows the current screen (free).
 - `act(action, note?)` takes one action and shows the new screen. Actions: `ACTION1` up, `ACTION2` down,
-  `ACTION3` left, `ACTION4` right, `ACTION5` interact, `RESET` restart the current level.
+  `ACTION3` left, `ACTION4` right, `ACTION5` interact (only in games that list it as available), `RESET` restart the current level.
 
 The screen is a 64x64 image, also given as a text grid (one hex digit 0-f per cell = colour index, row 0 at the top).
 Nobody tells you the goal, the rules or what the colours mean: work them out by acting and watching what changes.
