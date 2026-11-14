@@ -85,3 +85,15 @@
   .dpad-act { grid-area: act; }
   .dpad-reset { grid-area: reset; color: var(--warn) !important; }
 }
+
+.play-name-missing {
+  margin: 0 0 var(--s3);
+  padding: var(--s2) var(--s3);
+  border-left: 2px solid var(--warn);
+  background: var(--surface-1);
+  color: var(--text-1);
+}
+.field input[aria-invalid] {
+  border-color: var(--warn);
+  outline: 1px solid var(--warn);
+}
