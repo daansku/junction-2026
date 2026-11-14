@@ -31,6 +31,13 @@ def _hud_items(cv: Canvas, level: Level, state: State, x: int) -> None:
     for c in comps.active(level):
         for role, value, vmax in c.hud(level, state):
             col = cv.color(role)
+            if vmax > 6:  # long meters: 1 px per unit, dim tick for spent units
+                if x + vmax > SIZE:
+                    return
+                cv.rect(x, 3, vmax, 1, col)
+                cv.rect(x, 4, value, 1, col)
+                x += vmax + 2
+                continue
             for i in range(vmax):
                 if x + 2 > SIZE:
                     return
@@ -54,7 +61,8 @@ def render(level: Level, state: State, skin: dict[str, tuple[int, str]], level_i
         _pips(cv, levels_total, levels_total, True)
         return cv.to_hex()
 
-    cv.set_grid(level.w, level.h)
+    cv.set_grid(level.w, level.h, rot=int(state.c.get("rotation", 0)),
+                stable="rotation" in level.rules)
     for c in comps.active(level):
         c.draw(level, state, cv)
     cv.cell(state.pos, "player")

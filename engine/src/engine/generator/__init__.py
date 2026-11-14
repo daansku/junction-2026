@@ -14,7 +14,9 @@ from __future__ import annotations
 from .. import components as comps
 from ..core.level import Level
 from ..core.rng import rng_for
-from ..solver import compute_budget, neutralised_optimal, random_walk_win_rate, solve
+from dataclasses import replace
+
+from ..solver import compute_budget, random_walk_win_rate, replay_wins, solve
 from . import curriculum
 from .layout import STYLES, make_layout
 from .placement import Draft
@@ -22,8 +24,9 @@ from .placement import Draft
 SLACK = {1: 3.0, 2: 2.5, 3: 2.0, 4: 1.5}
 INTRO_ALLOWANCE = 8
 MAX_ATTEMPTS = 150
+ATTEMPTS_PER_CANDIDATE = 60  # when fallback rule sets exist, give up on one set sooner
 RANDOM_WALK_MAX = 0.02
-SOLVER_CAP = 150_000
+SOLVER_CAP = 50_000
 
 
 class GenerationError(RuntimeError):
@@ -72,8 +75,7 @@ def try_level(seed: int, family: str, difficulty: int, level_idx: int, rules: tu
     if path is None or len(path) < _min_optimal(difficulty, level_idx, teaching):
         return None
     for r in rules:  # every rule must matter
-        alt = neutralised_optimal(lv, r)
-        if alt is not None and alt == len(path):
+        if not rule_matters(lv, r, len(path)):
             return None
     lv.optimal_moves = len(path)
     lv.optimal_path = [a.value for a in path]
@@ -83,6 +85,15 @@ def try_level(seed: int, family: str, difficulty: int, level_idx: int, rules: tu
         return None
     lv.data["attempt"] = attempt
     return lv
+
+
+def rule_matters(lv: Level, rule: str, optimal: int) -> bool:
+    """A rule matters if the optimal plan of a player who ignores it is longer, impossible, or
+    fails on the real level (PLAN.md §5, strengthened so remap/rotation rules count)."""
+    alt = solve(replace(lv, rules=tuple(r for r in lv.rules if r != rule)), max_states=SOLVER_CAP)
+    if alt is None or len(alt) != optimal:
+        return True
+    return not replay_wins(lv, alt)
 
 
 def generate_level(seed: int, family: str, difficulty: int, level_idx: int,
@@ -106,7 +117,8 @@ def generate_levels(seed: int, family: str, difficulty: int, n_levels: int,
             if frozenset(cand) in used:
                 continue
             try:
-                lv = generate_level(seed, family, difficulty, i, cand, new)
+                lv = generate_level(seed, family, difficulty, i, cand, new,
+                                    ATTEMPTS_PER_CANDIDATE if fallbacks else MAX_ATTEMPTS)
                 break
             except GenerationError:
                 continue

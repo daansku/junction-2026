@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .base import Component
-from . import register, active
+from . import register, hooks
 from ..render import colors as C
 
 N = "push_blocks"
@@ -39,7 +39,7 @@ class PushBlocks(Component):
         t = (pos[0] + d[0], pos[1] + d[1])
         if not level.in_bounds(t) or t == level.goal:
             return False
-        if any(c.blocks_object(level, state, t) for c in active(level)):
+        if any(c.blocks_object(level, state, t) for c in hooks(level, "blocks_object")):
             return False
         state.c[N] = (blocks - {pos}) | {t}
         events.append("pushed")

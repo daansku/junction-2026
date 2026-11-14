@@ -55,6 +55,9 @@ class Component:
     def remap(self, level: "Level", state: "State", action: Any) -> Any:
         return action
 
+    def on_action(self, level: "Level", state: "State", action: Any, events: list[str]) -> None:
+        """Called with the final (remapped) action before the player moves (twins, enemies)."""
+
     def blocks(self, level: "Level", state: "State", pos: "Pos", d: tuple[int, int]) -> bool:
         """True if the player may not enter `pos` moving in direction `d`."""
         return False

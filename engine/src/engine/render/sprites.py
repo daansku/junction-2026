@@ -4,7 +4,7 @@ from __future__ import annotations
 from functools import lru_cache
 
 SPRITES = ("full", "ring", "dot", "cross", "x", "corners", "hbar", "vbar", "checker", "frame_dot",
-           "arrow_up", "arrow_down", "arrow_left", "arrow_right", "bars", "diag")
+           "arrow_up", "arrow_down", "arrow_left", "arrow_right", "bars", "diag", "diamond", "half", "tri")
 
 
 @lru_cache(maxsize=None)
@@ -30,6 +30,9 @@ def mask(c: int, kind: str) -> tuple[tuple[int, int], ...]:
         "arrow_right": lambda x, y: lo <= y <= hi or x == c - 2,
         "bars": lambda x, y: x % 2 == 0,
         "diag": lambda x, y: (x + y) % 3 == 0,
+        "diamond": lambda x, y: abs(2 * x - (c - 1)) + abs(2 * y - (c - 1)) <= c - 1,
+        "half": lambda x, y: y >= c // 2,
+        "tri": lambda x, y: y >= c - 1 - x,
     }
     if kind not in tests:
         raise KeyError(kind)

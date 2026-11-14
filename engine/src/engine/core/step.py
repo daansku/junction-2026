@@ -23,36 +23,39 @@ def uses_interact(level: Level) -> bool:
     return any(c.uses_interact for c in comps.active(level))
 
 
-def _try_move(level: Level, s: State, d: tuple[int, int], active, events: list[str]) -> bool:
+def _try_move(level: Level, s: State, d: tuple[int, int], events: list[str]) -> bool:
     target = (s.pos[0] + d[0], s.pos[1] + d[1])
     if not level.in_bounds(target):
         return False
-    if any(c.blocks(level, s, target, d) for c in active):
-        return False
-    for c in active:
-        r = c.push(level, s, target, d, events)
-        if r is False:
+    for c in comps.hooks(level, "blocks"):
+        if c.blocks(level, s, target, d):
+            return False
+    for c in comps.hooks(level, "push"):
+        if c.push(level, s, target, d, events) is False:
             return False
     s.pos = target
-    for c in active:
+    for c in comps.hooks(level, "on_enter"):
         c.on_enter(level, s, target, d, events)
     return True
 
 
 def step_level(level: Level, state: State, action: Action) -> tuple[State, list[str], str]:
     """Apply one counted action. Caller handles RESET and ignores unavailable actions."""
-    active = comps.active(level)
+    H = comps.hooks
     s = state.copy()
     events: list[str] = []
-    for c in active:
+    for c in H(level, "remap"):
         action = c.remap(level, s, action)
+    for c in H(level, "on_action"):
+        c.on_action(level, s, action, events)
 
     if action in DIRS:
         d = DIRS[action]
-        if _try_move(level, s, d, active, events):
+        if _try_move(level, s, d, events):
             n = 0
-            while n < MAX_SLIDE and any(c.slide(level, s, s.pos, d) for c in active):
-                if not _try_move(level, s, d, active, events):
+            sliders = H(level, "slide")
+            while n < MAX_SLIDE and any(c.slide(level, s, s.pos, d) for c in sliders):
+                if not _try_move(level, s, d, events):
                     break
                 n += 1
             if n:
@@ -60,15 +63,15 @@ def step_level(level: Level, state: State, action: Action) -> tuple[State, list[
         else:
             events.append("bump")
     elif action == Action.ACTION5:
-        for c in active:
+        for c in H(level, "interact"):
             c.interact(level, s, events)
 
     s.moves += 1
-    for c in active:
+    for c in H(level, "on_step"):
         c.on_step(level, s, events)
 
-    if s.pos == level.goal and all(c.win_ok(level, s) for c in active):
+    if s.pos == level.goal and all(c.win_ok(level, s) for c in H(level, "win_ok")):
         return s, events, LEVEL_WON
-    if any(c.lost(level, s) for c in active):
+    if any(c.lost(level, s) for c in H(level, "lost")):
         return s, events, LOST
     return s, events, PLAYING

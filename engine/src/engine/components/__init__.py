@@ -39,6 +39,18 @@ def _active(rules: tuple[str, ...]) -> tuple["Component", ...]:
     return tuple(sorted((REGISTRY[n] for n in names), key=lambda c: (c.layer, c.name)))
 
 
+def hooks(level: "Level", hook: str) -> tuple["Component", ...]:
+    """Active components that actually override `hook` (skips no-op defaults; hot path)."""
+    return _hooks(tuple(level.rules), hook)
+
+
+@lru_cache(maxsize=None)
+def _hooks(rules: tuple[str, ...], hook: str) -> tuple["Component", ...]:
+    from .base import Component
+    base = getattr(Component, hook)
+    return tuple(c for c in _active(rules) if getattr(type(c), hook) is not base)
+
+
 def raw_roles() -> dict[str, tuple[int | str, str]]:
     """Role -> (colour or "@other_role", sprite). "@x" = same colour as role x."""
     from ..render import colors as C
@@ -72,3 +84,4 @@ def tiers() -> dict[str, int]:
 # registration side effects; one module per component
 from . import walls, goal, budget  # noqa: E402,F401  tier 0
 from . import keys_doors, plates_gates, teleporters, hazards, push_blocks, one_way, ice  # noqa: E402,F401  tier 1
+from . import collect_all, phase_walls, rotation, remap, twin, stamina  # noqa: E402,F401  tier 2

@@ -15,10 +15,18 @@ Colours below are defaults; skin shuffle permutes object colours per game, so ne
 | push blocks | `push_blocks.py` | 1 | live | ring with centre dot; pushed one cell if free behind; never into goal | blocks on the path | `test_push_blocks` |
 | one-way tiles | `one_way.py` | 1 | live | arrow (shaft + bar near the head); enter only moving in that direction | arrows on the path, at least one against travel | `test_one_way` |
 | ice | `ice.py` | 1 | live | diagonal stripes; keep sliding until blocked or off ice | ice patch over the path | `test_ice_slides_until_blocked` |
+| collect all | `collect_all.py` | 2 | live | diamond gems; goal only counts once all are collected; HUD pips | gems far from the path | `test_collect_all_gates_goal` |
+| phase walls | `phase_walls.py` | 2 | live | solid square / hollow corners when open; solid for k actions, open for k (k=3-5), bumps count | on a chokepoint | `test_phase_walls_cycle` |
+| rotation trigger | `rotation.py` | 2 | live | triangle; stepping on it turns the map 90 deg clockwise on screen, controls stay screen-relative | on the path | `test_rotation_*` |
+| control remap | `remap.py` | 2 | live | half-filled square; toggles a per-level scramble (mirror h/v, swap axes, reverse); HUD pip lit while scrambled | on the path (+ decoy) | `test_remap_mirror` |
+| mirror twin | `twin.py` | 2 | live | small square + ring goal in its own colour; copies every move (mirrored L/R at d>=2), walls stop it; win needs both on goals | twin start/goal placed apart | `test_twin_*` |
+| stamina | `stamina.py` | 2 | live | every action costs 1; 0 = lost; refill pads restore to max (single use); HUD meter | refills off the path | `test_stamina_and_refill` |
 
-Every generated level is checked: BFS-solvable, **every active rule matters** (removing it changes optimal length or makes it unsolvable), random walk wins < 2%.
+Difficulty 1 games use tier 1 only; difficulty 2-3 draw from tiers 1-2.
 
-## Curriculum (engine 0.2.0)
+Every generated level is checked: BFS-solvable, **every active rule matters** (a player who ignores it has a longer/impossible optimum, or their optimal plan fails on the real level), random walk wins < 2%.
+
+## Curriculum (engine 0.3.0)
 Level 1 = movement + goal. Levels 2..n-1 each introduce one new rule (teaching layout: smaller grid, +8 move allowance), alone or with 1-2 seen rules. For games with >= 5 levels the last level is an "exam": 2-3 seen rules, no new rule. No two levels share a rule set. Order and combos come from the seed.
 
 ## Frame layout

@@ -21,11 +21,25 @@ class Canvas:
         self.cs = 1
         self.ox = 0
         self.oy = HUD_ROWS
+        self.rot = 0
+        self.lw = self.lh = 1
 
-    def set_grid(self, w: int, h: int) -> None:
-        self.cs = max(1, min(SIZE // w, PLAY_H // h))
-        self.ox = (SIZE - w * self.cs) // 2
-        self.oy = HUD_ROWS + (PLAY_H - h * self.cs) // 2
+    def set_grid(self, w: int, h: int, rot: int = 0, stable: bool = False) -> None:
+        """Logical grid w x h, shown rotated `rot` quarter turns clockwise. `stable` keeps the
+        cell size the same in every orientation (levels that can rotate)."""
+        self.lw, self.lh, self.rot = w, h, rot % 4
+        sw, sh = (h, w) if self.rot % 2 else (w, h)
+        self.cs = max(1, min(SIZE // sw, PLAY_H // sh))
+        if stable:
+            self.cs = max(1, min(self.cs, SIZE // sh, PLAY_H // sw))
+        self.ox = (SIZE - sw * self.cs) // 2
+        self.oy = HUD_ROWS + (PLAY_H - sh * self.cs) // 2
+
+    def _xf(self, x: int, y: int, w: int, h: int) -> tuple[int, int]:
+        """Rotate (x, y) in a w x h box `rot` times clockwise."""
+        for _ in range(self.rot):
+            x, y, w, h = h - 1 - y, x, h, w
+        return x, y
 
     def put(self, x: int, y: int, color: int) -> None:
         if 0 <= x < SIZE and 0 <= y < SIZE:
@@ -47,8 +61,12 @@ class Canvas:
             spr = sprite
         if color is not None:
             col = color
-        bx, by = self.ox + p[0] * self.cs, self.oy + p[1] * self.cs
-        for dx, dy in mask(self.cs, spr):
+        sx, sy = self._xf(p[0], p[1], self.lw, self.lh)
+        bx, by = self.ox + sx * self.cs, self.oy + sy * self.cs
+        cs = self.cs
+        for dx, dy in mask(cs, spr):
+            if self.rot:
+                dx, dy = self._xf(dx, dy, cs, cs)
             self.put(bx + dx, by + dy, col)
 
     def to_hex(self) -> list[str]:

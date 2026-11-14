@@ -1,3 +1,3 @@
 # Bump whenever generation or rules change output. Frozen collections record the version they
 # were made with and are always loaded from their snapshot, never regenerated.
-ENGINE_VERSION = "0.2.0"
+ENGINE_VERSION = "0.3.0"

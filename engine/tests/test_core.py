@@ -75,7 +75,8 @@ def test_unavailable_action_is_free(game):
 
 def test_random_walk_rarely_wins(game):
     for lv in game.levels:
-        assert random_walk_win_rate(lv, tries=200, seed="test") < 0.02
+        # generator rejects >= 2% with its own seed; an independent sample gets some margin
+        assert random_walk_win_rate(lv, tries=400, seed="test") < 0.05
 
 
 def test_serialisation_roundtrip(game):

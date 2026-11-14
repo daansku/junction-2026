@@ -3,7 +3,7 @@ The generator walls off the goal, so the pair is the only way across."""
 from __future__ import annotations
 
 from .base import Component, static
-from . import register, active
+from . import register, hooks
 from ..render import colors as C
 
 N = "teleporters"
@@ -55,7 +55,7 @@ class Teleporters(Component):
         dst = link.get(pos)
         if dst is None:
             return
-        if any(c.blocks_object(level, state, dst) for c in active(level)):
+        if any(c.blocks_object(level, state, dst) for c in hooks(level, "blocks_object")):
             return
         state.pos = dst
         events.append("teleport")

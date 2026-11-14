@@ -11,7 +11,11 @@ from itertools import combinations
 from .. import components as comps
 from ..core.rng import rng_for
 
-MAX_TIER = 1  # raise as tiers land
+MAX_TIER = 2  # raise as tiers land
+
+
+def max_tier_for(difficulty: int) -> int:
+    return 1 if difficulty <= 1 else MAX_TIER
 
 
 def rule_pool(max_tier: int = MAX_TIER) -> list[str]:
@@ -36,7 +40,7 @@ def plan(seed: int, family: str, difficulty: int, n_levels: int,
     if rules is not None:
         order = list(rules)
     else:
-        order = rule_pool()
+        order = rule_pool(max_tier_for(difficulty))
         rng.shuffle(order)
     out: list = [((), None, [])]
     used: set[frozenset] = {frozenset()}
@@ -63,6 +67,7 @@ def plan(seed: int, family: str, difficulty: int, n_levels: int,
             if not combos:
                 break
             rng.shuffle(combos)
-            out.append((combos[0], None, combos[1:6]))
+            singles = [(s,) for s in sorted(seen)]
+            out.append((combos[0], None, combos[1:12] + singles))
             used.add(frozenset(combos[0]))
     return out

@@ -5,7 +5,7 @@ from engine.components import REGISTRY
 from engine.core.actions import Action
 from engine.core.level import Level
 from engine.core.step import LEVEL_WON, LOST, PLAYING, initial_state, step_level
-from engine.generator import generate_level
+from engine.generator import generate_level, rule_matters
 from engine.generator.curriculum import rule_pool
 from engine.solver import neutralised_optimal, solve
 
@@ -93,11 +93,76 @@ def test_tier1_all_registered():
             "ice"} <= set(REGISTRY)
 
 
-@pytest.mark.parametrize("rule", rule_pool())
+@pytest.mark.parametrize("rule", rule_pool(2))
 @pytest.mark.parametrize("difficulty", [1, 3])
 def test_generated_teaching_level(rule, difficulty):
     lv = generate_level(7, "gridworld", difficulty, 1, (rule,), rule)
     path = solve(lv)
     assert path is not None and len(path) == lv.optimal_moves <= lv.move_budget
-    alt = neutralised_optimal(lv, rule)
-    assert alt is None or alt != lv.optimal_moves     # the rule matters
+    assert rule_matters(lv, rule, lv.optimal_moves)
+
+
+# ---- tier 2 -------------------------------------------------------------------
+def test_collect_all_gates_goal():
+    lv = corridor(5, ["collect_all"], {"collect_all": {"gems": [[2, 2]]}}, rows=2)
+    assert run(lv, [R] * 4)[1] == PLAYING             # goal ignored without the gem
+    s, out, ev = run(lv, [R, D, U, R, R, R])
+    assert "collected" in ev and out == LEVEL_WON
+
+
+def test_phase_walls_cycle():
+    lv = corridor(5, ["phase_walls"], {"phase_walls": {"cells": [[3, 1]], "period": 2, "phase": 0}}, rows=1)
+    s, out, ev = run(lv, [R, R])        # t=1 at second move: still solid -> bump
+    assert s.pos == (2, 1) and "bump" in ev
+    s, out, ev = run(lv, [R, L, R, R])  # t=3 open
+    assert s.pos == (3, 1)
+
+
+def test_rotation_turns_controls():
+    lv = corridor(6, ["rotation"], {"rotation": {"triggers": [[2, 2]]}}, rows=3)
+    s, _, ev = run(lv, [R, D])          # land on trigger
+    assert "rotated" in ev and s.c["rotation"] == 1
+    s2, _, _ = step_level(lv, s, U)     # screen-up after one cw turn = logical left
+    assert s2.pos == (1, 2)
+
+
+def test_rotation_render_changes_frame():
+    from engine.core.game import Game, GameSpec
+    from engine.generator.skin import make_skin
+    lv = corridor(6, ["rotation"], {"rotation": {"triggers": [[2, 1]]}}, rows=2)
+    g = Game(GameSpec(), [lv], make_skin(0, "gridworld", False, ["rotation"]))
+    f0 = g.frame()
+    g.step(R)
+    assert "rotated" in g.events and g.frame() != f0
+
+
+def test_remap_mirror():
+    lv = corridor(6, ["remap"], {"remap": {"triggers": [[2, 1]], "mode": "mirror_h"}}, rows=1)
+    s, _, ev = run(lv, [R, R])          # 2nd R is mirrored to L after the trigger
+    assert "controls_changed" in ev and s.pos == (1, 1)
+
+
+def test_twin_must_reach_its_goal():
+    lv = corridor(5, ["twin"], {"twin": {"start": [1, 3], "goal": [4, 3], "mirror": False}}, rows=3)
+    s, out, ev = run(lv, [R, R, R])
+    assert s.c["twin"] == (4, 3) and out == PLAYING   # player at (4,1), goal is (5,1)
+    assert run(lv, [R, R, R, R])[1] == PLAYING          # twin overshoots to (5,3)
+    lv2 = corridor(5, ["twin"], {"twin": {"start": [1, 3], "goal": [5, 3], "mirror": False}}, rows=3)
+    assert run(lv2, [R] * 4)[1] == LEVEL_WON
+
+
+def test_twin_mirror():
+    lv = corridor(6, ["twin"], {"twin": {"start": [6, 3], "goal": [1, 3], "mirror": True}}, rows=3)
+    s, _, _ = run(lv, [R])
+    assert s.c["twin"] == (5, 3)
+
+
+def test_stamina_and_refill():
+    lv = corridor(8, ["stamina"], {"stamina": {"refills": [[3, 2]], "max": 3}}, rows=2)
+    assert run(lv, [R, R, R])[1] == LOST
+    s, out, ev = run(lv, [R, R, D])     # refill on 3rd action
+    assert "refilled" in ev and s.c["stamina"][0] == 3
+
+
+def test_all_tier2_registered():
+    assert {"collect_all", "phase_walls", "rotation", "remap", "twin", "stamina"} <= set(REGISTRY)
