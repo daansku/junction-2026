@@ -8,6 +8,9 @@
 - **Fine-tuned Qwen3.5-9B SFT v1 (h1):** 4/180 levels. Untuned base: rerunning on its own H100 server (the shared one timed out).
 - **SFT v2 trained (all three):** `games` val loss 2.62->0.23, `mix` 1.37->0.94, `ctrl` 1.51->1.10 (2.50M tokens each, token-matched). Served on A100 port 8002 as `arena-{games,mix,ctrl,sftv1}`.
 
+## RL
+- **RL (grpo-1):** started Sat 19:48 on a Modal H100 (app `junction-grpo`, 4 h cap, ~$16) from SFT v2 `games` (A3 decision 19:35, before bench results). Data 4,290 prompts: 70% `game_turn` (h1 map turns) + 30% aux (blocked_moves, full_plan, rule_effect). 150 steps, checkpoint every 25 -> Modal volume `junction-grpo` `/runs/grpo-1/step-<k>`, pulled to `/root/ckpt/grpo-1/` on the A100 box (`posttrain/tools/modal_pull.sh`). Status: loading model; first step not yet logged.
+
 ## Timeline (Helsinki)
 | When | What | Who uses it |
 |---|---|---|
