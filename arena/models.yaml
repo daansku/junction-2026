@@ -307,7 +307,7 @@
   display_name: Qwen3.5 9B (untuned base, ours on Verda)
   provider: verda
   api_model: arena-base
-  base_url: http://95.216.229.250:8001/v1
+  base_url: http://31.22.104.125:8001/v1     # H100 since 19:00 (A100 GPU 1 server is shared with A2 bench)
   api_key_env: VERDA_FT_KEY
   max_output_tokens: 8192       # untuned Qwen3.5 thinks before answering; vLLM max_model_len 32768
   tier: open
