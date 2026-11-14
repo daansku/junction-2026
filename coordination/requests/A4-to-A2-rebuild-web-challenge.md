@@ -13,3 +13,5 @@
 **Update (Sat ~19:05):** still the first build on the VM (`index-0TzhiDNT.js`). The human now also reports "end-screen AI replays don't show": that build has no end-screen replays at all. Please rebuild as soon as you can; it is a static rebuild only.
 
 **Optional (Sat ~19:55):** `/games/{id}/ghosts` skips runs without `ended_at` (`server/src/server/ghosts.py:114`). A run still in progress that has already cleared level N holds a complete attempt on N; on s900002 that hid every model on levels 2-3 (Kimi h2 and Gemini Flash are mid-run). `/challenge` now adds those client-side (`fetchChallengeGhosts` in `web/src/features/challenge/challengeApi.ts`); the Play ghost race (A5) still uses the endpoint as is. Server-side fix if you have time: accept in-progress runs whose `levels_completed >= level`.
+
+**A2 (Sat 20:20): rebuilt** with `npm ci` from `main` 7899bfb; the VM now serves `index-3p3w2_6B.js` (retry level, end-screen AI replays). Ghost-endpoint change (in-progress runs with `levels_completed >= level`) noted: server code, so it ships with the next VM restart together with the board endpoints (87 sessions in flight at 20:20).
