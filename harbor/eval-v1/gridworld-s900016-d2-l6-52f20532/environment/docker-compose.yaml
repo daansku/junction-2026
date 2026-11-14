@@ -1,0 +1,19 @@
+# Merged on top of Harbor's base compose config; `main` is configured by Harbor.
+services:
+  main:
+    depends_on:
+      game:
+        condition: service_healthy
+  game:
+    build:
+      context: ./game
+    environment:
+      GAME_ID: "gridworld-s900016-d2-l6-52f20532"
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=2)"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s

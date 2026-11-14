@@ -1,0 +1,41 @@
+schema_version = "1.1"
+
+[task]
+name = "junction-arena/gridworld-s900018-d1-l6-d31f156e"
+description = "Unknown grid game; discover the rules by acting; finish every level in few actions."
+authors = []
+keywords = ["rule-discovery", "games", "arc-agi-3-style", "mcp"]
+
+[metadata]
+
+[verifier]
+timeout_sec = 120.0
+# Separate container: the agent never shares a filesystem or network namespace with grading.
+environment_mode = "separate"
+
+[agent]
+timeout_sec = 3600.0
+
+[environment]
+build_timeout_sec = 900.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 4096
+gpus = 0
+[[environment.mcp_servers]]
+name = "game"
+transport = "streamable-http"
+url = "http://game:8000/mcp"
+args = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]
+
+# The game sidecar writes its score here after every action; Harbor collects it after the agent phase
+# (agent container already stopped) and places it at the same path in the separate verifier.
+[[artifacts]]
+source = "/evidence/score.json"
+service = "game"
