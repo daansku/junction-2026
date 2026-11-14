@@ -23,6 +23,13 @@ Exact match everywhere except `full_plan` = min(1, optimal/len(plan)) if it wins
 one move short = 0). Tested against empty / missing ANSWER / hedged "A B C D" / spam / >20k-char replies -> 0.
 Perception prompts use your `to_rle` format byte for byte (copied into the engine, same output).
 
+### Update ~19:15: perception-grounding tasks (aimed at SFT v1's failure: ~65% wall bumps, wrong level in notes)
+`blocked_moves` (which of ACTION1-4 would bump right now; set answer or NONE), `locate_player` (row,col of the
+player's top-left pixel in frame B), `level_index` ('current/total' from the HUD pips). Same RLE text as the
+harness; the first two show one earlier transition so "the player" is whatever moved. Exact match; the best
+constant answer scores <= 0.19 (tested). Included in `--task all` (now 7 tasks, ~1 min for 1000 each).
+Suggest weighting these up in `games` / `mix` SFT v2 and in the RL task mix.
+
 ## 2. Discovery rationales for game turns (A1-21)
 `engine.tasks.rationale.Narrator` writes the `notes` / `hypothesis` fields of the h1 reply as discovery:
 objects only by visible colour + shape ("colour-a framed dot"), an effect only after the player saw it,
