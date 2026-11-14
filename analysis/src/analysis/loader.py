@@ -197,6 +197,22 @@ def load_collection_game_ids(repo_root: Path | None = None) -> tuple[dict[str, s
     return by_col, fx_ids
 
 
+FINISHED_OUTCOMES = ("WIN", "GAME_OVER", "BUDGET")
+# Infra endings: never a result, for any player kind (checked before is_finished as well).
+INFRA_REASONS = ("idle_timeout", "server_shutdown", "server_restart", "error", "idle")
+
+
+def is_finished(outcome: str, kind: str, end_reason: str) -> bool:
+    """Only finished attempts count on the boards (human decision, Sat ~20:30): the game was won, a level
+    ran out of moves (GAME_OVER), or a run budget ended it (BUDGET). Abandoned attempts (left the page,
+    switched game, gave up, restarts) and runs still in progress are not results. Baselines (do-nothing,
+    stop-early) end on purpose and are recorded as ABORTED, so an ABORTED baseline counts unless an
+    infrastructure problem ended it."""
+    if outcome in FINISHED_OUTCOMES:
+        return True
+    return kind == "baseline" and outcome == "ABORTED" and end_reason not in INFRA_REASONS
+
+
 def filter_benchmark_runs(
     runs: list[dict[str, Any]],
     repo_root: Path | None = None,
@@ -236,7 +252,7 @@ def filter_benchmark_runs(
             continue
         if end_reason in ("idle_timeout", "server_shutdown", "error"):
             continue
-        if kind == "model" and outcome == "ABORTED":
+        if not is_finished(outcome, kind, end_reason):
             continue
 
         # Backfill harness_version from player dict when recorded by agent_h2 via POST /sessions
