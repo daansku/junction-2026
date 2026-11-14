@@ -55,7 +55,12 @@ function defaultPicks(runs: RunMeta[]): string[] {
       .sort((a, b) => score(b) - score(a))
       .slice(0, n)
   const opt = best((r) => r.player?.kind === 'baseline' && /optimal/.test(r.player?.name ?? r.player?.model_id ?? ''))
-  const human = best((r) => r.player?.kind === 'human' && !/^(anonymous|test)$/i.test(r.player?.name ?? ''))
+  const human = best(
+    (r) =>
+      r.player?.kind === 'human' &&
+      !/^(anonymous|anon|test|test2|practice|debug|visitor)?$/i.test((r.player?.name ?? '').trim()) &&
+      !(r.player as unknown as Record<string, unknown> | undefined)?.purpose,
+  )
   // Best run of each model, then the two best models: two runs of one model compare less.
   const seen = new Set<string>()
   const models = best((r) => r.player?.kind === 'model', Infinity)
@@ -87,7 +92,11 @@ export function ComparePage() {
     queryFn: () => api.listRuns({ game_id: gameId }),
     enabled: !!gameId,
   })
-  const finished = useMemo(() => (runs.data ?? []).filter((r) => r.outcome !== 'IN_PROGRESS'), [runs.data])
+  // finished runs, plus runs still playing that already cleared this level (their attempt on it is complete)
+  const finished = useMemo(
+    () => (runs.data ?? []).filter((r) => r.outcome !== 'IN_PROGRESS' || (r.levels_completed ?? 0) >= level),
+    [runs.data, level],
+  )
   const picked = useMemo(() => {
     const p = params.get('runs')
     return p ? p.split(',').filter(Boolean) : defaultPicks(finished)
@@ -152,6 +161,7 @@ export function ComparePage() {
                 setParams(p, { replace: true })
               }}
             >
+              {gameId && !games.data?.some((g) => g.game_id === gameId) && <option value={gameId}>{gameId}</option>}
               {games.data?.map((g) => (
                 <option key={g.game_id} value={g.game_id}>
                   {g.game_id}
