@@ -85,6 +85,7 @@ def step_level(level: Level, state: State, action: Action) -> tuple[State, list[
 
     if s.pos == level.goal and all(c.win_ok(level, s) for c in H(level, "win_ok")):
         return s, events, LEVEL_WON
-    if any(c.lost(level, s) for c in H(level, "lost")):
-        return s, events, LOST
+    for c in H(level, "lost"):
+        if c.lost(level, s):
+            return s, events, LOST
     return s, events, PLAYING

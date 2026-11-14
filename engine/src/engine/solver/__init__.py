@@ -24,21 +24,22 @@ def solve(level: Level, max_states: int = DEFAULT_MAX_STATES) -> list[Action] | 
     q = deque([s0])
     while q:
         s = q.popleft()
+        sk = s.key()
         for a in actions:
             ns, _, out = step_level(lv, s, a)
             if out == LOST:
                 continue
-            k = ns.key()
             if out == LEVEL_WON:
                 path = [a]
-                cur = s.key()
+                cur = sk
                 while parent[cur] is not None:
                     cur, pa = parent[cur]
                     path.append(pa)
                 return path[::-1]
+            k = ns.key()
             if k in parent:
                 continue
-            parent[k] = (s.key(), a)
+            parent[k] = (sk, a)
             STATS["states"] += 1
             if len(parent) > max_states:
                 return None

@@ -50,3 +50,12 @@ Near-transfer tier for the bench: score all levels, report `probe_levels` separa
 Rebuild: `python -m engine probe --workers 12` (deterministic, ~6 min).
 
 Insight-targeted oversampling (A5-21) plugs in once A5's export lands: tell me the format and I add a sampler.
+
+### Update ~19:40: reward parser fix (matters for RL; pull before the first GRPO run)
+`reward()` used to return 0 for correct answers in common real formats. Fixed:
+- reasoning of any length before the answer (the old 20k-char cap on the whole reply would zero thinking models;
+  now only the answer itself is capped at 6,000 chars)
+- `**ANSWER:** B`, `Answer: B`, answers inside ``` fences
+- trailing prose after the answer ("ANSWER: 12" then "That is my final answer.": the old parser found the last
+  "answer" word and returned 0)
+Exploit tests unchanged and still 0 (empty, hedged "A B C D", spam, padding, over-long answer). Tested per task.

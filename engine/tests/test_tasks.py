@@ -36,8 +36,22 @@ def test_obvious_exploits_score_zero(task):
         assert reward(d, d["answer"]) == 0.0                     # no ANSWER: line
         assert reward(d, "ANSWER:") == 0.0                       # empty answer
         assert reward(d, "ANSWER: A B C D") == 0.0               # hedging
-        assert reward(d, "x" * 30_000 + _gold(d)) == 0.0         # absurdly long reply
+        assert reward(d, "ANSWER: " + "1" * 7_000) == 0.0        # absurdly long answer
         assert reward(d, "ANSWER: " + "ACTION1 " * 500) == 0.0   # spam
+
+
+@pytest.mark.parametrize("task", list(TASKS))
+def test_robust_answer_formats_still_score(task):
+    """Real model replies: long thinking, markdown emphasis, code fences, trailing prose."""
+    for d in (s.to_dict() for s in generate(task, 8, seed=10)):
+        a, nl = d["answer"], chr(10)
+        multi = nl in a
+        assert reward(d, "think " * 5_000 + _gold(d)) == 1.0                       # long reasoning is fine
+        assert reward(d, ("**ANSWER:**" + nl + a) if multi else f"**ANSWER:** {a}") == 1.0
+        assert reward(d, "ANSWER:" + nl + "```" + nl + a + nl + "```") == 1.0
+        assert reward(d, ("Answer:" + nl + a) if multi else f"Answer: {a}") == 1.0
+        assert reward(d, _gold(d) + nl + nl + "That is my final answer.") == 1.0   # trailing prose ignored
+        assert reward(d, "ANSWER: draft" + nl + "..." + nl + _gold(d)) == 1.0       # last marker wins
 
 
 def test_full_plan_efficiency_and_padding():
