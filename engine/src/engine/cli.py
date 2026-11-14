@@ -55,11 +55,21 @@ def cmd_collection(a) -> int:
     else:
         built = [_build_one(j) for j in jobs]
     games = [g for g in built if g is not None]
-    for g in games[:20]:
+    from . import splits
+    for g in games:
+        g["holdout"] = splits.holdout_tag(g)
+    if a.split == "train":
+        n0 = len(games)
+        games = [g for g in games if splits.is_train_ok(g)]
+        print(f"  train hold-out filter: kept {len(games)}/{n0}", file=sys.stderr)
+    if a.limit:
+        games = games[:a.limit]
+    for g in games[:10]:
         print(f"  {g['game_id']}", file=sys.stderr)
     out = {"name": a.name, "engine_version": ENGINE_VERSION,
            "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-           "split": a.split, "games": games}
+           "split": a.split, "frozen": a.frozen, "holdout": splits.holdout_doc(),
+           "games": games}
     path = Path(a.out) if a.out else collection_path(a.name)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
@@ -158,6 +168,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--difficulties", default="1,2,3")
     p.add_argument("--split", default="dev"); p.add_argument("--out")
     p.add_argument("--workers", type=int, default=1)
+    p.add_argument("--limit", type=int, default=0, help="keep at most N games after filtering")
+    p.add_argument("--frozen", action="store_true", help="mark the collection frozen")
     p.set_defaults(fn=cmd_collection)
     p = sub.add_parser("play", help="play in the terminal"); _game_args(p); p.set_defaults(fn=cmd_play)
     p = sub.add_parser("render", help="PNG contact sheet of a game"); _game_args(p)
