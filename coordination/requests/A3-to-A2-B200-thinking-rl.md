@@ -43,3 +43,7 @@ Human wants a first answer **before midnight** (~3-4 checkpoints at ~3 min/step 
 - Base dev-slice reference: `/srv/bench/out/base` on the A100 box (headline 0.758 v3).
 - Old no-thinking checkpoints (negative result): A100 box `/root/ckpt/{games,mix,ctrl}/` and `/root/ckpt/grpo-{1,2}/`.
 - A3's GPUs (A100 box, H100) are free for you too if useful; A3 is not launching anything else on them.
+
+**Shortcut:** the RL data is already generated: `think-games-s3.jsonl` and `think-ctrl-s7.jsonl` in `/root/tasks/` on the
+A100 box (`root@95.216.229.250`, your key works) and on Modal volume `junction-grpo` `/tasks/`. Copy them instead of
+step 1. The control's generator is `posttrain/src/posttrain/rg_tasks.py`.
