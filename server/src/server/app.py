@@ -81,6 +81,16 @@ class ActIn(BaseModel):
     latency_ms: Optional[int] = Field(default=None, ge=0)
 
 
+class GenerateIn(BaseModel):
+    seed: Optional[int] = Field(default=None, ge=0, le=2**31 - 1)
+    difficulty: int = Field(default=2, ge=1, le=4)
+    n_levels: int = Field(default=6, ge=3, le=8)
+
+
+EVAL_SEEDS = range(900_000, 1_000_000)      # held-out eval seeds: never generated for visitors
+RANDOM_SEEDS = (1_000_000, 9_999_999)       # outside eval (900000-999999) and train (100000-899999)
+
+
 class EndIn(BaseModel):
     reason: str = Field(default="", max_length=500)
     outcome: Optional[Literal["WIN", "GAME_OVER", "BUDGET", "ABORTED"]] = None
@@ -129,7 +139,7 @@ def create_app(runs_dir=None) -> FastAPI:
     # ---- catalogue
     @api.get("/collections")
     def collections():
-        return engine_adapter.collections()
+        return engine_adapter.collections() + [engine_adapter.GENERATED]
 
     @api.get("/games")
     def games(collection: str = "dev"):
@@ -143,6 +153,39 @@ def create_app(runs_dir=None) -> FastAPI:
             return engine_adapter.load_game(game_id, collection)
         except KeyError:
             raise HTTPException(404, f"unknown game {game_id}") from None
+
+    gen_hits: dict[str, list[float]] = {}
+
+    @api.post("/games/generate")
+    def generate_game(body: Optional[GenerateIn] = None, request: Request = None,
+                      authorization: str = Header(default="")):
+        import secrets
+        import time as _time
+        body = body or GenerateIn()
+        is_admin = bool(config.ADMIN_TOKEN) and authorization == f"Bearer {config.ADMIN_TOKEN}"
+        if body.seed is not None and body.seed in EVAL_SEEDS and not is_admin:
+            raise HTTPException(403, "seeds 900000-999999 are reserved for evaluation")
+        # per-client rate limit: generation is CPU work, keep spam from starving the server
+        ip = request.client.host if request and request.client else "?"
+        now = _time.monotonic()
+        hits = [t for t in gen_hits.get(ip, []) if now - t < 60]
+        if len(hits) >= 30 and not is_admin:
+            raise HTTPException(429, "too many games generated; wait a minute")
+        gen_hits[ip] = hits + [now]
+        if len(gen_hits) > 10_000:
+            gen_hits.clear()
+        seed = body.seed if body.seed is not None else secrets.randbelow(RANDOM_SEEDS[1] - RANDOM_SEEDS[0] + 1) + RANDOM_SEEDS[0]
+        try:
+            game = engine_adapter.generate(seed, body.difficulty, body.n_levels)
+        except TimeoutError:
+            raise HTTPException(503, "generator busy, try again") from None
+        except Exception as e:  # noqa: BLE001 - generator could not build a valid game for this spec
+            log.warning("generate failed seed=%s d=%s n=%s: %s", seed, body.difficulty, body.n_levels, e)
+            raise HTTPException(422, "could not generate a game for these settings; try another seed") from None
+        meta = engine_adapter.game_meta(game, engine_adapter.GENERATED)
+        return {**meta, "seed": seed, "difficulty": body.difficulty, "n_levels": body.n_levels,
+                "collection": engine_adapter.GENERATED,
+                "thumbnail_url": f"/api/games/{game.game_id}/thumbnail.png"}
 
     @api.get("/games/{game_id}")
     def game_detail(game_id: str, collection: Optional[str] = None):

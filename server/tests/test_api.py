@@ -170,3 +170,30 @@ def test_published_mode(tmp_path, monkeypatch):
         # visitor play never enters the published listing
         assert len(c.get("/api/runs").json()) == 1
         assert c.post("/api/admin/rebuild", headers={"Authorization": "Bearer t"}).status_code == 403
+
+
+def test_generate_and_play(client, monkeypatch):
+    from server import config
+    monkeypatch.setattr(config, "ADMIN_TOKEN", "t")
+    r = client.post("/api/games/generate", json={"difficulty": 1, "n_levels": 3})
+    assert r.status_code == 200, r.text
+    g = r.json()
+    assert 1_000_000 <= g["seed"] <= 9_999_999 and g["levels_total"] == 3 and g["collection"] == "generated"
+    # same seed -> same game
+    assert client.post("/api/games/generate", json={"seed": g["seed"], "difficulty": 1, "n_levels": 3}).json()["game_id"] == g["game_id"]
+    # playable through the normal session routes, to a win on the optimal path
+    desc = client.get(f"/api/games/{g['game_id']}").json()
+    s = start(client, g["game_id"])
+    for lv in desc["levels"]:
+        for a in lv["optimal_path"]:
+            client.post(f"/api/sessions/{s['session_id']}/act", json={"action": a})
+    assert client.get(f"/api/sessions/{s['session_id']}/truth").json()["state"] == "WIN"
+    assert g["game_id"] in [x["game_id"] for x in client.get("/api/games", params={"collection": "generated"}).json()]
+    assert client.get(f"/api/games/{g['game_id']}/thumbnail.png").status_code == 200
+    # eval seeds are guarded, bad params rejected
+    assert client.post("/api/games/generate", json={"seed": 900005}).status_code == 403
+    assert client.post("/api/games/generate", json={"seed": 900005, "n_levels": 3},
+                       headers={"Authorization": "Bearer t"}).status_code == 200
+    assert client.post("/api/games/generate", json={"difficulty": 9}).status_code == 422
+    assert client.post("/api/games/generate", json={"n_levels": 50}).status_code == 422
+    assert client.post("/api/games/generate", json={"seed": -1}).status_code == 422

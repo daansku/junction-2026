@@ -47,6 +47,41 @@ paths:
               schema:
                 type: array
                 items: {$ref: "#/components/schemas/GameMeta"}
+  /games/generate:
+    post:
+      summary: Generate a new verified game on demand (procedural factory). CPU only, allowed in published mode.
+      description: |
+        No seed -> random seed in 1000000-9999999 (outside train 100000-899999 and eval 900000-999999).
+        Seeds 900000-999999 need the admin bearer token (eval leak guard). Same seed + settings -> same game_id.
+        The returned game_id works with every other route (GET /games/{id}, POST /sessions, thumbnail).
+        Recently generated games are listed by GET /games?collection=generated.
+        Rate limit 30 per minute per client (429); 503 when the generator is saturated.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seed: {type: integer, minimum: 0, nullable: true}
+                difficulty: {type: integer, minimum: 1, maximum: 4, default: 2}
+                n_levels: {type: integer, minimum: 3, maximum: 8, default: 6}
+      responses:
+        "200":
+          description: "GameMeta plus seed, difficulty, n_levels; collection = generated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: "#/components/schemas/GameMeta"}
+                  - type: object
+                    properties:
+                      seed: {type: integer}
+                      n_levels: {type: integer}
+        "403": {description: eval seed without admin token}
+        "422": {description: invalid settings, or no valid game for this seed}
+        "429": {description: rate limited}
+        "503": {description: generator busy}
   /games/{game_id}:
     get:
       summary: Full describe() output. Contains the truth; UI only.

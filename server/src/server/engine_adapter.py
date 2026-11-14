@@ -7,8 +7,11 @@ Game lookup order for (collection, game_id):
 """
 from __future__ import annotations
 
+import copy
 import json
 import logging
+import threading
+from collections import OrderedDict
 from functools import lru_cache
 from typing import Any, Optional
 
@@ -55,6 +58,8 @@ def collections() -> list[str]:
 
 
 def list_games(collection: str = "dev") -> list[dict[str, Any]]:
+    if collection == GENERATED:
+        return generated_games()
     eng = _real()
     path = _collection_path(collection)
     if eng is not None and path is not None:
@@ -87,8 +92,59 @@ def _meta_from_describe(d: dict, collection: str) -> dict:
     }
 
 
+# ---------------------------------------------------------------- on-demand generation
+GENERATED = "generated"           # pseudo-collection name for games made via POST /games/generate
+_GEN_CACHE_MAX = 500
+_gen_cache: "OrderedDict[str, Any]" = OrderedDict()
+_gen_lock = threading.Lock()
+_gen_slots = threading.BoundedSemaphore(2)   # at most 2 generations at once (CPU-bound, ~0.5-2 s each)
+
+
+def _fresh_copy(game):
+    return game.clone() if hasattr(game, "clone") else copy.deepcopy(game)
+
+
+def generate(seed: int, difficulty: int, n_levels: int):
+    """Make (or fetch from cache) a verified game. Raises TimeoutError if the generator is saturated."""
+    if not _gen_slots.acquire(timeout=30):
+        raise TimeoutError("generator busy")
+    try:
+        eng = _real()
+        if eng is not None:
+            game = eng.make_game(eng.GameSpec(seed=seed, difficulty=difficulty, n_levels=n_levels))
+        else:
+            game = fake_engine.make_game(fake_engine.GameSpec(seed=seed, difficulty=difficulty, n_levels=n_levels))
+    finally:
+        _gen_slots.release()
+    with _gen_lock:
+        _gen_cache[game.game_id] = game
+        _gen_cache.move_to_end(game.game_id)
+        while len(_gen_cache) > _GEN_CACHE_MAX:
+            _gen_cache.popitem(last=False)
+    return _fresh_copy(game)
+
+
+def generated_games() -> list[dict[str, Any]]:
+    """Metadata of recently generated games, newest first."""
+    with _gen_lock:
+        games = list(_gen_cache.values())[::-1]
+    return [game_meta(g, GENERATED) for g in games]
+
+
+def game_meta(game, collection: str) -> dict[str, Any]:
+    if hasattr(game, "meta"):
+        return _normalize_meta(game.meta(), collection)
+    return _meta_from_describe(game.describe(), collection)
+
+
 def load_game(game_id: str, collection: Optional[str] = None):
     """Return a fresh Game at its initial state. Raises KeyError if unknown."""
+    with _gen_lock:
+        cached = _gen_cache.get(game_id)
+    if cached is not None:
+        return _fresh_copy(cached)
+    if collection == GENERATED:
+        collection = None
     eng = _real()
     if eng is not None:
         for c in ([collection] if collection else collections()):
