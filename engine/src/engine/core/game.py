@@ -159,6 +159,8 @@ class Game:
                 "w": lv.w, "h": lv.h, "layout": lv.data.get("layout"),
                 "move_budget": lv.move_budget, "optimal_moves": lv.optimal_moves,
                 "optimal_path": list(lv.optimal_path),
+                "start": list(lv.start), "goal": list(lv.goal),
+                **_trace_path(lv),
             } for i, lv in enumerate(self.levels)],
         }
 
@@ -191,6 +193,24 @@ class Game:
     def state_hash(self) -> str:
         body = f"{self.game_id}|{self.idx}|{self.status}|{self.state.canonical()}"
         return hashlib.sha1(body.encode()).hexdigest()
+
+
+def _trace_path(lv: Level) -> dict[str, Any]:
+    """Player cell after each optimal action (slides/teleports resolved) plus the same in
+    frame pixels: [x, y, cell_size] of the cell's top-left, honouring map rotation."""
+    from ..render.canvas import Canvas
+    s = initial_state(lv)
+    cells, pixels = [], []
+    cv = Canvas({}, 0)
+    for a in lv.optimal_path:
+        s, _, _ = step_level(lv, s, parse_action(a))
+        cells.append(list(s.pos))
+        cv.set_grid(lv.w, lv.h, rot=int(s.c.get("rotation", 0)), stable="rotation" in lv.rules)
+        x, y = cv._xf(s.pos[0], s.pos[1], lv.w, lv.h)
+        pixels.append([cv.ox + x * cv.cs, cv.oy + y * cv.cs, cv.cs])
+    cv.set_grid(lv.w, lv.h, stable="rotation" in lv.rules)
+    return {"optimal_positions": cells, "optimal_pixels": pixels,
+            "start_pixel": [cv.ox + lv.start[0] * cv.cs, cv.oy + lv.start[1] * cv.cs, cv.cs]}
 
 
 # ---- constructors ---------------------------------------------------------------
