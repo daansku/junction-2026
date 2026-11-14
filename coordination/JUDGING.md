@@ -84,3 +84,11 @@ The reference run scores 1.000 on the same task. The gap shows on the judges' ow
 
 On Windows, `harbor run` exits 1 after writing results (`OPENSSL_Uplink: no OPENSSL_Applink`, a teardown crash); results and `n_errors: 0` are unaffected. Regenerate with `python -m arena harbor-export --collection eval-v1 --out harbor/eval-v1` (on Windows export to a short path such as `C:/hb` first: the repo path can exceed 260 characters).
 
+**`eval-v2` (A3, 14:00, same machine).** Judges' package at `harbor/eval-v2/` (30 tasks x 8 levels, difficulty 4, 3 unseen rules per game; `harbor lint` clean, no local-only parts). Game 1 (`gridworld-s910000-d4-l8-f71ee29e`):
+
+| Run | Reward | Levels | Actions | Errors |
+|---|---|---|---|---|
+| reference (oracle) | **1.000** | 8/8 | 187 | 0 |
+| do-nothing | **0.000** | 0/8 | 0 | 0 |
+| stop-early (`ORACLE_STOP_AFTER_LEVELS=1`) | **0.125** | 1/8 | 31 | 0 |
+
