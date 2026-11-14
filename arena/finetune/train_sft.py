@@ -36,8 +36,12 @@ def load_examples(path: str, limit: int | None = None) -> list[list[dict]]:
 
 def encode(tok, messages: list[dict], max_len: int):
     """input_ids + labels with -100 everywhere except the assistant reply."""
-    prompt_ids = tok.apply_chat_template(messages[:-1], add_generation_prompt=True, tokenize=True)
-    full_ids = tok.apply_chat_template(messages, tokenize=True)
+    def ids(msgs, gen):  # render then tokenize: newer transformers return a BatchEncoding from tokenize=True
+        text = tok.apply_chat_template(msgs, add_generation_prompt=gen, tokenize=False)
+        return list(tok(text, add_special_tokens=False)["input_ids"])
+
+    prompt_ids = ids(messages[:-1], True)
+    full_ids = ids(messages, False)
     if full_ids[: len(prompt_ids)] != prompt_ids:  # template quirk: fall back to suffix match
         reply_ids = tok(messages[-1]["content"], add_special_tokens=False)["input_ids"]
         full_ids = prompt_ids + reply_ids + [tok.eos_token_id]
