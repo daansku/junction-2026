@@ -40,14 +40,34 @@ Each run stops at $1 (`max_cost_usd`), so the worst case is $16, under the $20 c
 | 03:2x | Harbor in Docker: oracle 1.0, do-nothing 0, stop-early 1/6 (JUDGING.md) | done |
 | 03:31–03:48 | Harbor + OpenCode + Nemotron on 1 dev game: reward 0.113, 2/6 levels (JUDGING.md) | done |
 | 03:45–03:53 | Smoke, 1 game per model on the local test server: all 5 models play through the harness | done |
-| 03:55 | **overnight-dev** → `localhost:8100`: 56 runs (32 model + 24 baseline) | running |
-| after sweep | Harbor OpenCode + Nemotron, 3 attempts on 1 dev game (rubric: 3 agent runs on the judges' harness): `harbor run ... -k 3`, exact command in JUDGING.md | todo |
+| 03:55–08:01 | **overnight-dev** → `localhost:8100`: 56 runs (32 model + 24 baseline) | done (Results below) |
+| after sweep | Harbor OpenCode + Nemotron, 3 attempts on 1 dev game (rubric: 3 agent runs on the judges' harness): `harbor run ... -k 3`, exact command in JUDGING.md | running from 08:02 (30-min cap) |
 | 09:00 | **Morning copy** to the shared server (below), then A5 rebuilds derived data | todo, humans + A2 |
 
 Rerun after a crash: the same command resumes by `run_key`.
 ```bash
 .venv/bin/python -m arena run arena/sweeps/overnight-dev.yaml --api http://localhost:8100
 ```
+
+## Results (sweep finished 08:01)
+Packed for the morning copy: `~/overnight-runs.tgz` on A4's machine (61 run folders = 56 sweep runs + 5 abandoned ones from the first start, 1.6 MB).
+Summary file: `~/overnight-dev-results.jsonl` (one line per sweep run).
+
+| Player | Runs | Levels solved | Invalid replies / turns | Cost | Wall per run |
+|---|---|---|---|---|---|
+| baseline: optimal | 4 | 24/24 (100%) | | | |
+| `verda-kimi-k3-1-pro` | 8 | **25/48 (52%)**, best run 5/6 | 3 / 1174 | Verda credits | 81 min |
+| `nemotron-3-5-super-vl` | 8 | **6/48 (12%)** | 131 / 1331 (10%) | Verda credits | 44 min |
+| `featherless-open` (DeepSeek V3.2) | 8 | 0/48 | 3 / 1203 | $0.55 | 38 min |
+| `featherless-gpt-oss-120b` | 8 | 0/48 | 3 / 1203 | $1.54 | 24 min |
+| baseline: random | 8 | 0/48 | | | |
+| baseline: stop_early | 8 | 0/48 | | | |
+| baseline: noop | 4 | 0/24 | | | |
+
+- No model finished a game: all 32 model runs hit the 150-action cap. Optimal needs about 108 actions per game.
+- Total spend: **$2.09** (Featherless only).
+- The two Featherless models are text-only (RLE input) and solved nothing; the two vision models solved levels.
+  This is `dev` with a 150-action cap, so it is a first signal for the gap, not a leaderboard result.
 
 ## Morning copy (A2 + a human, after A2 restarts the shared server on main)
 1. On A4's machine, pack the overnight runs (each run is a folder `runs/<run_id>/` with `meta.json` + `steps.jsonl`):
@@ -70,6 +90,8 @@ Alternative if the copy is awkward: A5 runs `python -m analysis sync` against th
 - Anthropic and Gemini models: no Anthropic key; `gemini-flash` has no `api_model` yet (A3: pick from the live list, e.g. `models/gemini-flash-latest`, with its price from the docs).
 
 ## Log
+- 08:02 Harbor OpenCode + Nemotron, 3 attempts in parallel, 30-min agent cap, started.
+- 08:01 Sweep finished, all 56 runs. Packed `~/overnight-runs.tgz`. Results above.
 - 04:13 Check: 10 runs active (Kimi 3, Nemotron 3, DeepSeek 2, gpt-oss 2), all stepped within the last 30 s, 0 invalid/errored steps, runner log empty. 24/24 baselines done (oracle 4 WIN). Pace after 15 min: gpt-oss ~9 s/action, DeepSeek and Nemotron ~16–30 s, Kimi ~27 s. Kimi is the bottleneck: 8 runs × ~68 min / 3 slots, so expected finish **~07:30**.
 - 04:00 Sweep restarted with pool 40: with pool 10, the Kimi/Nemotron tasks waiting on their per-model limit held every slot, so Featherless and baselines never started. 3 Kimi + 2 Nemotron runs from the first start are left `IN_PROGRESS`/abandoned on :8100: ignore them.
 - 03:55 Sweep started.
