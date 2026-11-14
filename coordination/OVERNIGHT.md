@@ -41,7 +41,7 @@ Each run stops at $1 (`max_cost_usd`), so the worst case is $16, under the $20 c
 | 03:31–03:48 | Harbor + OpenCode + Nemotron on 1 dev game: reward 0.113, 2/6 levels (JUDGING.md) | done |
 | 03:45–03:53 | Smoke, 1 game per model on the local test server: all 5 models play through the harness | done |
 | 03:55–08:01 | **overnight-dev** → `localhost:8100`: 56 runs (32 model + 24 baseline) | done (Results below) |
-| after sweep | Harbor OpenCode + Nemotron, 3 attempts on 1 dev game (rubric: 3 agent runs on the judges' harness): `harbor run ... -k 3`, exact command in JUDGING.md | running from 08:02 (30-min cap) |
+| after sweep | Harbor OpenCode + Nemotron, 3 attempts on 1 dev game (rubric: 3 agent runs on the judges' harness): `harbor run ... -k 3`, exact command in JUDGING.md | done 09:12: 0.020 / 0.094 / 0.087, mean 0.067 (JUDGING.md) |
 | 09:00 | **Morning copy** to the shared server (below), then A5 rebuilds derived data | todo, humans + A2 |
 
 Rerun after a crash: the same command resumes by `run_key`.
@@ -90,6 +90,7 @@ Alternative if the copy is awkward: A5 runs `python -m analysis sync` against th
 - Anthropic and Gemini models: no Anthropic key; `gemini-flash` has no `api_model` yet (A3: pick from the live list, e.g. `models/gemini-flash-latest`, with its price from the docs).
 
 ## Log
+- 09:12 Harbor OpenCode + Nemotron rubric set done: 3 scored attempts, mean reward 0.067, each solved 1/6 levels.
 - 08:02 Harbor OpenCode + Nemotron, 3 attempts in parallel, 30-min agent cap, started.
 - 08:01 Sweep finished, all 56 runs. Packed `~/overnight-runs.tgz`. Results above.
 - 04:13 Check: 10 runs active (Kimi 3, Nemotron 3, DeepSeek 2, gpt-oss 2), all stepped within the last 30 s, 0 invalid/errored steps, runner log empty. 24/24 baselines done (oracle 4 WIN). Pace after 15 min: gpt-oss ~9 s/action, DeepSeek and Nemotron ~16–30 s, Kimi ~27 s. Kimi is the bottleneck: 8 runs × ~68 min / 3 slots, so expected finish **~07:30**.

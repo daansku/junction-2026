@@ -65,9 +65,9 @@ harbor run -p <task> -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
 | OpenCode + Nemotron, attempt 1 | 94 | 2 | 2/6 | **0.113** | hit the 15-min test cap (AgentTimeoutError); level 1 at 2× optimal, level 2 at 5.7× |
 | OpenCode + Nemotron, k=3 run (08:02), attempt A | 155 | 3 | 1/6 | **0.020** | 30-min cap (`--agent-timeout-multiplier 0.5`), AgentTimeoutError |
 | OpenCode + Nemotron, k=3 run (08:02), attempt B | 135 | 2 | 1/6 | **0.094** | 30-min cap, AgentTimeoutError |
-| OpenCode + Nemotron, k=3 run (08:02), attempt C | — | — | — | — | AgentSetupTimeoutError (OpenCode install > 360 s with 3 setups in parallel); rerun 08:38 with `-k 1 --agent-setup-timeout-multiplier 2` |
+| OpenCode + Nemotron, k=3 run, attempt C (rerun 08:38) | 227 | 3 | 1/6 | **0.087** | first try hit AgentSetupTimeoutError (OpenCode install > 360 s with 3 setups in parallel); rerun with `-k 1 --agent-setup-timeout-multiplier 2`, 30-min cap, AgentTimeoutError |
 
 `-k 3 -n 3` = 3 attempts in parallel. With `-n 3`, give setup more time (`--agent-setup-timeout-multiplier 2`), or use `-n 1`.
-Mean reward over the 3 scored attempts so far (0.113, 0.020, 0.094): **0.076**, against the reference 1.000.
+Rubric set (3 agent runs, 30-min cap): 0.020, 0.094, 0.087, **mean 0.067**. With the earlier 15-min attempt (0.113), 4 runs average 0.079. Reference: 1.000, do-nothing: 0.000.
 
 The reference run scores 1.000 on the same task. The gap shows on the judges' own harness.
