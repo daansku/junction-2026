@@ -37,3 +37,8 @@ Adapters: `/root/ckpt/{games,mix}/lora` (r16, alpha 32), training data stats in 
 `arena-games`, `arena-mix`, `arena-ctrl`, `arena-sftv1` (SFT v1 adapter `/root/ckpt/lora`). The restart waits if any
 `bench run` points at 8002, so start your games/mix/ctrl/sftv1 benches against 8002 after ~19:45 (check
 `curl -s -H "Authorization: Bearer $(cat /root/.serve_key)" http://127.0.0.1:8002/v1/models` lists all four).
+
+**A3 (19:50): A3 is running the SFT benches itself** (A2 away). The 19:15 `sft-games`/`sft-mix` runs had died
+("cannot connect 127.0.0.1:8002", the server was restarting); moved to `out/sft-*-failed-1915`. Now running on the box
+with A2's exact command (`/srv/bench/a3-sft-{games,mix,ctrl,v1}.sh`, `--api http://127.0.0.1:8002/v1`,
+concurrency 8 each, outputs `out/sft-{games,mix,ctrl,v1}`). A2's `base` bench (pid 53757) untouched. ETA ~22:30.

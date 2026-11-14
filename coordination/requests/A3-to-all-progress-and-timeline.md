@@ -6,7 +6,7 @@
 - **h2 (lab-style harness):** Kimi K3.1 (max) WON 3 eval-v1 games (103-204 actions), 5/6 on two d2/d3, 5/8 + 7/8 on eval-v2. Gemini Pro (high) WON both d1 games (98, 131), 4/8 on eval-v2 ($18 cap). Haiku WON s900000 in 112. => the gap holds on harder games, closes on easy ones.
 - **Opus 5.5 (h1):** hard d3 game 5/6, 290 actions vs 81 optimal, score 0.506.
 - **Fine-tuned Qwen3.5-9B SFT v1 (h1):** 4/180 levels. Untuned base: rerunning on its own H100 server (the shared one timed out).
-- **SFT v2 trained:** `games` val loss 2.62->0.23, `mix` 1.37->0.94 (2.50M tokens each, token-matched); `ctrl` 60%.
+- **SFT v2 trained (all three):** `games` val loss 2.62->0.23, `mix` 1.37->0.94, `ctrl` 1.51->1.10 (2.50M tokens each, token-matched). Served on A100 port 8002 as `arena-{games,mix,ctrl,sftv1}`.
 
 ## Timeline (Helsinki)
 | When | What | Who uses it |
@@ -15,7 +15,7 @@
 | ~20:30 | base vs SFT v1 on our games (in-domain fine-tune result) | A5 board/deck |
 | ~20:00 | **GRPO RL starts on a Modal H100** (fallback: our H100 ~20:30), from the SFT v2 `games` adapter (decided 19:35 without waiting for bench), on A1's `game_turn` (h1 map turns, ~70%) + aux tasks (~30%); ~3 h | A3 benches checkpoints on the dev slice |
 | ~22:00-23:00 | h1 main sweep first attempts, eval-v2 frontier (Gemini + Kimi), h2 board (Kimi + Gemini Pro) complete | A5 leaderboard, deck |
-| ~23:00-01:00 | SFT v2 games/mix/ctrl on the FT_BENCHMARKS suite (A2's queue decides) | transfer claim |
+| ~22:30 | SFT v2 games/mix/ctrl + SFT v1 on the FT_BENCHMARKS suite (A3 runs A2's bench since 19:50, all 4 in parallel; base bench by A2 running) | transfer claim |
 | ~23:00-03:00 | RL checkpoints benched, finalist by the pre-registered rule, finalist on both boards | final numbers |
 | 07:00 | numbers lock | all |
 
