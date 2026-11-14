@@ -71,27 +71,45 @@ def train(a):
     from peft import LoraConfig, get_peft_model
     from transformers import AutoTokenizer, get_cosine_schedule_with_warmup
 
+    import os
+    world = int(os.environ.get("WORLD_SIZE", "1"))  # >1 when launched with torchrun: one process per GPU (DDP)
+    rank = int(os.environ.get("RANK", "0"))
+    local = int(os.environ.get("LOCAL_RANK", "0"))
+    if world > 1:
+        import torch.distributed as dist
+        dist.init_process_group("nccl")
+        torch.cuda.set_device(local)
+    main = rank == 0
+    log = print if main else (lambda *_, **__: None)
+
     torch.manual_seed(a.seed)
-    random.seed(a.seed)
+    random.seed(a.seed)  # same seed everywhere: every rank shuffles identically, then takes its shard
     tok = AutoTokenizer.from_pretrained(a.base)
     if tok.pad_token_id is None:
         tok.pad_token = tok.eos_token
-    model = load_model(a.base, torch_dtype=torch.bfloat16, device_map="auto")
-    model.gradient_checkpointing_enable()
+    model = load_model(a.base, torch_dtype=torch.bfloat16, device_map={"": local} if world > 1 else "auto")
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     model.enable_input_require_grads()
     model = get_peft_model(model, LoraConfig(r=a.lora_r, lora_alpha=2 * a.lora_r, lora_dropout=0.05,
                                              target_modules=lora_targets(model), task_type="CAUSAL_LM"))
-    model.print_trainable_parameters()
+    if main:
+        model.print_trainable_parameters()
+    core = model  # unwrapped: used for eval and saving
+    if world > 1:
+        from torch.nn.parallel import DistributedDataParallel as DDP
+        model = DDP(model, device_ids=[local], broadcast_buffers=False)
 
     data = [encode(tok, m, a.max_len) for m in load_examples(a.data, a.limit)]
     random.shuffle(data)
     n_val = max(1, len(data) // 50)
     val, data = data[:n_val], data[n_val:]
-    steps_per_epoch = math.ceil(len(data) / (a.batch * a.grad_accum))
+    per_step = a.batch * a.grad_accum * world
+    data = data[: len(data) // per_step * per_step]  # equal micro-batch count on every rank (DDP would hang)
+    steps_per_epoch = len(data) // per_step
     total = steps_per_epoch * a.epochs
-    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=a.lr, weight_decay=0.0)
+    opt = torch.optim.AdamW([p for p in core.parameters() if p.requires_grad], lr=a.lr, weight_decay=0.0)
     sched = get_cosine_schedule_with_warmup(opt, max(1, total // 20), total)
-    dev = next(model.parameters()).device
+    dev = torch.device("cuda", local) if world > 1 else next(core.parameters()).device
 
     def batches(rows, bs):
         for i in range(0, len(rows), bs):
@@ -107,33 +125,53 @@ def train(a):
             yield ids.to(dev), lab.to(dev), att.to(dev)
 
     @torch.no_grad()
-    def evaluate():
-        model.eval()
+    def evaluate():  # rank 0 only, on the unwrapped model (no collectives)
+        core.eval()
         tot, n = 0.0, 0
         for ids, lab, att in batches(val, a.batch):
-            tot += model(input_ids=ids, attention_mask=att, labels=lab).loss.item()
+            tot += core(input_ids=ids, attention_mask=att, labels=lab).loss.item()
             n += 1
-        model.train()
+        core.train()
         return tot / max(1, n)
 
-    print(f"{len(data)} train / {len(val)} val examples, {total} optimizer steps; val loss {evaluate():.4f}")
+    def barrier():
+        if world > 1:
+            torch.distributed.barrier()
+
+    if main:
+        log(f"{len(data)} train / {len(val)} val examples on {world} GPU(s), {total} optimizer steps "
+            f"(effective batch {per_step}); val loss {evaluate():.4f}")
+    barrier()
     model.train()
     step, t0 = 0, time.time()
+    from contextlib import nullcontext
     for ep in range(a.epochs):
         random.shuffle(data)
-        for i, (ids, lab, att) in enumerate(batches(data, a.batch)):
-            loss = model(input_ids=ids, attention_mask=att, labels=lab).loss / a.grad_accum
-            loss.backward()
-            if (i + 1) % a.grad_accum == 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        shard = data[rank::world]
+        for i, (ids, lab, att) in enumerate(batches(shard, a.batch)):
+            sync = (i + 1) % a.grad_accum == 0
+            ctx = model.no_sync() if (world > 1 and not sync) else nullcontext()
+            with ctx:
+                loss = model(input_ids=ids, attention_mask=att, labels=lab).loss / a.grad_accum
+                loss.backward()
+            if sync:
+                torch.nn.utils.clip_grad_norm_(core.parameters(), 1.0)
                 opt.step(); sched.step(); opt.zero_grad()
                 step += 1
                 if step % 20 == 0:
-                    print(f"ep {ep} step {step}/{total} loss {loss.item() * a.grad_accum:.4f} {time.time() - t0:.0f}s")
-        print(f"epoch {ep}: val loss {evaluate():.4f}")
-        model.save_pretrained(a.out)
-        tok.save_pretrained(a.out)
-    Path(a.out, "train_args.json").write_text(json.dumps(vars(a), indent=1))
+                    log(f"ep {ep} step {step}/{total} loss {loss.item() * a.grad_accum:.4f} {time.time() - t0:.0f}s")
+        barrier()
+        if main:
+            log(f"epoch {ep}: val loss {evaluate():.4f}")
+            core.save_pretrained(a.out)
+            tok.save_pretrained(a.out)
+        barrier()
+    if not main:
+        torch.distributed.destroy_process_group()
+        return
+    Path(a.out, "train_args.json").write_text(json.dumps({**vars(a), "world_size": world}, indent=1))
+    if world > 1:
+        torch.distributed.destroy_process_group()
 
 
 def merge(a):

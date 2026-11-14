@@ -1,5 +1,5 @@
 #!/bin/bash
-# A3-11 on one rented GPU box (Verda instance, Ubuntu + CUDA image, 1x A100 40/80 GB).
+# A3-11 on one rented GPU box (Verda instance, Ubuntu + CUDA image, 1 or 2x A100 40/80 GB, all GPUs used).
 # From the laptop (repo root):
 #   scp -i ~/.ssh/junction_verda arena/finetune/train_sft.py arena/finetune/remote_run.sh \
 #       ~/junction-data/sft/train-v1-h1-4k.jsonl root@<IP>:/root/
@@ -8,20 +8,30 @@
 # Then: VERDA_BASE_URL=http://<IP>:8000/v1 and VERDA_FT_KEY=<SERVE_KEY> in .env; model `verda-ft-qwen3-5-9b`.
 set -euo pipefail
 BASE=${BASE:-Qwen/Qwen3.5-9B}
-DATA=${DATA:-/root/train-v1-h1-4k.jsonl}   # 4k examples ~ 45-60 min on 1x A100
+DATA=${DATA:-/root/train-v1-h1-4k.jsonl}   # 4k examples ~ 45-60 min on 1x A100, ~30 min on 2x
 : "${SERVE_KEY:?set SERVE_KEY (bearer key the vLLM endpoint will require)}"
 cd /root
 nvidia-smi --query-gpu=name,memory.total --format=csv
 MEM=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits | head -1)
-if [ "$MEM" -lt 60000 ]; then BATCH=2; ACC=8; else BATCH=4; ACC=4; fi   # A100 40 GB vs 80 GB; same effective batch 16
+NGPU=$(nvidia-smi -L | wc -l)
+if [ "$MEM" -lt 60000 ]; then BATCH=2; else BATCH=4; fi        # A100 40 GB vs 80 GB
+ACC=$(( 16 / (BATCH * NGPU) )); [ "$ACC" -ge 1 ] || ACC=1        # effective batch 16 regardless of GPU count
+echo "GPUs=$NGPU batch=$BATCH grad_accum=$ACC"
 
 python3 -m venv /root/venv && . /root/venv/bin/activate
 pip install -q --upgrade pip
 pip install -q "torch" "transformers>=4.57" "peft>=0.13" accelerate
 
 echo "== train $(date -u +%H:%M)"
-python train_sft.py --base "$BASE" --data "$DATA" --out /root/ckpt/lora --epochs 1 --lr 2e-4 \
-    --batch $BATCH --grad-accum $ACC --max-len 2048 --lora-r 16
+ARGS=(--base "$BASE" --data "$DATA" --out /root/ckpt/lora --epochs 1 --lr 2e-4 --max-len 2048 --lora-r 16)
+if [ "$NGPU" -gt 1 ]; then
+  # DDP: one process per GPU, each takes 1/NGPU of every batch (~1.8x faster on 2 GPUs)
+  torchrun --standalone --nproc_per_node "$NGPU" train_sft.py "${ARGS[@]}" --batch $BATCH --grad-accum $ACC \
+    || { echo "== multi-GPU failed, retrying on 1 GPU"; CUDA_VISIBLE_DEVICES=0 python train_sft.py "${ARGS[@]}" \
+         --batch $BATCH --grad-accum $(( 16 / BATCH )); }
+else
+  python train_sft.py "${ARGS[@]}" --batch $BATCH --grad-accum $ACC
+fi
 echo "== merge $(date -u +%H:%M)"
 python train_sft.py --merge --base "$BASE" --out /root/ckpt/lora --merged /root/ckpt/merged
 
