@@ -121,3 +121,18 @@ def test_export_layout(tmp_path):
     assert len(one["games"]) == 1
     # shell scripts must have LF line endings to run in Linux containers
     assert b"\r\n" not in (t / "tests/test.sh").read_bytes()
+
+
+@needs_engine
+def test_extra_ca_is_opt_in_only(tmp_path):
+    from arena.harbor.export import export
+    clean = export(str(DEV), tmp_path / "clean", first=1, log=lambda *_: None)[0]
+    for f in ("environment/Dockerfile", "environment/game/Dockerfile"):
+        txt = (clean / f).read_text()
+        assert "extra-ca" not in txt and "__EXTRA_CA__" not in txt
+    assert not (clean / "environment/extra-ca.crt").exists()
+    ca = tmp_path / "ca.crt"
+    ca.write_text("-----BEGIN CERTIFICATE-----\nAA==\n-----END CERTIFICATE-----\n")
+    local = export(str(DEV), tmp_path / "local", first=1, log=lambda *_: None, extra_ca=ca)[0]
+    assert (local / "environment/extra-ca.crt").exists() and (local / "environment/game/extra-ca.crt").exists()
+    assert "update-ca-certificates" in (local / "environment/game/Dockerfile").read_text()

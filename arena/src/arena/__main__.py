@@ -66,11 +66,13 @@ def main(argv=None):
     h.add_argument("--out", required=True)
     h.add_argument("--first", type=int)
     h.add_argument("--agent-timeout", type=int, default=3600)
+    h.add_argument("--extra-ca", help="LOCAL ONLY: PEM root CA to trust inside task containers (antivirus TLS scanning)")
     a = ap.parse_args(argv)
 
     if a.cmd == "harbor-export":
         from .harbor.export import export
-        export(a.collection, Path(a.out), first=a.first, agent_timeout=a.agent_timeout)
+        export(a.collection, Path(a.out), first=a.first, agent_timeout=a.agent_timeout,
+               extra_ca=Path(a.extra_ca) if a.extra_ca else None)
         return
 
     if a.cmd == "dataset":

@@ -137,11 +137,19 @@ EOF
 
 MAIN_DOCKERFILE = """FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y curl python3 ca-certificates && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
+__EXTRA_CA__WORKDIR /app
+"""
+
+# Local-only: trust an extra root CA (e.g. antivirus TLS scanning) inside task containers.
+# Never used for tasks we hand to judges; `--extra-ca` must be passed explicitly.
+EXTRA_CA_MAIN = """COPY extra-ca.crt /usr/local/share/ca-certificates/extra-ca.crt
+RUN update-ca-certificates
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt UV_NATIVE_TLS=1
 """
 
 GAME_DOCKERFILE = """FROM python:3.12-slim
-RUN pip install --no-cache-dir "mcp>=1.6,<2"
+__EXTRA_CA__RUN pip install --no-cache-dir "mcp>=1.6,<2"
 WORKDIR /srv
 COPY engine /srv/engine
 COPY arena /srv/arena
@@ -178,7 +186,8 @@ def _safe_name(game_id: str) -> str:
     return "".join(c if c.isalnum() or c in "-_" else "-" for c in game_id)
 
 
-def export(collection: str, out: Path, first: int | None = None, agent_timeout: int = 3600, log=print) -> list[Path]:
+def export(collection: str, out: Path, first: int | None = None, agent_timeout: int = 3600, log=print,
+           extra_ca: Path | None = None) -> list[Path]:
     from ..engine_adapter import load_engine
     eng, name = load_engine()
     if name != "engine":
@@ -203,10 +212,14 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         (t / "solution").mkdir()
         (t / "task.toml").write_text(_task_toml(_safe_name(gid), agent_timeout))
         (t / "instruction.md").write_text(INSTRUCTION)
-        (t / "environment" / "Dockerfile").write_text(MAIN_DOCKERFILE)
+        ca_block = EXTRA_CA_MAIN if extra_ca else ""
+        (t / "environment" / "Dockerfile").write_text(MAIN_DOCKERFILE.replace("__EXTRA_CA__", ca_block), newline="\n")
         (t / "environment" / "docker-compose.yaml").write_text(COMPOSE.replace("__GAME_ID__", gid))
         gd = t / "environment" / "game"
-        (gd / "Dockerfile").write_text(GAME_DOCKERFILE)
+        (gd / "Dockerfile").write_text(GAME_DOCKERFILE.replace("__EXTRA_CA__", ca_block), newline="\n")
+        if extra_ca:
+            shutil.copy2(extra_ca, t / "environment" / "extra-ca.crt")
+            shutil.copy2(extra_ca, gd / "extra-ca.crt")
         shutil.copytree(engine_src, gd / "engine", ignore=shutil.ignore_patterns("__pycache__", "tests"))
         for f in SIDECAR_FILES:
             dst = gd / "arena" / f
@@ -219,5 +232,6 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         (t / "tests" / "test.sh").write_text(TEST_SH, newline="\n")
         (t / "solution" / "solve.sh").write_text(SOLVE_SH.replace("__PATH__", json.dumps(path)), newline="\n")
         made.append(t)
-    log(f"exported {len(made)} Harbor tasks from {coll_file.name} -> {out}")
+    log(f"exported {len(made)} Harbor tasks from {coll_file.name} -> {out}"
+        + (f" (LOCAL ONLY: extra CA {extra_ca.name} baked in; do not hand these to judges)" if extra_ca else ""))
     return made

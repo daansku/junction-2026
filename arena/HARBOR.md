@@ -46,3 +46,9 @@ levels, 0 for unsolved. Every move and RESET on a level counts. In [0, 1]; only 
   `solve.sh` replayed 119 actions -> reward 1.0, 6/6 levels.
 - **Not yet run:** the Docker build and a full `harbor run` (Docker Desktop was not running on this machine;
   Harbor CLI now installed on this machine).
+
+## Local machines with antivirus TLS scanning
+Norton "Web/Mail Shield" (and similar) re-signs HTTPS with its own root, so downloads inside task containers fail
+(`CERTIFICATE_VERIFY_FAILED`). `--extra-ca <pem>` bakes that root into the task containers for **local runs only**;
+never hand such an export to judges. On ignacio's machine Norton also corrupts chunked downloads even when the
+certificate is trusted (`InvalidChunkLength` from pip), so a full local `harbor run` needs Norton's SSL scanning paused.
