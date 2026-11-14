@@ -247,7 +247,9 @@
   display_name: Qwen3.5 9B fine-tuned on train-v1 (ours)
   provider: verda
   api_model: arena-ft
+  base_url: http://95.216.229.250:8000/v1   # our Verda 2x A100 instance (vLLM), up from 2026-11-14 13:56
   api_key_env: VERDA_FT_KEY
+  max_output_tokens: 1024       # vLLM max_model_len 4096 (prompt ~1.4-2k); trained replies are ~60 tokens
   tier: finetuned
   input_modes: [rle]
   price_in: null                # paid by GPU time (Verda credits)
@@ -255,7 +257,7 @@
   params: "9B + LoRA r16"
   link: https://huggingface.co/Qwen/Qwen3.5-9B
   max_concurrency: 8
-  verified: false
+  verified: true                # 3-action harness check 2026-11-14 14:00
 
 # ---- offline harness test model ----
 - id: mock-random
