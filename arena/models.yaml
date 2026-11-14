@@ -89,17 +89,101 @@
   max_concurrency: 2
   verified: false
 
+# featherless.ai: OpenAI-compatible, https://api.featherless.ai/v1, key FEATHERLESS_API_KEY.
+# Ids, context and prices from the live catalog GET https://api.featherless.ai/v1/models on 2026-11-14
+# (pricing.input / pricing.output, USD per 1M tokens). Featherless plans cap concurrency in units;
+# each model costs `concurrency_cost` units (4 for the big MoEs), so keep max_concurrency low.
+# `featherless-open` keeps its id because sweeps/pilot.yaml and sweeps/main.yaml reference it.
 - id: featherless-open
-  display_name: featherless open model (TBD)
+  display_name: DeepSeek V3.2 (featherless)
   provider: featherless
-  api_model: null
+  api_model: deepseek-ai/DeepSeek-V3.2
   tier: open
   input_modes: [rle]
-  price_in: null
-  price_out: null
-  link: https://featherless.ai/models
-  max_concurrency: 2
-  verified: false
+  price_in: 0.264
+  price_out: 0.41
+  params: "671B MoE"
+  link: https://featherless.ai/models/deepseek-ai/DeepSeek-V3.2
+  max_concurrency: 1            # concurrency_cost 4
+  verified: true
+
+- id: featherless-kimi-k2-6
+  display_name: Kimi K2.6 (featherless)
+  provider: featherless
+  api_model: moonshotai/Kimi-K2.6
+  tier: open
+  input_modes: [rle]
+  price_in: 0.8
+  price_out: 3.4
+  params: null
+  link: https://featherless.ai/models/moonshotai/Kimi-K2.6
+  max_concurrency: 1            # concurrency_cost 4
+  verified: true
+
+- id: featherless-glm-5-3
+  display_name: GLM-5.3 (featherless)
+  provider: featherless
+  api_model: zai-org/GLM-5.3
+  tier: open
+  input_modes: [rle]
+  price_in: 1.4
+  price_out: 4.4
+  params: null
+  link: https://featherless.ai/models/zai-org/GLM-5.3
+  max_concurrency: 1            # concurrency_cost 4
+  verified: true
+
+- id: featherless-qwen3-5-397b
+  display_name: Qwen3.5 397B-A17B (featherless)
+  provider: featherless
+  api_model: Qwen/Qwen3.5-397B-A17B
+  tier: open
+  input_modes: [rle]
+  price_in: 0.55
+  price_out: 3.5
+  params: "397B MoE (17B active)"
+  link: https://featherless.ai/models/Qwen/Qwen3.5-397B-A17B
+  max_concurrency: 1            # concurrency_cost 4
+  verified: true
+
+- id: featherless-gpt-oss-120b
+  display_name: gpt-oss-120b (featherless)
+  provider: featherless
+  api_model: openai/gpt-oss-120b
+  tier: open
+  input_modes: [rle]
+  price_in: 0.15
+  price_out: 0.6
+  params: "120B MoE"
+  link: https://featherless.ai/models/openai/gpt-oss-120b
+  max_concurrency: 2            # concurrency_cost 2
+  verified: true
+
+- id: featherless-qwen3-5-9b
+  display_name: Qwen3.5 9B (featherless)
+  provider: featherless
+  api_model: Qwen/Qwen3.5-9B
+  tier: open
+  input_modes: [rle]
+  price_in: 0.17
+  price_out: 0.25
+  params: "9B"
+  link: https://featherless.ai/models/Qwen/Qwen3.5-9B
+  max_concurrency: 2            # concurrency_cost 1; small-model reference for the fine-tune story
+  verified: true
+
+- id: featherless-qwen3-vl-30b
+  display_name: Qwen3-VL 30B-A3B (featherless)
+  provider: featherless
+  api_model: Qwen/Qwen3-VL-30B-A3B-Instruct
+  tier: open
+  input_modes: [image, rle]
+  price_in: 0.15
+  price_out: 0.5
+  params: "30B MoE (3B active)"
+  link: https://featherless.ai/models/Qwen/Qwen3-VL-30B-A3B-Instruct
+  max_concurrency: 2            # concurrency_cost 2
+  verified: false               # image input over featherless not tested yet; flip after one real run
 
 - id: verda-small
   display_name: Small open model on Verda (base for fine-tune)
