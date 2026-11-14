@@ -36,7 +36,9 @@ from . import stats
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs"
 
 # primary metric and preferred filter per lm-eval task family (first match wins)
-METRIC_PREF = ["prompt_level_strict_acc", "exact_match", "math_verify", "acc_norm", "acc"]
+# math_verify before exact_match: minerva_math reports both, and exact_match needs Minerva's "Final Answer: The final
+# answer is ..." phrasing (0.0 for a chat model), while math_verify checks the answer itself (lm-eval's recommended metric).
+METRIC_PREF = ["prompt_level_strict_acc", "math_verify", "exact_match", "acc_norm", "acc"]
 FILTER_PREF = ["flexible-extract", "custom-extract", "get_response", "none", "strict-match"]
 MC_TASKS = {"medqa_4options"}          # loglikelihood multiple choice (checked in lm-eval 0.4.13)
 
@@ -293,6 +295,33 @@ def summarize(items: list[dict], benches: list[dict], bcfg: dict, meta: dict) ->
 def _save(out: Path, items_so_far: list[dict], tag: str) -> None:
     (out / "items.jsonl").write_text("".join(json.dumps(i) + "\n" for i in items_so_far), encoding="utf-8")
     print(f"saved {len(items_so_far)} items ({tag})", flush=True)
+
+
+def main_rescore(a) -> int:
+    """Re-parse the raw lm-eval samples of a finished run (no generation) and rewrite items.jsonl + summary.json.
+    Used after a parsing fix; reasoning-gym items are kept as they are."""
+    bcfg, g = load_configs(a.benchmarks, a.generation)
+    out = Path(a.out)
+    old = json.loads((out / "summary.json").read_text(encoding="utf-8")) if (out / "summary.json").exists() else {}
+    dev = bool(old.get("dev_slice"))
+    benches = select(bcfg, None, dev)
+    kept = [json.loads(l) for l in (out / "items.jsonl").open(encoding="utf-8")] if (out / "items.jsonl").exists() else []
+    lm_ids = {b["id"] for b in benches if b["kind"] == "lm_eval"}
+    items = [i for i in kept if i["bench"] not in lm_ids]
+    for b in benches:
+        if b["kind"] == "lm_eval":
+            try:
+                items += parse_lm_eval_samples(out / "lm_eval", b)
+            except RuntimeError as e:
+                print(f"skip {b['id']}: {e}")
+    _save(out, items, "rescored")
+    meta = {k: v for k, v in old.items() if k not in ("benchmarks", "tiers", "subsets")}
+    meta["rescored_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+    summary = summarize(items, benches, bcfg, meta)
+    (out / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
+    for bid, r in summary["benchmarks"].items():
+        print(f"{bid:22s} n={r['n']:5d} mean={r['mean']}")
+    return 0
 
 
 def main_run(a) -> int:

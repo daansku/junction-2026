@@ -95,10 +95,17 @@ def main(argv=None) -> int:
     c.add_argument("--cand", required=True)
     c.add_argument("--out")
     sub.add_parser("list", help="print the benchmark list")
+    rs = sub.add_parser("rescore", help="re-parse a finished run's raw lm-eval samples (no generation)")
+    rs.add_argument("--out", required=True)
+    rs.add_argument("--benchmarks")
+    rs.add_argument("--generation")
     a = p.parse_args(argv)
     if a.cmd == "run":
         from .run import main_run
         return main_run(a)
+    if a.cmd == "rescore":
+        from .run import main_rescore
+        return main_rescore(a)
     return {"compare": cmd_compare, "list": cmd_list}[a.cmd](a)
 
 
