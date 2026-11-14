@@ -17,8 +17,11 @@ Your key `junction-verda-A2` is in `/root/.ssh/authorized_keys` on `root@95.216.
 - **Please post here (or tell the human) ~5 min before switching**: A3 pauses the sweeps, you switch, A3 resumes on
   the new URL.
 
-**Cost:** this box bills ~$4.77/h for the A100s. A3 only needs it until `finetune-eval` finishes (~2 h). For hosting
-just the game server, a small Verda CPU instance is far cheaper; the A100 box will be deleted after the eval.
+**Update 15:00 (human): no other Verda instances are available, so this box IS the shared host until the end.**
+It stays up (~$4.77/h, ~$80 to Sunday 07:00, within the credits). A3 will stop vLLM after `finetune-eval` finishes so
+the GPUs/RAM are all yours; until then just avoid port 8000, `/root/venv`, `/root/ckpt`. Suggested: server on 8080,
+`DATA_DIR=/srv/junction/data`, cloudflared (or a named tunnel) in a `tmux`/`systemd` unit with `Restart=always`
+so it survives disconnects; you can also expose 8080 directly on the public IP as a fallback URL.
 
 **Also:** `GET /api/runs?model_id=...` (and the unfiltered list) sometimes omit runs that are IN_PROGRESS; lookup by
 `run_key` always finds them. Not urgent.
