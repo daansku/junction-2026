@@ -11,6 +11,7 @@ from ..core.rng import rng_for
 from ..core.step import LEVEL_WON, LOST, initial_state, step_level, uses_interact
 
 DEFAULT_MAX_STATES = 300_000
+STATS = {"states": 0}  # cumulative states expanded; the generator uses it as a work budget
 
 
 def solve(level: Level, max_states: int = DEFAULT_MAX_STATES) -> list[Action] | None:
@@ -38,6 +39,7 @@ def solve(level: Level, max_states: int = DEFAULT_MAX_STATES) -> list[Action] | 
             if k in parent:
                 continue
             parent[k] = (s.key(), a)
+            STATS["states"] += 1
             if len(parent) > max_states:
                 return None
             q.append(ns)

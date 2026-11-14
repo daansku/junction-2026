@@ -25,6 +25,7 @@ SLACK = {1: 3.0, 2: 2.5, 3: 2.0, 4: 1.5}
 INTRO_ALLOWANCE = 8
 MAX_ATTEMPTS = 150
 ATTEMPTS_PER_CANDIDATE = 60  # when fallback rule sets exist, give up on one set sooner
+STATE_BUDGET = 150_000       # solver states per rule set before giving up (deterministic)
 RANDOM_WALK_MAX = 0.02
 SOLVER_CAP = 50_000
 
@@ -99,7 +100,11 @@ def rule_matters(lv: Level, rule: str, optimal: int) -> bool:
 def generate_level(seed: int, family: str, difficulty: int, level_idx: int,
                    rules: tuple[str, ...] = (), new_rule: str | None = None,
                    max_attempts: int = MAX_ATTEMPTS) -> Level:
+    from ..solver import STATS
+    start_states = STATS["states"]
     for attempt in range(max_attempts):
+        if STATS["states"] - start_states > STATE_BUDGET:
+            break
         lv = try_level(seed, family, difficulty, level_idx, tuple(rules), new_rule, attempt)
         if lv is not None:
             return lv

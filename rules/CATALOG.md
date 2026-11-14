@@ -33,7 +33,7 @@ Difficulty 1 games use tier 1 only; difficulty 2-3 draw from tiers 1-2.
 
 Every generated level is checked: BFS-solvable, **every active rule matters** (a player who ignores it has a longer/impossible optimum, or their optimal plan fails on the real level), random walk wins < 2%.
 
-## Curriculum (engine 0.4.0)
+## Curriculum (engine 0.5.0)
 Level 1 = movement + goal. Levels 2..n-1 each introduce one new rule (teaching layout: smaller grid, +8 move allowance), alone or with 1-2 seen rules. For games with >= 5 levels the last level is an "exam": 2-3 seen rules, no new rule. No two levels share a rule set. Order and combos come from the seed.
 
 ## Frame layout
