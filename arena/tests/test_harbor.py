@@ -14,10 +14,10 @@ ROOT = Path(__file__).resolve().parents[2]
 DEV = ROOT / "data" / "collections" / "dev.json"
 
 
-def episode():
+def episode(evidence=None):
     gid = eng.list_games(DEV)[0]["game_id"]
     g = eng.load_game(DEV, gid)
-    return Episode(g, [lv["optimal_moves"] for lv in g.describe()["levels"]]), g.describe()
+    return Episode(g, [lv["optimal_moves"] for lv in g.describe()["levels"]], evidence), g.describe()
 
 
 def call(mcp, tool, args=None):
@@ -73,7 +73,7 @@ def test_invalid_actions_and_after_win_do_not_count():
 @needs_engine
 def test_mcp_surface_is_only_observe_and_act():
     ep, _ = episode()
-    mcp = build(ep, token="t0k")
+    mcp = build(ep)
     names = {t.name for t in asyncio.run(mcp.list_tools())}
     assert names == {"observe", "act"}
     out = call(mcp, "act", {"action": "ACTION1"})
@@ -83,15 +83,17 @@ def test_mcp_surface_is_only_observe_and_act():
 
 
 @needs_engine
-def test_score_route_requires_token():
+def test_evidence_file_tracks_score_and_no_score_route(tmp_path):
     from starlette.testclient import TestClient
-    ep, _ = episode()
-    app = build(ep, token="secret-token").streamable_http_app()
-    with TestClient(app) as c:
-        assert c.get("/score").status_code == 403
-        assert c.get("/score?token=wrong").status_code == 403
-        r = c.get("/score?token=secret-token")
-        assert r.status_code == 200 and r.json()["reward"] == 0.0
+    ev = tmp_path / "evidence" / "score.json"
+    ep, desc = episode(str(ev))
+    assert json.loads(ev.read_text())["reward"] == 0.0          # written at start: no evidence != credit
+    for lv in desc["levels"]:
+        for a in lv["optimal_path"]:
+            ep.act(a)
+    assert json.loads(ev.read_text()) == ep.score() and ep.score()["reward"] == 1.0
+    with TestClient(build(ep).streamable_http_app()) as c:
+        assert c.get("/score").status_code == 404
         assert c.get("/healthz").json() == {"ok": True}
 
 
@@ -107,13 +109,11 @@ def test_export_layout(tmp_path):
         assert (t / f).exists(), f
     toml = (t / "task.toml").read_text()
     assert '[[environment.mcp_servers]]' in toml and 'url = "http://game:8000/mcp"' in toml
-    # token: same in compose and verifier, absent from everything the agent can see
-    compose = (t / "environment/docker-compose.yaml").read_text()
-    token = compose.split('SCORE_TOKEN: "')[1].split('"')[0]
-    assert token in (t / "tests/test.sh").read_text()
-    assert token not in (t / "instruction.md").read_text() + toml + (t / "environment/Dockerfile").read_text()
-    # tokens differ per task
-    assert token not in (made[1] / "environment/docker-compose.yaml").read_text()
+    # grading runs in a separate container from collected evidence, never over the agent's network
+    assert 'environment_mode = "separate"' in toml
+    assert '[[artifacts]]' in toml and 'source = "/evidence/score.json"' in toml and 'service = "game"' in toml
+    assert "/evidence/score.json" in (t / "tests/test.sh").read_text()
+    assert "http" not in (t / "tests/test.sh").read_text()
     # the agent container gets no game code or optimal path
     assert "COPY" not in (t / "environment/Dockerfile").read_text()
     assert "optimal" not in (t / "instruction.md").read_text()

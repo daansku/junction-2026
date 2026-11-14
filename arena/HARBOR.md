@@ -14,12 +14,12 @@ harbor run -p harbor/eval-v1 -a opencode -m <provider/model>    # frontier agent
 ## What a task contains
 | file | role |
 |---|---|
-| `task.toml` | schema 1.1; declares the `game` MCP server (`streamable-http`, `http://game:8000/mcp`) |
+| `task.toml` | schema 1.1; `game` MCP server (`streamable-http`, `http://game:8000/mcp`); **separate** verifier; `/evidence/score.json` collected from the `game` service as an artifact |
 | `instruction.md` | tools, actions, "find the goal yourself", scoring; no rules, no colours, no numbers |
 | `environment/Dockerfile` | the agent's container: plain ubuntu, **no game code** |
 | `environment/docker-compose.yaml` | adds the `game` sidecar (built from `environment/game/`) |
 | `environment/game/` | engine + `arena.harbor.sidecar` + a one-game collection |
-| `tests/test.sh` | verifier: `GET /score?token=...` -> `/logs/verifier/reward.json` + `reward.txt` |
+| `tests/test.sh` | separate verifier: reads the collected `/evidence/score.json` -> `/logs/verifier/reward.json` + `reward.txt` |
 | `solution/solve.sh` | oracle: replays the optimal path through the MCP tools |
 
 ## Reward
@@ -28,17 +28,21 @@ levels, 0 for unsolved. Every move and RESET on a level counts. In [0, 1]; only 
 
 ## Exploit surface (what judges can poke at)
 - The agent reaches the sidecar over the network, so the sidecar exposes **only** MCP `observe()` / `act()`
-  plus `/healthz`. No game list, no restart-from-level-1, no truth, no optimal path, no rule names.
-- `/score` needs a random per-task token that exists only in the sidecar env and `tests/test.sh`; Harbor
-  uploads `tests/` after the agent finishes. Wrong or missing token -> 403.
+  plus `/healthz`. No game list, no restart-from-level-1, no truth, no optimal path, no score endpoint.
+- Grading never touches the agent's container or network. The sidecar writes `/evidence/score.json` in its
+  own container after every action; Harbor stops the agent container, collects that file as an artifact,
+  and runs `tests/test.sh` in a **separate** verifier container. (An earlier design read a token-protected
+  HTTP score endpoint from a shared verifier; `harbor lint` flagged the shared verifier, and an agent could
+  have pointed `game` at a fake server via `/etc/hosts`. Fixed.) Missing evidence = reward 0.
 - Invalid actions are rejected and not counted; actions after the win do nothing; a hard cap (3000) on total actions.
 - Doing nothing = 0. Stopping early = credit only for levels actually solved, discounted by actions used.
 - Claims in text are ignored: the reward comes from the sidecar's game state only.
 
 ## Verified (2026-11-14, on A1's `dev` collection)
 - Unit tests: optimal = 1.0, nothing = 0, stop one move short = 0, one wasted RESET = exact partial credit,
-  invalid input and post-win actions not counted, only two MCP tools, `/score` 403 without the token.
-- Native run of an exported sidecar over real MCP streamable HTTP: the oracle client from `solve.sh` replayed
-  119 actions -> reward 1.0, 6/6 levels; the verifier script wrote `reward.json`.
+  invalid input and post-win actions not counted, only two MCP tools, no `/score` route, evidence file tracks score.
+- `harbor lint` (Harbor 0.26.0): clean. Harbor's `TaskConfig` parses the exported `task.toml`.
+- Native run of an exported sidecar over real MCP streamable HTTP (token-endpoint version): the oracle client from
+  `solve.sh` replayed 119 actions -> reward 1.0, 6/6 levels.
 - **Not yet run:** the Docker build and a full `harbor run` (Docker Desktop was not running on this machine;
-  Harbor CLI not installed here).
+  Harbor CLI now installed on this machine).

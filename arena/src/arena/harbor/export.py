@@ -10,14 +10,13 @@ Layout per task (Harbor task format, schema 1.1, modelled on harbor's examples/t
   instruction.md            what the agent is told: tools, actions, "find the goal", scoring
   environment/Dockerfile    agent container (plain ubuntu; no game code in it)
   environment/docker-compose.yaml   + `game` sidecar service
-  environment/game/         sidecar image: engine + arena sidecar + one-game collection + token
-  tests/test.sh             verifier: GET /score?token= -> /logs/verifier/reward.json + reward.txt
+  environment/game/         sidecar image: engine + arena sidecar + one-game collection
+  tests/test.sh             separate verifier: reads the collected /evidence/score.json -> /logs/verifier/reward.*
   solution/solve.sh         oracle: replays the optimal path through MCP
 """
 from __future__ import annotations
 
 import json
-import secrets
 import shutil
 from pathlib import Path
 
@@ -40,6 +39,8 @@ keywords = ["rule-discovery", "games", "arc-agi-3-style", "mcp"]
 
 [verifier]
 timeout_sec = 120.0
+# Separate container: the agent never shares a filesystem or network namespace with grading.
+environment_mode = "separate"
 
 [agent]
 timeout_sec = {float(agent_timeout)}
@@ -61,6 +62,12 @@ args = []
 [environment.env]
 
 [solution.env]
+
+# The game sidecar writes its score here after every action; Harbor collects it after the agent phase
+# (agent container already stopped) and places it at the same path in the separate verifier.
+[[artifacts]]
+source = "/evidence/score.json"
+service = "game"
 '''
 
 
@@ -82,15 +89,14 @@ make more progress, stop. Do not look for the score anywhere else: only playing 
 """
 
 TEST_SH = """#!/bin/bash
-# Verifier: ask the game sidecar for the score (token known only to the verifier) and write the reward.
+# Separate verifier: read the score the game sidecar wrote (collected by Harbor as an artifact).
 set -u
 mkdir -p /logs/verifier
 python3 - <<'EOF'
-import json, urllib.request
-url = "http://game:8000/score?token=__TOKEN__"
+import json
 try:
-    s = json.load(urllib.request.urlopen(url, timeout=30))
-except Exception as e:
+    s = json.load(open("/evidence/score.json"))
+except Exception as e:  # missing evidence = no credit
     s = {"reward": 0.0, "error": str(e)}
 reward = float(s.get("reward", 0.0))
 metrics = {"reward": reward}
@@ -157,7 +163,6 @@ services:
       context: ./game
     environment:
       GAME_ID: "__GAME_ID__"
-      SCORE_TOKEN: "__TOKEN__"
     expose:
       - "8000"
     healthcheck:
@@ -190,7 +195,6 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         gid = g["game_id"]
         game = eng.load_game(coll_file, gid)
         path = [a for lv in game.describe()["levels"] for a in lv["optimal_path"]]
-        token = secrets.token_hex(16)
         t = out / _safe_name(gid)
         if t.exists():
             shutil.rmtree(t)
@@ -200,8 +204,7 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         (t / "task.toml").write_text(_task_toml(_safe_name(gid), agent_timeout))
         (t / "instruction.md").write_text(INSTRUCTION)
         (t / "environment" / "Dockerfile").write_text(MAIN_DOCKERFILE)
-        (t / "environment" / "docker-compose.yaml").write_text(COMPOSE.replace("__GAME_ID__", gid)
-                                                               .replace("__TOKEN__", token))
+        (t / "environment" / "docker-compose.yaml").write_text(COMPOSE.replace("__GAME_ID__", gid))
         gd = t / "environment" / "game"
         (gd / "Dockerfile").write_text(GAME_DOCKERFILE)
         shutil.copytree(engine_src, gd / "engine", ignore=shutil.ignore_patterns("__pycache__", "tests"))
@@ -213,7 +216,7 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
         shutil.copy2(root / "contracts" / "palette.json", gd / "contracts" / "palette.json")
         (gd / "collection.json").write_text(json.dumps({**{k: v for k, v in coll.items() if k != "games"},
                                                         "games": [g]}))
-        (t / "tests" / "test.sh").write_text(TEST_SH.replace("__TOKEN__", token), newline="\n")
+        (t / "tests" / "test.sh").write_text(TEST_SH, newline="\n")
         (t / "solution" / "solve.sh").write_text(SOLVE_SH.replace("__PATH__", json.dumps(path)), newline="\n")
         made.append(t)
     log(f"exported {len(made)} Harbor tasks from {coll_file.name} -> {out}")
