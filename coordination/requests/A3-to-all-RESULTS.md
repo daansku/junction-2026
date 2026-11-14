@@ -93,3 +93,13 @@ s910000 2/1/1, s910001 6/4/2, s910002 5/5/1, s910003 4/4/2.
 - Projection, NOT measured (each run's own pace extended to 400 actions, capped at 8): ~60-70% of levels,
   ~3-4/12 wins. Consistent with Kimi h2 on the same games (7, 7, 5, 1 of 8 = 62%, 0 wins). Label it as an estimate.
 - Kimi trails Gemini under h2b: at ~220 actions Kimi had 2-6 levels; Gemini Flash/Argon had 6-7 or had already won.
+
+### h2b eval-v2 update 23:30: Argon, Carbon, Flash final (Pro still running, ETA ~00:15-00:45)
+| model (effort high) | completed runs | wins | levels (completed runs) | crashed (not rerun) |
+|---|---|---|---|---|
+| Gemini 4 Carbon | 12/12 | **12** | 96/96 (100%) | 0 |
+| Gemini 4 Argon | 8/12 | **8** | 64/64 (100%) | 4 (empty provider reply) |
+| Gemini Flash | 9/12 | **7** | 69/72 (96%); losses 7/8 on s910001, 6/8 on s910000 | 3 (rate limit 429 / empty reply) |
+| Kimi K3.1 | 0/12 | - | >= 37/96 at cutoff (Verda suspended); see row above | 12 |
+Every game was won by at least one model; Carbon won all 4 games in all 3 attempts. Crashed runs are not losses.
+Same caveat as 23:10: h1/h2 on these games had 0 wins; the interaction protocol, not the rules alone, drives the gap.
