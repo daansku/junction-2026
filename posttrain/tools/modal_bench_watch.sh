@@ -30,10 +30,20 @@ while true; do
     modal volume get --force junction-grpo "/bench/$name" "$OUT/" >/dev/null 2>&1 && echo "$(date -u +%H:%M) pulled $name"
     if grep -qE "App completed|Stopping app|stopped" "/root/modal-bench-$name.log" 2>/dev/null; then
       touch "$OUT/$name/.pulled"
-      # PROTOCOL v3 (human decision 20:50): official rescore, one rule for every row
-      (cd /root/posttrain && /srv/bench/.venv/bin/python -m posttrain.rescore_v3 "$OUT/$name" \
-         --out "$OUT/rescore_v3-$name.json" 2>&1 | tail -1 | sed "s/^/$(date -u +%H:%M) /" >> /root/rl-v3-headlines.txt)
+      # PROTOCOL v3 (human decision): canonical rescore (posttrain.rescore_answer), then the post-training table
+      (cd "$REPO/posttrain/src" && python3 -m posttrain.rescore_answer "$OUT/$name" 2>&1 | head -1 \
+         | sed "s/^/$(date -u +%H:%M) /" >> /root/rl-v3-headlines.txt)
+      python3 "$REPO/posttrain/tools/v3_table.py" "$OUT" > "$OUT/v3_table.md" 2>/dev/null
     fi
+  done
+  # full SFT benches run by A3 main on the A100 (ports 8002-8004): rescore once each has finished (summary.json)
+  for name in ${SFT_RUNS:-sft-ctrl sft-mix sft-v1}; do
+    d="$OUT/$name"
+    [ -f "$d/summary.json" ] || continue
+    [ -f "$d/items_v3.jsonl" ] && [ "$d/items_v3.jsonl" -nt "$d/summary.json" ] && continue
+    (cd "$REPO/posttrain/src" && python3 -m posttrain.rescore_answer "$d" 2>&1 | head -1 \
+       | sed "s/^/$(date -u +%H:%M) /" >> /root/rl-v3-headlines.txt)
+    python3 "$REPO/posttrain/tools/v3_table.py" "$OUT" > "$OUT/v3_table.md" 2>/dev/null
   done
   sleep "$POLL"
 done

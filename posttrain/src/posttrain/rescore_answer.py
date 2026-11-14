@@ -25,6 +25,8 @@ import sys
 from pathlib import Path
 
 LETTERS = "ABCDEFGHIJ"
+PRIMARY = ["bbh", "math", "gsm8k", "medqa", "mmlu_pro_health", "mmlu_pro_law"]  # FT_BENCHMARKS primary tier
+CONTROL = "mmlu_pro_history"                                                   # negative control
 
 
 def _clean(x: str) -> str:
@@ -114,6 +116,9 @@ def rescore(run: Path) -> dict:
     summ = {"rule": "v3: 'ANSWER: X' accepted when lm-eval extraction is [invalid] (posttrain/rescore_answer.py)",
             "run": run.name, "changed_items": changed,
             "benchmarks": {b: {"n": len(v), "mean": sum(v) / len(v)} for b, v in sorted(per.items())}}
+    prim = [summ["benchmarks"][b]["mean"] for b in PRIMARY if b in summ["benchmarks"]]
+    summ["headline_v3"] = sum(prim) / len(prim) if len(prim) == len(PRIMARY) else None
+    summ["negative_control_v3"] = summ["benchmarks"].get(CONTROL, {}).get("mean")
     (run / "summary_v3.json").write_text(json.dumps(summ, indent=1), encoding="utf-8")
     return summ
 
@@ -121,7 +126,8 @@ def rescore(run: Path) -> dict:
 def main(argv=None):
     for d in (argv if argv is not None else sys.argv[1:]):
         s = rescore(Path(d))
-        print(f"{s['run']}: changed {s['changed_items']}")
+        h = s["headline_v3"]
+        print(f"{s['run']}: headline_v3 {'-' if h is None else f'{h:.3f}'} changed {s['changed_items']}")
         for b, v in s["benchmarks"].items():
             print(f"  {b:20s} n={v['n']:5d} mean={v['mean']:.3f}")
 

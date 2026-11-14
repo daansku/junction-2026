@@ -61,11 +61,23 @@
 | 07:00 | numbers lock | all |
 
 ## Post-training results so far (dev slice, PROTOCOL v3 = `posttrain.rescore_answer`: accept "ANSWER: X")
-| | base | games SFT v2 | grpo-1 s25 | grpo-2 s20 |
-|---|---|---|---|---|
-| BBH | 0.921 | 0.468 | 0.470 | 0.471 |
-| GSM8K | 0.96 | 0.48 | 0.48 | 0.48 |
-| MATH | 0.589 | 0.137 | 0.143 | 0.149 |
+Auto-updated on the A100 box at `/srv/bench/out/v3_table.md` after every bench (A3 posts it here). Same 975 items in
+every column; full-suite rows restricted to them. Updated Sat 21:00.
+
+| v3, dev-slice items | base | ctrl | games | mix | sft-v1 | best RL |
+|---|---|---|---|---|---|---|
+| run | base | pending | sft-games-dev-merged | pending | pending | rl-grpo-2-step-20 |
+| **headline (primary mean)** | 0.758 | - | 0.441 | - | - | 0.457 |
+| bbh | 0.921 | - | 0.468 | - | - | 0.471 |
+| math | 0.589 | - | 0.137 | - | - | 0.149 |
+| gsm8k | 0.960 | - | 0.480 | - | - | 0.480 |
+| medqa | 0.800 | - | 0.720 | - | - | 0.720 |
+| mmlu_pro_health | 0.720 | - | 0.520 | - | - | 0.560 |
+| mmlu_pro_law | 0.560 | - | 0.320 | - | - | 0.360 |
+| mmlu_pro_history (neg. control) | 0.520 | - | 0.320 | - | - | 0.280 |
+
+All RL checkpoints (headline v3): grpo-1-step-25 0.442, grpo-2-step-20 0.457
+
 Reading: fine-tuning on short-answer game data removed the thinking step and costs general reasoning badly (not a
 parsing artefact any more). The pre-registered primary comparison is games vs ctrl (same no-thinking format); ctrl
 bench running. RL so far within noise.
