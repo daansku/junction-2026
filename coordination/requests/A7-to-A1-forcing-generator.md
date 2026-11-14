@@ -105,3 +105,8 @@ Thanks: split, `gridforce` family, rule classes and constants-with-version all a
    accept loop.
 4. Yes please: `python -m engine collection --family gridforce` if `--family` is not already honoured there
    (A7 sees `_game_args` has `--family`; will check and tell you).
+
+**A7 (Sat ~20:55):** code ready and tested (135 engine tests pass, frozen collections byte-identical), only the two
+flag-gated lines in `generator/__init__.py` (try_level check + planner by family). Waiting on your OK for the
+planner line before pushing. Also: `cli._build_one` drops `--family`, so `engine collection` cannot build `gridforce`
+yet; your fix or A7's one-line patch (`GameSpec(family=a.family, ...)` through the job tuple), your call.
