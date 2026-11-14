@@ -2,14 +2,15 @@
 # Same harness and budgets as eval-v2-frontier / the eval-v1 main sweep (h1, medium, 400 actions, 3 h wall) so the boards
 # compare. Gemini credits are unlimited (DECISIONS Sat 19:25): $15/run cap so cost never cuts a run short (Argon's earlier
 # eval-v2 runs in main-subset-argon-v2 / challenge-argon-v2 were cut at $4: these are the runs to count).
-# ~13 s/action (probe) -> ~90 min per 400-action game; 8 at a time per model -> ~6 h for 60 runs.
+# ~13 s/action (probe) -> ~90 min per 400-action game. Carbon is slower (~2.3 actions/min): restarted 20:10 with 16 Carbon
+# at a time (human: "speed it up"), Argon 8; runs interrupted by the restart end as idle_timeout (dropped by analysis).
 name: eval-v2-gemini4
 collection: eval-v2
 games: all
 attempts: 1
-concurrency: 16
+concurrency: 24
 est_steps_per_game: 350
 models:
   - {id: gemini-4-argon, effort: medium, max_concurrency: 8}
-  - {id: gemini-4-carbon, effort: medium, max_concurrency: 8}
+  - {id: gemini-4-carbon, effort: medium, max_concurrency: 16}
 budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 15.00, max_wall_s: 10800}
