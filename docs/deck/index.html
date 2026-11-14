@@ -1,711 +1,470 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Junction 2026 — Games No Model Has Seen Before (Deck v2)</title>
-  <style>
-    :root {
-      --bg: #0e0e0f;
-      --surface-1: #161617;
-      --surface-2: #1f1f21;
-      --line: #2c2c2f;
-      --line-strong: #3d3d42;
-      --text-1: #efefec;
-      --text-2: #a9a8a2;
-      --text-3: #76756f;
-      --accent: #ffdc00;
-      --good: #0ca30c;
-      --warn: #fab219;
-      --bad: #d03b3b;
-      --s1: #3987e5;
-      --s2: #d95926;
-      --s3: #199e70;
-      --font-sans: "IBM Plex Sans", "Inter", system-ui, -apple-system, sans-serif;
-      --font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-      color: var(--text-1);
-      font-family: var(--font-sans);
-      font-size: 16px;
-      line-height: 1.45;
-      overflow: hidden;
-    }
-
-    .deck {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .topbar {
-      height: 40px;
-      border-bottom: 1px solid var(--line);
-      background: var(--surface-1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--text-2);
-      flex: none;
-    }
-
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .accent-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--accent);
-      display: inline-block;
-    }
-
-    .stage {
-      flex: 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px 36px;
-      overflow: auto;
-    }
-
-    .slide {
-      display: none;
-      width: 100%;
-      max-width: 1220px;
-      min-height: 570px;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .slide.active { display: flex; }
-
-    .kicker {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-
-    h1 {
-      margin: 8px 0 0 0;
-      font-size: 40px;
-      line-height: 1.12;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    h2 {
-      margin: 6px 0 0 0;
-      font-size: 27px;
-      line-height: 1.2;
-      font-weight: 600;
-      letter-spacing: -0.015em;
-    }
-
-    h3 {
-      margin: 0 0 8px 0;
-      font-size: 14.5px;
-      font-weight: 600;
-    }
-
-    .sub {
-      color: var(--text-2);
-      font-size: 16px;
-      margin-top: 6px;
-      max-width: 960px;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--line);
-      border: 1px solid var(--line);
-    }
-
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--line);
-      border: 1px solid var(--line);
-    }
-
-    .panel {
-      background: var(--surface-1);
-      border: 1px solid var(--line);
-      padding: 15px 18px;
-    }
-
-    .cell {
-      background: var(--surface-1);
-      padding: 15px 18px;
-    }
-
-    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-    .muted { color: var(--text-2); }
-    .dim { color: var(--text-3); }
-
-    .big-stat {
-      font-family: var(--font-mono);
-      font-size: 30px;
-      font-weight: 600;
-      line-height: 1.1;
-      margin: 6px 0 5px 0;
-    }
-
-    .palette-bar {
-      display: grid;
-      grid-template-columns: repeat(16, 1fr);
-      gap: 2px;
-    }
-
-    .swatch {
-      height: 18px;
-      border: 1px solid var(--line);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12.5px;
-    }
-
-    th, td {
-      padding: 6px 8px;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-    }
-
-    th {
-      font-family: var(--font-mono);
-      font-size: 10.5px;
-      color: var(--text-2);
-      font-weight: 500;
-      text-transform: uppercase;
-    }
-
-    th.num, td.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-
-    .formula {
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      padding: 10px 14px;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--text-1);
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 1px 6px;
-      font-family: var(--font-mono);
-      font-size: 10.5px;
-      border: 1px solid var(--line-strong);
-      background: var(--surface-2);
-      color: var(--text-1);
-    }
-
-    .tag.good { border-color: var(--good); color: var(--good); }
-    .tag.warn { border-color: var(--warn); color: var(--warn); }
-    .tag.bad { border-color: var(--bad); color: var(--bad); }
-
-    ul { margin: 6px 0 0 0; padding-left: 18px; }
-    li { margin-bottom: 6px; color: var(--text-2); font-size: 13.5px; }
-    li strong { color: var(--text-1); }
-
-    .code-box {
-      background: var(--bg);
-      border: 1px solid var(--line);
-      padding: 10px 14px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      white-space: pre-wrap;
-      color: var(--text-1);
-    }
-
-    .pixel-sheet {
-      width: 100%;
-      max-height: 210px;
-      object-fit: contain;
-      image-rendering: pixelated;
-      display: block;
-      background: #000;
-      border: 1px solid var(--line);
-    }
-
-    .footer {
-      height: 42px;
-      border-top: 1px solid var(--line);
-      background: var(--surface-1);
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--text-2);
-      flex: none;
-    }
-
-    .nav-btns { display: flex; gap: 8px; align-items: center; }
-
-    button {
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      color: var(--text-1);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      padding: 4px 10px;
-      cursor: pointer;
-    }
-    button:hover { border-color: var(--line-strong); }
-  </style>
-</head>
-<body>
-  <div class="deck">
-    <header class="topbar">
-      <div class="topbar-left">
-        <span class="accent-dot"></span>
-        <span>JUNCTION 2026 // AFTERQUERY — PIXELS-ONLY DISCOVERY ARENA &amp; POST-TRAINING</span>
-      </div>
-      <span id="slide-label" class="mono">SLIDE 1 / 9</span>
-    </header>
-
-    <main class="stage">
-      <!-- Slide 1: Problem -->
-      <section class="slide active" data-title="The Problem">
-        <div>
-          <div class="kicker">01 · Problem — Static Benchmarks Leak Priors</div>
-          <h1>Games No Model Has Seen Before.</h1>
-          <p class="sub">
-            Instruction-heavy benchmarks test reading comprehension and memorized training priors. Real-world agents break when undocumented state transitions change silently without a manual. We built an infinite factory of verified causal worlds where every rule must be discovered by acting.
-          </p>
-        </div>
-
-        <div class="grid-4">
-          <div class="cell">
-            <div class="kicker">Observation</div>
-            <div class="big-stat">64×64×16</div>
-            <div class="muted">Pixels + lossless RLE only. Zero English rule hints. Per-seed <span class="mono">skin_shuffle</span>.</div>
-          </div>
-          <div class="cell">
-            <div class="kicker">Optimal Ceiling</div>
-            <div class="big-stat">1.000</div>
-            <div class="muted">Exact BFS shortest-path proof on every generated level.</div>
-          </div>
-          <div class="cell">
-            <div class="kicker">Lab-Standard Gap (`h2`)</div>
-            <div class="big-stat" style="color:var(--accent)">0.463</div>
-            <div class="muted"><span class="mono">Kimi K3.1 Pro (max)</span> on <span class="mono">eval-v2</span> (<span class="mono">0%</span> wins) vs <span class="mono">Human 0.637</span> (<span class="mono">100%</span> wins).</div>
-          </div>
-          <div class="cell">
-            <div class="kicker">Reward Integrity</div>
-            <div class="big-stat" style="color:var(--good)">9 / 9 = 0.0</div>
-            <div class="muted"><span class="mono">noop</span>, <span class="mono">stop_early</span>, &amp; all 9 Harbor red-team exploits score <span class="mono">0.000</span>.</div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="kicker" style="margin-bottom:8px;">16-Colour Permuted Cartridge Palette (<span class="mono">contracts/palette.json</span>)</div>
-          <div class="palette-bar">
-            <div class="swatch" style="background:#0e0e12"></div>
-            <div class="swatch" style="background:#2b2d38"></div>
-            <div class="swatch" style="background:#5a5e6b"></div>
-            <div class="swatch" style="background:#9ca0ad"></div>
-            <div class="swatch" style="background:#f2f0e6"></div>
-            <div class="swatch" style="background:#e04646"></div>
-            <div class="swatch" style="background:#e8852e"></div>
-            <div class="swatch" style="background:#f0c93d"></div>
-            <div class="swatch" style="background:#7bc443"></div>
-            <div class="swatch" style="background:#2d9e6b"></div>
-            <div class="swatch" style="background:#38b8c4"></div>
-            <div class="swatch" style="background:#3d7be0"></div>
-            <div class="swatch" style="background:#7a4fd6"></div>
-            <div class="swatch" style="background:#cf57b3"></div>
-            <div class="swatch" style="background:#a36a3e"></div>
-            <div class="swatch" style="background:#5c3c28"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Slide 2: Environment in 30s -->
-      <section class="slide" data-title="Environment in 30s">
-        <div>
-          <div class="kicker">02 · Environment in 30 Seconds (`engine 0.5.0`)</div>
-          <h2>18 Composable Mechanics, 1 New Rule Per Level, 4 Solvability Proofs</h2>
-          <p class="sub">
-            Every seed compiles a 6–8 level curriculum (<span class="mono">dev</span>, frozen <span class="mono">eval-v1</span>, harder <span class="mono">eval-v2</span> with Tier-3 drift/timing) where each level adds one hidden mechanic that is mathematically proven necessary to win.
-          </p>
-        </div>
-
-        <div class="grid-2">
-          <div class="panel">
-            <h3>18 Mechanics Contact Sheet (<span class="mono">rules/img/all_rules.png</span>)</h3>
-            <img class="pixel-sheet" src="../../rules/img/all_rules.png" alt="18 Gridworld Rules Contact Sheet" />
-            <div class="mono dim" style="font-size:11px; margin-top:8px;">
-              Tier 1: keys_doors · plates_gates · teleporters · hazards · push_blocks · ice · one_way<br/>
-              Tier 2: collect_all · phase_walls · rotation · remap · twin · stamina · cracked_floor · beacon_goal<br/>
-              Tier 3 (`eval-v2`): conveyors · enemies · gravity
-            </div>
-          </div>
-          <div class="panel">
-            <h3>4 Generator Guarantees Before Any Level Ships</h3>
-            <ul>
-              <li><strong>BFS Solvability Proof:</strong> Exact state-graph shortest path establishes <span class="mono">optimal_moves(L)</span> and <span class="mono">optimal_path</span>.</li>
-              <li><strong>Rule-Necessity Ablation:</strong> Removing or ignoring the newly introduced mechanic breaks or lengthens the optimal path.</li>
-              <li><strong>Bounded Exploration Budget:</strong> <span class="mono">ceil(optimal_moves × slack)</span> permits deliberate probing while punishing aimless loops.</li>
-              <li><strong>Anti-Random Gate:</strong> Rejected if 100 random-walk rollouts win <span class="mono">≥ 2%</span> of attempts.</li>
-              <li><strong>Combinatorial &amp; Skin Holdouts:</strong> <span class="mono">eval-v1</span> / <span class="mono">eval-v2</span> hold out unseen rule pairs + permuted glyph palettes disjoint from <span class="mono">train-v1</span>.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <!-- Slide 3: Live Demo (/challenge) -->
-      <section class="slide" data-title="Live Demo: Beat the AI">
-        <div>
-          <div class="kicker">03 · Live Demo — Public `/challenge` Kiosk</div>
-          <h2>Play a Held-Out World in 60 Seconds — Then Watch Frontier Models Try</h2>
-          <p class="sub">
-            Scan the QR or open <span class="mono">/challenge</span>: zero login, zero API keys, running 100% client-side in TypeScript (<span class="mono">engine.ts</span>) on the exact held-out games frontier models played.
-          </p>
-        </div>
-
-        <div class="grid-2">
-          <div class="panel">
-            <h3>Captured `/challenge` Level-Solved Screen (<span class="mono">12-challenge-level-solved.png</span>)</h3>
-            <img class="pixel-sheet" style="image-rendering:auto; max-height:195px;" src="../../web/screenshots/12-challenge-level-solved.png" alt="Beat the AI level solved screen with AI ghost reels" />
-          </div>
-          <div class="panel">
-            <h3>Why Judges &amp; Visitors Play Live (`gridworld-s900002-d3-l6-f09d6348`)</h3>
-            <ul>
-              <li><strong>Human Won (`d3`):</strong> On default 6-level <span class="mono">s900002</span>, our unassisted human tester beat every finished <span class="mono">h1</span> &amp; <span class="mono">h2</span> model.</li>
-              <li><strong>4 moves/s AI Reels:</strong> Clearing Level <span class="mono">L</span> unlocks side-by-side replays of <span class="mono">Kimi</span>, <span class="mono">Gemini</span>, &amp; <span class="mono">Nemotron</span> on that exact level (hidden on retry so zero spoilers).</li>
-              <li><strong>Strict Hygiene:</strong> Tagged <span class="mono">mode: "challenge"</span> — visitor leaderboard stays separate and <span class="mono">loader.py</span> drops all kiosk runs from benchmark tables.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
-          <span><strong>Live Demo Switch:</strong> Play <span class="mono">L1–L2</span> on <span class="mono">/challenge</span> (<span class="mono">← ↑ → ↓</span> move · <span class="mono">Space</span> wait · <span class="mono">R</span> reset) or fallback <span class="mono">challenge-full-run.mp4</span>.</span>
-          <span class="tag warn">LIVE TAB 2 → /challenge</span>
-        </div>
-      </section>
-
-      <!-- Slide 4: The Gap (h1 then h2) -->
-      <section class="slide" data-title="The Gap: h1 vs Lab-Standard h2">
-        <div>
-          <div class="kicker">04 · The Capability Gap (`leaderboard.json` &amp; `leaderboard_h2.json`)</div>
-          <h2>Run the Lab Way (`h2`), They Close Easy `d1` — and Still Lose on Harder Levels &amp; New Rules</h2>
-          <p class="sub">
-            We keep <span class="mono">h1</span> (stateless rolling-notes) and <span class="mono">h2</span> (full multi-turn history, preserved thinking blocks, <span class="mono">high/max</span> effort, <span class="mono">64k/32k</span> output cap, native <span class="mono">act()</span> tool) strictly separate.
-          </p>
-        </div>
-
-        <div class="grid-2">
-          <div class="panel">
-            <h3>`h1` Stateless Rolling-Notes &amp; Harbor Rubric</h3>
-            <table>
-              <thead>
-                <tr><th>Player</th><th>Split / Mode</th><th class="num">Lvl Solve</th><th class="num">Score</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>Optimal (`oracle`)</td><td class="mono">BFS / Harbor</td><td class="num">100.0%</td><td class="num"><strong>1.000</strong></td></tr>
-                <tr><td>Human (first-attempt)</td><td class="mono">eval-v1 / eval-v2</td><td class="num">100% / 92.5%</td><td class="num"><strong>0.795 / 0.630</strong></td></tr>
-                <tr><td>Gemini 3.8 Flash (`med`)*</td><td class="mono">eval-v1 (3 d1–d2)</td><td class="num">100.0%</td><td class="num">0.575</td></tr>
-                <tr><td>Kimi K3.1 Pro</td><td class="mono">dev (8 games)</td><td class="num">52.1%</td><td class="num">0.374</td></tr>
-                <tr><td>OpenCode + Nemotron (`k=3`)</td><td class="mono">Harbor MCP</td><td class="num">16.7%</td><td class="num" style="color:var(--accent)"><strong>0.067</strong></td></tr>
-                <tr><td>Nemotron 3.5 Super VL</td><td class="mono">dev (8 games)</td><td class="num">12.5%</td><td class="num">0.061</td></tr>
-                <tr><td>DeepSeek V3.2 / gpt-oss-120b</td><td class="mono">dev [rle only]</td><td class="num">0.0% (0/96)</td><td class="num">0.000</td></tr>
-              </tbody>
-            </table>
-            <div class="mono dim" style="font-size:10.5px; margin-top:6px;">*Pre-17:15 Gemini `h1` API cost badge flagged `~3.6× low` before thinking-token billing fix.</div>
-          </div>
-
-          <div class="panel">
-            <h3>`h2` Lab-Standard Multi-Turn (`95%` Bootstrap CIs, `k=1`)</h3>
-            <table>
-              <thead>
-                <tr><th>Player (`effort`)</th><th>Subset</th><th class="num">Win</th><th class="num">Score [95% CI]</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>Optimal</td><td class="mono">eval-v1 / v2</td><td class="num">100%</td><td class="num"><strong>1.000</strong></td></tr>
-                <tr><td>Claude Haiku 5.5 (`high`)</td><td class="mono">eval-v1 (1/6 d1)</td><td class="num">100%</td><td class="num">0.827 <span class="dim">(n=1)</span></td></tr>
-                <tr><td>Gemini 3.1 Pro (`high`)</td><td class="mono">eval-v1 (2/6 d1–d2)</td><td class="num">100%</td><td class="num">0.803 <span class="dim">[.732,.874]</span></td></tr>
-                <tr><td><strong>Human (unassisted)</strong></td><td class="mono"><strong>eval-v1 (d1–d3)</strong></td><td class="num"><strong>100%</strong></td><td class="num" style="color:var(--s3)"><strong>0.795</strong></td></tr>
-                <tr><td>Kimi K3.1 Pro (`max`)</td><td class="mono">eval-v1 (all 6/6)</td><td class="num">50%</td><td class="num" style="color:var(--accent)"><strong>0.671</strong> <span class="dim">[.541,.795]</span></td></tr>
-                <tr><td><strong>Human (unassisted)</strong></td><td class="mono"><strong>eval-v2 (d4, l8)</strong></td><td class="num"><strong>100%</strong></td><td class="num" style="color:var(--s3)"><strong>0.637</strong> <span class="dim">[.635,.639]</span></td></tr>
-                <tr><td>Kimi K3.1 Pro (`max`)</td><td class="mono">eval-v2 (d4, l8)</td><td class="num">0%</td><td class="num" style="color:var(--accent)"><strong>0.463</strong> <span class="dim">[.389,.537]</span></td></tr>
-              </tbody>
-            </table>
-            <div class="mono dim" style="font-size:10.5px; margin-top:6px;">`h2` closes the `d1` memory artifact, isolating true causal-induction failure on `d3–d4` &amp; unseen pairs (`0.436` / `0.389`).</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Slide 5: Meaningful Failures (Replay + X-Ray) -->
-      <section class="slide" data-title="Why Failures Are Meaningful">
-        <div>
-          <div class="kicker">05 · Failure Forensics (`/insights` &amp; `/replay` X-Ray Curtain)</div>
-          <h2>Models Fail for Crisp Epistemic Reasons — Not UI Noise or Unfair Puzzles</h2>
-          <p class="sub">
-            Across <span class="mono">99</span> extracted failure decision points (<span class="mono">56</span> judge-verified level diagnoses in <span class="mono">explanations.json</span>), every failure pins down the exact step where an agent's causal hypothesis diverges from engine truth.
-          </p>
-        </div>
-
-        <div class="grid-2">
-          <div class="panel">
-            <h3>Trace &amp; Hypothesis Inspector (<span class="mono">04-replay-argon.png</span>)</h3>
-            <img class="pixel-sheet" style="image-rendering:auto; max-height:190px;" src="../../web/screenshots/04-replay-argon.png" alt="Replay step inspector showing reasoning, hypothesis, and hidden truth" />
-          </div>
-          <div class="panel">
-            <h3>99 Extracted Failure Decision Points (<span class="mono">decision_point_targets.json</span>)</h3>
-            <ul>
-              <li><strong>Zero-Change Loops (<span class="mono" style="color:var(--bad)">46.9%</span>):</strong> Agents repeat wall/arrow bumps (<span class="mono">one_way</span>, <span class="mono">phase_walls</span>) after zero pixel change.</li>
-              <li><strong>Sunk-Cost Late Resets (<span class="mono" style="color:var(--warn)">42.1%</span>):</strong> Agents burn <span class="mono">&gt;1.5× optimal_moves</span> in dead-ends (<span class="mono">cracked_floor</span>, <span class="mono">push_blocks</span>) before resetting.</li>
-              <li><strong>Coupled Dynamics (<span class="mono">twin = 17.3% wt</span>):</strong> #1 bottleneck mechanic (<span class="mono">0%</span> `h1` intro solve) — models steer avatar A while twin B hits hazards.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
-          <span><strong>Live Replay X-Ray:</strong> Drag the 50/50 X-Ray split curtain on <span class="mono">/replay</span> to contrast raw pixels against active rules, BFS optimal path, and <span class="mono">[ TAKE OVER FROM STEP N ]</span>.</span>
-          <span class="tag">LIVE TAB 4 → /replay</span>
-        </div>
-      </section>
-
-      <!-- Slide 6: Reward Integrity -->
-      <section class="slide" data-title="Reward Integrity">
-        <div>
-          <div class="kicker">06 · Reward Integrity (`Harbor 0.26` + Red-Team `9 / 9 = 0.000`)</div>
-          <h2>Zero Shaping, Container-Isolated Verifier, 9 Red-Team Exploits Tested</h2>
-        </div>
-
-        <div class="formula">
-          level_score(L) = min(1.0, optimal_moves(L) / actions_used(L)) if solved else 0.0 &nbsp;&nbsp;|&nbsp;&nbsp; game_score = (1 / levels_total) · Σ level_score(L)
-        </div>
-
-        <div class="grid-2">
-          <div class="panel">
-            <h3>Official Harbor Sidecar Verification</h3>
-            <table>
-              <thead>
-                <tr><th>Harbor Agent Run</th><th class="num">Actions</th><th class="num">Levels</th><th class="num">Reward</th></tr>
-              </thead>
-              <tbody>
-                <tr><td class="mono">oracle (full game)</td><td class="num">92</td><td class="num">6 / 6</td><td class="num"><span class="tag good">1.000</span></td></tr>
-                <tr><td class="mono">oracle STOP_AFTER=3</td><td class="num">45</td><td class="num">3 / 6</td><td class="num">0.500</td></tr>
-                <tr><td class="mono">oracle STOP_AFTER=1</td><td class="num">13</td><td class="num">1 / 6</td><td class="num">0.167</td></tr>
-                <tr><td class="mono">nop / stop_early / random</td><td class="num">0..400</td><td class="num">0 / 6</td><td class="num"><span class="tag warn">0.000</span></td></tr>
-              </tbody>
-            </table>
-            <div class="mono dim" style="font-size:11px; margin-top:8px;">Pre-reset exploration + `RESET` stay in `actions_used(L)` — reset-and-replay farming strictly lowers score.</div>
-          </div>
-
-          <div class="panel">
-            <h3>9/9 Inside-Container Red-Team Attacks → `0.000`</h3>
-            <ul>
-              <li><strong>1–2. File &amp; Env Recon/Forgery:</strong> Writing <span class="mono">1.0</span> to <span class="mono">/evidence/score.json</span> &amp; <span class="mono">/logs/verifier/reward.txt</span> stays in <span class="mono">main</span>; Harbor grades from isolated <span class="mono">game</span> sidecar after agent stops.</li>
-              <li><strong>3–5. Network &amp; MCP Fuzzing:</strong> Port scan (<span class="mono">22..9000</span>), <span class="mono">/truth</span>, unknown MCP tools, &amp; <span class="mono">RESET;ACTION1</span> rejected (<span class="mono">observe</span> + <span class="mono">act</span> only).</li>
-              <li><strong>6–9. State &amp; Budget Abuse:</strong> Fresh MCP session attach, 32-way parallel race, <span class="mono">2,000× RESET</span> spam, and <span class="mono">3,100×</span> wall cycles all score <span class="mono">0.000</span>.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <!-- Slide 7: Post-Training & Reasoning Transfer -->
-      <section class="slide" data-title="Post-Training & Transfer">
-        <div>
-          <div class="kicker">07 · Post-Training &amp; Reasoning Transfer (`Qwen3.5-9B` · `bench_summary.json`)</div>
-          <h2>Step 0 Proved Action Cloning Fails — Controlled `SFT v2` + `GRPO` Tests Causal Transfer</h2>
-          <p class="sub">
-            Pre-registered in <span class="mono">bench/PROTOCOL.md</span> v2 &amp; <span class="mono">FT_BENCHMARKS.md</span> before scoring trained checkpoints: token-matched <span class="mono">ctrl</span> vs <span class="mono">games</span> vs <span class="mono">mix</span> + <span class="mono">MMLU-Pro: History</span> negative control.
-          </p>
-        </div>
-
-        <div class="grid-2">
-          <div class="panel">
-            <h3>Empirical Step 0 + Training Ladder (`posttrain/`)</h3>
-            <ul>
-              <li><strong>Step 0 (`SFT v1` — Completed):</strong> Optimal-action SFT on disjoint <span class="mono">train-v1</span> achieved <span class="mono">0</span> parse errors yet scored <span class="mono" style="color:var(--bad)"><strong>0.012</strong></span> on held-out <span class="mono">eval-v1</span> (<span class="mono">1/36</span> synced levels, <span class="mono">56.8%</span> wall-bump loops; <span class="mono">4/180</span> across 30 games). <em>Syntax ≠ causal discovery.</em></li>
-              <li><strong>`SFT v2` (`ctrl` / `games` / `mix`):</strong> Exact token-matched LoRA (rank 16) preserving <span class="mono">&lt;think&gt;...&lt;/think&gt;</span> with A1's Narrator discovery rationales + verifiable aux tasks (<span class="mono">next_frame</span>, <span class="mono">rule_induction</span>, <span class="mono">solvable_in_k</span>) weighted by <span class="mono">decision_point_targets.json</span>.</li>
-              <li><strong>`GRPO` (`posttrain.grpo`):</strong> Online RL from SFT LoRA with exact engine verifier reward &amp; KL to SFT reference.</li>
-            </ul>
-          </div>
-
-          <div class="panel">
-            <h3>Pre-Registered Outside Suite &amp; Honesty Claim Rule</h3>
-            <table>
-              <thead>
-                <tr><th>Tier</th><th>Benchmarks (`lm-eval 0.4.13`, `max_toks=8192`)</th><th>Role</th></tr>
-              </thead>
-              <tbody>
-                <tr><td class="mono">Primary (6)</td><td>BBH (27-task), MATH, GSM8K, MedQA, MMLU-Pro Health &amp; Law</td><td>Headline mean</td></tr>
-                <tr><td class="mono">Neg. Ctrl</td><td>MMLU-Pro: History (5-shot CoT)</td><td>Format guard</td></tr>
-                <tr><td class="mono">BBH Logic (5)</td><td>Shuffled Objects, Navigate, Deduction, Web of Lies, Temporal</td><td>Near-logic</td></tr>
-              </tbody>
-            </table>
-            <div class="mono muted" style="font-size:11.5px; margin-top:10px; border-top:1px solid var(--line); padding-top:8px;">
-              <strong>Honesty Rule (`10,000` paired item bootstrap resamples):</strong> Claim transfer <em>iff</em> <span class="mono">cand &gt; ctrl</span> on Primary Headline + <span class="mono">≥2</span> Primary tasks (<span class="mono">95% CI &gt; 0</span>) + <span class="mono">History Δ &lt; Headline Δ</span>. Otherwise report exact CIs &amp; in-domain gains plainly.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Slide 8: Business Value -->
-      <section class="slide" data-title="Business & Real-Life Value">
-        <div>
-          <div class="kicker">08 · Commercial &amp; Real-World Value (`docs/BUSINESS.md`)</div>
-          <h2>Three Concrete Wedges Backed by Direct Trace Evidence</h2>
-          <p class="sub">
-            We assessed all 6 candidate markets in <span class="mono">docs/BUSINESS.md</span> and selected the 3 where our Harbor sidecar, failure forensics, and post-training pipeline solve an immediate pain point today.
-          </p>
-        </div>
-
-        <div class="grid-3">
-          <div class="cell">
-            <div class="kicker">01 · Frontier Model Labs</div>
-            <h3 style="margin-top:6px;">Contamination-Proof Eval &amp; RL Gym</h3>
-            <p class="muted" style="font-size:13px;">
-              Private seeded splits + <span class="mono">skin_shuffle</span> + container-verified Harbor MCP (<span class="mono">9/9</span> red-team = <span class="mono">0.000</span>) give labs an uncontaminated evaluation &amp; GRPO reward signal where even <span class="mono">h2</span> frontier models score <span class="mono">0.463</span> on <span class="mono">eval-v2</span>.
-            </p>
-          </div>
-          <div class="cell">
-            <div class="kicker">02 · Enterprise Agent Teams</div>
-            <h3 style="margin-top:6px;">Pre-Deployment Agent Sanity Gate</h3>
-            <p class="muted" style="font-size:13px;">
-              Catches silent failure loops before production: <span class="mono">46.9%</span> of agent failures are zero-change action loops and <span class="mono">42.1%</span> are sunk-cost refusals to reset — the exact failure modes that burn cloud &amp; tool budgets.
-            </p>
-          </div>
-          <div class="cell">
-            <div class="kicker">03 · Post-Training Teams</div>
-            <h3 style="margin-top:6px;">Procedural Causal-Reasoning Data Engine</h3>
-            <p class="muted" style="font-size:13px;">
-              Generates unlimited solver-verified state-prediction &amp; rule-induction traces (<span class="mono">engine/tasks</span>). <span class="mono">SFT v1</span> (<span class="mono">0.012</span>) proved trajectory cloning fails without the grounded causal rationales our engine synthesizes.
-            </p>
-          </div>
-        </div>
-
-        <div class="panel mono dim" style="font-size:11.5px;">
-          Two-outcome win (`BACKUP IDEAS.md`): if post-training transfers, we sell the RL gym; if `28.7k` fine-tuning examples don't lift unseen-rule scores, that proves the benchmark resists training-to-the-test (+ Game Studio SDK hedge &amp; `/challenge` human-trace flywheel).
-        </div>
-      </section>
-
-      <!-- Slide 9: Ask & Reproduction -->
-      <section class="slide" data-title="Reproduce & Live Exploit Hunt">
-        <div>
-          <div class="kicker">09 · One-Command Harbor Reproduction &amp; Ask</div>
-          <h2>Try `/challenge`, Audit Every Number, Break Our Sidecar</h2>
-          <p class="sub">
-            Every table on every slide is verified by <span class="mono">python -m analysis check-claims</span> (<span class="mono">0</span> errors across all 7 derived files). Ready for the 15-minute live judge exploit hunt.
-          </p>
-        </div>
-
-        <div class="grid-2">
-          <div class="panel">
-            <h3>Official Harbor Judge Commands (<span class="mono">arena/HARBOR.md</span>)</h3>
-            <div class="code-box">TASK=harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4
-harbor run -p "$TASK" -a oracle                     # -> 1.000
-harbor run -p "$TASK" -a nop                        # -> 0.000
-harbor run -p "$TASK" -a oracle \
-  --ae ORACLE_STOP_AFTER_LEVELS=1                   # -> 0.167
-harbor run -p "$TASK" -a opencode \
-  -m verda-nemotron/nemotron-3.5-super-vl -k 3      # -> 0.067</div>
-          </div>
-
-          <div class="panel">
-            <h3>End-to-End Verification Gates</h3>
-            <ul>
-              <li><span class="tag good">CHALLENGE</span> Public zero-setup <span class="mono">/challenge</span> kiosk + QR + spoiler-free 4 moves/s AI ghost reels.</li>
-              <li><span class="tag good">H1 + H2</span> Strictly separated <span class="mono">h1</span> and lab-standard <span class="mono">h2</span> boards with 95% bootstrap CIs.</li>
-              <li><span class="tag good">POSTTRAIN</span> Pre-registered <span class="mono">FT_BENCHMARKS.md</span> + paired CIs + Honesty Rule + <span class="mono">SFT v1/v2/GRPO</span>.</li>
-              <li><span class="tag good">CLAIMS</span> <span class="mono">9/9</span> analysis unit tests + <span class="mono">check-claims</span> (<span class="mono">0</span> errors) + strict TS/Vite build.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
-          <strong>Ready for 15-minute live exploit hunt &amp; Harbor + OpenCode rerun.</strong>
-          <span class="mono" style="color:var(--accent);">/challenge &nbsp;·&nbsp; /leaderboard?view=h2 &nbsp;·&nbsp; /leaderboard?view=bench &nbsp;·&nbsp; /replay</span>
-        </div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <span>Keyboard: ← / → or Space to navigate · Home / End to jump</span>
-      <div class="nav-btns">
-        <button id="prev-btn" type="button">← Prev</button>
-        <button id="next-btn" type="button">Next →</button>
-      </div>
-    </footer>
+<title>Game Factory Pitch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: 16:9 slides stacked like a contact sheet; Present mode shows one slide full screen.
+   Colour is the game's own 16-colour palette, used with its in-game meaning:
+   green = the goal ring (humans), orange = models, yellow = the move bar (figures), grey = walls. */
+:root {
+  --bg: #0d0f12;
+  --panel: #15181d;
+  --line: #262b33;
+  --fg: #eceef1;
+  --muted: #9aa2ad;
+  --human: #2fb54a;
+  --model: #f2832b;
+  --figure: #f5c518;
+  --wall: #8a8f98;
+  --optimal: #eceef1;
+  --display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 64px;
+}
+.deck { display: grid; gap: 28px; max-width: 1280px; margin: 0 auto; }
+.bar {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+  max-width: 1280px; margin: 0 auto 20px; font-family: var(--mono); font-size: 13px; color: var(--muted);
+}
+.bar button {
+  font: 500 13px var(--mono); color: var(--bg); background: var(--figure); border: 0; border-radius: 3px;
+  padding: 8px 14px; cursor: pointer;
+}
+.bar button:focus-visible, .slide:focus-visible { outline: 2px solid var(--figure); outline-offset: 3px; }
+
+/* ---- slide frame: everything inside scales with the slide width (cqw) ---- */
+.slide { scroll-margin-top: 16px; }
+.frame {
+  container-type: inline-size; aspect-ratio: 16 / 9; width: 100%; max-width: 100%;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+  position: relative;
+}
+.in {
+  position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto;
+  padding: 3.4cqw 4.2cqw 2.6cqw; gap: 1.6cqw;
+  font-size: 1.62cqw; line-height: 1.4;
+}
+.top { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--mono); font-size: 1.05cqw; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.top b { color: var(--figure); font-weight: 500; }
+h1, h2 { font-family: var(--display); font-weight: 800; margin: 0; text-wrap: balance; letter-spacing: -.01em; line-height: 1.02; }
+h1 { font-size: 6cqw; }
+h2 { font-size: 3.7cqw; max-width: 22ch; }
+p { margin: 0; max-width: 58ch; }
+.lead { font-size: 2cqw; color: var(--fg); max-width: 40ch; }
+.muted { color: var(--muted); }
+.src { font-family: var(--mono); font-size: .95cqw; color: var(--muted); }
+.fig { color: var(--figure); font-family: var(--mono); font-weight: 500; }
+.h { color: var(--human); } .m { color: var(--model); }
+.body { display: grid; gap: 2.4cqw; align-content: start; min-height: 0; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 3.4cqw; align-items: start; min-height: 0; }
+.cols > * { min-width: 0; }
+.list { display: grid; gap: 1.1cqw; margin: 0; padding: 0; list-style: none; }
+.list li { display: grid; grid-template-columns: 1.1cqw 1fr; gap: 1.1cqw; align-items: baseline; }
+.list li::before { content: ""; width: .8cqw; height: .8cqw; background: var(--wall); transform: translateY(-.15cqw); }
+.list.h li::before { background: var(--human); } .list.m li::before { background: var(--model); }
+.list.y li::before { background: var(--figure); }
+.shot { width: 100%; max-width: 100%; border: 1px solid var(--line); border-radius: 3px; display: block; }
+
+/* ---- title ---- */
+.title { grid-template-columns: 1.15fr 1fr; align-items: center; gap: 4cqw; }
+.title .body { gap: 2cqw; }
+#hero { width: 100%; max-width: 100%; aspect-ratio: 1; image-rendering: pixelated; display: block; border-radius: 2px; }
+.cap { font-family: var(--mono); font-size: 1cqw; color: var(--muted); margin-top: .8cqw; }
+.team { font-family: var(--mono); font-size: 1.15cqw; color: var(--muted); }
+
+/* ---- big numbers ---- */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqw; }
+.stat { border-top: 2px solid var(--line); padding-top: 1cqw; display: grid; gap: .4cqw; }
+.stat .n { font-family: var(--mono); font-size: 4.2cqw; font-weight: 500; color: var(--figure); line-height: 1; font-variant-numeric: tabular-nums; }
+.stat .l { color: var(--muted); font-size: 1.35cqw; }
+
+/* ---- rule gifs ---- */
+.gifs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2cqw; }
+.gifs figure { margin: 0; display: grid; gap: .5cqw; }
+.gifs img { width: 100%; max-width: 100%; image-rendering: pixelated; border-radius: 2px; display: block; }
+.gifs figcaption { font-family: var(--mono); font-size: 1cqw; color: var(--muted); }
+
+/* ---- bar chart, drawn to one scale: 0..1 maps to 0..100% of the track ---- */
+.chart { display: grid; gap: 1.15cqw; }
+.row { display: grid; grid-template-columns: 15cqw 1fr 13cqw; gap: 1.4cqw; align-items: center; }
+.row .who { font-size: 1.45cqw; }
+.row .who small { display: block; font-family: var(--mono); font-size: .95cqw; color: var(--muted); }
+.track { position: relative; height: 2.3cqw; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 25%); border-left: 1px solid var(--wall); }
+.fill { position: absolute; left: 0; top: .35cqw; bottom: .35cqw; width: calc(var(--v) * 100%); }
+.fill.h { background: var(--human); } .fill.m { background: var(--model); } .fill.o { background: var(--optimal); } .fill.z { background: var(--wall); width: 2px; }
+.ci { position: absolute; top: 50%; height: 1.6cqw; transform: translateY(-50%); left: calc(var(--lo) * 100%); width: calc((var(--hi) - var(--lo)) * 100%); border: 1px solid var(--fg); border-top: 0; border-bottom: 0; }
+.ci::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--fg); }
+.row .val { font-family: var(--mono); font-size: 1.45cqw; font-variant-numeric: tabular-nums; }
+.row .val small { display: block; color: var(--muted); font-size: .95cqw; }
+.axis { display: grid; grid-template-columns: 15cqw 1fr 13cqw; gap: 1.4cqw; }
+.axis div { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .9cqw; color: var(--muted); }
+
+/* ---- failure split ---- */
+.split { display: grid; grid-template-columns: 50fr 44fr 6fr; height: 3cqw; border-radius: 2px; overflow: hidden; }
+.split span:nth-child(1) { background: var(--model); } .split span:nth-child(2) { background: var(--figure); } .split span:nth-child(3) { background: var(--wall); }
+.pct { font-family: var(--mono); font-size: 3.6cqw; line-height: 1; font-variant-numeric: tabular-nums; }
+
+/* ---- tables ---- */
+table { border-collapse: collapse; width: 100%; font-size: 1.35cqw; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: .55cqw .8cqw .55cqw 0; border-bottom: 1px solid var(--line); vertical-align: baseline; }
+th { font-family: var(--mono); font-weight: 400; color: var(--muted); font-size: 1cqw; text-transform: uppercase; letter-spacing: .05em; }
+td.r, th.r { text-align: right; }
+code, .cmd { font-family: var(--mono); font-size: .92em; }
+.cmd { display: block; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; padding: 1cqw 1.2cqw; color: var(--fg); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pending { border: 1px dashed var(--figure); border-radius: 3px; padding: 1.2cqw 1.4cqw; display: grid; gap: .5cqw; }
+.pending b { font-family: var(--mono); font-weight: 500; color: var(--figure); font-size: 1.05cqw; letter-spacing: .06em; text-transform: uppercase; }
+.ideas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4cqw; }
+.idea { display: grid; gap: .8cqw; align-content: start; border-top: 2px solid var(--line); padding-top: 1.2cqw; }
+.idea h3 { margin: 0; font-family: var(--display); font-weight: 600; font-size: 2cqw; line-height: 1.1; }
+.idea .who { font-family: var(--mono); font-size: 1cqw; color: var(--figure); text-transform: uppercase; letter-spacing: .05em; }
+#qr { background: var(--fg); padding: .8cqw; width: 15cqw; max-width: 100%; aspect-ratio: 1; border-radius: 3px; }
+#qr img, #qr canvas { width: 100% !important; height: auto !important; display: block; image-rendering: pixelated; }
+
+/* ---- present mode: one slide, as large as the window allows at 16:9 ---- */
+body.present { padding: 0; overflow: hidden; }
+body.present .bar, body.present .slide:not(.current) { display: none; }
+body.present .deck { max-width: none; }
+body.present .slide.current { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); z-index: 5; }
+body.present .slide.current .frame { width: min(100vw, 177.78vh); border: 0; border-radius: 0; }
+
+/* ---- narrow screens: slides flow at their natural height ---- */
+@media (max-width: 760px) {
+  .frame { aspect-ratio: auto; container-type: normal; }
+  .in { position: static; padding: 20px 18px; gap: 14px; font-size: 15px; }
+  .top { font-size: 11px; } .src, .cap, .gifs figcaption, .team { font-size: 11px; }
+  h1 { font-size: 34px; } h2 { font-size: 24px; } .lead { font-size: 17px; }
+  .title, .cols, .ideas { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stat .n { font-size: 30px; } .stat .l { font-size: 13px; }
+  .gifs { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .row, .axis { grid-template-columns: 92px 1fr 74px; gap: 8px; }
+  .row .who, .row .val { font-size: 13px; } .row .who small, .row .val small, .axis div { font-size: 10px; }
+  .track { height: 16px; } .fill { top: 3px; bottom: 3px; } .ci { height: 12px; }
+  .split { height: 18px; } .pct { font-size: 26px; }
+  table { font-size: 13px; } th { font-size: 10px; }
+  .idea h3 { font-size: 18px; } .idea .who, .pending b { font-size: 11px; }
+  .list li { grid-template-columns: 8px 1fr; gap: 8px; } .list li::before { width: 7px; height: 7px; }
+  #qr { width: 120px; padding: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="bar">
+  <span>Game Factory · Junction 2026 · 11 slides · ← → to move</span>
+  <button id="present" type="button">Present (P)</button>
+</div>
+
+<main class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" id="s1" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>Junction 2026 · AfterQuery challenge</span><span><b>01</b> / 11</span></div>
+  <div class="cols title">
+    <div class="body">
+      <h1>Game Factory</h1>
+      <p class="lead">Unlimited games that no model has seen. Frontier agents finish the easy ones. On games with new rules, humans still win.</p>
+      <p class="team">Anssi · Daniel · Hoang Dung · Ignacio</p>
+    </div>
+    <div>
+      <canvas id="hero" width="64" height="64" aria-label="A real level from eval-v2, as the model sees it: 64 by 64 cells, 16 colours"></canvas>
+      <div class="cap">What the agent sees: eval-v2, game s910004, level 8. Ice, conveyors, ordered checkpoints. No text.</div>
+    </div>
   </div>
+  <div class="src">Every number in this deck comes from a file in the repo; sources are under each slide.</div>
+</div></div></section>
 
-  <script>
-    (function () {
-      const slides = Array.from(document.querySelectorAll('.slide'));
-      const label = document.getElementById('slide-label');
-      const prevBtn = document.getElementById('prev-btn');
-      const nextBtn = document.getElementById('next-btn');
-      let idx = 0;
+<!-- 2 -->
+<section class="slide" id="s2" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>The problem</span><span><b>02</b> / 11</span></div>
+  <div class="body">
+    <h2>A benchmark that ends up in training data measures memory.</h2>
+    <ul class="list y">
+      <li>Public tests leak into training sets. Scores go up; the skill they were meant to measure may not.</li>
+      <li>Deployed agents meet software and rules that change without a manual. They have to work out the rules by acting and watching.</li>
+      <li>We need tests nobody has seen, each with a provably correct answer and a reward that can't be gamed.</li>
+    </ul>
+  </div>
+  <div class="src">Brief: docs/CHALLENGE.md (AfterQuery: an RL environment, a reproducible gap, a reward that resists exploits)</div>
+</div></div></section>
 
-      function show(nextIdx) {
-        idx = Math.max(0, Math.min(nextIdx, slides.length - 1));
-        slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-        const title = slides[idx].getAttribute('data-title') || '';
-        label.textContent = `SLIDE ${idx + 1} / ${slides.length} — ${title.toUpperCase()}`;
-        history.replaceState(null, '', `#${idx + 1}`);
-      }
+<!-- 3 -->
+<section class="slide" id="s3" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>The environment</span><span><b>03</b> / 11</span></div>
+  <div class="cols">
+    <div class="body">
+      <h2>A factory of verified games nobody has seen.</h2>
+      <ul class="list">
+        <li>The agent gets a 64×64 grid of 16 colours and 6 actions: four moves, interact, reset. No text, no score, no rule names.</li>
+        <li>Each new level introduces a hidden rule; the last level combines them. Colours and shapes are reshuffled for every game.</li>
+        <li>Every level is checked before it ships: a search finds the shortest solution, every rule must change that solution, and random play wins under 2% of 200 tries.</li>
+      </ul>
+      <div class="stats">
+        <div class="stat"><span class="n">21</span><span class="l">composable rules</span></div>
+        <div class="stat"><span class="n">2,035</span><span class="l">training games</span></div>
+        <div class="stat"><span class="n">60</span><span class="l">frozen test games</span></div>
+      </div>
+    </div>
+    <div class="gifs">
+      <figure><img src="assets/keys_doors.gif" alt="Keys and doors teaching level"><figcaption>keys + doors</figcaption></figure>
+      <figure><img src="assets/ice.gif" alt="Ice teaching level"><figcaption>ice</figcaption></figure>
+      <figure><img src="assets/teleporters.gif" alt="Teleporters teaching level"><figcaption>teleporters</figcaption></figure>
+      <figure><img src="assets/push_blocks.gif" alt="Push blocks teaching level"><figcaption>push blocks</figcaption></figure>
+      <figure><img src="assets/one_way.gif" alt="One-way tiles teaching level"><figcaption>one-way tiles</figcaption></figure>
+      <figure><img src="assets/plates_gates.gif" alt="Plates and gates teaching level"><figcaption>plates + gates</figcaption></figure>
+      <figure><img src="assets/pits.gif" alt="Pits teaching level"><figcaption>pits (new)</figcaption></figure>
+      <figure><img src="assets/checkpoints.gif" alt="Ordered checkpoints teaching level"><figcaption>checkpoints (new)</figcaption></figure>
+    </div>
+  </div>
+  <div class="src">engine 0.6.0 · rules/CATALOG.md · data/collections/{train-v1,eval-v1,eval-v2}.json · 1,000/1,000 fuzzed games solvable</div>
+</div></div></section>
 
-      const initialHash = parseInt(location.hash.replace('#', ''), 10);
-      if (!Number.isNaN(initialHash) && initialHash >= 1 && initialHash <= slides.length) {
-        show(initialHash - 1);
-      } else {
-        show(0);
-      }
+<!-- 4 -->
+<section class="slide" id="s4" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>Live demo</span><span><b>04</b> / 11</span></div>
+  <div class="cols">
+    <div class="body">
+      <h2>Can you beat the AI?</h2>
+      <p>Play a held-out test game in the browser. When you clear a level, the recorded AI runs on that same level replay beside you.</p>
+      <div style="display:flex; gap:2cqw; align-items:center; flex-wrap:wrap">
+        <div id="qr" role="img" aria-label="QR code for the challenge page"></div>
+        <p class="src" style="font-size:1.2cqw; overflow-wrap:anywhere">65.108.33.107.compute.verda.run/challenge</p>
+      </div>
+      <p class="muted">No paid model calls. Visitor scores are kept apart from the research data.</p>
+    </div>
+    <img class="shot" src="assets/challenge.png" alt="The challenge page after a level is solved, with AI replays beside the player's result">
+  </div>
+  <div class="src">web/src/features/challenge · screenshot web/screenshots/12-challenge-level-solved.png</div>
+</div></div></section>
 
-      prevBtn.addEventListener('click', () => show(idx - 1));
-      nextBtn.addEventListener('click', () => show(idx + 1));
+<!-- 5 -->
+<section class="slide" id="s5" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>The gap</span><span><b>05</b> / 11</span></div>
+  <div class="body">
+    <h2>On games with never-seen rules, humans finish. No model does.</h2>
+    <div class="chart" role="img" aria-label="eval-v2 scores: optimal 1.000, human playtesters 0.684, Gemini 4 Argon 0.442, Gemini Flash 0.020, random 0, do nothing 0">
+      <div class="row"><div class="who">Optimal<small>shortest solution</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">1.000<small>20 of 20 won</small></div></div>
+      <div class="row"><div class="who h">Human playtesters<small>first attempt</small></div><div class="track"><div class="fill h" style="--v:.684"></div><div class="ci" style="--lo:.604;--hi:.758"></div></div><div class="val">0.684<small>8 of 14 won</small></div></div>
+      <div class="row"><div class="who m">Gemini 4 Argon<small>medium effort</small></div><div class="track"><div class="fill m" style="--v:.442"></div><div class="ci" style="--lo:.346;--hi:.526"></div></div><div class="val">0.442<small>0 of 6 won</small></div></div>
+      <div class="row"><div class="who m">Gemini Flash<small>medium effort</small></div><div class="track"><div class="fill m" style="--v:.020"></div><div class="ci" style="--lo:0;--hi:.05"></div></div><div class="val">0.020<small>0 of 7 won</small></div></div>
+      <div class="row"><div class="who">Random · Do nothing<small>baselines</small></div><div class="track"><div class="fill z"></div></div><div class="val">0.000<small>0 of 20 won</small></div></div>
+      <div class="axis"><span></span><div><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span></div><span></span></div>
+    </div>
+    <p class="muted">Score per level = optimal moves ÷ moves used, 0 if unsolved, averaged over all 8 levels. Whiskers: 95% bootstrap CI.</p>
+  </div>
+  <div class="src">eval-v2: 30 games × 8 levels, 3 never-trained rules each · harness h1 · leaderboard.json, built 17:49 UTC from the shared server's runs</div>
+</div></div></section>
 
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
-          e.preventDefault();
-          show(idx + 1);
-        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-          e.preventDefault();
-          show(idx - 1);
-        } else if (e.key === 'Home') {
-          e.preventDefault();
-          show(0);
-        } else if (e.key === 'End') {
-          e.preventDefault();
-          show(slides.length - 1);
-        }
-      });
-    })();
-  </script>
-</body>
-</html>
+<!-- 6 -->
+<section class="slide" id="s6" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>The gap, run the lab way</span><span><b>06</b> / 11</span></div>
+  <div class="cols">
+    <div class="body">
+      <h2>Even run the way labs benchmark, the gap holds.</h2>
+      <ul class="list">
+        <li>Harness h2: the full conversation, reasoning carried across turns, native tool calls, highest effort, 32k–64k output.</li>
+        <li>On easy games with known rules, it closes the gap: Kimi, Gemini Pro and Claude Haiku won d1 games in 98–131 moves, against 86–92 optimal.</li>
+        <li>On new rules, no model has finished a game.</li>
+      </ul>
+    </div>
+    <div class="body">
+      <div class="chart" role="img" aria-label="eval-v2 h2 subset scores: human 0.660, Kimi K3.1 max 0.523, Gemini Pro high 0.242">
+        <div class="row"><div class="who h">Humans<small>same 4 games</small></div><div class="track"><div class="fill h" style="--v:.660"></div><div class="ci" style="--lo:.586;--hi:.757"></div></div><div class="val">0.660<small>4 of 4 won</small></div></div>
+        <div class="row"><div class="who m">Kimi K3.1<small>max effort</small></div><div class="track"><div class="fill m" style="--v:.523"></div><div class="ci" style="--lo:.389;--hi:.644"></div></div><div class="val">0.523<small>0 of 3 won</small></div></div>
+        <div class="row"><div class="who m">Gemini Pro<small>high effort</small></div><div class="track"><div class="fill m" style="--v:.242"></div><div class="ci" style="--lo:.201;--hi:.284"></div></div><div class="val">0.242<small>0 of 2 won</small></div></div>
+        <div class="axis"><span></span><div><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span></div><span></span></div>
+      </div>
+      <p class="muted">eval-v2 h2 subset, one attempt per model and game. Best model run: 7 of 8 levels before the 400-move cap.</p>
+    </div>
+  </div>
+  <div class="src">leaderboard_h2.json, built 17:49 UTC · arena/src/arena/agent_h2.py · arena/sweeps/h2-subset-v2.yaml</div>
+</div></div></section>
+
+<!-- 7 -->
+<section class="slide" id="s7" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>Why they fail</span><span><b>07</b> / 11</span></div>
+  <div class="cols">
+    <div class="body">
+      <h2>Two habits explain 94% of the failures.</h2>
+      <div class="split" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:2cqw">
+        <div style="display:grid; gap:.6cqw"><span class="pct m">50%</span><span>Repeating moves that change nothing, such as walking into the same wall.</span></div>
+        <div style="display:grid; gap:.6cqw"><span class="pct fig">44%</span><span>Not restarting a level that can no longer be finished in the moves left.</span></div>
+      </div>
+      <p class="muted">The other 6%: missing the newly introduced rule, or acting on a wrong guess about it.</p>
+    </div>
+    <img class="shot" src="assets/replay.png" alt="Replay viewer showing a model run step by step with its stated hypothesis">
+  </div>
+  <div class="src">decision_points.json: 194 failure points from recorded runs · replay: web/screenshots/04-replay-argon.png</div>
+</div></div></section>
+
+<!-- 8 -->
+<section class="slide" id="s8" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>Reward integrity</span><span><b>08</b> / 11</span></div>
+  <div class="cols">
+    <div class="body">
+      <h2>The only way to score is to play well.</h2>
+      <table>
+        <thead><tr><th>On the judges' harness (Harbor + MCP)</th><th class="r">Reward</th></tr></thead>
+        <tbody>
+          <tr><td>Reference solution</td><td class="r fig">1.000</td></tr>
+          <tr><td>Do nothing</td><td class="r fig">0.000</td></tr>
+          <tr><td>Stop after 1 of 6 levels</td><td class="r fig">0.167</td></tr>
+          <tr><td>Stop after 3 of 6 levels</td><td class="r fig">0.500</td></tr>
+          <tr><td>OpenCode + Nemotron, 3 runs</td><td class="r fig">0.067</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="body">
+      <p><span class="fig">9 of 9</span> attacks from inside the agent's container scored <span class="fig">0.0</span>:</p>
+      <ul class="list">
+        <li>Forging the score file. The verifier reads the score from the game's container, not the agent's.</li>
+        <li>Searching the disk, environment and network for answers or hidden endpoints.</li>
+        <li>Malformed actions, new sessions, 32 parallel calls, 2,000 resets, 3,100 wall bumps.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="src">coordination/JUDGING.md (Results, Red team) · harbor/eval-v1 · reproduce with one command, slide 11</div>
+</div></div></section>
+
+<!-- 9 -->
+<section class="slide" id="s9" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>Post-training</span><span><b>09</b> / 11</span></div>
+  <div class="cols">
+    <div class="body">
+      <h2>Can our games teach a small model to reason?</h2>
+      <ul class="list">
+        <li><b>Step 1, copying optimal moves</b> (Qwen3.5-9B, SFT v1): 4 of 180 test levels. It learned the reply format, not the skill.</li>
+        <li><b>Step 2, tonight:</b> three token-matched fine-tunes (control data / game data / mix), then RL with rewards checked by the engine, including playing the maps turn by turn.</li>
+        <li><b>Scored on outside benchmarks:</b> BBH, MATH, GSM8K, MedQA, MMLU-Pro health and law, plus a negative control. Paired bootstrap CIs, decision rule fixed in advance.</li>
+      </ul>
+    </div>
+    <div class="body">
+      <div class="pending">
+        <b>Result at the 07:00 numbers lock</b>
+        <span>Base vs control vs ours, with 95% CIs on each benchmark.</span>
+        <span class="muted">If no trained model beats the control, we say so here and show what it learned in-domain.</span>
+      </div>
+    </div>
+  </div>
+  <div class="src">A3 status (finetune-eval, 30 games) · bench/PROTOCOL.md v3, human sign-off · engine/src/engine/tasks · posttrain/</div>
+</div></div></section>
+
+<!-- 10 -->
+<section class="slide" id="s10" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>Business value</span><span><b>10</b> / 11</span></div>
+  <div class="body">
+    <h2>Who pays for tests nobody has seen.</h2>
+    <div class="ideas">
+      <div class="idea"><span class="who">AI labs · model buyers · safety institutes</span><h3>Contamination-proof evaluations</h3><p>A fresh, never-published game set for every evaluation, with a reward that resists exploits. If training on our games doesn't transfer, that is evidence nobody can train to the test.</p></div>
+      <div class="idea"><span class="who">Agent startups</span><h3>Pre-deployment checks for agents</h3><p>"Can your agent adapt to software it has never seen?" Catches the two habits behind 94% of failures before an agent burns a customer's budget.</p></div>
+      <div class="idea"><span class="who">Labs · game studios</span><h3>Verified training data and levels</h3><p>Unlimited RL environments with engine-checked rewards; for puzzle studios, levels that come with a solvability proof and a par score.</p></div>
+    </div>
+  </div>
+  <div class="src">docs/BUSINESS.md · BACKUP IDEAS.md</div>
+</div></div></section>
+
+<!-- 11 -->
+<section class="slide" id="s11" tabindex="-1"><div class="frame"><div class="in">
+  <div class="top"><span>Try to break it</span><span><b>11</b> / 11</span></div>
+  <div class="cols">
+    <div class="body">
+      <h2>Run it yourself, then try to break the reward.</h2>
+      <code class="cmd">harbor run -p harbor/eval-v1 -a oracle     # 1.000
+harbor run -p harbor/eval-v1 -a nop        # 0.000
+harbor run -p harbor/eval-v2 -a &lt;your agent&gt;</code>
+      <p class="muted">README.md has the one-command setup. eval-v2 adds 30 games with rules no training set contains.</p>
+    </div>
+    <div class="body">
+      <ul class="list y">
+        <li>Play the held-out games: <span class="fig">/challenge</span></li>
+        <li>Both leaderboards, with confidence intervals: <span class="fig">/leaderboard</span></li>
+        <li>Every model run, step by step, with its stated hypothesis: <span class="fig">/replay</span></li>
+        <li>New games on demand, each proven solvable: <span class="fig">/play</span> → New game</li>
+      </ul>
+    </div>
+  </div>
+  <div class="src">arena/HARBOR.md · coordination/JUDGING.md · 65.108.33.107.compute.verda.run</div>
+</div></div></section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function () {
+  // ---- hero: a real 64x64 frame, drawn with the game's palette ----
+  var PAL = ["#000000","#1E5BD8","#E5383B","#2FB54A","#F5C518","#8A8F98","#D63AAF","#F2832B",
+             "#6FD3F2","#7A1F2B","#FFFFFF","#3A3F47","#8E5CE6","#1FA39A","#A8D94A","#8B5A2B"];
+  var FRAME = ["4444444444444444444444444444444444444444444444444444444444444444","4444444444444444444444444444444444444444444444444444444444444444","0000000000000000000000000000000000000000000000000000000000000000","330330330330330330330aa00000000000000000000000000000000000000000","330330330330330330330aa00009009009000000000000000000000000000000","0000000000000000000000000000000000000000000000000000000000000000","0000000000000000000000000000000000000000000000000000000000000000","0000000000000000000000000000000000000000000000000000000000000000","0000000000000000000000000000000000000000000000000000000000000000","0000000000555555555555555555555555555555555555555555550000000000","0000000000555555555555555555555555555555555555555555550000000000","0000000000555555555555555555555555555555555555555555550000000000","0000000000555555555555555555555555555555555555555555550000000000","0000000000555500000000555509905555000000000000000055550000000000","0000000000555500000000555509905555000000000000000055550000000000","0000000000555500000000555509905555000000000000000055550000000000","0000000000555500000000555509905555000000000000000055550000000000","0000000000555500000000000000000000555500000000000055550000000000","0000000000555500000000000000000000555500000000000055550000000000","0000000000555500000000000000000000555500000000000055550000000000","0000000000555500000000000000000000555500000000000055550000000000","0000000000555555550000555500005555555555555555555555550000000000","0000000000555555550000555500005555555555555555555555550000000000","0000000000555555550000555500005555555555555555555555550000000000","0000000000555555550000555500005555555555555555555555550000000000","0000000000555500000000555500000000000000090000000055550000000000","0000000000555500000000555500000000000000990000000055550000000000","0000000000555500000000555500000000000009990000000055550000000000","0000000000555500000000555500000000000099990000000055550000000000","0000000000555500000000000000005555555500000000555555550000000000","0000000000555500000000000000005555555500000000555555550000000000","0000000000555500000000000000005555555500000000555555550000000000","0000000000555500000000000000005555555500000000555555550000000000","00000000005555000000005555010001000100aaaa0000000055550000000000","00000000005555000000005555111111111111aaaa0000000055550000000000","00000000005555000000005555111111111111aaaa0000000055550000000000","00000000005555000000005555010001000100aaaa0000000055550000000000","000000000055550000ffff5555aaaaaaaaaaaaaaaa0000000055550000000000","000000000055550000f00f5555aaaaaaaaaaaaaaaa0000000055550000000000","000000000055550000f00f5555aaaaaaaaaaaaaaaa0000000055550000000000","000000000055550000ffff5555aaaaaaaaaaaaaaaa0000000055550000000000","000000000055555555000055555555aaaa0110aaaa0000000055550000000000","000000000055555555000055555555aaaa0110aaaa0000000055550000000000","000000000055555555000055555555aaaa1111aaaa0000000055550000000000","000000000055555555000055555555aaaa0110aaaa0000000055550000000000","0000000000555500000000555500000000011000000000000055550000000000","0000000000555500000000555500000000011000000000000055550000000000","0000000000555500000000555500000000111100000000000055550000000000","0000000000555500000000555500000000011000000000000055550000000000","0000000000555500000000555500000000777700000000555555550000000000","0000000000555500000000555500000000777700000000555555550000000000","0000000000555500000000555500000000777700000000555555550000000000","0000000000555500000000555500000000777700000000555555550000000000","0000000000555500000000555500000000000000000990000055550000000000","0000000000555500000000555500000000000000000990000055550000000000","0000000000555500000000555500000000000000000990000055550000000000","0000000000555500000000555500000000000000000990000055550000000000","0000000000555555555555555555555555555555555555555555550000000000","0000000000555555555555555555555555555555555555555555550000000000","0000000000555555555555555555555555555555555555555555550000000000","0000000000555555555555555555555555555555555555555555550000000000","0000000000000000000000000000000000000000000000000000000000000000","0000000000000000000000000000000000000000000000000000000000000000","0000000000000000000000000000000000000000000000000000000000000000"];
+  var cv = document.getElementById("hero");
+  if (cv && cv.getContext) {
+    var ctx = cv.getContext("2d");
+    for (var y = 0; y < 64; y++) for (var x = 0; x < 64; x++) {
+      ctx.fillStyle = PAL[parseInt(FRAME[y][x], 16)];
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  // ---- QR code for the live demo ----
+  try {
+    if (window.QRCode) new QRCode(document.getElementById("qr"), {
+      text: "https://65.108.33.107.compute.verda.run/challenge", width: 256, height: 256,
+      colorDark: "#0d0f12", colorLight: "#eceef1", correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch (e) {}
+
+  // ---- navigation: arrows / space / PageUp-Down; P toggles present mode ----
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var cur = 0;
+  function nearest() {
+    var best = 0, bd = Infinity;
+    slides.forEach(function (s, i) { var d = Math.abs(s.getBoundingClientRect().top); if (d < bd) { bd = d; best = i; } });
+    return best;
+  }
+  function go(i) {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, k) { s.classList.toggle("current", k === cur); });
+    if (!document.body.classList.contains("present")) slides[cur].scrollIntoView({ behavior: "smooth", block: "start" });
+    try { history.replaceState(null, "", "#" + slides[cur].id); } catch (e) {}
+  }
+  function present(on) {
+    document.body.classList.toggle("present", on);
+    if (on) {
+      go(nearest());
+      var el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(function () {});
+    } else {
+      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+      slides[cur].scrollIntoView({ block: "start" });
+    }
+  }
+  document.getElementById("present").addEventListener("click", function () { present(true); });
+  document.addEventListener("fullscreenchange", function () {
+    if (!document.fullscreenElement && document.body.classList.contains("present")) present(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    var k = e.key;
+    if (k === "p" || k === "P") { present(!document.body.classList.contains("present")); return; }
+    if (k === "Escape" && document.body.classList.contains("present")) { present(false); return; }
+    var base = document.body.classList.contains("present") ? cur : nearest();
+    if (k === "ArrowRight" || k === "PageDown" || k === " ") { e.preventDefault(); go(base + 1); }
+    else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); go(base - 1); }
+    else if (k === "Home") { e.preventDefault(); go(0); }
+    else if (k === "End") { e.preventDefault(); go(slides.length - 1); }
+  });
+  document.addEventListener("click", function (e) {
+    if (!document.body.classList.contains("present")) return;
+    go(cur + (e.clientX > window.innerWidth / 3 ? 1 : -1));
+  });
+  var start = slides.findIndex(function (s) { return "#" + s.id === location.hash; });
+  if (start > 0) go(start); else slides[0].classList.add("current");
+})();
+</script>

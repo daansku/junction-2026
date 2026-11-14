@@ -1,59 +1,42 @@
-# Presentation Deck v2 (`docs/deck/SLIDES.md`)
+# Game Factory pitch: deck v3 (speaker notes and sources)
 
-> Standalone interactive deck: open `docs/deck/index.html` in any browser (`←` / `→` / `Space` / `Home` / `End`).
-> Structure follows `PLAN.md` §3.5: **Problem → Environment in 30s → Live Demo (`/challenge`) → The Gap (`h1` then `h2`) → Meaningful Failures (`/replay` + X-Ray) → Reward Integrity (`9/9` Red-Team = `0.000`) → Post-Training & Transfer (`Qwen3.5-9B` + Honesty Rule) → Business Value → Ask**.
-> Every number traces to `coordination/JUDGING.md` and `data/derived/{leaderboard,leaderboard_h2,bench_summary,rules,insights,decision_points}.json` (`python -m analysis check-claims`, `0` errors).
+Open `docs/deck/index.html` in a browser (or the published copy). Arrow keys or Space move between slides;
+**P** starts Present mode (one slide, full screen; click the right two thirds to go forward). Esc leaves it.
+Built by A1 at the humans' request (Sat ~20:15), replacing deck v2. Numbers are from boards rebuilt at 17:49 UTC
+from the shared server's export (652 runs); rebuild and update the marked figures after the 07:00 lock.
 
----
+Timing target: 10 minutes including the live demo. Rewrite the notes in your own words.
 
-## Slide 1 — Problem: Static Agent Benchmarks Leak
-- **Headline:** Games No Model Has Seen Before.
-- **Core problem:** Instruction-heavy benchmarks test reading comprehension and memorized training priors (`green = goal`, `red = lava`), whereas deployed agents fail when APIs, UIs, or physical systems change rules silently without a manual.
-- **Headline KPIs:** `64×64×16` pixels-only observation · `18` composable rules · `1.000` BFS optimal ceiling · `0.000` across `9/9` red-team exploit attacks.
+| # | Slide | Say (about) | Time |
+|---|---|---|---|
+| 1 | **Game Factory**: unlimited games no model has seen; frontier agents finish easy ones; on new rules humans win. Hero = a real eval-v2 frame. | "This is exactly what the model sees: 64 by 64 cells, 16 colours, no words." | 0:30 |
+| 2 | **The problem**: a benchmark that ends up in training data measures memory. | Leakage; agents meet rules without a manual; we need unseen tests with provable answers. | 0:45 |
+| 3 | **The environment**: 21 rules, 2,035 training games, 60 frozen test games; every level checked (search, every rule matters, random <2%). GIFs = real teaching levels. | Point at one GIF (ice or teleporters) and say what the player has to discover. | 1:00 |
+| 4 | **Live demo** `/challenge` + QR. | Hand a phone to a judge or play one level live; show the AI replays appear. Fallback: `web/screenshots/video/challenge-full-run.mp4` (scripted optimal player, say so). | 2:00 |
+| 5 | **The gap (h1, eval-v2)**: optimal 1.000 · humans 0.684, 8 of 14 won · Gemini 4 Argon 0.442, 0 of 6 · Gemini Flash 0.020 · random / do nothing 0. | Headline sentence. Explain the score in one line. | 1:00 |
+| 6 | **Run the lab way (h2)**: humans 0.660 (4 of 4) · Kimi K3.1 max 0.523 (0 of 3) · Gemini Pro high 0.242 (0 of 2); on easy d1 games h2 closes the gap (98–131 moves vs 86–92 optimal). | Pre-empt "you crippled the models": full history, reasoning kept, native tools, max effort. Be honest that easy games close. | 1:00 |
+| 7 | **Why they fail**: 50% repeating moves that change nothing, 44% not restarting a doomed level (194 failure points). | Show one replay if time allows (`/replay`). | 0:45 |
+| 8 | **Reward integrity**: Harbor reference 1.000, do nothing 0.000, stop-early 0.167 / 0.500, OpenCode + Nemotron 0.067; 9 of 9 container attacks 0.0. | "Judges: the only way to score is to play well. Try us." | 0:45 |
+| 9 | **Post-training**: SFT v1 4 of 180 levels; SFT v2 three-way + RL (incl. game_turn on the maps); outside benchmarks with pre-registered rule. **Result box is a placeholder until 07:00.** | Replace the dashed box with base / ctrl / ours and CIs. If no transfer, say so (honesty rule). | 1:00 |
+| 10 | **Business**: contamination-proof evals · pre-deployment agent checks · verified training data and levels. | If transfer failed: "that is evidence you can't train to our test." | 0:45 |
+| 11 | **Try to break it**: Harbor commands, live pages. | Ask + invite the 15-minute exploit hunt. | 0:30 |
 
-## Slide 2 — The Environment in 30 Seconds (`engine 0.5.0`)
-- **Visual contact sheet:** `rules/img/all_rules.png` (`18` deterministic mechanics across Tier 0–3).
-- **Zero prose, zero score leakage:** Agents see only a `64×64` indexed frame (`rows 0–1` shrinking budget bar, `rows 3–4` level & state pips, `rows 6–63` playfield) with per-seed `skin_shuffle: true` and held-out rule pairs + skins in `eval-v1` and `eval-v2`.
-- **4 Mathematical Proofs per Generated Level:** Exact BFS shortest path (`optimal_moves`), single-rule necessity ablation, bounded exploration slack, and `< 2%` random-walk win ceiling (`100` rollouts).
+## Sources for every figure
 
-## Slide 3 — Live Demo: Beat the AI (`/challenge`)
-- **Public zero-setup kiosk:** Visitors & judges play the exact held-out game in-browser (`gridworld-s900002-d3-l6-f09d6348` default — where our human tester beat every finished model — plus `s900000` quick mode & mobile QR).
-- **Zero spoiler bias, instant comparison:** Runs 100% client-side (`engine.ts`, zero paid API calls, isolated from benchmark tables via `loader.py` hygiene filter). Clearing a level reveals `4 moves/s` side-by-side AI ghost replays (`Kimi`, `Gemini`, `Nemotron`) on that exact level.
+| Figure | Source |
+|---|---|
+| 21 rules, engine 0.6.0, 1,000/1,000 fuzz | `engine/src/engine/components/`, `rules/CATALOG.md`, A1 status |
+| 2,035 training games; 30 + 30 frozen test games | `data/collections/train-v1.json`, `eval-v1.json`, `eval-v2.json` |
+| Slide 5 bars and CIs | `leaderboard.json` (h1), built 17:49 UTC by `analysis.cli.build_all` from `/api/runs/export` |
+| Slide 6 bars and CIs | `leaderboard_h2.json`, same build; d1 wins from `/api/runs` metas (h2) |
+| 50% / 44% / 194 failure points | `decision_points.json`, same build |
+| Harbor rows, red team | `coordination/JUDGING.md` (Results, Red team) |
+| SFT v1 4/180 levels | `coordination/status/A3.md` (A3-20 finetune-eval, 30 games) |
+| Post-training protocol | `bench/PROTOCOL.md` v3 (human sign-off), `FT_BENCHMARKS.md` |
 
-## Slide 4 — The Gap: `h1` Board, Then `h2` Lab-Standard Board
-- **Left — `h1` Stateless Rolling-Notes & Harbor Rubric (`leaderboard.json`):**
-  - `Optimal`: **`1.000`** · `Human`: **`0.795`** (`eval-v1`) / **`0.630`** (`eval-v2`, `5` games) / **`0.606`** (`dev`, `23` games)
-  - `Harbor 0.26 + OpenCode + Nemotron` (`k=3`): **`0.067`** mean (`0.020`, `0.094`, `0.087`)
-  - `Kimi K3.1 Pro` (`dev`, `8` games): **`0.374`** (`52.1%` levels, `0%` game wins)
-  - `DeepSeek V3.2` / `gpt-oss-120b` (text-only `[rle]`): **`0.000`** (`0/96` levels despite lossless 64×64 RLE)
-- **Right — `h2` Lab-Standard Multi-Turn (`leaderboard_h2.json`, *"Even run the lab way, they lose"*):**
-  - Full multi-turn history, preserved thinking blocks, native `act()` tool, `high`/`max` effort, `64k`/`32k` token cap, last-5 frames + caching, 95% bootstrap CIs:
-  - `eval-v1` (`d1–d2` partial subsets): `Claude Haiku 5.5 (high)` **`0.827`** (`1/6` games) · `Gemini 3.1 Pro (high)` **`0.803`** (`2/6` games, `95% CI [0.732, 0.874]`).
-  - `eval-v1` (full `6/6` `h2` subset incl. `d3`): `Kimi K3.1 Pro (max)` **`0.671`** (`95% CI [0.541, 0.795]`, `50%` wins, `0.436` unseen pairs) vs **`Human 0.795`** (`100%` win).
-  - `eval-v2` (`d4`, 8 levels, unseen rules): `Kimi K3.1 Pro (max)` **`0.463`** (`95% CI [0.389, 0.537]`, **`0%` game wins**) vs **`Human 0.637`** (**`100%` game wins**).
-
-## Slide 5 — Why Failures Are Meaningful (`/replay` + X-Ray Curtain)
-- **Pinpointed Epistemic Bottlenecks (`rules.json`, `explanations.json`, `decision_points.json`):**
-  - **Zero-change wall/state loops (`46.9%` of decision points):** Agents repeat falsified actions when hidden constraints (`one_way`, `phase_walls`, `twin`) block movement.
-  - **Delayed resets (`42.1%` of decision points):** Agents burn `>1.5× optimal_moves` in dead-ends (`cracked_floor`, `push_blocks`) instead of resetting early.
-  - **Interactive X-Ray Forensics:** Dragging the `/replay` X-Ray split curtain contrasts raw agent pixels against ground-truth rule sprites, BFS optimal paths, and verbatim false `hypothesis` quotes.
-
-## Slide 6 — Reward Integrity (`Harbor 0.26` + `9/9` Red-Team = `0.000`)
-- **Action-efficiency formula:** $\text{level\_score}(L) = \min(1.0,\; \text{optimal\_moves}(L) / \text{actions\_used}(L))$ if solved else $0.0$, averaged over all `levels_total` levels (pre-reset steps + `RESET` included).
-- **Verified Harbor Baselines:** `oracle = 1.000` (`6/6`), `STOP_AFTER_LEVELS=3 = 0.500`, `STOP_AFTER_LEVELS=1 = 0.167`, `nop = 0.000`.
-- **Inside-Container Red-Team (`9/9 -> 0.000`):** Forging `/evidence/score.json` & `/logs/verifier/reward.txt`, disk/env recon, port scan, unknown MCP tools, malformed actions, session-reset bypass, 32-way race, `2,000× RESET` spam, `3,100×` wall-cycle spam all score **`0.000`**.
-
-## Slide 7 — Post-Training & Reasoning Transfer (`Qwen3.5-9B`)
-- **Step 0 Proof (`SFT v1`, `bench_summary.json`):** Pure optimal-action cloning on disjoint `train-v1` achieved `0` JSON parse errors yet solved **`1/36` synced levels (`0.012`, `56.8%` wall-bumps; `4/180` on 30-game sweep)** on `eval-v1` — proving action imitation without causal discovery fails.
-- **Controlled Post-Training Ladder (`SFT v2` + `GRPO`):** Token-matched `ctrl` (Tulu-3 reasoning) vs `games` (Narrator `<think>` causal rationales + A1 verifiable world-model tasks: `next_frame`, `rule_induction`, `solvable_in_k`, weighted by `decision_point_targets.json`) vs `mix`, followed by engine-verified GRPO.
-- **Pre-Registered Honesty Claim Rule (`FT_BENCHMARKS.md`):** `10,000`-resample paired item-level bootstrap CIs across 6 Primary Far-Transfer tasks (`BBH`, `MATH`, `GSM8K`, `MedQA`, `MMLU-Pro Health & Law`) + `MMLU-Pro: History` negative control. Transfer is claimed **only** if `cand > ctrl` on headline + `≥2` primary benchmarks (`95% CI > 0`) while outpacing `History`.
-
-## Slide 8 — Business & Real-World Value (`docs/BUSINESS.md` + `BACKUP IDEAS.md`)
-1. **Contamination-Proof Frontier Lab Eval & Post-Training Gym:** Fresh private seed splits + Harbor MCP sidecars (`9/9` red-team = `0.000`) + engine-verified RL environments that never saturate across training cutoffs. *(Two-outcome win: if post-training transfers, we sell the RL gym; if `28.7k` game examples don't game unseen rules, that proves the benchmark resists training-to-the-test.)*
-2. **Pre-Deployment Sanity Gate for Tool-Using Agents:** Catches zero-effect action loops (`46.9%` of failures) and sunk-cost refusal to reset (`42.1%`) before agents burn enterprise API/cloud budgets.
-3. **Procedural Data & Solvable-Level SDK + `/challenge` Flywheel:** Solver-verified causal-induction traces (`engine/tasks`), grid-studio level SDK hedge, and daily human discovery data via `/challenge`.
-
-## Slide 9 — Ask & 15-Minute Live Exploit Hunt
-- **One-Command Harbor Reproduction (`arena/HARBOR.md`):** `harbor run -p harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4 -a oracle | nop | opencode`.
-- **Live Interactive Suite:** `/challenge` (QR live play) · `/leaderboard` (`h1`, `h2` Lab-Standard, `bench` Post-Training) · `/insights` · `/replay` (X-Ray + Take-Over).
-- **Automated Audit:** `9/9` analysis unit tests passing + `python -m analysis check-claims` `0` errors across all `7` derived artifacts.
+## To update after the 07:00 lock
+1. Rebuild the boards (`python -m analysis build`, or `analysis.cli.build_all` on Python 3.14, where the CLI's argparse
+   help string fails) and replace the figures on slides 5, 6 and 7 if they moved.
+2. Fill slide 9's result box from `bench_summary.json`.
+3. A4 retakes `web/screenshots/` (`python web/scripts/deck_capture.py`); copy `12-challenge-level-solved.png` and
+   `04-replay-argon.png` over `docs/deck/assets/challenge.png` and `replay.png`.
