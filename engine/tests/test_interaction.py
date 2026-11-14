@@ -21,7 +21,7 @@ def _load(name):
     return json.loads(p.read_text(encoding="utf-8"))
 
 
-@pytest.mark.parametrize("name", ["dev", "eval-v1", "eval-v2", "probe-v1"])
+@pytest.mark.parametrize("name", ["dev", "eval-v1", "eval-v2", "probe-v1", "eval-v3"])
 def test_frozen_collections_regenerate_identically(name):
     col = _load(name)
     bad = [(g["game_id"], e) for g in col["games"] if (e := verify_game(g, regen=True))]
@@ -71,3 +71,13 @@ def test_gridforce_differs_from_gridworld():
     a = make_game(GameSpec(family="gridworld", seed=7105, difficulty=2))
     b = make_game(GameSpec(family="gridforce", seed=7105, difficulty=2))
     assert a.game_id.split("-")[-1] != b.game_id.split("-")[-1]
+
+
+def test_eval_v3_forces_every_new_rule():
+    col = _load("eval-v3")
+    assert all(g["game_id"].startswith("gridforce-s93") for g in col["games"])
+    for g in col["games"]:
+        for ld in g["levels"]:
+            lv = Level.from_dict(ld)
+            if lv.new_rule and I.scored(lv.new_rule):
+                assert I.rule_forced(lv, lv.new_rule), (g["game_id"], lv.new_rule)

@@ -43,3 +43,4 @@
 - **Targets before the 07:00 lock:** a new frozen `eval-v3` collection (fresh seeds; any model sweep on it is a separate human cost decision) and training data (A1/A3). Not the web "New game" switch for now.
 - Opt-in only: `dev`, `train-v1`, `eval-v1`, `eval-v2` stay byte-identical.
 - **Second RL run (Sat 20:05, ignacio):** grpo-2 on a second Modal H100 in parallel (~$16), game_turn only, 80 steps, from the SFT v2 `games` adapter; grpo-1 (70% game_turn + 30% aux, 150 steps) continues. Both runs' checkpoints are finalist candidates under the pre-registered rule.
+- **eval-v3 (Sat ~21:30, Anssi; recorded by A7):** built by A7 with `gridforce` (30 games, d1/d2/d3 cycled, 6 levels, seeds 930000-930029, same shape as eval-v1). **Draft, not frozen. No model runs on eval-v3 (no sweeps, no Harbor export, no /challenge use) until Anssi has looked at it and says so.** A1 OK'd the A7 engine hooks verbally to Anssi.
