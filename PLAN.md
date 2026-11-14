@@ -120,6 +120,7 @@ A kiosk-style page for visitors and judges, on the public URL, with no paid mode
 ### 3.5 Presentation
 - Deck structure (A5 drafts, humans rewrite in their own voice): problem → environment in 30 s → **live demo** → the gap (h1 board, then h2 board: "even run the lab way, they lose") → why failures are meaningful (one replay) → reward integrity (do-nothing / stop-early / exploit attempts) → **post-training result** (base vs ctrl vs ours, with CIs) → business value → ask.
 - `docs/DEMO_SCRIPT.md` timed to 10 minutes, with a fallback if the network fails (local `make demo`, recorded video).
+- **Video presentation (A6):** a 2–3 minute video of the same story, visuals animated with Manim (the 3Blue1Brown library) from real game frames and real numbers. It doubles as the submission/backup video.
 - Every number in deck, README and submission traces to a file in `data/derived/` (`python -m analysis check-claims`).
 
 ### 3.6 Business and real-life value
@@ -146,6 +147,7 @@ PLAN-v1 §3.1–3.3 apply (write only where you own, requests in `coordination/r
 | `arena/src/arena/` h2 loop, `arena/sweeps/h2-*.yaml`, `prompts/system_h2.md` | A3 | |
 | `web/src/features/challenge/` | **A4** | demo page; server endpoints for the visitor board via request to A2 |
 | `analysis/` bench + h2 aggregation, `docs/BUSINESS.md`, deck | A5 | |
+| `video/` (new) | **A6** | video presentation (Manim); instructions in `video/A6_INSTRUCTIONS.md` |
 | `data/derived/bench/` | written only by `bench` | gitignored like the rest of `data/derived/`; published snapshot by A2 |
 | `PLAN.md` | humans | |
 
@@ -163,6 +165,8 @@ Times are Helsinki. Task ids continue for status files. If your task is blocked 
 | **Q1** 19:30–23:30 | RL reward functions, rejection-sampling driver | bench every SFT v2 run; demo endpoints; deploy | SFT v2 ×3; RL run 1; h2 subset sweep | demo polish, attract mode, deploy check | bench page, h2 board; deck v2 |
 | **Q2** 23:30–05:00 | data v3 from Q1 failures (stretch) | bench RL checkpoints; snapshot | RL continues; finalist chosen by rule | screenshots, video capture help, QA | findings, business doc done, Q&A prep |
 | **Q3** 05:00–09:30 | on call | final snapshot 07:00, keep stack up | final full bench; GPU cleanup | on call, published build | claim check, final deck |
+
+**A6 REEL** (added Sat 18:40, human request): Q0 storyboard approved by Anssi · Q1 scenes in Manim · **H2 23:30 full draft render** (placeholders marked) · Q2 polish, real numbers as they lock · **H4 07:00 re-render with locked numbers** · **H5 08:30 final MP4**.
 
 ### A1 — FORGE
 - **A1-20** `engine/src/engine/tasks/`: generators for next-frame prediction, rule-effect induction (before/after pair, multiple choice), plan length / solvable-in-k, full-plan-from-text-grid. Each sample: prompt, answer, verifier function. Seeds disjoint from all eval collections; respect hold-outs. Determinism test.
@@ -198,6 +202,14 @@ Times are Helsinki. Task ids continue for status files. If your task is blocked 
 - **A5-22** `docs/BUSINESS.md` per §3.6.
 - **A5-23** Deck v2 (H2) and final (H5), `docs/DEMO_SCRIPT.md` with the live demo and network fallback, `docs/QA_PREP.md` updated with "did you cripple the models?" and "is the transfer real?" answers, claim check.
 
+### A6 — REEL (video presentation)
+Full instructions: **`video/A6_INSTRUCTIONS.md`** (read it first; ask Anssi the questions in its §8 before building).
+- **A6-01** Storyboard `video/SCRIPT.md`: scenes, durations, on-screen content, voice-over lines, matching the deck's story and claims (§3.5). Anssi approves it.
+- **A6-02** Manim scenes in `video/` (own venv, pinned version): real game frames animated from `contracts/palette.json`, the h1/h2 gap, one failure replay, reward integrity, post-training result with CIs, business value.
+- **A6-03** Every number from `data/derived/` or `/api/derived/*`; placeholders listed in `video/NUMBERS.md` until the 07:00 lock, then re-render.
+- **A6-04** Draft render by H2; final 1080p MP4 (+ captions) by H5, delivered where Anssi says; A5 links it from the submission.
+- Writes only in `video/`; requests to A4 (screen recordings), A5 (deck/claims), A2 (server/API) through `coordination/requests/`.
+
 ---
 
 ## 6. Humans — decisions and tasks
@@ -209,7 +221,8 @@ Times are Helsinki. Task ids continue for status files. If your task is blocked 
 | **by 19:00** | Approve `bench/PROTOCOL.md` (benchmark list, checkpoint rule). After this nobody changes the list. | keeps the result honest |
 | **Q1** | Playtest `/challenge`; pick the demo game if the data-driven pick is not fun. | taste |
 | **H2 23:30** | Review SFT v2 results; decide whether RL continues overnight. | risk call |
-| **Q2** | Read `docs/BUSINESS.md`, pick the 2–3 ideas for the deck; rewrite the deck in your own words; record demo video + backup screen recording. | your voice |
+| **Q0** | Start A6 and answer its questions (length, voice, Manim flavour, where the video goes); approve its storyboard. | taste |
+| **Q2** | Read `docs/BUSINESS.md`, pick the 2–3 ideas for the deck; rewrite the deck in your own words; record demo video + backup screen recording; record A6's voice-over if narrated. | your voice |
 | **07:00** | Numbers lock. | |
 | **08:00–09:30** | Final check of site, deck, numbers, README one-command eval. **Submit 09:30.** | platform login |
 | **after** | Peer review; rehearse the pitch twice, timed; run the booth demo. | in person |
