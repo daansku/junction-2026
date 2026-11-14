@@ -127,8 +127,11 @@ def check_claims(derived_dir: Path, repo_root: Path | None = None) -> dict[str, 
                 errors.append(f"Insight {ins.get('id')} has empty evidence array")
 
     if "explanations" in docs:
+        valid_stages = {"perception", "rule_induction", "belief_updating", "spatial_planning", "budget_management"}
+        valid_sources = {"cot", "notes", "hypothesis_only", "none"}
         seen_pairs: set[tuple[str, int]] = set()
-        for idx, exp in enumerate(docs["explanations"].get("explanations", [])):
+        exp_items = docs["explanations"].get("explanations", [])
+        for idx, exp in enumerate(exp_items):
             rid = str(exp.get("run_id") or "").strip()
             lv = int(exp.get("level") or 0)
             verdict = str(exp.get("verdict") or "").strip()
@@ -141,6 +144,19 @@ def check_claims(derived_dir: Path, repo_root: Path | None = None) -> dict[str, 
             seen_pairs.add(pair)
             if step is not None and (not isinstance(step, int) or step < 0):
                 errors.append(f"Invalid step index on ({rid}, L{lv}): {step}")
+            if exp.get("cognitive_stage") is not None and exp.get("cognitive_stage") not in valid_stages:
+                errors.append(f"Invalid cognitive_stage on ({rid}, L{lv}): {exp.get('cognitive_stage')}")
+            if exp.get("reasoning_source") is not None and exp.get("reasoning_source") not in valid_sources:
+                errors.append(f"Invalid reasoning_source on ({rid}, L{lv}): {exp.get('reasoning_source')}")
+            if exp.get("quote_source") not in (None, "reasoning", "hypothesis"):
+                errors.append(f"Invalid quote_source on ({rid}, L{lv}): {exp.get('quote_source')}")
+        summary = docs["explanations"].get("summary")
+        if isinstance(summary, dict):
+            if int(summary.get("total_failed_levels", -1)) != len(exp_items):
+                errors.append("explanations.summary.total_failed_levels mismatch")
+            stage_sum = sum(int(s.get("count", 0)) for s in (summary.get("by_cognitive_stage") or []))
+            if stage_sum != len(exp_items):
+                errors.append(f"explanations.summary.by_cognitive_stage sum {stage_sum} != {len(exp_items)}")
 
     return {
         "ok": len(errors) == 0,

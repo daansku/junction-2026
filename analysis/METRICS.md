@@ -172,3 +172,24 @@ Built by `analysis/src/analysis/bench_agg.py` from `data/derived/bench/<run>/{su
 Built by `analysis/src/analysis/sampling_export.py` (with holdout-safe `dev`-only target weights committed at `analysis/decision_point_targets.json` for `A1` and `A3`):
 - Extracts crisp failure decision points across `premature_hypothesis`, `zero_change_wall_bump`, `late_reset`, and `missed_new_rule`.
 - Computes normalized oversampling mixture weights over `dev`-only failures, explicitly excluding `eval-v1`, `eval-v2`, `probe-v1`, and Tier-3 holdout mechanics (`conveyors`, `enemies`, `gravity`) so training data synthesis never leaks held-out evaluation distributions.
+
+---
+
+## 10. Truth-Diffed Reasoning Forensics & Cognitive Bottleneck Funnel (`explanations.json`, `A5-24`)
+
+Built by `analysis/src/analysis/explain.py` (`reasoning-auditor-v2` + optional `arena judge` LLM pass via `--export-prompts` / `--import-replies` / `--judge-arena`):
+
+- **Why Pure CoT Text Classification Is Insufficient:** Models frequently write plausible-sounding post-hoc rationalizations in `<think>` or rolling scratchpad notes when bumping into walls or misreading coordinates. Therefore, LENS never classifies `step.reasoning` in isolation — every reasoning block is **diffed against hidden engine `truth`** (`events`, `[NO_EFFECT]` playfield-unchanged check, `active_rules`, `new_rule`, and BFS `optimal_path`).
+- **Reasoning Provenance (`reasoning_source`):**
+  - `cot`: `h2` Chain-of-Thought `<think>` / reasoning blocks.
+  - `notes`: `h1` rolling structured scratchpad notes.
+  - `hypothesis_only`: `step.reasoning` is unpopulated because the provider encrypts thinking tokens (e.g. `gemini-pro` `thought_signature` on `h2`), while `step.hypothesis` is populated.
+  - `none`: neither `reasoning` nor `hypothesis` recorded.
+- **Deterministic Inflection-Window Slicer (`slice_inflection_windows`):** Extracts $\pm 2$-step windows around initial orientation, first `new_rule` event, first mechanic deduction in CoT/notes, `no_effect` streak onset, `belief != expected_belief` mismatches, adverse events (`hurt`, `decoy`, `floor_collapsed`, `checkpoints_reset`, `enemy_hit`), and `RESET`/terminal steps — pairing **both** `reasoning` and `hypothesis` with engine `truth`.
+- **5-Stage Cognitive Bottleneck Funnel (`cognitive_stage` & `root_cause`):**
+  1. `perception` (`coordinate_misread`): Fails pure Tier-0 wall/goal geometry or hallucinates motion/win state across zero-effect moves.
+  2. `rule_induction` (`unprobed_new_rule` | `false_rule_hypothesis`): Never articulates the active non-Tier-0 mechanic prior to failure.
+  3. `belief_updating` (`ignored_falsifying_feedback`): Repeats blocked/zero-pixel-change actions ($\ge 3$ consecutive `[NO_EFFECT]` steps) without revising its plan.
+  4. `spatial_planning` (`knew_rule_failed_rollout` | `hazard_collision`): **The Knowing–Doing Gap** — explicitly articulates the active hidden mechanic in CoT/notes (`deduced_rule_in_cot = true` at `deduced_rule_step < terminal_step`) yet fails multi-step spatial rollout or collides with hazards during execution.
+  5. `budget_management` (`sunk_cost_late_reset`): Delays `RESET` until remaining move budget cannot cover `optimal_moves`.
+- **Programmatic Verbatim Quote Verification:** Every `evidence_quote` (`quote_source` $\in \{\text{reasoning}, \text{hypothesis}\}$) is strictly verified as an exact contiguous substring of the recorded step text (`quote in step[quote_source]`).

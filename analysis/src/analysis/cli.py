@@ -11,7 +11,15 @@ from typing import Any
 from .aggregate import aggregate_h2_runs, aggregate_runs
 from .bench_agg import build_bench_summary
 from .claim_check import check_claims, validate_against_schema
-from .explain import build_explanations, build_failure_packets, estimate_judge_cost, make_arena_judge
+from .explain import (
+    build_explanations,
+    build_failure_packets,
+    estimate_judge_cost,
+    export_judge_prompts_jsonl,
+    load_judge_replies_jsonl,
+    make_arena_judge,
+    summarize_explanations,
+)
 from .insights import generate_auto_proposals, synthesize_insights
 from .loader import default_data_dir, find_repo_root, load_collections, load_models, load_runs
 from .rule_discovery import analyze_rules
@@ -176,7 +184,7 @@ def build_all(
     bench_summary = build_bench_summary(resolved_bench_dir, lb_h1=leaderboard, lb_h2=leaderboard_h2)
     decision_points = build_decision_points_export(runs, game_descs=games, repo_root=root)
 
-    # Preserve any prior LLM-judge entries on incremental rebuilds so `analysis build` never clobbers A3's judge run
+    # Preserve any prior LLM-judge entries on incremental rebuilds while backfilling new A5-24 forensic fields
     existing_exp_path = out_dir / "explanations.json"
     if existing_exp_path.exists():
         try:
@@ -184,12 +192,19 @@ def build_all(
             llm_by_key = {
                 (e.get("run_id"), e.get("level")): e
                 for e in (prev_exp.get("explanations") or [])
-                if e.get("judge_model") and e.get("judge_model") != "trace-auditor-v1"
+                if e.get("judge_model") and e.get("judge_model") not in ("trace-auditor-v1", "reasoning-auditor-v2")
             }
             if llm_by_key:
-                merged = [llm_by_key.get((e["run_id"], e["level"]), e) for e in explanations["explanations"]]
-                models_used = sorted({str(e.get("judge_model") or "trace-auditor-v1") for e in merged})
+                merged: list[dict[str, Any]] = []
+                for det_item in explanations["explanations"]:
+                    key = (det_item["run_id"], det_item["level"])
+                    if key in llm_by_key:
+                        merged.append({**det_item, **llm_by_key[key]})
+                    else:
+                        merged.append(det_item)
+                models_used = sorted({str(e.get("judge_model") or "reasoning-auditor-v2") for e in merged})
                 explanations["explanations"] = merged
+                explanations["summary"] = summarize_explanations(merged)
                 explanations["judge_model"] = ", ".join(models_used)
         except Exception:
             pass
@@ -264,11 +279,14 @@ def main(argv: list[str] | None = None) -> int:
     _add_common_io_args(p_ins)
     p_ins.add_argument("--write-proposals", action="store_true", help="Write rules/proposals/auto-*.md")
 
-    p_exp = sub.add_parser("explain", help="Build explanations.json (or estimate judge-LLM cost)")
+    p_exp = sub.add_parser("explain", help="Build truth-diffed reasoning forensics explanations.json")
     _add_common_io_args(p_exp)
     p_exp.add_argument("--estimate", action="store_true", help="Print judge token & USD cost estimate and exit")
+    p_exp.add_argument("--export-prompts", help="Write prompts JSONL for `python -m arena judge --in ...` and exit")
+    p_exp.add_argument("--import-replies", help="Merge LLM replies JSONL emitted by `python -m arena judge --out ...`")
     p_exp.add_argument("--judge-cmd", help="Shell command accepting JSON {system, prompt, max_tokens} on stdin")
     p_exp.add_argument("--judge-arena", action="store_true", help="Use arena.judge.complete if available")
+    p_exp.add_argument("--judge-model", help="Model ID for --judge-arena (e.g. gemini-flash or gemini-pro)")
 
     p_build = sub.add_parser("build", help="Build leaderboard (h1 & h2), rules, insights, explanations, bench_summary, and decision_points")
     _add_common_io_args(p_build)
@@ -373,6 +391,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.estimate:
             print(json.dumps(est, indent=2))
             return 0
+        if args.export_prompts:
+            p_out = Path(args.export_prompts).expanduser()
+            written_prompts = export_judge_prompts_jsonl(packets, p_out)
+            print(json.dumps({**est, "exported_prompts": written_prompts, "prompts_jsonl": str(p_out)}, indent=2))
+            return 0
+        preloaded = load_judge_replies_jsonl(Path(args.import_replies).expanduser()) if args.import_replies else None
         judge_fn = None
         if args.judge_arena:
             arena_src = root / "arena" / "src"
@@ -380,17 +404,29 @@ def main(argv: list[str] | None = None) -> int:
                 sys.path.insert(0, str(arena_src))
             from arena import judge as _arena_judge  # type: ignore
 
-            judge_fn = make_arena_judge(_arena_judge.complete)
+            judge_fn = make_arena_judge(_arena_judge.complete, model_id=args.judge_model)
         exp = build_explanations(
             runs,
             game_descs=games,
             repo_root=root,
             judge_fn=judge_fn,
             judge_cmd=args.judge_cmd,
+            preloaded_replies=preloaded,
         )
         validate_against_schema(exp, root / "contracts" / "derived.schema.json")
         (out_dir / "explanations.json").write_text(json.dumps(exp, indent=2) + "\n", encoding="utf-8")
-        print(json.dumps({**est, "written": len(exp["explanations"]), "judge_model": exp["judge_model"], "out": str(out_dir / "explanations.json")}, indent=2))
+        print(
+            json.dumps(
+                {
+                    **est,
+                    "written": len(exp["explanations"]),
+                    "judge_model": exp["judge_model"],
+                    "knowing_doing_gap_rate": exp["summary"]["knowing_doing_gap_rate"],
+                    "out": str(out_dir / "explanations.json"),
+                },
+                indent=2,
+            )
+        )
         return 0
 
     return 1

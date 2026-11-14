@@ -30,22 +30,86 @@ export interface GhostsResponse {
   ghosts: GhostSlice[]
 }
 
+export type CognitiveStage =
+  | 'perception'
+  | 'rule_induction'
+  | 'belief_updating'
+  | 'spatial_planning'
+  | 'budget_management'
+
+export type ReasoningSource = 'cot' | 'notes' | 'hypothesis_only' | 'none'
+
 export interface ExplanationEntry {
   run_id: string
   game_id?: string | null
+  collection?: string | null
+  harness_version?: string | null
   player_id?: string | null
   level: number
   step?: number | null
   rule?: string | null
   verdict: string
+  cognitive_stage?: CognitiveStage | null
+  root_cause?: string | null
+  reasoning_source?: ReasoningSource | null
+  deduced_rule_in_cot?: boolean | null
+  deduced_rule_step?: number | null
+  truth_contrast?: string | null
   explanation?: string | null
   evidence_quote?: string | null
+  quote_source?: 'reasoning' | 'hypothesis' | null
   judge_model?: string | null
+}
+
+export interface ExplanationStageSummary {
+  stage: CognitiveStage
+  label: string
+  count: number
+  share: number
+  h1_count: number
+  h1_share: number
+  h2_count: number
+  h2_share: number
+  top_root_cause?: string | null
+}
+
+export interface ExplanationHarnessSummary {
+  total: number
+  non_tier0_total: number
+  knowing_doing_gap_count: number
+  knowing_doing_gap_rate: number
+  stages: Record<string, number>
+}
+
+export interface ExplanationModelSummary {
+  player_id: string
+  harness_version: string
+  reasoning_source: ReasoningSource | string
+  total: number
+  knowing_doing_gap_count: number
+  knowing_doing_gap_rate: number
+  primary_bottleneck: CognitiveStage | string
+  stages: Record<string, number>
+}
+
+export interface ExplanationsSummary {
+  total_failed_levels: number
+  non_tier0_failed_levels: number
+  knowing_doing_gap_count: number
+  knowing_doing_gap_rate: number
+  by_cognitive_stage: ExplanationStageSummary[]
+  by_reasoning_source: Record<string, number>
+  by_harness: {
+    h1?: ExplanationHarnessSummary
+    h2?: ExplanationHarnessSummary
+  }
+  by_model: ExplanationModelSummary[]
 }
 
 export interface ExplanationsDocument {
   generated_at: string
   judge_model?: string | null
+  summary?: ExplanationsSummary | null
   explanations: ExplanationEntry[]
 }
 

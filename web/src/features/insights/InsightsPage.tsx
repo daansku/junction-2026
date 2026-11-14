@@ -137,12 +137,15 @@ export function InsightsPage() {
   const [curveMode, setCurveMode] = useState<'plot' | 'table'>('plot')
   const [selectedCell, setSelectedCell] = useState<RuleCell | null>(null)
   const [expRuleFilter, setExpRuleFilter] = useState<string>('all')
+  const [expStageFilter, setExpStageFilter] = useState<string>('all')
+  const [expModelFilter, setExpModelFilter] = useState<string>('all')
 
   const insights = insightsQ.data?.insights ?? []
   const cells = rulesQ.data?.cells ?? []
   const learningCurve = rulesQ.data?.level_curve ?? rulesQ.data?.level_learning_curve ?? []
   const failureModes = rulesQ.data?.failure_modes ?? []
   const explanations = explanationsQ.data?.explanations ?? []
+  const expSummary = explanationsQ.data?.summary ?? null
 
   const runById = useMemo(() => {
     const map = new Map<string, RunMeta>()
@@ -240,10 +243,16 @@ export function InsightsPage() {
     () => ['all', ...Array.from(new Set(explanations.map((e) => e.rule).filter((r): r is string => !!r))).sort()],
     [explanations],
   )
-  const filteredExplanations = useMemo(
-    () => (expRuleFilter === 'all' ? explanations : explanations.filter((e) => e.rule === expRuleFilter)),
-    [explanations, expRuleFilter],
-  )
+  const filteredExplanations = useMemo(() => {
+    return explanations.filter((e) => {
+      if (expRuleFilter !== 'all' && e.rule !== expRuleFilter) return false
+      if (expModelFilter !== 'all' && `${e.player_id ?? ''}::${e.harness_version ?? 'h1'}` !== expModelFilter) return false
+      if (expStageFilter === 'all') return true
+      if (expStageFilter === 'knowing_doing') return !!e.deduced_rule_in_cot
+      if (expStageFilter === 'h2') return e.harness_version === 'h2'
+      return e.cognitive_stage === expStageFilter
+    })
+  }, [explanations, expRuleFilter, expStageFilter, expModelFilter])
 
   const loading = insightsQ.isLoading || rulesQ.isLoading
   const error = insightsQ.error ?? rulesQ.error
@@ -757,17 +766,188 @@ export function InsightsPage() {
             </Panel>
           </div>
 
-          {/* Judge Failure Explanations Ledger (`explanations.json`) */}
+          {/* Truth-Diffed Reasoning Forensics: 5-Stage Cognitive Funnel & Knowing–Doing Gap */}
+          {expSummary && expSummary.by_cognitive_stage?.length > 0 && (
+            <Panel
+              label="Truth-Diffed Reasoning Forensics · Cognitive Bottleneck Funnel (h1 vs h2)"
+              actions={
+                <span className="mono ins-kd-headline">
+                  Knowing–Doing Gap: <strong>{(expSummary.knowing_doing_gap_rate * 100).toFixed(0)}%</strong>{' '}
+                  <span className="muted">
+                    ({expSummary.knowing_doing_gap_count}/{expSummary.non_tier0_failed_levels} hidden-rule failures deduced rule in CoT/notes)
+                  </span>
+                </span>
+              }
+            >
+              <div className="ins-forensic-split">
+                <div className="ins-funnel-col">
+                  <div className="ins-funnel-legend mono muted">
+                    <span>Click any cognitive stage to filter diagnoses below</span>
+                    <span>
+                      <i className="ins-swatch-h1" /> h1 ({expSummary.by_harness.h1?.total ?? 0}) ·{' '}
+                      <i className="ins-swatch-h2" /> h2 ({expSummary.by_harness.h2?.total ?? 0})
+                    </span>
+                  </div>
+                  <div className="ins-funnel-list">
+                    {expSummary.by_cognitive_stage.map((stg) => {
+                      const active = expStageFilter === stg.stage
+                      const h1Pct = Math.round(stg.h1_share * 100)
+                      const h2Pct = Math.round(stg.h2_share * 100)
+                      return (
+                        <button
+                          type="button"
+                          key={stg.stage}
+                          className={cx('ins-funnel-row', active && 'ins-funnel-row-active')}
+                          onClick={() => setExpStageFilter((cur) => (cur === stg.stage ? 'all' : stg.stage))}
+                        >
+                          <div className="ins-funnel-row-top mono">
+                            <span>
+                              <strong>{stg.label}</strong>
+                              {stg.top_root_cause && <span className="muted"> · {stg.top_root_cause}</span>}
+                            </span>
+                            <span>
+                              <strong>{stg.count}</strong>{' '}
+                              <span className="muted">({Math.round(stg.share * 100)}%)</span>
+                            </span>
+                          </div>
+                          <div className="ins-funnel-bars">
+                            <div className="ins-funnel-bar-line mono">
+                              <span className="muted">h1</span>
+                              <div className="ins-failure-bar-track">
+                                <div
+                                  className="ins-failure-bar-fill"
+                                  style={{ width: `${Math.max(stg.h1_count ? 2 : 0, h1Pct)}%`, background: 'var(--text-2)' }}
+                                />
+                              </div>
+                              <span className="num muted">{h1Pct}%</span>
+                            </div>
+                            <div className="ins-funnel-bar-line mono">
+                              <span className="ins-h2-tag">h2</span>
+                              <div className="ins-failure-bar-track">
+                                <div
+                                  className="ins-failure-bar-fill"
+                                  style={{ width: `${Math.max(stg.h2_count ? 2 : 0, h2Pct)}%`, background: 'var(--accent)' }}
+                                />
+                              </div>
+                              <span className="num ins-h2-tag">{h2Pct}%</span>
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="ins-model-forensic-col">
+                  <div className="ins-kd-callout">
+                    <div className="ins-kd-callout-head mono">
+                      <strong>THE KNOWING–DOING GAP</strong>
+                      <Button
+                        mono
+                        active={expStageFilter === 'knowing_doing'}
+                        onClick={() => setExpStageFilter((cur) => (cur === 'knowing_doing' ? 'all' : 'knowing_doing'))}
+                      >
+                        {expStageFilter === 'knowing_doing' ? 'Showing Gap Cases' : `Filter ${expSummary.knowing_doing_gap_count} Cases`}
+                      </Button>
+                    </div>
+                    <p className="ins-kd-callout-body">
+                      By diffing per-step <span className="mono">reasoning</span>/<span className="mono">hypothesis</span> against hidden engine{' '}
+                      <span className="mono">truth</span>, <strong>{(expSummary.knowing_doing_gap_rate * 100).toFixed(1)}%</strong> of failed
+                      non-Tier-0 levels explicitly articulated the active mechanic before failing multi-step execution. Upgrading{' '}
+                      <span className="mono">h1 → h2</span> eliminates Stage 1 perception failures (
+                      <span className="mono">
+                        {Math.round(((expSummary.by_cognitive_stage[0]?.h1_share ?? 0) * 100))}% →{' '}
+                        {Math.round(((expSummary.by_cognitive_stage[0]?.h2_share ?? 0) * 100))}%
+                      </span>
+                      ), concentrating residual failures in rule induction and spatial rollout.
+                    </p>
+                    <div className="ins-source-strip mono muted">
+                      <span>CoT traces: {expSummary.by_reasoning_source.cot ?? 0}</span>
+                      <span>· h1 notes: {expSummary.by_reasoning_source.notes ?? 0}</span>
+                      <span>· hyp-only (encrypted CoT): {expSummary.by_reasoning_source.hypothesis_only ?? 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="table-wrap ins-forensic-table-wrap">
+                    <table className="table ins-forensic-table">
+                      <thead>
+                        <tr>
+                          <th>Model</th>
+                          <th>Hrn</th>
+                          <th>Src</th>
+                          <th className="num">Fail</th>
+                          <th className="num">Knew Rule</th>
+                          <th>Primary Bottleneck</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {expSummary.by_model.slice(0, 8).map((m) => {
+                          const key = `${m.player_id}::${m.harness_version}`
+                          const active = expModelFilter === key
+                          return (
+                            <tr
+                              key={key}
+                              className={cx('ins-clickable-row', active && 'ins-row-selected')}
+                              onClick={() => setExpModelFilter((cur) => (cur === key ? 'all' : key))}
+                            >
+                              <td className="mono">{shortPlayerHeader(m.player_id)}</td>
+                              <td className="mono">
+                                <span className={m.harness_version === 'h2' ? 'ins-h2-tag' : 'muted'}>{m.harness_version}</span>
+                              </td>
+                              <td className="mono muted">{m.reasoning_source === 'hypothesis_only' ? 'hyp-only' : m.reasoning_source}</td>
+                              <td className="num">{m.total}</td>
+                              <td className="num">{(m.knowing_doing_gap_rate * 100).toFixed(0)}%</td>
+                              <td className="mono">{m.primary_bottleneck}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </Panel>
+          )}
+
+          {/* Judge / Truth-Diffed Failure Explanations Ledger (`explanations.json`) */}
           {explanations.length > 0 && (
             <Panel
               label={`Why Models Failed · ${filteredExplanations.length} Level Diagnoses`}
               actions={
-                <span className="mono muted">
-                  auditor: {explanationsQ.data?.judge_model ?? 'trace-auditor-v1'}
-                </span>
+                <div className="ins-ledger-head-actions mono">
+                  {(expStageFilter !== 'all' || expRuleFilter !== 'all' || expModelFilter !== 'all') && (
+                    <Button
+                      mono
+                      onClick={() => {
+                        setExpStageFilter('all')
+                        setExpRuleFilter('all')
+                        setExpModelFilter('all')
+                      }}
+                    >
+                      Reset Filters
+                    </Button>
+                  )}
+                  <span className="muted">auditor: {explanationsQ.data?.judge_model ?? 'reasoning-auditor-v2'}</span>
+                </div>
               }
             >
-              <div className="ins-controls">
+              <div className="ins-controls ins-forensic-filters">
+                <div className="ins-metric-pills">
+                  {[
+                    { id: 'all', label: 'all stages' },
+                    { id: 'knowing_doing', label: 'knew rule in CoT' },
+                    { id: 'h2', label: 'h2 only' },
+                    { id: 'perception', label: '1·perception' },
+                    { id: 'rule_induction', label: '2·induction' },
+                    { id: 'belief_updating', label: '3·updating' },
+                    { id: 'spatial_planning', label: '4·spatial' },
+                    { id: 'budget_management', label: '5·budget' },
+                  ].map((f) => (
+                    <Button key={f.id} mono active={expStageFilter === f.id} onClick={() => setExpStageFilter(f.id)}>
+                      {f.label}
+                    </Button>
+                  ))}
+                </div>
                 <div className="ins-metric-pills">
                   {explanationRules.map((r) => (
                     <Button key={r} mono active={expRuleFilter === r} onClick={() => setExpRuleFilter(r)}>
@@ -776,39 +956,81 @@ export function InsightsPage() {
                   ))}
                 </div>
               </div>
-              <div className="ins-exp-grid">
-                {filteredExplanations.slice(0, 12).map((ex) => {
-                  const replayHref = `/replay/${encodeURIComponent(ex.run_id)}${ex.step != null ? `?step=${ex.step}` : ''}`
-                  const tkHref = buildTakeoverHref(ex.run_id, ex.step, ex.level, ex.game_id, ex.player_id)
-                  return (
-                    <div key={`${ex.run_id}-${ex.level}`} className="ins-exp-card">
-                      <div className="ins-exp-card-head mono">
-                        <span className="ins-rule-label">
-                          {ex.rule && <RuleSprite rule={ex.rule} size={18} />}
-                          <strong>{ex.player_id ?? 'model'}</strong>
-                          <span className="muted">· L{ex.level}</span>
-                          {ex.rule && <span className="secondary">· {ex.rule}</span>}
-                        </span>
-                        <Chip outcome="GAME_OVER">{ex.verdict}</Chip>
-                      </div>
-                      {ex.explanation && <p className="ins-exp-card-text">{ex.explanation}</p>}
-                      {ex.evidence_quote && (
-                        <blockquote className="ins-exp-card-quote mono">“{ex.evidence_quote}”</blockquote>
-                      )}
-                      <div className="ins-exp-card-foot mono">
-                        <Link to={replayHref} className="ins-pill" title={ex.run_id}>
-                          #{shortRunId(ex.run_id)} · @{ex.step ?? 0} →
-                        </Link>
-                        {tkHref && (
-                          <Link to={tkHref} className="ins-takeover-pill">
-                            [ TAKE OVER FROM STEP {ex.step ?? 1} ]
-                          </Link>
+              {!filteredExplanations.length ? (
+                <Empty>No level diagnoses match the active stage/mechanic filter.</Empty>
+              ) : (
+                <div className="ins-exp-grid">
+                  {filteredExplanations.slice(0, 12).map((ex) => {
+                    const replayHref = `/replay/${encodeURIComponent(ex.run_id)}?step=${ex.step ?? 0}&xray=50`
+                    const tkHref = buildTakeoverHref(ex.run_id, ex.step, ex.level, ex.game_id, ex.player_id)
+                    const srcLabel =
+                      ex.reasoning_source === 'cot'
+                        ? 'h2 CoT'
+                        : ex.reasoning_source === 'hypothesis_only'
+                          ? 'hyp-only (encrypted CoT)'
+                          : 'h1 notes'
+                    const quoteFrom =
+                      ex.quote_source === 'reasoning'
+                        ? ex.harness_version === 'h2'
+                          ? '<think> CoT'
+                          : 'scratchpad notes'
+                        : 'hypothesis'
+                    return (
+                      <div key={`${ex.run_id}-${ex.level}`} className="ins-exp-card">
+                        <div className="ins-exp-card-head mono">
+                          <span className="ins-rule-label">
+                            {ex.rule && <RuleSprite rule={ex.rule} size={18} />}
+                            <strong>{ex.player_id ?? 'model'}</strong>
+                            {ex.harness_version && (
+                              <span className={cx('ins-hrn-badge', ex.harness_version === 'h2' && 'ins-hrn-h2')}>
+                                {ex.harness_version}
+                              </span>
+                            )}
+                            <span className="muted">· L{ex.level}</span>
+                            {ex.rule && <span className="secondary">· {ex.rule}</span>}
+                          </span>
+                          <Chip outcome={ex.cognitive_stage === 'spatial_planning' || ex.cognitive_stage === 'budget_management' ? 'BUDGET' : 'GAME_OVER'}>
+                            {ex.cognitive_stage ?? ex.verdict}
+                          </Chip>
+                        </div>
+
+                        <div className="ins-exp-submeta mono">
+                          <span className="muted">cause: {ex.root_cause ?? ex.verdict}</span>
+                          <span className="muted">· trace: {srcLabel}</span>
+                          {ex.deduced_rule_in_cot && (
+                            <span className="ins-kd-badge">
+                              KNEW RULE{ex.deduced_rule_step != null ? ` @${ex.deduced_rule_step}` : ''}
+                            </span>
+                          )}
+                        </div>
+
+                        {ex.truth_contrast && (
+                          <div className="ins-truth-contrast">
+                            <span className="mono ins-truth-kicker">TRUTH DIFF</span> {ex.truth_contrast}
+                          </div>
                         )}
+
+                        {ex.explanation && <p className="ins-exp-card-text">{ex.explanation}</p>}
+                        {ex.evidence_quote && (
+                          <blockquote className="ins-exp-card-quote mono">
+                            <span className="ins-quote-kicker">verbatim ({quoteFrom}):</span> “{ex.evidence_quote}”
+                          </blockquote>
+                        )}
+                        <div className="ins-exp-card-foot mono">
+                          <Link to={replayHref} className="ins-pill" title="Open divergence frame with 50% X-Ray truth curtain">
+                            [ X-RAY DIVERGENCE @{ex.step ?? 0} · #{shortRunId(ex.run_id)} ] →
+                          </Link>
+                          {tkHref && (
+                            <Link to={tkHref} className="ins-takeover-pill">
+                              [ TAKE OVER @{ex.step ?? 1} ]
+                            </Link>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </Panel>
           )}
         </>
