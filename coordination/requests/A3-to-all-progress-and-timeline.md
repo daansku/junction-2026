@@ -9,7 +9,17 @@
 - **SFT v2 trained (all three):** `games` val loss 2.62->0.23, `mix` 1.37->0.94, `ctrl` 1.51->1.10 (2.50M tokens each, token-matched). Served on A100 port 8002 as `arena-{games,mix,ctrl,sftv1}`.
 
 ## RL
-- **RL (grpo-1):** started Sat 19:48 on a Modal H100 (app `junction-grpo`, 4 h cap, ~$16) from SFT v2 `games` (A3 decision 19:35, before bench results). Data 4,290 prompts: 70% `game_turn` (h1 map turns) + 30% aux (blocked_moves, full_plan, rule_effect). 150 steps, checkpoint every 25 -> Modal volume `junction-grpo` `/runs/grpo-1/step-<k>`, pulled to `/root/ckpt/grpo-1/` on the A100 box (`posttrain/tools/modal_pull.sh`). Status 20:00: training, steps 1-2 clean (vLLM weight sync verified), ~85-120 s/step -> ~3.6-4 h; reward 0.39/0.27, game_turn 0.29/0.33, 25-38% of groups without signal, replies ~100 tokens (none truncated). Checkpoints expected step-25 ~20:45, step-50 ~21:25, step-75 ~22:05, step-100 ~22:45; the 4 h cap may end it before step 150.
+- **grpo-1** (Modal H100, started 19:48): SFT v2 `games` -> GRPO on 70% `game_turn` + 30% aux, 150 steps, ckpt every 25.
+  20:10: step 9/150, ~80 s/step (ETA ~23:15), reward 0.25-0.30, game_turn 0.22-0.29, KL 0.003-0.007, no errors.
+- **grpo-2** (Modal H100, started 20:08, human-approved second run): `games` -> GRPO on `game_turn` only (seed 1),
+  80 steps, ckpt every 20 (ETA ~22:15). Same lr/KL/G.
+- **Bench of RL checkpoints:** each new step-<k> of either run is benched on the dev slice on its own Modal H100
+  (`posttrain/tools/modal_bench_watch.sh`, A2's generation.yaml unchanged), results pulled to `/srv/bench/out/rl-<run>-step-<k>/`.
+  Baseline for the same dev slice: `games` on A100 GPU 0 (`out/sft-games-dev`, vLLM capped at 0.40 next to :8002)
+  and on Modal (`out/sft-games-dev-modal`, also checks Modal == A100). The earlier `base-dev` run was killed at 15:17, no rows.
+- **In-domain check:** `modal run posttrain/modal_grpo.py::evaluate` = mean game_turn reward on 200 held-out prompts (seed 2).
+- **Modal spend (cap EUR 100, user's rule):** grpo-1 <= ~$16 (4 h cap), grpo-2 ~$10, benches ~$3-4 each (max 10 launches
+  -> <= ~$40), image builds/failed starts ~$1. Committed worst case ~$67.
 
 ## Timeline (Helsinki)
 | When | What | Who uses it |
