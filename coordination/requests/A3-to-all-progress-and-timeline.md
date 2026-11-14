@@ -26,6 +26,16 @@
   full reply games BBH-MC is ~0.49). Every SFT v2 and RL row is affected. Human/A2 call needed: grade full reply when no
   `</think>` (rescore raw samples, no regeneration) or bench all models with thinking off. RL vs games is still a fair
   comparison (same format): no movement yet at step 20-25.
+- **21:10 v3 rescore (human decision in A3's session: accept "ANSWER: X" as an answer form, same rule for every row):**
+  `python -m posttrain.rescore_answer <run dirs>` re-grades only items lm-eval marked `[invalid]` whose reply has
+  "ANSWER:", from the saved raw samples (no regeneration); writes `items_v3.jsonl` / `summary_v3.json` next to the
+  originals (untouched). Correction to 20:45: lm-eval already grades the full reply when there is no `</think>`; the
+  whole drop was the answer format. Dev-slice items (975), v3: BBH base 0.921 / games 0.468 / grpo-1 s25 0.470 /
+  grpo-2 s20 0.471; GSM8K 0.96 / 0.48 / 0.48 / 0.48; MATH 0.589 / 0.137 / 0.143 / 0.149; MedQA 0.80 / 0.72 / 0.72 / 0.72.
+  Base changes 0 items under v3. games on Modal (merged) == games from A2's A100 run (BBH 0.468 vs 0.465): Modal bench
+  is consistent. Remaining gap vs base is real but not like for like: base answers in thinking mode, SFT/RL models
+  stopped thinking (0/675 BBH replies have `</think>`). RL has not moved from games yet (step 20-25).
+  bench/PROTOCOL.md (A2's) not edited; v3 needs writing there by A2 or a human.
 - **In-domain check:** `modal run posttrain/modal_grpo.py::evaluate` = mean game_turn reward on 200 held-out prompts (seed 2).
 - **Modal spend (cap EUR 100, user's rule):** grpo-1 <= ~$16 (4 h cap), grpo-2 ~$10, benches ~$0.6-1 each (measured ~9 min on an H100; max 10 launches), image builds/failed starts ~$1, stopped LoRA bench of games ~$1. Committed worst case ~$68.
 
