@@ -13,6 +13,10 @@ from ..core.actions import Action, parse_action
 from ..core.level import Level
 from ..core.step import LEVEL_WON, LOST, initial_state, step_level
 from .auxtasks import TASKS
+from .gameturn import grade_game_turn, make_game_turn
+
+TASKS["game_turn"] = (make_game_turn, grade_game_turn)
+RAW_TASKS = {"game_turn"}
 from .common import extract_answer
 
 
@@ -20,6 +24,11 @@ from .common import extract_answer
 def reward(sample: dict, output: str) -> float:
     if not output:
         return 0.0
+    if sample["task"] in RAW_TASKS:     # h1 JSON reply graded as the harness parses it
+        try:
+            return float(TASKS[sample["task"]][1](sample, output))
+        except Exception:  # noqa: BLE001
+            return 0.0
     ans = extract_answer(output)
     if ans is None:
         return 0.0

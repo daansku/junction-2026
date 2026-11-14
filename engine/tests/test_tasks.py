@@ -7,7 +7,7 @@ import pytest
 from engine import components as comps
 from engine import splits
 from engine.core.game import Game
-from engine.tasks import TASKS, episode_score, generate, reward
+from engine.tasks import DEFAULT_ALL, TASKS, episode_score, generate, reward
 from engine.tasks.auxtasks import parse_plan
 from engine.tasks.common import _games, apply_rle_patch, to_rle
 from engine.tasks.rationale import Narrator
@@ -20,7 +20,7 @@ def _gold(d):
     return "ANSWER:\n" + d["answer"] if "\n" in d["answer"] else "ANSWER: " + d["answer"]
 
 
-@pytest.mark.parametrize("task", list(TASKS))
+@pytest.mark.parametrize("task", DEFAULT_ALL)
 def test_deterministic_and_gold_scores_one(task):
     a = [s.to_dict() for s in generate(task, 15, seed=3)]
     b = [s.to_dict() for s in generate(task, 15, seed=3)]
@@ -29,7 +29,7 @@ def test_deterministic_and_gold_scores_one(task):
     assert all(reward(d, "some reasoning first\n" + _gold(d)) == 1.0 for d in a)
 
 
-@pytest.mark.parametrize("task", list(TASKS))
+@pytest.mark.parametrize("task", DEFAULT_ALL)
 def test_obvious_exploits_score_zero(task):
     for d in (s.to_dict() for s in generate(task, 15, seed=4)):
         assert reward(d, "") == 0.0
@@ -40,7 +40,7 @@ def test_obvious_exploits_score_zero(task):
         assert reward(d, "ANSWER: " + "ACTION1 " * 500) == 0.0   # spam
 
 
-@pytest.mark.parametrize("task", list(TASKS))
+@pytest.mark.parametrize("task", DEFAULT_ALL)
 def test_robust_answer_formats_still_score(task):
     """Real model replies: long thinking, markdown emphasis, code fences, trailing prose."""
     for d in (s.to_dict() for s in generate(task, 8, seed=10)):
@@ -210,3 +210,40 @@ def test_rejection_keeps_only_efficient_solved_levels(tmp_path):
     assert "notes after" in rows[1]["messages"][1]["content"]           # previous notes carried into prompt
     ids = pick_games(30)
     assert len(ids) == len(set(ids)) == 30 and pick_games(30) == ids
+
+
+# ---- game_turn: RL on the maps in the h1 harness format ---------------------------------------
+def test_game_turn_labels_match_engine_and_harness_format():
+    from engine.core.game import Game
+    from engine.core.step import LEVEL_WON
+    a = [s.to_dict() for s in generate("game_turn", 25, seed=11)]
+    assert a == [s.to_dict() for s in generate("game_turn", 25, seed=11)]          # deterministic
+    for d in a:
+        msgs = d["messages"]
+        assert msgs[1]["content"].startswith("Turn ") and "run-length encoded" in msgs[1]["content"]
+        assert "ANSWER" not in msgs[2]["content"]                                   # raw h1 JSON reply
+        assert reward(d, msgs[2]["content"]) == 1.0
+        assert reward(d, "```json\n" + msgs[2]["content"] + "\n```") == 1.0
+        bad = [x for x in d["meta"]["allowed"] if x not in d["meta"]["optimal_actions"]]
+        for x in bad:
+            assert reward(d, json.dumps({"notes": "", "hypothesis": "", "belief": "playing", "action": x})) == 0.0
+        assert reward(d, "") == 0.0 and reward(d, "ACTION1") == 0.0 and reward(d, '{"action": "ACTION9"}') == 0.0
+        assert not any(n in msgs[2]["content"] for n in comps.REGISTRY if "_" in n)   # no rule ids leak
+
+
+def test_game_turn_optimal_set_is_exact():
+    """Every labelled action really starts a shortest win; every other move does not."""
+    from engine.core.game import load_game
+    from engine.tasks.gameturn import optimal_first_actions
+    from engine.core.actions import Action
+    from engine.core.step import step_level, LEVEL_WON
+    raw = _games("train-v1")[5]
+    g = Game.from_dict(raw)
+    lv = g.levels[2]
+    g.goto_level(3)
+    opt, dist = optimal_first_actions(lv, g.state)
+    assert dist == lv.optimal_moves
+    for a in (Action.ACTION1, Action.ACTION2, Action.ACTION3, Action.ACTION4):
+        ns, _, out = step_level(lv, g.state, a)
+        rest = 0 if out == LEVEL_WON else (optimal_first_actions(lv, ns) or (None, 10**6))[1]
+        assert (1 + rest == dist) == (a.value in opt)

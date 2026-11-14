@@ -26,13 +26,20 @@ class Sample:
     prompt: str
     answer: str                     # gold answer text (what goes after "ANSWER:")
     meta: dict[str, Any] = field(default_factory=dict)
+    system: str | None = None       # own system prompt (game_turn uses the h1 harness prompt)
+    raw_answer: bool = False        # reply is the answer itself (h1 JSON), no "ANSWER:" line
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
-        d["messages"] = [{"role": "system", "content": SYSTEM},
+        d.pop("system")
+        d.pop("raw_answer")
+        if self.raw_answer:
+            reply = self.answer
+        else:
+            reply = f"ANSWER: {self.answer}" if "\n" not in self.answer else f"ANSWER:\n{self.answer}"
+        d["messages"] = [{"role": "system", "content": self.system or SYSTEM},
                          {"role": "user", "content": self.prompt},
-                         {"role": "assistant", "content": f"ANSWER: {self.answer}" if "\n" not in self.answer
-                          else f"ANSWER:\n{self.answer}"}]
+                         {"role": "assistant", "content": reply}]
         return d
 
 
