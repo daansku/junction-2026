@@ -126,3 +126,6 @@
 
 .ch-solo { display: flex; justify-content: center; padding-top: var(--s6); }
 .ch-solo .ch-verdict { width: min(560px, 100%); }
+
+/* phones/tablets: the result card (with "Next level") above the replays, not 2000px down the page */
+@media (max-width: 980px) { .ch-grid-review > .ch-side { order: -1; } }

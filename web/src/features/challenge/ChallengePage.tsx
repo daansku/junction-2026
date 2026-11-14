@@ -768,7 +768,7 @@ function LevelReview(props: {
   return (
     review.kind === 'solved' ? (
       // level done, so its AI attempts can no longer spoil it (lost / stopped levels can be retried: no AI there)
-      <div className="ch-grid">
+      <div className="ch-grid ch-grid-review">
         <section className="ch-card ch-review">
           <span className="kicker">the AI on level {levelNo} · recorded attempts, replayed</span>
           <LevelReels key={review.level} ghosts={ghosts} optimalGhost={optimalGhost} level={levelNo} />
