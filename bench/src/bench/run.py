@@ -108,6 +108,7 @@ def run_lm_eval(a, benches: list[dict], g: dict, out: Path) -> list[dict]:
     for b in lm:
         groups.setdefault((b.get("limit"), b.get("fewshot"), b["task"] in MC_TASKS), []).append(b)
     env = {**os.environ, "HF_DATASETS_TRUST_REMOTE_CODE": "1"}
+    cmds = []
     for (limit, fewshot, mc), group in groups.items():
         model, margs = _model_spec(a, g, mc)
         # bench.lmeval_shim = lm-eval's CLI plus the bench-chat-completions model (no task stop strings mid-thought)
@@ -126,11 +127,25 @@ def run_lm_eval(a, benches: list[dict], g: dict, out: Path) -> list[dict]:
             cmd += ["--limit", str(limit)]
         if fewshot is not None:
             cmd += ["--num_fewshot", str(fewshot)]
-        print("+", " ".join(cmd), flush=True)
-        subprocess.run(cmd, check=True, env=env)
-        for b in group:
-            items += parse_lm_eval_samples(raw, b)
-        _save(out, items_so_far=items, tag=f"lm_eval group {group[0]['id']}")
+        cmds.append((group, cmd))
+
+    def run_group(gc):
+        group, cmd = gc
+        log = raw / f"lm_eval_{group[0]['id']}.log"
+        print("+", " ".join(cmd), f"> {log}", flush=True)
+        with log.open("w", encoding="utf-8") as f:
+            rc = subprocess.run(cmd, env=env, stdout=f, stderr=subprocess.STDOUT).returncode
+        if rc != 0:
+            raise RuntimeError(f"lm-eval group {group[0]['id']} failed (exit {rc}); see {log}")
+        return [it for b in group for it in parse_lm_eval_samples(raw, b)]
+
+    # API mode: run the groups at the same time so the server batches more requests (each group keeps its own
+    # --num_concurrent). In-process mode loads the model per group, so groups run one after another.
+    workers = len(cmds) if a.api else 1
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for res in ex.map(run_group, cmds):
+            items += res
+            _save(out, items_so_far=items, tag=f"lm_eval {len(items)} items")
     return items
 
 

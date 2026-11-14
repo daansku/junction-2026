@@ -1,8 +1,10 @@
 # Bench protocol (pre-registration)
 
-**Status: DRAFT v2 (A2, Sat 14.11 18:10).** Needs review by A3 (training) and A5 (analysis), then **human approval by 19:00** (PLAN.md §6).
+**Status: DRAFT v3 (A2, Sat 14.11 20:20). A3 signed off on v2 (18:05); v3 only cuts item counts.** Needs review by A3 (training) and A5 (analysis), then **human approval by 19:00** (PLAN.md §6).
 After approval, nobody changes the benchmark list, the generation settings, the comparisons or the checkpoint rule.
 Any change after that is a new protocol version, and every row is rerun under it.
+
+**v3 change (human decision, Sat 20:15):** every model runs a **fixed subsample** of the suite (~2,250 generative items + full MedQA), the same items for every model, because the full ~17k-item suite takes ~13 h per model on the shared vLLM server. Item counts are in §3.
 
 **v2 changes (human decisions, Sat 18:00):** the primary suite is the humans' list in `FT_BENCHMARKS.md` (replacing A2's v1 list);
 decoding is the Qwen3.5 model-card sampling, not greedy (greedy makes thinking models loop; see §4).
@@ -34,14 +36,14 @@ All rows share the base model, LoRA recipe (A3, `posttrain/`), serving stack (vL
 
 | # | Benchmark | lm-eval task (0.4.13) | Setting | Items |
 |---|---|---|---|---|
-| 1 | Big-Bench Hard, all 27 tasks | `bbh_cot_fewshot` | 3-shot CoT | ~6.5k |
-| 2 | MATH | `minerva_math` with `--num_fewshot 0` | 0-shot CoT | 5,000 |
-| 3 | GSM8K | `gsm8k_cot` | 8-shot CoT | 1,319 |
-| 4 | MedQA-USMLE, 4 options | `medqa_4options` | 0-shot, loglikelihood multiple choice (the only form lm-eval ships) | 1,273 |
-| 5 | MMLU-Pro: health | `mmlu_pro_health` | 5-shot CoT | full subject |
-| 6 | MMLU-Pro: law | `mmlu_pro_law` | 5-shot CoT | full subject |
+| 1 | Big-Bench Hard, all 27 tasks | `bbh_cot_fewshot` | 3-shot CoT | first 50 per task = 1,350 |
+| 2 | MATH | `minerva_math` with `--num_fewshot 0` | 0-shot CoT | first 50 per subject = 350 |
+| 3 | GSM8K | `gsm8k_cot` | 8-shot CoT | first 250 |
+| 4 | MedQA-USMLE, 4 options | `medqa_4options` | 0-shot, loglikelihood multiple choice (the only form lm-eval ships) | full 1,273 |
+| 5 | MMLU-Pro: health | `mmlu_pro_health` | 5-shot CoT | first 100 |
+| 6 | MMLU-Pro: law | `mmlu_pro_law` | 5-shot CoT | first 100 |
 
-**Negative control:** MMLU-Pro history (`mmlu_pro_history`, 5-shot CoT). Must not move. If it rises as much as the suite, the gain is answer formatting, not reasoning.
+**Negative control:** MMLU-Pro history (`mmlu_pro_history`, 5-shot CoT, first 100). Must not move. If it rises as much as the suite, the gain is answer formatting, not reasoning.
 
 **Pre-declared BBH subset** (reported separately, computed from row 1's items): tracking shuffled objects, navigate, logical deduction, web of lies, temporal sequences.
 
@@ -77,7 +79,7 @@ Metrics: the task's own primary metric, preferring the `flexible-extract` / `cus
 
 - RL / intermediate checkpoints run the **dev slice**: the first 25 items of every (sub)task of the primary suite and the negative control (~975 items; `python -m bench run --dev-slice`). Same items for every checkpoint. FT_BENCHMARKS.md asked for a random 1,000-item subsample; lm-eval's `--limit` takes the first N, which is fixed and identical across models.
 - **Finalist** = the checkpoint with the best dev-slice headline whose MMLU-Pro history drop vs `base` is ≤ 2 points. Ties: the earlier checkpoint.
-- `base`, `ctrl` and the finalist run the **full suite once** (FT_BENCHMARKS.md: "if time is short, run the full suite on base, control and the final model"). `games`/`mix` run it too if GPU time allows. Dev-slice items are a subset of the full sets, so final numbers are partly in-sample for the choice; this is stated next to the result.
+- `base`, `ctrl` and the finalist run the **v3 suite** (the fixed subsample in §3) once (FT_BENCHMARKS.md: "if time is short, run the full suite on base, control and the final model"). `games`/`mix` run it too if GPU time allows. Dev-slice items are a subset of the full sets, so final numbers are partly in-sample for the choice; this is stated next to the result.
 
 ## 8. How to run
 
@@ -93,6 +95,6 @@ python -m bench compare --ref data/derived/bench/ctrl --cand data/derived/bench/
 `compare` warns when two runs used a different config hash (different list, settings or slice): such deltas are not valid.
 
 ## Sign-off
-- [ ] A3 (training rows, LoRA recipe, token-count matching, server names)
+- [x] A3 (training rows, LoRA recipe, token-count matching, server names), Sat 18:05 on v2
 - [ ] A5 (statistics, headline definition, summary format)
 - [ ] Humans (approve the list, decoding and the checkpoint rule; after this nothing changes)
