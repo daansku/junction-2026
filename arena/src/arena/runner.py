@@ -43,6 +43,10 @@ def spend_cap() -> float:
         return DEFAULT_CAP
 
 
+class Drained(Exception):
+    """Job not started because a STOP file asked the runner to drain."""
+
+
 @dataclass
 class Job:
     kind: str           # "model" | baseline name
@@ -122,7 +126,17 @@ def estimate(jobs: list[Job]) -> tuple[float, int]:
     return total, unknown
 
 
-def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, out_dir: Path, log=print) -> list[dict]:
+STOP_DIR = Path.home() / ".cache" / "junction-arena"
+
+
+def stop_requested(sweep_name: str) -> bool:
+    """Drain switch: `STOP` (all sweeps) or `STOP-<sweep>` in ~/.cache/junction-arena. A draining runner starts no
+    new job but lets its in-flight runs finish (used when the shared server moves)."""
+    return (STOP_DIR / "STOP").exists() or (STOP_DIR / f"STOP-{sweep_name}").exists()
+
+
+def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, out_dir: Path, log=print,
+            also_done: list[str] | None = None) -> list[dict]:
     models = load_models()
     sw["api"] = api
     ledger = out_dir / "mock_ledger.jsonl" if api == "mock" else None
@@ -131,6 +145,11 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
     for w in warnings:
         log(f"warning: {w}")
     done = client.finished_run_keys()
+    # Runs finished on a previous shared server that hasn't been merged into this one yet: don't redo them.
+    for url in also_done or []:
+        old = make_client(url)
+        done |= old.finished_run_keys() - old.infra_aborted_run_keys()  # real results only; aborted ones rerun here
+        log(f"also-done: {url} ({len(done)} finished keys in total)")
     # A run the server ended by idle_timeout died with our runner or the tunnel, not by the model's play: rerun it
     # under a derived key (the server refuses to restart a finished key). Analysis drops idle_timeout aborts.
     infra = getattr(client, "infra_aborted_run_keys", lambda: set())()
@@ -171,6 +190,8 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
     rows: list[dict] = []
 
     def one(j: Job):
+        if stop_requested(sw["name"]):
+            raise Drained()
         if j.kind == "model":
             m = models[j.model_id]
             with sems[j.model_id]:
@@ -196,6 +217,8 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
                 f.result()
             except AlreadyFinished:
                 log("  skipped: server says this run_key already finished")
+            except Drained:
+                pass
             except Exception as e:  # one broken run must not kill the sweep; it stays unfinished -> rerun
                 log(f"  run failed: {type(e).__name__}: {e}")
     log(f"results: {results_path}")
