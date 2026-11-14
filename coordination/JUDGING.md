@@ -21,7 +21,7 @@ Then they spend 15 minutes hunting reward exploits. They must be able to run the
 | 2 | **Stop-early baseline**: `-a oracle --ae ORACLE_STOP_AFTER_LEVELS=<n>` (oracle replays only the first n levels) | A4 | done |
 | 3 | **Docker build + full `harbor run`** with oracle / nop / stop-early on `dev` (needs Docker: A4's machine has it) | A4 | done (see Results) |
 | 4 | **OpenCode agent run** through Harbor, using the organisers' Nemotron opencode config (`NVIDIA_VERDA_INFERENCE_KEY`, see `coordination/KEYS.md`) | A4 | done once (see Results); 3 attempts in OVERNIGHT.md |
-| 5 | Export the frozen `eval-v1` after the 11:00 freeze and rerun oracle once | A3 | after 11:00 |
+| 5 | Export the frozen `eval-v1` after the 11:00 freeze and rerun oracle once | A3 | done 13:25: `harbor/eval-v1/` (30 tasks, engine 0.6.0, lint clean); Docker oracle 1.0 / nop 0.0 / stop-early 0.167 (Results) |
 | 6 | README one-command eval + fix SUBMISSION / QA_PREP / DEMO_SCRIPT / PITCH to use the Harbor commands | A5 | done (`README.md`, `docs/{SUBMISSION,QA_PREP,DEMO_SCRIPT,PITCH}.md`) |
 | 7 | Reward integrity check: do-nothing = 0, stop-early earns only the solved levels, oracle = 1.0, reported in the deck | A5 (numbers from A4's runs) | done (`docs/deck/SLIDES.md`, `docs/deck/index.html`) |
 
@@ -71,3 +71,16 @@ harbor run -p <task> -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
 Rubric set (3 agent runs, 30-min cap): 0.020, 0.094, 0.087, **mean 0.067**. With the earlier 15-min attempt (0.113), 4 runs average 0.079. Reference: 1.000, do-nothing: 0.000.
 
 The reference run scores 1.000 on the same task. The gap shows on the judges' own harness.
+
+**Frozen `eval-v1` (A3, 13:25, ignacio's machine, Docker 29.9.2, Harbor 0.26.0).** The judges' package is committed at
+`harbor/eval-v1/` (30 tasks, one per game, engine 0.6.0, `harbor lint` clean, no local-only CA/vendor). Game 1
+(`gridworld-s900000-d1-l6-33a57ce4`), run from a local copy that only adds the antivirus CA:
+
+| Run | Command | Reward | Levels | Actions | Errors |
+|---|---|---|---|---|---|
+| reference (oracle) | `harbor run -p harbor/eval-v1 -a oracle` | **1.000** | 6/6 | 86 | 0 |
+| do-nothing | `harbor run -p harbor/eval-v1 -a nop` | **0.000** | 0/6 | 0 | 0 |
+| stop-early | `harbor run -p harbor/eval-v1 -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1` | **0.167** | 1/6 | 11 | 0 |
+
+On Windows, `harbor run` exits 1 after writing results (`OPENSSL_Uplink: no OPENSSL_Applink`, a teardown crash); results and `n_errors: 0` are unaffected. Regenerate with `python -m arena harbor-export --collection eval-v1 --out harbor/eval-v1` (on Windows export to a short path such as `C:/hb` first: the repo path can exceed 260 characters).
+
