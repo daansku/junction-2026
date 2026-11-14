@@ -58,3 +58,12 @@ ignacio's laptop at 22:25, wall cap 4 h per run (all end by ~02:30), cost cap $5
 - Gemini Flash / Gemini 4 Argon / Gemini 4 Carbon, effort high (highest in the registry): 1 attempt each -> labelled single-attempt.
 - Claude: not run (key not topped up).
 No reruns after this; results go into A3-to-all-RESULTS.md when the runs finish.
+
+## Sat 22:32 A3-35 re-launched as harness h2b (A3; ignacio 22:40 "same sweeps, much less time, don't cut runs")
+The 22:25 h2 launch (and its 22:24 wall-capped relaunch) were stopped before any result; files removed.
+A complete h2 run is ~400 sequential model calls (Kimi 8-12 s/action, Gemini Pro 12-60 s/action = 1-3 h), so
+parallelism cannot shorten a run. h2b = h2 with: `act` takes 1-5 actions run in order (each counted and scored as
+in h2; the list stops early on level change, game end, or an action that changes nothing) + smaller context (last 2
+frames, last 3 reasoning blocks). Test: 15 actions in 3-4 calls, no invalid turns, Kimi 4.8 s/action.
+Sweep `h2b-eval-v2.yaml`: frozen 4 eval-v2 games x 3 attempts x {Kimi K3.1 max, Gemini Pro/Flash/4 Argon/4 Carbon high}
+= 60 runs, all at once, no cost cap, no wall cut (4 h safety only). h2b is its own board, never mixed with h2 rows.
