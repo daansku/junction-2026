@@ -16,15 +16,30 @@ function cellGeometry(w: number, h: number) {
   return { cs, ox: Math.floor((64 - w * cs) / 2), oy: HUD_ROWS + Math.floor((64 - HUD_ROWS - h * cs) / 2) }
 }
 
-/** Optimal path drawn over a level thumbnail. Needs start + optimal_positions from describe(). */
+/**
+ * Optimal path drawn over a level thumbnail. Prefers the engine's frame pixels
+ * (start_pixel / optimal_pixels: [x, y, cell_size], rotation-aware); falls back
+ * to cell positions mapped with the canvas.py geometry.
+ */
 function PathOverlay({ level }: { level: LevelDescribe }) {
-  if (!level.w || !level.h || !level.start || !level.optimal_positions?.length) return null
-  const { cs, ox, oy } = cellGeometry(level.w, level.h)
-  const pts = [level.start, ...level.optimal_positions].map(([x, y]) => `${ox + (x + 0.5) * cs},${oy + (y + 0.5) * cs}`)
+  let pts: Array<[number, number]> = []
+  let cs = 1
+  const sp = level.start_pixel as [number, number, number] | undefined
+  const op = level.optimal_pixels as Array<[number, number, number]> | undefined
+  if (sp && op?.length) {
+    cs = sp[2]
+    pts = [sp, ...op].map(([x, y, c]) => [x + c / 2, y + c / 2])
+  } else if (level.w && level.h && level.start && level.optimal_positions?.length) {
+    const g = cellGeometry(level.w, level.h)
+    cs = g.cs
+    pts = [level.start, ...level.optimal_positions].map(([x, y]) => [g.ox + (x + 0.5) * g.cs, g.oy + (y + 0.5) * g.cs])
+  }
+  if (pts.length < 2) return null
+  const [ex, ey] = pts[pts.length - 1]
   return (
     <svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden>
       <polyline
-        points={pts.join(' ')}
+        points={pts.map((p) => p.join(',')).join(' ')}
         fill="none"
         stroke="var(--accent)"
         strokeWidth={Math.max(0.5, cs / 5)}
@@ -32,6 +47,8 @@ function PathOverlay({ level }: { level: LevelDescribe }) {
         strokeLinecap="round"
         opacity={0.9}
       />
+      <circle cx={pts[0][0]} cy={pts[0][1]} r={Math.max(0.6, cs / 4)} fill="var(--accent)" />
+      <rect x={ex - cs / 4} y={ey - cs / 4} width={cs / 2} height={cs / 2} fill="none" stroke="var(--accent)" strokeWidth={Math.max(0.3, cs / 10)} />
     </svg>
   )
 }
@@ -76,7 +93,7 @@ export function GameDetail({ gameId }: { gameId: string }) {
   if (game.isLoading) return <Loading what="Loading game" />
   if (game.error) return <ErrorState error={game.error} retry={() => game.refetch()} />
   const g = game.data!
-  const hasPositions = g.levels.some((l) => l.optimal_positions?.length)
+  const hasPositions = g.levels.some((l) => l.optimal_positions?.length || (l.optimal_pixels as unknown[] | undefined)?.length)
   const totalOpt = g.optimal_moves_total ?? g.levels.reduce((s, l) => s + (l.optimal_moves ?? 0), 0)
   const totalBudget = g.levels.reduce((s, l) => s + (l.move_budget ?? 0), 0)
 
