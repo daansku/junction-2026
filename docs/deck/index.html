@@ -395,26 +395,23 @@
           </p>
         </div>
 
-        <div class="grid-3">
-          <div class="cell">
-            <div class="kicker">Default Challenge (`s900002`)</div>
-            <div class="big-stat" style="color:var(--s3)">Human Won</div>
-            <div class="muted"><span class="mono">eval-v1</span> difficulty <span class="mono">d3</span> (6 levels): unassisted human beat every finished <span class="mono">h1</span> and <span class="mono">h2</span> model.</div>
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Captured `/challenge` Level-Solved Screen (<span class="mono">12-challenge-level-solved.png</span>)</h3>
+            <img class="pixel-sheet" style="image-rendering:auto; max-height:195px;" src="../../web/screenshots/12-challenge-level-solved.png" alt="Beat the AI level solved screen with AI ghost reels" />
           </div>
-          <div class="cell">
-            <div class="kicker">Spoiler-Free Level Reels</div>
-            <div class="big-stat">4 moves/s</div>
-            <div class="muted">Clearing Level <span class="mono">L</span> unlocks side-by-side ghost replays of <span class="mono">Kimi</span>, <span class="mono">Gemini</span>, &amp; <span class="mono">Nemotron</span> on that level (hidden on retry).</div>
-          </div>
-          <div class="cell">
-            <div class="kicker">Benchmark Isolation</div>
-            <div class="big-stat" style="color:var(--good)">0 Leakage</div>
-            <div class="muted">Tagged <span class="mono">mode: "challenge"</span>; visitor leaderboard stays separate and <span class="mono">loader.py</span> drops all kiosk sessions from benchmark tables.</div>
+          <div class="panel">
+            <h3>Why Judges &amp; Visitors Play Live (`gridworld-s900002-d3-l6-f09d6348`)</h3>
+            <ul>
+              <li><strong>Human Won (`d3`):</strong> On default 6-level <span class="mono">s900002</span>, our unassisted human tester beat every finished <span class="mono">h1</span> &amp; <span class="mono">h2</span> model.</li>
+              <li><strong>4 moves/s AI Reels:</strong> Clearing Level <span class="mono">L</span> unlocks side-by-side replays of <span class="mono">Kimi</span>, <span class="mono">Gemini</span>, &amp; <span class="mono">Nemotron</span> on that exact level (hidden on retry so zero spoilers).</li>
+              <li><strong>Strict Hygiene:</strong> Tagged <span class="mono">mode: "challenge"</span> — visitor leaderboard stays separate and <span class="mono">loader.py</span> drops all kiosk runs from benchmark tables.</li>
+            </ul>
           </div>
         </div>
 
         <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
-          <span><strong>Live Demo Switch:</strong> Play <span class="mono">L1–L2</span> on <span class="mono">/challenge</span> (<span class="mono">← ↑ → ↓</span> move · <span class="mono">Space</span> wait · <span class="mono">R</span> reset) and compare move counts live.</span>
+          <span><strong>Live Demo Switch:</strong> Play <span class="mono">L1–L2</span> on <span class="mono">/challenge</span> (<span class="mono">← ↑ → ↓</span> move · <span class="mono">Space</span> wait · <span class="mono">R</span> reset) or fallback <span class="mono">challenge-full-run.mp4</span>.</span>
           <span class="tag warn">LIVE TAB 2 → /challenge</span>
         </div>
       </section>
@@ -423,7 +420,7 @@
       <section class="slide" data-title="The Gap: h1 vs Lab-Standard h2">
         <div>
           <div class="kicker">04 · The Capability Gap (`leaderboard.json` &amp; `leaderboard_h2.json`)</div>
-          <h2>First `h1` — Then Lab-Standard `h2`: Even Run the Lab Way, Models Trail Humans</h2>
+          <h2>Run the Lab Way (`h2`), They Close Easy `d1` — and Still Lose on Harder Levels &amp; New Rules</h2>
           <p class="sub">
             We keep <span class="mono">h1</span> (stateless rolling-notes) and <span class="mono">h2</span> (full multi-turn history, preserved thinking blocks, <span class="mono">high/max</span> effort, <span class="mono">64k/32k</span> output cap, native <span class="mono">act()</span> tool) strictly separate.
           </p>
@@ -480,21 +477,18 @@
           </p>
         </div>
 
-        <div class="grid-3">
-          <div class="cell">
-            <div class="kicker">Zero-Change Loops</div>
-            <div class="big-stat" style="color:var(--bad)">46.9%</div>
-            <div class="muted">Share of failure decision points: agents repeat wall/arrow bumps (<span class="mono">one_way</span>, <span class="mono">phase_walls</span>) after zero pixel change.</div>
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Trace &amp; Hypothesis Inspector (<span class="mono">04-replay-argon.png</span>)</h3>
+            <img class="pixel-sheet" style="image-rendering:auto; max-height:190px;" src="../../web/screenshots/04-replay-argon.png" alt="Replay step inspector showing reasoning, hypothesis, and hidden truth" />
           </div>
-          <div class="cell">
-            <div class="kicker">Sunk-Cost Late Resets</div>
-            <div class="big-stat" style="color:var(--warn)">42.1%</div>
-            <div class="muted">Agents burn <span class="mono">&gt;1.5× optimal_moves</span> inside irreversible dead-ends (<span class="mono">cracked_floor</span>, <span class="mono">push_blocks</span>) before resetting.</div>
-          </div>
-          <div class="cell">
-            <div class="kicker">Coupled Dynamics (`twin`)</div>
-            <div class="big-stat" style="color:var(--accent)">17.3% wt</div>
-            <div class="muted">#1 bottleneck mechanic in <span class="mono">decision_point_targets.json</span> (<span class="mono">0%</span> `h1` intro solve): models track avatar A while twin B hits hazards.</div>
+          <div class="panel">
+            <h3>99 Extracted Failure Decision Points (<span class="mono">decision_point_targets.json</span>)</h3>
+            <ul>
+              <li><strong>Zero-Change Loops (<span class="mono" style="color:var(--bad)">46.9%</span>):</strong> Agents repeat wall/arrow bumps (<span class="mono">one_way</span>, <span class="mono">phase_walls</span>) after zero pixel change.</li>
+              <li><strong>Sunk-Cost Late Resets (<span class="mono" style="color:var(--warn)">42.1%</span>):</strong> Agents burn <span class="mono">&gt;1.5× optimal_moves</span> in dead-ends (<span class="mono">cracked_floor</span>, <span class="mono">push_blocks</span>) before resetting.</li>
+              <li><strong>Coupled Dynamics (<span class="mono">twin = 17.3% wt</span>):</strong> #1 bottleneck mechanic (<span class="mono">0%</span> `h1` intro solve) — models steer avatar A while twin B hits hazards.</li>
+            </ul>
           </div>
         </div>
 
@@ -617,7 +611,7 @@
         </div>
 
         <div class="panel mono dim" style="font-size:11.5px;">
-          Honest scope boundary: 64×64 gridworlds measure abstract causal hypothesis testing &amp; recovery, not domain-specific HTML/SQL syntax — complementing (not replacing) end-to-end production integration tests.
+          Two-outcome win (`BACKUP IDEAS.md`): if post-training transfers, we sell the RL gym; if `28.7k` fine-tuning examples don't lift unseen-rule scores, that proves the benchmark resists training-to-the-test (+ Game Studio SDK hedge &amp; `/challenge` human-trace flywheel).
         </div>
       </section>
 

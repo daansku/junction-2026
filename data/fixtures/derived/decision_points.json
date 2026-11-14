@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-14T16:48:32Z",
+  "generated_at": "2026-11-14T16:55:12Z",
   "holdout_notice": "NEVER train on eval-v1, eval-v2, or probe-v1 traces. Use `oversample_weights` to bias procedural `train-v1` seed/mechanic generation in `engine.tasks` and `arena/dataset.py`.",
   "counts_by_decision_type": {
     "premature_hypothesis": 0,

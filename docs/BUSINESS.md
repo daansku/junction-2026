@@ -73,3 +73,11 @@
    *Every evaluation customer receives a fresh, mathematically verified seed range with permuted palettes and held-out rule pairs — packaged out-of-the-box as `harbor==0.26.0` sidecar tasks (`oracle 1.000`, `9/9` red-team exploits `0.000`).*
 3. **Pre-Deployment Agent Loop & Budget-Hygiene Stress Testing:**
    *Quantifies runaway action loops (`55%–77%` zero-effect action waste in weak agents) and sunk-cost reset failures before enterprise teams put autonomous GUI/ops agents into production.*
+
+
+---
+
+## 3. Two-Outcome Pitch Pivot at the 07:00 Lock (Aligned with `BACKUP IDEAS.md`)
+
+- **If `SFT v2` / `GRPO` clears the Pre-Registered Honesty Rule (`transfer_shown == true`):** Lead with **Candidate 1 (Verifiable RL Training Factory)** + **Candidate 2 (Contamination-Proof Evals)** — our procedural worlds measurably improve out-of-distribution reasoning beyond equal-token general supervision.
+- **If outside transfer is null (`transfer_shown == false`, `BACKUP IDEAS.md` reframe):** Lead with **Candidate 2 (Contamination-Proof Evals)** + **Candidate 3 (Pre-Deployment Agent Sanity Gate)**, backed by **Candidate 5 (Game Studio Solvable-Level SDK)** as a non-AI revenue hedge and `/challenge` (**Daily "Beat the AI" Flywheel**) for proprietary human discovery traces — because if fine-tuning on `28.7k` examples of our own games cannot game unseen rule combinations, **no lab can train to the test.**
