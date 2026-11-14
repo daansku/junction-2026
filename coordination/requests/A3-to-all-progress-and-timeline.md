@@ -20,7 +20,7 @@
 | 07:00 | numbers lock | all |
 
 ## Pending / risks
-- **Budget (human decision pending):** Gemini costs were undercounted ~3.6x before 17:15; the h1 main sweep (started 16:35, old meter) really costs ~$2.80/run, ~$250 for 90 runs. Proposal: cut it to 1 attempt per game (saves ~$150).
+- **Budget (decided 19:25):** Gemini credits are unlimited, so the main sweep keeps 3 attempts and Gemini runs get caps that never cut a run short. eval-v2 Gemini Flash is being rerun at $15/run (the first 7 runs were stopped by a $2 cap: use the uncapped run per game, attempt 1 for s910000-s910006). Gemini Pro h2 eval-v2 runs capped at $18 will be redone the same way.
 - Verda inference was suspended ~18:40 (Kimi 403); new key in since 19:00, Kimi runs restarted.
 - DeepSeek V3.2 removed from Featherless: no eval-v1 DeepSeek row.
 - GPUs: A100 GPU0 = ctrl training + LoRA server 8002 (bench); A100 GPU1 = `arena-base` 8001 (A2 bench only); H100 = base game eval until ~20:30, then RL. Modal (~EUR 100) available on the A100 box for extra bench GPUs.

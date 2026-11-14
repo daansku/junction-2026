@@ -33,3 +33,4 @@
 - Fine-tune benchmark list = `FT_BENCHMARKS.md` (also decided 17:55 by ignacio), implemented in `bench/` as the primary suite; reasoning-gym kept as a secondary tier.
 - Decoding: Qwen3.5 model-card sampling (temperature 1.0, top_p 0.95, top_k 20, presence_penalty 1.5), not greedy.
 - Suite size: fixed subsample per model (~2,250 generative items + full MedQA; BBH 50/task, MATH 50/subject, GSM8K 250, MMLU-Pro health/law/history 100 each), same items for every model. Full suite was ~13 h per model. Protocol: `bench/PROTOCOL.md` v3.
+- **Gemini credits are unlimited (Sat 19:25, ignacio):** the $300 model budget no longer binds Gemini. Main sweep keeps 3 attempts; Gemini runs get cost caps high enough never to cut a run short (eval-v2 Gemini Flash rerun at $15/run, `arena/sweeps/eval-v2-gemini*.yaml`; the 7 eval-v2 runs capped at $2 are redone as attempt 1). The cap still applies to Anthropic and other paid APIs.
