@@ -12,6 +12,7 @@
 - All 30 games x 3 attempts: Claude Haiku 5.5, Gemini Flash, DeepSeek V3.2 (featherless), baselines.
 - Subsets, 1 attempt: Kimi K3.1 on 10 games, Claude Sonnet 5.5 on 10 games, Claude Opus 5.5 on 5 games. Marked as subsets on the leaderboard.
 - Nemotron is not in the eval-v1 sweep (endpoint takes ~30 s per request, one game ~3.3 h); it is reported from the overnight dev run only.
+- Update Sat 14:45 (human): Nemotron runs a small eval-v1 subset after all, from A4's machine: `arena/sweeps/main-subset-nemotron.yaml`, first 3 games x 1, one request at a time, 4 h wall cap per game, Verda credits. A3: don't run Nemotron elsewhere at the same time (the endpoint only queues).
 - Wall cap 3 h per run, `max_actions` 400 is the budget, so scores don't measure API latency.
 
 ## Improvement plan (Sat 14:10, Anssi; recorded by A2 for the human)
