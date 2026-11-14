@@ -1,10 +1,6 @@
-// Where the web app gets data from. Priority:
-//   1. ?api=<mode|url> in the URL (remembered in localStorage)
-//   2. localStorage "api"
-//   3. VITE_API at build time
-//   4. dev server → "mock", production build → same-origin "/api"
-// Modes: "mock" (data/fixtures + fake engine), "local" (localhost:8000),
-// "shared" (coordination/API_URL committed by A2), or any base URL.
+// Where the web app gets data from. VITE_API is an optional build-time override.
+// Otherwise development uses the shared server when available and production uses
+// the server serving the app. Mock mode is only an explicit fallback.
 
 const apiUrlFiles = import.meta.glob('../../../coordination/API_URL*', {
   eager: true,
@@ -24,19 +20,6 @@ export const SHARED_URL: string | null = (() => {
 function withApiSuffix(url: string): string {
   const u = url.replace(/\/+$/, '')
   return /\/api$/.test(u) ? u : `${u}/api`
-}
-
-function readStored(): string | null {
-  try {
-    const q = new URLSearchParams(window.location.search).get('api')
-    if (q) {
-      localStorage.setItem('api', q)
-      return q
-    }
-    return localStorage.getItem('api')
-  } catch {
-    return null
-  }
 }
 
 export type ApiMode = 'mock' | 'local' | 'shared' | 'same-origin' | 'custom'
@@ -64,9 +47,8 @@ function validPick(v: string | null | undefined): string | null {
 
 export function resolveApi(): ApiConfig {
   const pick =
-    validPick(readStored()) ??
     validPick(import.meta.env.VITE_API as string | undefined) ??
-    (import.meta.env.DEV ? 'mock' : '/api')
+    (import.meta.env.DEV && SHARED_URL ? 'shared' : '/api')
   if (pick === 'mock') return { mode: 'mock', base: null, label: 'mock' }
   if (pick === 'local') return { mode: 'local', base: 'http://localhost:8000/api', label: 'localhost' }
   if (pick === 'shared') {
@@ -75,17 +57,6 @@ export function resolveApi(): ApiConfig {
   }
   if (pick.startsWith('/')) return { mode: 'same-origin', base: pick.replace(/\/+$/, ''), label: 'server' }
   return { mode: 'custom', base: withApiSuffix(pick), label: new URL(pick).host }
-}
-
-export function setApiMode(value: string) {
-  try {
-    localStorage.setItem('api', value)
-  } catch {
-    /* storage blocked: query param still works */
-  }
-  const url = new URL(window.location.href)
-  url.searchParams.delete('api')
-  window.location.replace(url.toString())
 }
 
 export const API = resolveApi()

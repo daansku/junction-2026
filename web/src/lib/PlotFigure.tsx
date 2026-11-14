@@ -41,22 +41,14 @@ export function PlotFigure({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(640)
-  const [themeTick, setThemeTick] = useState(0)
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const ro = new ResizeObserver(() => setWidth(Math.max(240, Math.floor(el.clientWidth))))
     ro.observe(el)
-    const mq = window.matchMedia('(prefers-color-scheme: light)')
-    const onTheme = () => setThemeTick((t) => t + 1)
-    mq.addEventListener('change', onTheme)
-    const mo = new MutationObserver(onTheme)
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
     return () => {
       ro.disconnect()
-      mq.removeEventListener('change', onTheme)
-      mo.disconnect()
     }
   }, [])
 
@@ -67,7 +59,7 @@ export function PlotFigure({
     el.replaceChildren(fig)
     return () => fig.remove()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, themeTick, ...deps])
+  }, [width, ...deps])
 
   return <div ref={ref} className={className} style={{ width: '100%' }} />
 }
