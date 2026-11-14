@@ -14,11 +14,13 @@ are on the volume before that). Cost: H100 on Modal ~$4/h -> ~$12-16 for a 3-4 h
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import modal
 
 REPO = Path(__file__).resolve().parents[1]
+GPU = os.environ.get("GRPO_GPU", "H100")  # GRPO_GPU=A100-80GB if the account has no payment method (H100 needs one)
 app = modal.App("junction-grpo")
 vol = modal.Volume.from_name("junction-grpo", create_if_missing=True)
 hf_cache = modal.Volume.from_name("junction-hf-cache", create_if_missing=True)
@@ -38,7 +40,7 @@ image = (
 )
 
 
-@app.function(image=image, gpu="H100", timeout=4 * 3600, volumes={"/vol": vol, "/hf": hf_cache})
+@app.function(image=image, gpu=GPU, timeout=4 * 3600, volumes={"/vol": vol, "/hf": hf_cache})
 def train(sft: str, tasks: str, run: str, steps: int, save_every: int, config: str, extra: str):
     import shlex
     import subprocess
@@ -81,4 +83,5 @@ def train(sft: str, tasks: str, run: str, steps: int, save_every: int, config: s
 @app.local_entrypoint()
 def main(sft: str = "mix", tasks: str = "rl-s0-mix.jsonl", run: str = "grpo-1", steps: int = 150,
          save_every: int = 25, config: str = "grpo-1-h100.yaml", extra: str = ""):
+    print(f"GPU {GPU}")
     train.remote(sft, tasks, run, steps, save_every, config, extra)

@@ -5,7 +5,7 @@ base: Qwen/Qwen3.5-9B
 steps: 150                  # ~3 h; bench every 50 (posttrain/tools/bench_watch.sh EVERY=50)
 save_every: 25
 seed: 0
-note: "A3 decision Sat 19:40: start from SFT v2 mix without waiting for the bench verdict (saves ~3 h). Data: 70% game_turn (h1 maps) + 30% aux (blocked_moves, full_plan, rule_effect)."
+note: "A3 decision Sat 19:35: start from SFT v2 games before bench results to save time (games/mix val losses are on different data, not comparable). Data: 70% game_turn (h1 maps) + 30% aux (blocked_moves, full_plan, rule_effect)."
 task_filter: null
 
 lr: 1.0e-5
