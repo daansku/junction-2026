@@ -1,545 +1,225 @@
-# PLAN.md — Junction 2026 build plan
+# PLAN.md — Junction 2026, phase 2
 
-**Clock:** revised Sat 14.11 01:25 (Helsinki). **Final submission: Sun 15.11 10:00.** We submit at **09:30**. ~32 working hours.
+**Clock:** written Sat 14.11 16:45 (Helsinki). **We submit Sun 15.11 09:30** (deadline 10:00). About 16.5 working hours left.
 
-**What we are building, in one sentence:** a factory that produces unlimited, seed-reproducible, verified-solvable ARC-AGI-3-style games, plus the arena that shows where frontier models still lose to humans (and to a small fine-tuned model) on games nobody has seen before.
+**The previous plan** (build the factory, arena, web, first sweeps) is archived in `coordination/PLAN-v1.md`. Its §3 (working rules, ownership, git), §4 (contracts) and §5 (game design rules) **still bind**. This file replaces only its scope, gates and task lists.
 
-Every agent reads sections 1–5 in full, then its own section in 6. Humans read 1, 2 and 7.
+**What changes, in one sentence:** we stop building features and turn the project into three claims we can defend in front of the judges: (1) the gap holds when frontier models are run *the way labs benchmark them*; (2) post-training a small model on our games *improves its reasoning on outside benchmarks*, or we show honestly that it does not; (3) people at the venue can feel the gap themselves in a "Can you beat the AI?" demo.
+
+Every agent reads §1–§4 in full, then its own part of §5. Humans read §1, §2 and §6.
 
 ---
 
 ## 1. Scope
 
-### Must ship (the demo dies without these)
-1. **Game factory** — procedural, seeded, multi-level grid games; one new rule introduced per level; rule combinations never repeat inside a game; every level proven solvable; move budget derived from the optimal solution.
-2. **Pixels-only agent interface** — MCP server + REST. The agent receives a 64×64 frame and nothing else. No win/lose flag, no score, no rule names.
-3. **Human play UI** — same frames, arrow keys.
-4. **Replay viewer** — watch any run step by step with the model's reasoning next to the frame.
-5. **Puzzle gallery** — browse the collection, rules per level, optimal path.
-6. **Model leaderboard** — several providers, performance, tokens, cost, cost-vs-performance chart, model links/specs.
-7. **Post-game analysis** — where models learn a rule fast, where they never do, compared with human and optimal play.
-8. **Pitch deck + demo.**
+### Must ship
+1. **Benchmark-standard harness `h2`** and a frontier rerun on a fixed subset (§3.1). The h1 leaderboard stays as is; h2 is a separate board, never mixed.
+2. **Reasoning-benchmark pipeline**: one command evaluates any model (base, SFT, RL checkpoint) on a fixed list of outside reasoning benchmarks plus our held-out games, with identical settings and confidence intervals (§3.2).
+3. **Post-training** of a small open model on experience from our games, measured by that pipeline against a control run (§3.3). **This is the most important item in this plan.**
+4. **"Can you beat the AI?" demo** for visitors, safe on the public URL (§3.4).
+5. **Presentation**: deck, 10-minute demo script, backup video, all numbers claim-checked (§3.5).
+6. **Business / real-life value**: a short written exploration, the best two or three ideas on one slide (§3.6).
 
-### Stretch (cut from the bottom up when behind)
-1. Analysis → new rules → second eval collection (the "factory improves itself" loop)
-2. Fine-tuned small model beating un-tuned frontier models on held-out games
-3. Effort-level comparison
-4. Live spectating wall (several models playing at once)
-5. ARC-AGI-3-compatible REST shim, so existing community agents can be pointed at our games
-6. 3D map rotation
+### Stretch (cut from the bottom up)
+1. RL on full multi-turn game episodes (single-turn verifiable tasks are the must-ship RL, §3.3).
+2. h2 rerun through the judges' own Harbor + OpenCode harness as a cross-check.
+3. Second training iteration driven by the first iteration's failure analysis.
+4. Live (not replayed) AI opponent in the demo, using our fine-tuned model.
 
-### Assumptions made (humans: correct these in `coordination/DECISIONS.md`)
-- Each agent runs on its own machine with its own clone of the repo. The machines share exactly two things: the GitHub remote and one shared server URL (§3.4).
-- Python 3.11+ backend, React + TypeScript + Vite frontend.
-- We write our own small engine, wire-compatible with ARC-AGI-3 (64×64 frame, 16 colours, `RESET` + `ACTION1..7`). We do not depend on the official `arcengine` package.
-- No API keys are in hand yet. Agents build against mocks until keys land in `.env`.
-- Aiven is a database provider, not GPU compute. Fine-tuning goes to Modal. Aiven Postgres is optional run storage only if a human decides it matters for a challenge.
+### Already running — do not disturb
+- h1 main sweep on `eval-v1` (A3), Gemma 4 E4B sweep on the Verda host (A4), Nemotron subset (A4). They finish and land on the h1 board.
+- Shared server on the Verda CPU VM (`coordination/API_URL`). A2 restarts it only between sweeps.
 
 ---
 
 ## 2. Gates
 
-Each gate is a hard integration point. At a gate every agent: rebases on `main`, runs `scripts/smoke.sh`, updates its status file. Gates G1 and G5-prep fall in a window where no human input is needed. Agents are on different machines, so "rebase on `main`" is the only way anyone sees anyone else's work.
-
-| Gate | Time | What must work end to end |
+| Gate | Time | What must be true |
 |---|---|---|
-| **G0** | Sat 02:15 | Contracts + fixtures committed. Stub engine (walls + goal + budget) importable. Web shell with all routes. Every agent unblocked. |
-| **G0+** | Sat 03:00 | Shared server reachable from all five machines; URL committed to `coordination/API_URL`. |
-| **G1** | Sat 06:00 | **Vertical slice:** a generated 6-level game is playable in the browser, playable by one real model through the harness, the run is recorded, and the replay shows up in the viewer. |
-| **G2** | Sat 13:00 | **Breadth:** ≥ 12 rules, `eval-v1` collection frozen, ≥ 6 models from ≥ 3 providers run on a pilot subset, gallery + leaderboard on real data, human baseline traces exist, draft submission opened. |
-| **G3** | Sat 20:00 | Main sweep finished. Analysis v1 with 3 headline findings. Fine-tune result or a decision to cut it. `eval-v2` (rules born from analysis) generated. |
-| **G4** | Sun 00:00 | **Feature freeze.** Public demo URL live in read-only mode. Deck v1. Demo video recorded. Only bug fixes and overnight eval runs after this. |
-| **G5** | Sun 08:30 | Final numbers locked (07:00), deck matches data, submission text final. **Submit 09:30.** |
+| **H0** | Sat 17:30 | This plan read by all agents. SFT v1 `finetune-eval` result (Qwen3.5-9B base vs `verda-ft-qwen3-5-9b`, h1, `eval-v1`) written in A3's status file, good or bad. Owners of the new folders (§4) have pushed stubs. |
+| **H1** | Sat 19:30 | `h2` plays one `eval-v1` game end to end with one Anthropic and one OpenAI-compatible model, reasoning retained across turns, trace marked `harness_version: h2`. Bench pipeline has produced **base-model numbers** for Qwen3.5-9B on the full benchmark list (§3.2). Training-data generators v2 produce valid samples. Demo page playable locally. |
+| **H2** | Sat 23:30 | SFT v2 trained and benchmarked against base and control. First RL run (single-turn tasks) running, with at least one checkpoint benchmarked. h2 frontier subset finished or in flight with cost under the approved cap. Demo live on the public URL. Deck v2 with real h1 numbers. |
+| **H3** | Sun 05:00 | Best checkpoint chosen by a rule fixed in advance (§3.3), full benchmark run on it with 95% CIs. h2 board built. Business value doc done. |
+| **H4** | Sun 07:00 | **Numbers lock.** Only presentation work after this. |
+| **H5** | Sun 08:30 | Deck, script, video, README match the locked numbers (claim check passes). **Submit 09:30.** |
 
 ---
 
-## 3. Working rules for all agents
+## 3. Workstreams
 
-### 3.1 Ownership — the rule that makes parallel work possible
-You write only inside the paths you own (table in §3.2). Need a change elsewhere? Create `coordination/requests/<from>-to-<to>-<slug>.md` (what, why, by when) and carry on with a mock. The owner picks requests up at the top of each hour.
+### 3.1 Run models the way labs benchmark them (harness `h2`)
 
-### 3.2 Folder structure and owners
+**Why:** h1 sends every turn as a fresh single message with rolling notes, no chat history, no retained reasoning, mostly `medium` effort and 16k max output tokens. That is cheap and fair, but a judge can say "you crippled the model". h2 removes that objection. Every choice below must match how providers and ARC Prize report frontier results; look each one up in current provider docs (PLAN-v1 §3.5), do not write it from memory.
 
-```
-.
-├── PLAN.md                      humans only
-├── README.md                    A5
-├── Makefile, scripts/           A2   (setup, dev, test, smoke, demo)
-├── .env.example                 A3   (.env is never committed)
-├── contracts/                   A2   single writer; additive-only after G0
-│   ├── palette.json             16 colours, index 0–15
-│   ├── engine_api.py            Protocol stubs (§4.3)
-│   ├── openapi.yaml             REST (§4.4)
-│   ├── trace.schema.json        run traces (§4.5)
-│   └── derived.schema.json      leaderboard + analysis outputs (§4.6)
-├── engine/                      A1
-│   ├── src/engine/core/         state, actions, game loop, events, seeded rng
-│   ├── src/engine/components/   ONE FILE PER COMPONENT (keys_doors.py, ice.py, …)
-│   ├── src/engine/generator/    layout, placement, curriculum (rule intro + shuffle)
-│   ├── src/engine/solver/       bfs, budget, rule-necessity, random-walk check
-│   ├── src/engine/render/       grid → 64×64 frame, HUD, PNG
-│   ├── src/engine/cli.py        gen / play / render / verify
-│   └── tests/
-├── server/                      A2
-│   ├── src/server/              app, sessions, recorder, routes/, live (WS),
-│   │                            mcp_server, arc_compat (stretch)
-│   └── tests/
-├── arena/                       A3
-│   ├── models.yaml              model registry (§4.7)
-│   ├── src/arena/               providers/, agent_loop, prompts/, runner, cost, budget
-│   ├── sweeps/                  one yaml per eval sweep
-│   ├── finetune/                make_dataset, modal_train, modal_serve
-│   └── tests/
-├── analysis/                    A5
-│   ├── METRICS.md               exact metric definitions
-│   └── src/analysis/            aggregate, rule_discovery, compare, insights
-├── web/                         A4, except the two folders marked A5
-│   ├── DESIGN.md                A4   design direction; A5 follows it
-│   ├── package.json             A4   (dependency requests go through A4)
-│   └── src/
-│       ├── app/                 A4   router, layout
-│       ├── design/              A4   tokens, primitives
-│       ├── lib/                 A4   api client, FrameCanvas, mock mode
-│       └── features/
-│           ├── play/            A4
-│           ├── gallery/         A4
-│           ├── replay/          A4   replay + live spectate
-│           ├── leaderboard/     A5
-│           └── insights/        A5
-├── rules/
-│   ├── proposals/               humans + A5 add files; A1 implements
-│   └── CATALOG.md               A1   every rule: status, tier, visuals, teaching level
-├── data/
-│   ├── fixtures/                A2 (+ fixtures/derived/ by A5)  committed sample data
-│   ├── collections/             A1   frozen puzzle collections (committed)
-│   ├── runs/                    gitignored — traces, written only by the server
-│   ├── derived/                 gitignored — written only by analysis
-│   └── published/               A2   committed snapshot used by the public demo
-├── docs/                        A5   research/, PITCH.md, DEMO_SCRIPT.md, SUBMISSION.md, deck/
-└── coordination/
-    ├── status/A1.md … A5.md     each agent writes only its own
-    ├── requests/                new files only, never edit someone else's
-    └── DECISIONS.md             humans only
-```
+**h2 rules (binding for A3; state them on the h2 board):**
+1. **Multi-turn conversation.** The model sees its own previous turns, not only a notes field.
+2. **Reasoning retained across turns** where the API supports it: Anthropic thinking blocks passed back unchanged; Gemini thought signatures passed back; OpenAI-compatible models: follow each provider's rule for `reasoning_content` (some require it back, some forbid it). Record in the trace which mode each model ran in.
+3. **Native tool calling** for actions (`act(action)`), not JSON inside text, where the model supports tools. Invalid or truncated replies are counted in the trace and cost a turn, as in h1.
+4. **Highest reasoning effort that providers and public leaderboards normally report** for that model (`max`/`xhigh`/`high`). If that is too expensive on a model, run it at the highest affordable level and label the row with the effort used. Never compare efforts silently.
+5. **Generous output limit** (the model's documented maximum, or at least 64k for thinking models) so no reply is cut off by our settings.
+6. **Provider-default sampling** (temperature etc.) unless the provider's docs say otherwise for reasoning models.
+7. **Context management:** full text history; frames as images for the last N turns (N fixed in the harness, same for all models), older frames dropped; prompt caching on. When the context would overflow, a fixed summarisation step, identical for all models. No hidden information is added; the observation stays pixels only.
+8. **Repeats:** ≥ 3 attempts per (model, game) where affordable; report mean and 95% CI. Single-attempt rows are labelled.
+9. **Same system prompt idea as h1** (no rule names, no hints), versioned as `prompts/system_h2.md`.
 
-No shared lockfile and no root `pyproject.toml`: each Python package has its own `pyproject.toml` and adds its own dependencies. One venv per clone, built by `make setup` (`pip install -e ./engine -e ./server -e ./arena -e ./analysis`).
+**h2 subset:** 6 `eval-v1` games (2 per difficulty band) + 4 `eval-v2` games, frozen in `arena/sweeps/h2-subset.yaml` before the first run. Models: Claude Opus 5.5, Gemini Pro, Kimi K3.1, one open model, and our best post-trained model (h2 settings apply to it as well). `--dry-run` cost estimate first; anything above the per-sweep cap needs a human OK (§6).
 
-### 3.3 Git
-- One clone and one branch per agent machine: `agent/a1` … `agent/a5`.
-- Git is the only channel between agents. `git fetch && git rebase origin/main` at least every 30 minutes and before starting each new task; push after each finished task.
-- Commit small, prefix the message with your id: `[A3] add gemini provider`.
-- Ship to main often: `git fetch origin && git rebase origin/main && git push origin HEAD:main`. Rejected push → fetch, rebase, push again. Directories are disjoint, so rebases are conflict-free. If you hit a conflict you edited something you do not own — stop and revert that edit.
-- Never force-push. Never commit `.env`, `data/runs/`, `node_modules/`.
+**Done means:** the h2 board shows, per model, score with CI, effort used, reasoning-retention mode, tokens, cost; and the gap to the optimal and human reference is still there (or we report that it closed).
 
-### 3.4 Shared runtime (agents are on different machines)
-- **One shared server holds every trace.** It runs on the host named in `DECISIONS.md` (default: A2's machine behind a tunnel that works on the venue network; move to a cloud VM as soon as a human provides one). A2 commits its public address to `coordination/API_URL` **by 03:00** and again whenever it changes. Every run that counts (model sweeps, human playtests, baselines) goes through that URL, so all traces land in one `DATA_DIR` on that host.
-- The shared host also serves the built web app from `main`, so humans playtest and review at one address.
-- **Local dev is local.** Each machine runs its own server and web on localhost against its own throwaway `DATA_DIR` (`~/junction-data`). Local traces are never used for results.
-- A2 keeps the shared server on current `main`: pulls and restarts at every gate and on request, never in the middle of a sweep (check A3's status file first). Tars `DATA_DIR` hourly to a second location; lost traces are lost money.
-- **Reading traces from another machine** goes through the API only. `GET /runs/export?since=` returns finished runs as a tar; `python -m analysis sync` mirrors them into a local cache. The shared host runs `analysis build` on `POST /admin/rebuild` and serves the output at `/derived/`, so web pages never need local traces.
-- **Secrets:** model keys and the Modal token live only in `.env` on A3's machine. The shared host needs none. `/admin/*` requires `ADMIN_TOKEN`. Humans pass keys and the token over a private channel, never through git.
-- The host machine must not sleep: on power, sleep disabled, one human responsible for it.
+### 3.2 Reasoning-benchmark pipeline (`bench/`)
 
-### 3.5 Working unattended
-- Do not wait for a human or another agent. Blocked for more than 10 minutes → write the blocker in your status file, switch to the next task in your list, keep going on a mock.
-- Update `coordination/status/A<n>.md` at every gate and whenever blocked: **Done / Doing / Blocked / Need from humans**. Humans read these five files, nothing else.
-- A task is done when it runs: tests pass, and you exercised it yourself (played the level, opened the page, read the trace).
-- **Spending:** before any model sweep, the runner prints a cost estimate. Above the cap in `DECISIONS.md` (default **$5 per sweep** until a human raises it) you stop and ask.
-- **Model IDs, prices, SDK details:** look them up in the provider's current docs. Do not write them from memory.
-- **Any UI or deck work:** first search for and load a UI/frontend design skill, and read `web/DESIGN.md`. No purple gradients, no emoji as icons, no glass cards, no "hero + three feature cards". The pixel grid and its 16-colour palette are the visual identity; the dashboards should read like a dense benchmark or sports-stats site.
+**Why:** "the model got better at our games" is not interesting; "training on our games made a small model reason better elsewhere" is. The pipeline must make that comparison trustworthy.
 
----
+**One command:** `make bench MODEL=<id or HF path or vLLM URL> OUT=data/derived/bench/<run>.json`. It serves the model with vLLM on a Verda/Modal GPU, runs every benchmark below with **identical generation settings for every model** (chat template, temperature, max tokens, number of samples, seeds), and writes per-item results so we can do paired comparisons.
 
-## 4. Contracts
+**Benchmark list** (check each task's exact name and licence in `lm-evaluation-harness` / the dataset card before using it; drop a benchmark rather than guess):
 
-These are frozen at G0. PLAN.md is the source of truth until A2 has written `contracts/` (by 01:55); after that `contracts/` wins. Changes after G0 are additive only and go through a request to A2.
-
-### 4.1 Frame
-- Always **64×64**, each cell an int **0–15**, palette in `contracts/palette.json`.
-- Wire format: 64 strings of 64 hex characters (`"0003aa…"`), row 0 at the top.
-- **Everything a player may know is drawn in the frame**: remaining-moves bar, health, stamina, inventory, win screen, game-over screen. The HUD lives in the top rows; the play area is the logical grid scaled by an integer cell size.
-- No text, no legends, no numbers. Rules are discovered by acting, as in ARC-AGI-3.
-
-### 4.2 Actions (ARC-AGI-3 compatible)
-| Action | Meaning | Human key |
+| Tier | Purpose | Benchmarks |
 |---|---|---|
-| `RESET` | restart the current level (counted) | R |
-| `ACTION1` | up | ↑ / W |
-| `ACTION2` | down | ↓ / S |
-| `ACTION3` | left | ← / A |
-| `ACTION4` | right | → / D |
-| `ACTION5` | interact (only in games that use it) | Space |
-| `ACTION6` | click `x,y` in 0–63 (reserved, unused in v1) | mouse |
-| `ACTION7` | undo (disabled in v1) | Z |
+| Near transfer | same skill, new format | our held-out `eval-v1` and `eval-v2` (h1 and h2 harness); Reasoning Gym procedural tasks closest to ours (maze, Sokoban-like, Rush Hour, grid puzzles, ARC-1D); ARC-AGI-1 public eval in text form |
+| Logical reasoning | the target | ZebraLogic, Knights and Knaves, BIG-Bench Hard logic subsets (logical_deduction, tracking_shuffled_objects, navigate, web_of_lies), MuSR, FOLIO |
+| Regression guard | did we break it? | GSM8K or MATH-500, MMLU-Pro subset, IFEval |
 
-After game over, every action except `RESET` leaves the frame unchanged.
+**Statistics:** paired bootstrap over items, 95% CI on every delta; report the effect per benchmark, never only an average. Small benchmarks get several samples per item. Pre-register the comparison (base vs control vs ours) in `bench/PROTOCOL.md` **before** the first trained model is scored.
 
-### 4.3 Engine API (A1 provides; A2, A3, A5 consume)
-```python
-spec = GameSpec(family="gridworld", seed=1234, n_levels=6, difficulty=2,
-                rules=None, skin_shuffle=True)      # rules=None → curriculum picks
-game = make_game(spec)            # or load_game(collection, game_id) for frozen games
-frame = game.reset()              # -> Frame (64 hex rows)
-frame = game.step(Action.ACTION1) # -> Frame
-game.truth()      # -> Truth, hidden from agents, see below
-game.describe()   # -> metadata: rules per level, budgets, optimal path per level, engine_version
-game.clone(); game.state_hash()   # for the solver
-```
-```json
-// Truth
-{"state":"NOT_FINISHED|WIN|GAME_OVER","level":2,"levels_total":6,
- "moves_used":17,"move_budget":40,"resets":1,
- "active_rules":["keys_doors","ice"],"new_rule":"ice",
- "events":["picked_key","slid:4"],"optimal_moves":22}
-```
-- `game_id` is a stable string: `gridworld-s1234-d2-l6-<hash8>`.
-- **Determinism:** same spec + same engine version → byte-identical frames. Seeded `random.Random` derived with `hashlib` from (seed, level, attempt). No global `random`, no builtin `hash()`.
-- **Collections are frozen snapshots:** a collection file stores spec + `engine_version` + the materialised levels. Evals always load from the snapshot, so adding rules later never changes an existing eval game.
+**Done means:** base Qwen3.5-9B numbers committed by H1; any later model is one command away from a row in `data/derived/bench/`, and A5's page shows deltas with CIs.
 
-### 4.4 REST (A2 provides; A3 and web consume) — base `/api`
-| Method & path | Body → response | Notes |
+### 3.3 Post-training (very important)
+
+**Goal:** improve the logical-reasoning tier of §3.2 for a small open model, using experience from our games, without regressing the guard tier. Base model: **Qwen3.5-9B** (same as SFT v1, so all results compare). If throughput is too low for RL, a 4B sibling for RL experiments only, stated as such.
+
+**Step 0 — read the SFT v1 result first (H0).** SFT v1 trained on optimal action sequences in h1 format (val loss 0.054). Expectation: better on our games, no change on outside reasoning, because it learned actions, not reasoning. Benchmark it in §3.2 anyway: it is a free data point.
+
+**Step 1 — training data v2 (A1 generates, A3 trains).** All from `train-v1`-style seeds, disjoint from every eval set, hold-out rule combinations respected (`engine/src/engine/splits.py`):
+- **Reasoning trajectories:** game turns where the target reply contains *explicit reasoning* before the action: what changed in the frame, which hypothesis that supports or kills, what test to run next. Two sources: (a) **rejection sampling** from strong models (Kimi K3.1, Gemini) on train games, keeping only turns from winning, efficient episodes; (b) **templated rationales from engine truth** (the engine knows which rule fired), phrased as discovery, never naming hidden rules the player could not have seen yet.
+- **Insight-targeted data:** use A5's failure analysis (`insights.json`, explanations): over-sample the decision points where frontier models fail (acting on premature hypotheses, zero-change wall bumps, resetting too late, missing the newly introduced rule).
+- **Auxiliary verifiable tasks** (single turn, cheap, auto-graded by the engine): next-frame prediction after an action; rule induction from a before/after frame pair (multiple choice over effects, not rule names); plan length / "is this level solvable within k moves"; write the full action plan for a level from a text grid (verified by replaying it in the engine).
+- **Control set:** an equal-token mix of general open reasoning SFT data with **no game data**, so we can tell "games helped" from "more fine-tuning helped".
+
+**Step 2 — SFT v2** (LoRA, same recipe as v1): three runs — `ctrl` (general data only), `games` (game data only), `mix` (general + game). Benchmark all three. This is the core experiment and must finish by H2.
+
+**Step 3 — RL with verifiable rewards** (GRPO via TRL + vLLM, or an equivalent maintained library; check current docs). Start from the best SFT v2 checkpoint. Rewards come from the engine: correctness on the auxiliary tasks, and the PLAN-v1 §4.6 efficiency score on single-level text-grid episodes. The reward is already exploit-tested; keep it that way (no partial credit a policy can farm). Benchmark a checkpoint every fixed number of steps on a **small dev slice** of §3.2; the full list runs only on the finalist.
+
+**Checkpoint choice rule (fixed now, not after seeing results):** the checkpoint with the best mean on the logical tier dev slice whose regression-guard drop is ≤ 2 points. Final numbers are on the full test sets, reported once.
+
+**Honesty rule:** if no trained model beats `ctrl` on the logical tier with a CI that excludes zero, the pitch says so plainly and shows the in-domain gain and what we learned. That is still a result.
+
+**Compute:** Verda A100s (A3 holds the credits) or Modal. Delete idle GPU instances; log GPU hours and cost in A3's status file.
+
+### 3.4 "Can you beat the AI?" demo
+
+A kiosk-style page for visitors and judges, on the public URL, with no paid model calls.
+- New route `/challenge`. Big frame, one short game (3 levels, chosen so humans win more often than frontier models — pick from real h1/h2 data).
+- While the visitor plays, the recorded runs of two or three models on the same level advance in step (reuse the ghost-race code), with their stated hypothesis visible.
+- End screen: your score vs Opus, Gemini, the fine-tuned 9B and the optimal path; "the AI needed N moves to figure out what you saw in M"; link to the replay.
+- Visitor scoreboard (name, score, beat-the-AI yes/no), stored on the server, separate from the human baseline so it never pollutes research data.
+- Idle attract mode: replays loop after 60 s without input. QR code on screen so people can play on their phones.
+- Touch controls (already exist on Play) and keyboard.
+- Stretch: "live AI" toggle that plays our fine-tuned model in real time from the GPU box, only when an operator enables it.
+
+### 3.5 Presentation
+- Deck structure (A5 drafts, humans rewrite in their own voice): problem → environment in 30 s → **live demo** → the gap (h1 board, then h2 board: "even run the lab way, they lose") → why failures are meaningful (one replay) → reward integrity (do-nothing / stop-early / exploit attempts) → **post-training result** (base vs ctrl vs ours, with CIs) → business value → ask.
+- `docs/DEMO_SCRIPT.md` timed to 10 minutes, with a fallback if the network fails (local `make demo`, recorded video).
+- Every number in deck, README and submission traces to a file in `data/derived/` (`python -m analysis check-claims`).
+
+### 3.6 Business and real-life value
+`docs/BUSINESS.md`, ≤ 2 pages. For each idea: who pays, what pain it solves, why our factory specifically (procedural, seed-fresh, solvability-proven, pixels-only, reward integrity), what evidence we already have, what we would need. Candidates to assess, not to assume:
+- RL environments and training curricula for labs (AfterQuery's own market); "reasoning data that transfers" if §3.3 works.
+- Contamination-proof private evals: a fresh, never-published game set per evaluation.
+- Pre-deployment testing of agents for adapting to unfamiliar software/UI and limited-resource situations.
+- Small on-device models trained for planning (robotics, games, assistants).
+- Game industry: solvability-guaranteed level generation and automated QA.
+- Cognitive / educational assessment with human baselines (note the ethics and validation burden).
+Pick the strongest two or three for the deck, with one sentence each on evidence.
+
+---
+
+## 4. Ownership changes
+
+PLAN-v1 §3.1–3.3 apply (write only where you own, requests in `coordination/requests/`, ship to `main` often, never force-push). New and changed paths:
+
+| Path | Owner | Notes |
 |---|---|---|
-| `GET /games?collection=` | → list of game metadata + thumbnail URL | gallery |
-| `GET /games/{game_id}` | → `describe()` output | contains truth; UI only |
-| `POST /sessions` | `{game_id, player:{kind:"human"\|"model"\|"baseline", name, model_id?, effort?}, run_key?}` → `{session_id, run_id, frame, available_actions}` | |
-| `POST /sessions/{id}/act` | `{action, x?, y?, reasoning?, hypothesis?, belief?, usage?}` → `{frame, available_actions}` | **pixels only** |
-| `GET /sessions/{id}/truth` | → Truth | harness and human debug overlay; never shown to a model |
-| `POST /sessions/{id}/end` | `{reason}` | closes the run |
-| `GET /runs?game_id=&model_id=&kind=` | → run metas | |
-| `GET /runs/{run_id}` · `/runs/{run_id}/steps` | → meta · steps | replay |
-| `GET /runs/export?since=<iso time>` | → tar of run folders finished since then | how other machines read traces |
-| `POST /admin/rebuild` | → runs `analysis build` on the shared host | needs `ADMIN_TOKEN` |
-| `GET /derived/{name}.json` | → file from `data/derived/` (or `published/`) | leaderboard, insights |
-| `WS /live` | stream of `{run_id, step}` | spectate |
+| `bench/` (new Python package, own `pyproject.toml`) | **A2** | benchmark pipeline, `bench/PROTOCOL.md`, vLLM serve scripts |
+| `posttrain/` (new Python package) | **A3** | SFT v2 + RL training code, configs, run logs; `arena/finetune/` stays A3 |
+| `engine/src/engine/tasks/` | **A1** | training-data and auxiliary-task generators, RL reward functions (pure, deterministic) |
+| `arena/src/arena/` h2 loop, `arena/sweeps/h2-*.yaml`, `prompts/system_h2.md` | A3 | |
+| `web/src/features/challenge/` | **A4** | demo page; server endpoints for the visitor board via request to A2 |
+| `analysis/` bench + h2 aggregation, `docs/BUSINESS.md`, deck | A5 | |
+| `data/derived/bench/` | written only by `bench` | gitignored like the rest of `data/derived/`; published snapshot by A2 |
+| `PLAN.md` | humans | |
 
-**MCP server** (same session core): tools `list_games()`, `start_game(game_id)`, `act(action, x?, y?, note?)`, `reset()`. Each returns the frame as a PNG image **and** as a text grid. Nothing else.
-
-### 4.5 Trace (written only by the server; read by web and analysis)
-`$DATA_DIR/runs/<run_id>/meta.json`
-```json
-{"run_id":"…","run_key":"…","game_id":"…","collection":"eval-v1","split":"test",
- "player":{"kind":"model","name":"…","model_id":"…","provider":"…","effort":"medium"},
- "harness_version":"h1","started_at":"…","ended_at":"…",
- "outcome":"WIN|GAME_OVER|BUDGET|ABORTED","levels_completed":4,"levels_total":6,
- "actions":212,"resets":3,"tokens_in":0,"tokens_out":0,"cost_usd":0.0,"wall_s":0}
-```
-`steps.jsonl`, one line per action:
-```json
-{"i":17,"t_ms":41250,"action":"ACTION3","frame":["…64 hex rows…"],
- "truth":{…},"reasoning":"…","hypothesis":"blue tile opens the gate",
- "belief":"playing|won|lost","usage":{"in":0,"out":0,"cost_usd":0.0},"latency_ms":900}
-```
-`run_key = sha1(collection, game_id, model_id, effort, harness_version, attempt)` — the runner skips keys that already have a finished run, so sweeps are resumable.
-
-### 4.6 Derived data (written only by `analysis`; read by web)
-- `leaderboard.json` — one row per (model, effort, collection): games, level solve rate, game win rate, **score**, median actions, tokens, cost per game, cost per solved level, latency, plus the model card from `models.yaml`. Baselines `random`, `optimal`, `human` are rows too.
-- `rules.json` — rule × model matrix: solve rate on the level that introduces the rule, actions to first correct use, wasted actions.
-- `insights.json` — headline findings, each with evidence and deep links to replays.
-- **Score** (headline metric, in the spirit of ARC-AGI-3's action-efficiency scoring): mean over all levels of `min(1, optimal_moves / actions_used)` for solved levels and `0` for unsolved ones. Actions before a reset count.
-
-### 4.7 Model registry — `arena/models.yaml`
-```yaml
-- id: <our stable id>
-  display_name: …
-  provider: anthropic | google | nvidia | featherless | verda | modal
-  api_model: <exact id from provider docs>
-  tier: frontier | open | finetuned
-  input_modes: [image, text]
-  efforts: [low, medium, high]      # omit if unsupported
-  price_in: …    # USD per 1M tokens, null if unknown
-  price_out: …
-  params: …      # e.g. "8B"
-  link: <model card URL>
-```
+Add `posttrain/` and `bench/` to `make setup`.
 
 ---
 
-## 5. Game design rules (binding for A1, context for everyone)
+## 5. Agent tasks
 
-- **Curriculum:** a game has 6 levels by default. Level 1 is movement + goal. Each later level introduces exactly one new rule in a small "teaching" layout where its effect cannot be missed, then later levels recombine. No two levels in a game use the same rule set. Which rules, in which order, is decided by the seed.
-- **Solvable:** BFS over the full game state proves it. Unsolvable candidates are discarded and regenerated with the next sub-seed.
-- **The new rule must matter:** solve the level again with the new component neutralised; if the optimal length is unchanged, reject the level.
-- **Budget:** `move_budget = ceil(optimal × slack)`, slack 1.5–3.0 by difficulty, plus an exploration allowance on levels that introduce a rule. Budget exhausted or health zero → game over for that level → `RESET` restarts it.
-- **Not brute-forceable:** a random-walk agent must win a level under budget in < 2% of 200 tries, otherwise reject.
-- **Human-doable:** humans playtest; any level two humans fail to solve in 3 attempts gets flagged in `rules/proposals/feedback-*.md` and A1 retunes.
-- **Skin shuffle:** per game, the colours/shapes of components are permuted by the seed, so no player — human, frontier model or fine-tuned model — can memorise "red means key".
-- **Rule backlog** (A1 implements top-down; one file each in `engine/components/`):
-  - *Tier 0 (G0):* walls, goal, move-budget bar
-  - *Tier 1 (G1):* keys + doors · pressure plates + gates · teleporter pairs · hazards + health bar · pushable blocks · one-way tiles · ice (slide until blocked)
-  - *Tier 2 (G2):* shadow that follows one step behind · mirror twin copying moves · 2D rotation trigger · control remap trigger · stamina + refills · shields · walls that toggle every k moves · collect-all-before-goal · teleporter variants (one-way, colour-linked)
-  - *Tier 3 (stretch):* 3D rotation (two-layer map flip) · conveyor belts · patrolling enemies · gravity switch
-  - plus everything in `rules/proposals/` from humans and from A5's analysis
-
----
-
-## 6. Agent plans
-
-Times are Helsinki. Task ids are for status files. Each agent has work in every window; nobody idles waiting for another.
-
-### Parallel timeline at a glance
+Times are Helsinki. Task ids continue for status files. If your task is blocked for more than 10 minutes, write it down and take the next one (PLAN-v1 §3.5).
 
 | Window | A1 FORGE | A2 GATEWAY | A3 ARENA | A4 STUDIO | A5 LENS |
 |---|---|---|---|---|---|
-| **P0** 01:30–02:15 | engine core, renderer, stub game | contracts, fixtures, server skeleton on fake engine | providers, registry, random agent | design skill, DESIGN.md, web shell + mock mode | research digest, metrics spec, derived fixtures |
-| **P1** 02:15–06:00 | solver, generator, Tier 1, curriculum, `dev` collection | **shared URL by 03:00**, real engine wiring, recorder, runs API, MCP, live WS | agent loop, cost accounting, runner, first real traces | Play page, Replay page | aggregation, Leaderboard page |
-| **P2** 06:00–13:00 | Tier 2, skin shuffle, human rules, freeze `eval-v1`, `train-v1` | derived serving, hardening, Docker, published mode | full registry, efforts, pilot sweep, freeze harness, fine-tune dataset | Gallery, game detail, live spectate, compare view | rule-discovery analysis, Insights page |
-| **P3** 13:00–20:00 | rules from analysis, `eval-v2`, fuzzing, Tier 3 | deploy, load test, backups, ARC shim | main sweep, fine-tune + serve + eval, effort ablation | polish, overview page, projector QA | findings, auto rule proposals, pitch, deck, submission text |
-| **P4** 20:00–00:00 | bug fixes, contact sheets for deck | `make demo`, offline fallback, freeze | `eval-v2` sweep, reruns | published build, screenshots, QA | deck v1, demo script, README |
-| **P5** 00:00–08:30 | on call for bugs | on call, keep stack alive | overnight runs, lock numbers 07:00 | on call for bugs | final numbers into deck, claim check |
+| **Q0** 16:45–19:30 | data generators v2 + aux tasks | `bench/` pipeline, base numbers | SFT v1 result; h2 harness | `/challenge` page | bench/h2 aggregation spec; deck outline; business doc start |
+| **Q1** 19:30–23:30 | RL reward functions, rejection-sampling driver | bench every SFT v2 run; demo endpoints; deploy | SFT v2 ×3; RL run 1; h2 subset sweep | demo polish, attract mode, deploy check | bench page, h2 board; deck v2 |
+| **Q2** 23:30–05:00 | data v3 from Q1 failures (stretch) | bench RL checkpoints; snapshot | RL continues; finalist chosen by rule | screenshots, video capture help, QA | findings, business doc done, Q&A prep |
+| **Q3** 05:00–09:30 | on call | final snapshot 07:00, keep stack up | final full bench; GPU cleanup | on call, published build | claim check, final deck |
+
+### A1 — FORGE
+- **A1-20** `engine/src/engine/tasks/`: generators for next-frame prediction, rule-effect induction (before/after pair, multiple choice), plan length / solvable-in-k, full-plan-from-text-grid. Each sample: prompt, answer, verifier function. Seeds disjoint from all eval collections; respect hold-outs. Determinism test.
+- **A1-21** Templated discovery rationales from engine truth for game turns (never naming a rule before the player could have observed its effect). Coordinate the output format with A3's h1/h2 prompt so train == inference.
+- **A1-22** RL reward functions: pure functions `(sample, model_output) -> float` for every aux task and for single-level episodes (PLAN-v1 §4.6 score). Unit-test them against obvious exploits (empty answer, repeated answer, over-long plan).
+- **A1-23** A small **transfer-probe set** of new games with rule combinations unseen in training *and* in eval-v1 (fresh seeds), for the near-transfer tier.
+- Engine and frozen collections stay frozen; bug fixes only.
+
+### A2 — GATEWAY
+- **A2-20** `bench/`: vLLM serve + `lm-evaluation-harness` runner (+ Reasoning Gym / ZebraLogic / K&K loaders where not in lm-eval), fixed generation config file, per-item output, paired bootstrap. `make bench`. Write `bench/PROTOCOL.md` with A3 and A5 and commit it before any trained model is scored.
+- **A2-21** Base Qwen3.5-9B numbers by H1 (GPU from A3's Verda credits or Modal; ask A3 for access).
+- **A2-22** Visitor-board endpoints for `/challenge` (`POST /challenge/score`, `GET /challenge/board`), stored apart from research runs, allowed in published mode, rate-limited, name length capped, no free text other than the name.
+- **A2-23** Deploy the demo on the public URL; phone test; `data/published/` snapshot at H2 and at 07:00.
+
+### A3 — ARENA
+- **A3-20** (H0) Finish `finetune-eval`, write base vs SFT v1 numbers in the status file, then delete or park the 2×A100 instance.
+- **A3-21** h2 harness per §3.1 (Anthropic first, then OpenAI-compatible, then Gemini). `harness_version: h2`. Test on one game per provider.
+- **A3-22** `h2-subset.yaml` frozen, `--dry-run` estimate, request human approval if over cap, then run.
+- **A3-23** `posttrain/`: SFT v2 `ctrl` / `games` / `mix` (same LoRA recipe, same token count), handed to A2's bench.
+- **A3-24** Rejection-sampling run on train games with Kimi/Gemini (cost estimate first) feeding A1-21's data.
+- **A3-25** RL (GRPO) on A1's tasks from the best SFT v2 checkpoint; checkpoints to bench on the dev slice; finalist by the §3.3 rule.
+- **A3-26** Register the finalist in `models.yaml` (`tier: finetuned`) and run it on h1 and h2 so it appears on both boards.
+
+### A4 — STUDIO
+- **A4-20** `/challenge` per §3.4: game choice from real data (with A5), synced model ghosts, end screen, visitor board (mock until A2-22 lands), attract mode, QR code, touch + keyboard, published-mode safe.
+- **A4-21** Projector and phone QA of `/challenge`; one-click "reset kiosk" for the booth.
+- **A4-22** Screenshot and screen-recording set for the deck and backup video.
+- Keep supporting A5 on the pages A5 took over; `/challenge` must not change their files (request if needed).
+
+### A5 — LENS
+- **A5-20** Analysis: h2 aggregation (separate board, effort and retention mode as columns); bench aggregation (deltas vs base and vs `ctrl`, CIs) → `data/derived/bench_summary.json`; a bench/post-training page or section.
+- **A5-21** Export failure insights in a form A1/A3 can sample from (decision-point type, game, level, step) for insight-targeted data.
+- **A5-22** `docs/BUSINESS.md` per §3.6.
+- **A5-23** Deck v2 (H2) and final (H5), `docs/DEMO_SCRIPT.md` with the live demo and network fallback, `docs/QA_PREP.md` updated with "did you cripple the models?" and "is the transfer real?" answers, claim check.
 
 ---
 
-### A1 — FORGE (engine and factory) · owns `engine/`, `data/collections/`, `rules/CATALOG.md`
-You are the critical path. Ship the stub first, then deepen.
-
-**P0**
-- A1-01 Core: state, `Action`, `Game` with `reset/step/truth/describe/clone/state_hash`, seeded RNG.
-- A1-02 Renderer: logical grid → 64×64 frame with HUD; PNG export.
-- A1-03 **Stub game pushed by 02:00**: walls + goal + budget, 3 levels. This unblocks A2.
-
-**P1**
-- A1-04 Component plugin interface + registry (place, on_enter, on_step, render, solver hooks). One file per component from here on.
-- A1-05 Solver: BFS with state cap, budget calculation, rule-necessity check, random-walk check.
-- A1-06 Generator: layouts (rooms, maze, open), constrained placement, validate-and-retry loop.
-- A1-07 Tier 1 components, each with a teaching layout and a test.
-- A1-08 Curriculum: rule introduction order, shuffle, unique combinations.
-- A1-09 CLI: `gen`, `play` (terminal), `render` (PNG contact sheet), `verify <collection>`.
-- A1-10 `data/collections/dev.json` (10 games). Determinism test: generate twice, hashes equal.
-
-**P2**
-- A1-11 Tier 2 components.
-- A1-12 Skin shuffle.
-- A1-13 Implement human proposals from `rules/proposals/`.
-- A1-14 Difficulty calibration from playtest feedback. **Freeze `eval-v1.json` at 11:00** (30 games, 3 difficulty bands). Generate `train-v1.json` (≥ 2,000 games, seeds disjoint from eval, with a documented list of rule combinations and skins held out for eval only).
-
-**P3**
-- A1-15 Implement A5's `rules/proposals/auto-*.md`. Generate `eval-v2.json` targeting what models failed at.
-- A1-16 Fuzz: 1,000 seeds → all solvable, no crash, deterministic.
-- A1-17 Tier 3 if time.
-
-**P4–P5** Engine frozen at 22:00 except bug fixes. Render contact sheets and level GIFs for A5's deck.
-
-**Done means:** `python -m engine verify data/collections/eval-v1.json` passes; every rule in `CATALOG.md` has a test and a teaching level.
-
----
-
-### A2 — GATEWAY (server, MCP, traces, deploy) · owns `server/`, `contracts/`, `data/fixtures/`, `data/published/`, `scripts/`, `Makefile`
-You are the hub. Everyone else talks through you, so contracts and fixtures come first.
-
-**P0**
-- A2-01 **By 01:55:** write `contracts/` from §4 and `data/fixtures/`: sample frames, a catalogue of 3 games, one complete 30-step run (meta + steps) with reasoning text. Web and analysis build on these.
-- A2-02 FastAPI skeleton, session core on a fake engine, `make setup / dev / test`, `scripts/smoke.sh`.
-
-**P1**
-- A2-08 **First task of P1, done by 03:00:** shared server up on the host from `DECISIONS.md`, serving API and built web, opened successfully from a second machine, URL committed to `coordination/API_URL`. Use the stub engine if the real one is not ready.
-- A2-03 Wire the real engine as soon as A1-03 lands.
-- A2-04 Recorder: `meta.json` + append-only `steps.jsonl`, safe under concurrent sessions.
-- A2-05 Catalogue and runs endpoints including `/runs/export`; thumbnails through the engine renderer.
-- A2-06 MCP server (stdio and HTTP): image + text grid, pixels only. Test it by letting an MCP client play a level.
-- A2-07 `WS /live`.
-
-**P2**
-- A2-09 Serve `data/derived/`; trigger `analysis` rebuild on demand (`POST /admin/rebuild`).
-- A2-10 Hardening: 50 parallel sessions, idempotent `run_key`, crash-safe traces, hourly backup of `DATA_DIR`.
-- A2-11 Dockerfile; **published mode**: read-only, serves `data/published/`, human play works with no keys, and no visitor action can trigger a paid model call.
-
-**P3**
-- A2-12 If the shared server is still on a laptop tunnel, move it to the final host (decision due 13:00): stop sweeps with A3, copy `DATA_DIR`, start, commit the new `coordination/API_URL`. Verify from a phone.
-- A2-13 Stretch: ARC-AGI-3-shaped REST shim (`/api/cmd/RESET`, `/api/cmd/ACTION1` …) so community agents can run on our games.
-
-**P4–P5** `make demo` starts everything with one command; offline fallback from `data/published/`; snapshot final data at 07:00 Sun.
-
-**Done means:** `scripts/smoke.sh` creates a session, plays to a win with the optimal path, and finds the run through `/runs`.
-
----
-
-### A3 — ARENA (models, evaluation, fine-tuning) · owns `arena/`, `.env.example`
-One harness, identical for every model. Fairness is what makes the leaderboard credible.
-
-**P0** (needs no game yet)
-- A3-01 `.env.example` listing every key; provider adapters: Anthropic, Google Gemini, and one OpenAI-compatible adapter covering featherless, NVIDIA, Verda and Modal-hosted models. Check current model ids and prices in each provider's docs.
-- A3-02 `models.yaml` skeleton. Baseline players: `random`, and `optimal` (replays the engine's optimal path through the API).
-
-**P1**
-- A3-03 Agent loop v1: generic system prompt (you see frames, you can act, work out the goal and rules); observation as image and/or text grid per `input_modes`; rolling notes the model maintains; JSON output `{notes, hypothesis, belief, action}`. `hypothesis` and `belief` are sent to the server for analysis.
-- A3-04 Token and cost accounting; per-game budgets for tokens, wall time and total actions → outcome `BUDGET`.
-- A3-05 Runner: sweep yaml, async concurrency, per-provider rate limits, retries, resume by `run_key`, `--dry-run` cost estimate.
-- A3-06 **First real traces by ~04:30:** smoke sweep through the shared `API_URL`, 2 cheap models × 3 `dev` games, plus `random` and `optimal` on all of `dev`. Sweeps always target the shared server; a local server is for debugging the harness only.
-
-**P2**
-- A3-07 Fill the registry: ≥ 8 models over ≥ 4 providers as keys arrive; effort levels where the API supports them.
-- A3-08 Pilot sweep on 5 `eval-v1` games. Fix harness problems, then **freeze the harness as `h1` at 12:00**. Later harness changes get a new version and never mix in one leaderboard.
-- A3-09 Fine-tune dataset from `train-v1`: optimal trajectories plus recover-from-mistake trajectories. Any agent-side perception (e.g. downsampling the frame to logical cells) is allowed but must be applied to every model and stated on the dashboard.
-
-**P3**
-- A3-10 **Main sweep** on `eval-v1` after the human approves the estimate (13:00). Expensive models get a subset; say so in the data.
-- A3-11 Fine-tune a small open model on Modal (go/no-go 14:00), serve it behind an OpenAI-compatible endpoint, register it as `tier: finetuned`, evaluate on `eval-v1` only. **No result on the board by 22:00 → cut from the pitch.**
-- A3-12 Effort ablation on 2 models.
-
-**P4–P5** Sweep `eval-v2`; rerun failed runs; numbers lock at 07:00 Sun.
-
-**Done means:** `python -m arena run sweeps/main.yaml --dry-run` prints runs and cost; a real run produces traces that validate against `trace.schema.json`.
-
----
-
-### A4 — STUDIO (web: play, gallery, replay) · owns `web/` except `features/leaderboard` and `features/insights`
-**P0**
-- A4-01 Search for and load a UI design skill. Write `web/DESIGN.md` in 20 minutes: direction, type, colour tokens, spacing, table and chart conventions, do/don't list. A human looks at it at 02:30.
-- A4-02 **Shell pushed by 02:15:** Vite + React + TS, router with routes `/play`, `/gallery`, `/replay/:run`, `/leaderboard`, `/insights`, stub folders for A5, API client where `VITE_API` is `mock` (reads `data/fixtures/`), localhost, or the shared URL, `FrameCanvas` (crisp 64×64 pixel rendering from the palette), one charting library installed that covers scatter, line and heatmap.
-
-**P1**
-- A4-03 **Play:** arrow keys / WASD / R, player name, game picker; the human sees exactly the model's frame. Optional debug overlay toggle for truth.
-- A4-04 **Replay:** scrubber, play/pause/speed, step list, reasoning + hypothesis pane beside the frame, timeline with level changes, resets and events.
-
-**P2**
-- A4-05 **Gallery:** thumbnail grid, filters by rule and difficulty; game detail with levels, rule per level, optimal-path overlay, budget, per-model results, links to play and replays.
-- A4-06 **Live spectate:** watch a run in progress; wall view with several models at once.
-- A4-07 **Compare:** human vs model vs optimal on the same level, side by side.
-
-**P3** Overview page for peer reviewers (what this is, play now, see results); loading/empty/error states; keyboard-first; projector check at 1080p.
-
-**P4–P5** Published-mode build, screenshot set for the deck, QA with humans, bug fixes only after freeze.
-
-**Done means:** a person who has never seen the project can open the site, play a game and watch a model replay without being told how.
-
----
-
-### A5 — LENS (leaderboard, analysis, story) · owns `analysis/`, `docs/`, `README.md`, `web/src/features/leaderboard`, `web/src/features/insights`, `data/fixtures/derived/`
-**P0**
-- A5-01 Research digest, 45 minutes max → `docs/research/DIGEST.md`: ARC Prize winning write-ups, ARC-AGI-3 preview agents, community leaderboard approaches. Output must be actionable: rule ideas as files in `rules/proposals/`, harness and fine-tuning ideas as a request to A3.
-- A5-02 `analysis/METRICS.md` and `data/fixtures/derived/*.json` matching §4.6.
-
-**P1**
-- A5-03 `sync` (mirror traces from the shared server via `/runs/export`) and `aggregate` (traces → `leaderboard.json`). Works on the fixture run first, on real traces from 04:30.
-- A5-04 **Leaderboard page** (follow `web/DESIGN.md`; load a data-viz skill if available): sortable table, cost-vs-score scatter with log cost axis, model cards with links and specs, effort comparison, baselines `random` / `human` / `optimal` shown as reference lines.
-
-**P2**
-- A5-05 Rule-discovery analysis per rule × model: solve rate on the introducing level, actions to first correct use, wasted actions, repeated no-effect actions (a sign of not learning), whether the stated `hypothesis` ever matches the rule, whether `belief` matched the real outcome (did it know it had won or lost). Same numbers for humans and optimal.
-- A5-06 **Insights page:** rule × model heatmap, learning curve across levels, failure types, each finding linked to a replay.
-
-**P3**
-- A5-07 Three headline findings with evidence → `insights.json`. Write `rules/proposals/auto-*.md` for A1, each citing the failure it exploits.
-- A5-08 Story: `docs/PITCH.md`, `docs/DEMO_SCRIPT.md`, `docs/SUBMISSION.md` (fields from the human's draft submission), deck in `docs/deck/`. Search for skills/prompts for human-sounding writing and for presentation design first.
-
-**P4–P5** README; final numbers into the deck; **claim check** — every number in deck and submission traces to a file in `data/derived/`; Q&A prep sheet.
-
-**Done means:** `python -m analysis build` regenerates every derived file from a synced trace folder, the same command works on the shared host, and both pages render the result.
-
----
-
-## 7. Humans — what only you can do, and when
-
-Every machine has a **keeper**: the person who restarts its agent if it stops and answers its status file. Further roles (one person can hold several): **Integrator** (main branch, shared server host) · **Keys & budget** · **Playtester / rule designer** · **Storyteller** (deck, pitch, submission).
+## 6. Humans — decisions and tasks
 
 | When | Task | Why an agent can't |
 |---|---|---|
-| **Sat 01:25–01:45** | One person: create the GitHub repo, run Appendix A, add this file, push, give everyone access. Everyone else: clone, then start your agent with Appendix B. | accounts, terminals |
-| **01:45–02:30** | Send every key you already have to the keeper of A3's machine over a private channel, for its `.env`. Fill `coordination/DECISIONS.md`: project name, shared-server host, spend cap per sweep, total budget, challenge/track. | accounts, money |
-| **02:30–02:45** | 5-minute look at `web/DESIGN.md` and `contracts/`. Say no now, not at noon. | taste, final say |
-| **03:00** | Open the address in `coordination/API_URL` from a machine that is not the host. Put the host on power with sleep disabled. | physical machines, network |
-| **any time before 09:00** | Write 5–10 rule ideas, one file each in `rules/proposals/` (what it looks like, what it does, why it is hard for a model). | the plan calls for human-made rules |
-| **03:00–09:00** | *No human input needed.* Everything in P1 is pre-approved if keys and the spend cap are in place. | |
-| **09:00–09:30** | G1 review: read the five status files, play 3 games, watch one replay, answer blockers. | |
-| **09:30–12:00** | Playtest `dev` on the shared URL under your own names (these become the human baseline; local plays are not recorded centrally). Write feedback files. Collect remaining keys and credits from partner booths. | only humans know if it is fun and fair |
-| **11:00** | Approve freezing `eval-v1`. | changes after this invalidate results |
-| **12:00** | Submissions open: create the draft, copy every required field and rule (video? repo? live URL? pitch length?) into `docs/SUBMISSION.md`. Confirm Friday's pre-submission went through. | platform login |
-| **13:00** | G2 review. Approve A3's main-sweep cost estimate. Choose the deploy host. | money |
-| **13:30** | Optional: Modal workshop (GPU credits for the fine-tune). | in person |
-| **14:00** | Fine-tune go / no-go. | risk call |
-| **15:00–18:00** | Human baseline on `eval-v1`: ≥ 2 people × ≥ 10 games, first attempt only. Talk to challenge mentors; put what they care about in `DECISIONS.md`. | the comparison needs real humans |
-| **20:00** | G3 review: pick the 3 findings and the story with A5. | judgment |
-| **20:00–23:30** | Rewrite the deck in your own words. Record the demo video and a backup screen recording. | your voice, your face |
-| **Sun 00:00** | G4: call feature freeze. Open the public URL on a phone. | |
-| **00:00–08:00** | *No human input needed.* Overnight runs are pre-approved within budget. | |
-| **08:00–09:30** | Final check of site, deck and numbers. **Submit by 09:30.** | platform login |
-| **10:30–13:00** | Peer reviewing (required). | |
-| **13:00–14:00** | Rehearse the pitch twice, timed. Top 5 pitching starts 14:15. | |
+| **now** | Read §3.1 rule 4 and decide the effort policy for expensive models: `max` on a smaller subset, or `high` on the full h2 subset. Record in `DECISIONS.md`. | money, judgment |
+| **by 18:30** | Approve the h2 subset cost estimate (A3 posts it) and a GPU-hour budget for SFT v2 + RL (suggest: total cap in `DECISIONS.md`). | money |
+| **by 19:00** | Approve `bench/PROTOCOL.md` (benchmark list, checkpoint rule). After this nobody changes the list. | keeps the result honest |
+| **Q1** | Playtest `/challenge`; pick the demo game if the data-driven pick is not fun. | taste |
+| **H2 23:30** | Review SFT v2 results; decide whether RL continues overnight. | risk call |
+| **Q2** | Read `docs/BUSINESS.md`, pick the 2–3 ideas for the deck; rewrite the deck in your own words; record demo video + backup screen recording. | your voice |
+| **07:00** | Numbers lock. | |
+| **08:00–09:30** | Final check of site, deck, numbers, README one-command eval. **Submit 09:30.** | platform login |
+| **after** | Peer review; rehearse the pitch twice, timed; run the booth demo. | in person |
 
 ---
 
-## 8. If we fall behind
+## 7. If we fall behind
 
-- Cut in this order: 3D rotation → ARC shim → effort ablation → live wall → `eval-v2` loop → fine-tuning.
-- Never cut: solvability proof, pixels-only interface, human play, leaderboard, the recorded demo video.
-- G1 missed by more than 90 minutes → A4 and A5 drop to fixtures-only polish, A3 helps A2 until the slice works.
-- A provider has no key by 12:00 → it is dropped from `eval-v1`; do not hold the sweep for it.
-- Shared server unreachable for 15 minutes → A2 restarts the tunnel and commits the new address. Host dead → restore the latest backup on A3's machine, which becomes the host; resumable sweeps continue from where they stopped.
-- Public deploy not working by Sat 23:00 → demo runs locally, video carries the submission.
-
----
-
-## Appendix A — bootstrap (Integrator, once, ~2 minutes)
-
-```bash
-set -euo pipefail
-git init -b main
-mkdir -p contracts scripts rules/proposals docs/research docs/deck \
-  engine/src/engine engine/tests server/src/server server/tests \
-  arena/src/arena arena/sweeps arena/finetune arena/tests \
-  analysis/src/analysis analysis/tests web \
-  data/fixtures/derived data/collections data/published \
-  coordination/status coordination/requests
-for p in engine server arena analysis; do
-  cat > "$p/pyproject.toml" <<EOF
-[project]
-name = "$p"
-version = "0.1.0"
-requires-python = ">=3.11"
-dependencies = []
-
-[build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
-EOF
-  touch "$p/src/$p/__init__.py"
-done
-for a in A1 A2 A3 A4 A5; do
-  printf '# %s status\n\n## Done\n\n## Doing\n\n## Blocked\n\n## Need from humans\n' "$a" > "coordination/status/$a.md"
-done
-printf '# Decisions (humans only)\n\n- Project name:\n- Shared server host: A2 machine + tunnel\n- Spend cap per sweep: $5\n- Total model budget:\n- Challenge / track:\n- Final deploy host:\n' > coordination/DECISIONS.md
-find . -type d -empty -not -path './.git/*' -exec touch {}/.gitkeep \;
-cat > .gitignore <<'EOF'
-.env
-.venv/
-__pycache__/
-*.pyc
-*.egg-info/
-node_modules/
-dist/
-data/runs/
-data/derived/
-EOF
-git add -A && git commit -m "bootstrap"
-# then: add PLAN.md, create the GitHub remote, push main
-```
-
-On each agent machine (keeper, once):
-
-```bash
-git clone <repo-url> junction && cd junction
-git switch -c agent/a<N>          # N = 1..5
-mkdir -p ~/junction-data          # local dev traces only
-```
-
-## Appendix B — kickoff prompt (one per agent, in its own clone)
-
-```
-You are agent A<N> (<NAME>) on a hackathon team. Read PLAN.md completely.
-Sections 1–5 bind you; your tasks are in section 6 under A<N>.
-Work only inside the paths you own. Start with your P0 tasks now and keep
-going through the windows without waiting for approval. Push to main after
-every finished task. Update coordination/status/A<N>.md at each gate and
-whenever you are blocked. You are on your own machine: other agents are
-reachable only through git and through the shared server whose address is in
-coordination/API_URL (section 3.4). Local dev uses DATA_DIR=~/junction-data.
-Current time is in the
-plan header; check the real clock before each gate.
-```
-
-| N | NAME | Branch |
-|---|---|---|
-| 1 | FORGE | `agent/a1` |
-| 2 | GATEWAY | `agent/a2` |
-| 3 | ARENA | `agent/a3` |
-| 4 | STUDIO | `agent/a4` |
-| 5 | LENS | `agent/a5` |
+- Cut in this order: live-AI demo toggle → Harbor/OpenCode h2 cross-check → multi-turn RL → second data iteration → RL entirely (SFT v2 three-way comparison is the minimum post-training result) → h2 repeats (run 1 attempt, label it).
+- Never cut: the `ctrl` comparison and CIs in post-training, separate h1/h2 boards, the demo, the claim check, the recorded video.
+- Bench pipeline not producing base numbers by 20:30 → A5 helps A2; drop the benchmarks that are not running yet and keep the logical tier.
+- GPU unavailable for more than 30 minutes → switch provider (Verda ↔ Modal), log it, keep going.
+- h2 over budget → fewer games, never lower effort silently.
