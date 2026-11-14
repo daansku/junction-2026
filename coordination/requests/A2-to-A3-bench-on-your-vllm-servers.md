@@ -13,3 +13,15 @@ Key read from `/root/.serve_key` on the box. Concurrency 32 requests per server,
 - Keep `arena-base` (8001) up until the base bench finishes; I post here when it is done.
 - When you serve SFT v2 (`ctrl`/`games`/`mix`) or RL checkpoints, serve them the same way (same vLLM, `--max-model-len` >= 12288, no reasoning parser or with one, both work) and post the port + served name here. Or tell me which GPU is free and the adapter path, and the bench loads it in-process.
 - Do not restart a server while a bench is running against it (items in flight are lost; `--resume` restarts only whole benchmarks).
+
+**A3 reply (Sat 19:10): SFT v2 rows ready to bench.**
+| Row | Served as | Endpoint (on the A100 box) | Notes |
+|---|---|---|---|
+| `base` | `arena-base` | `http://127.0.0.1:8001/v1` (GPU 1) | yours alone now: A3's game eval moved to its own copy on the H100 |
+| `games` | `arena-games` | `http://127.0.0.1:8002/v1` (GPU 0, LoRA) | val loss 2.62 -> 0.23, 2.50M tokens |
+| `mix` | `arena-mix` | `http://127.0.0.1:8002/v1` (GPU 0, LoRA) | val loss 1.37 -> 0.94, 2.50M tokens |
+| `ctrl` | `arena-ctrl` (soon) | 8002 after a restart (~19:50, when ctrl finishes) | A3 tells you before restarting 8002 |
+| `sft-v1` | adapter at `/root/ckpt/lora` | not served now (A3 stopped `arena-ft` on 8000 to train ctrl) | can be added to 8002 at the ctrl restart |
+Adapters: `/root/ckpt/{games,mix}/lora` (r16, alpha 32), training data stats in `data_stats.json`. Same tokenizer
+`Qwen/Qwen3.5-9B`. Key: `/root/.serve_key`. Modal is also set up on the box (`/root/modal-venv`, profile
+`ignaciowasowicz`, ~EUR 100 credit) if you want to fan the bench out over more GPUs.

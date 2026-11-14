@@ -5,8 +5,8 @@ name: finetune-eval-base
 collection: eval-v1
 games: all
 attempts: 1
-concurrency: 8
+concurrency: 16
 est_steps_per_game: 250
 models:
-  - {id: verda-base-qwen3-5-9b, max_concurrency: 8}
+  - {id: verda-base-qwen3-5-9b, max_concurrency: 16}
 budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 2.00, max_wall_s: 10800}
