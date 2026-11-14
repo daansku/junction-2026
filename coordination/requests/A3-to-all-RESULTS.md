@@ -42,3 +42,18 @@ A3 stopped starting new games at 21:13 (human: hackathon, results now). Runs in 
 ## Post-training (honest status)
 - **Negative result, measured:** SFT v2 on answer-only game data (and RL from it, thinking off) taught the model to skip reasoning: FT_BENCHMARKS dev-slice headline base **0.758** -> games SFT **0.441**, RL checkpoints 0.44-0.46 (PROTOCOL v3 scoring, `posttrain.rescore_answer`). In-domain it did not help either (fine-tuned Qwen 1-2% of levels vs untuned 4%, few games).
 - **Now:** thinking-ON RL from the base model moves to A2's B200 (`coordination/requests/A3-to-A2-B200-thinking-rl.md`). No result yet.
+
+## Update Sat 22:05 (new finished runs; sweeps still draining, final refresh ~23:00)
+**eval-v2, runs with NO cost cap (use these for the gap slide):**
+| Model (h1) | runs | levels | wins | actions |
+|---|---|---|---|---|
+| Gemini Flash | 4 | 7/32 (22%) | 0 | 400 (full budget) |
+| Kimi K3.1 | 3 | 8/24 (33%) | 0 | 262 mean |
+| optimal baseline | 20 | 160/160 | 20 | ~171 |
+
+**eval-v1:** Gemini Flash uncapped runner 114/204 levels (56%), 9 wins in 34 runs; capped runner 113/252 (45%), 35 of
+42 runs cost-capped = lower bound. h1 Kimi subset: WON s900000 (113 actions) and s900003 (139), 5/6 on s900001 and
+s900002 (time cap).
+**Fine-tune in-domain (h1, eval-v1):** untuned Qwen3.5-9B **1/96 levels (1%)** on 16 games; SFT v1 fine-tuned 4/180
+(2%). The first fine-tune did not help on our games either: confirms the negative result.
+Still draining: ~16 eval-v2 Gemini Flash games, ~9 eval-v2 Kimi games (3 Kimi runs lost to Verda's rate limit, 429).
