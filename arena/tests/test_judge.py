@@ -28,3 +28,10 @@ def test_judge_refuses_over_cap(tmp_path, monkeypatch):
         assert "over the cap" in str(e)
     else:
         raise AssertionError("should refuse")
+
+
+def test_complete_hook_and_ledger(tmp_path, monkeypatch):
+    monkeypatch.setattr(judge, "LEDGER", tmp_path / "spend.jsonl")
+    out = judge.complete("why?", model_id="mock-random", cap=1.0)
+    assert out["model"] == "mock-random" and isinstance(out["reply"], str)
+    assert judge.LEDGER.exists() and judge.spent_so_far() == 0.0
