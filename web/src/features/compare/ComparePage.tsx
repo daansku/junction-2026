@@ -56,7 +56,16 @@ function defaultPicks(runs: RunMeta[]): string[] {
       .slice(0, n)
   const opt = best((r) => r.player?.kind === 'baseline' && /optimal/.test(r.player?.name ?? r.player?.model_id ?? ''))
   const human = best((r) => r.player?.kind === 'human' && !/^(anonymous|test)$/i.test(r.player?.name ?? ''))
-  const models = best((r) => r.player?.kind === 'model', 2)
+  // Best run of each model, then the two best models: two runs of one model compare less.
+  const seen = new Set<string>()
+  const models = best((r) => r.player?.kind === 'model', Infinity)
+    .filter((r) => {
+      const id = r.player?.model_id ?? r.player?.name ?? r.run_id
+      if (seen.has(id)) return false
+      seen.add(id)
+      return true
+    })
+    .slice(0, 2)
   return [...opt, ...human, ...models].slice(0, MAX_RUNS).map((r) => r.run_id)
 }
 

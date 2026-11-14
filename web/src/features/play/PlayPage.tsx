@@ -78,6 +78,11 @@ export function PlayPage() {
   const gameId = routeGame ?? games.data?.[0]?.game_id
 
   const [name, setName] = useState(loadName)
+  const [nameMissing, setNameMissing] = useState(false)
+  const nameRef = useRef<HTMLInputElement>(null)
+  const isShared = API.mode === 'shared' || API.mode === 'same-origin' || API.mode === 'custom'
+  // Runs on the shared server are the human baseline: they need a name to be attributable.
+  const nameRequired = isShared && !server.published
   const [session, setSession] = useState<Session | null>(null)
   const [frame, setFrame] = useState<Frame | null>(null)
   const [available, setAvailable] = useState<ActionName[]>([])
@@ -98,6 +103,12 @@ export function PlayPage() {
 
   const start = useCallback(async () => {
     if (!gameId) return
+    if (nameRequired && !name.trim()) {
+      setNameMissing(true)
+      nameRef.current?.focus()
+      return
+    }
+    setNameMissing(false)
     blurActive()
     setError(null)
     endCurrent('restarted')
@@ -122,7 +133,7 @@ export function PlayPage() {
     } catch (e) {
       setError(e)
     }
-  }, [gameId, name, endCurrent])
+  }, [gameId, name, nameRequired, endCurrent])
 
   // Close the run when leaving the page or the tab.
   useEffect(() => {
@@ -190,7 +201,6 @@ export function PlayPage() {
     navigate({ pathname: `/play/${encodeURIComponent(id)}`, search: params.toString() })
   }
 
-  const isShared = API.mode === 'shared' || API.mode === 'same-origin' || API.mode === 'custom'
   const resets = log.filter((a) => a === 'RESET').length
 
   return (
@@ -203,10 +213,15 @@ export function PlayPage() {
             <label className="field">
               <span className="kicker">name</span>
               <input
+                ref={nameRef}
                 type="text"
                 value={name}
-                placeholder="your name"
-                onChange={(e) => setName(e.target.value)}
+                placeholder={nameRequired ? 'your name (required)' : 'your name'}
+                aria-invalid={nameMissing || undefined}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  if (e.target.value.trim()) setNameMissing(false)
+                }}
                 onKeyDown={(e) => e.key === 'Enter' && start()}
               />
             </label>
@@ -247,6 +262,12 @@ export function PlayPage() {
       />
       {games.error ? <ErrorState error={games.error} retry={() => games.refetch()} /> : null}
       {error ? <ErrorState error={error} /> : null}
+      {nameMissing ? (
+        <p className="play-name-missing" role="alert">
+          Enter your name first: runs here are recorded as the human baseline. Practising? Use{' '}
+          <span className="mono">test</span>.
+        </p>
+      ) : null}
 
       <div className="play-grid">
         <div className="play-stage">
