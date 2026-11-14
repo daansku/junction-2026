@@ -82,6 +82,9 @@ def cmd_tasks(a) -> int:
     """A1-20: auxiliary verifiable tasks for post-training, as chat JSONL."""
     from .tasks import DEFAULT_ALL, write_jsonl
     names = list(DEFAULT_ALL) if a.task == "all" else a.task.split(",")
+    if a.collection:  # A7: build tasks from another train collection (e.g. train-v3b, gridbranch)
+        from .tasks import common
+        common.SOURCE = a.collection
     t0 = time.time()
     counts = write_jsonl(a.out, names, a.n, a.seed)
     print(f"wrote {a.out}: {counts} ({time.time() - t0:.1f}s)", file=sys.stderr)
@@ -349,6 +352,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--task", default="all", help="all or comma list: next_frame,rule_effect,min_moves,full_plan")
     p.add_argument("--n", type=int, default=1000, help="samples per task")
     p.add_argument("--seed", type=int, default=0); p.add_argument("--out", required=True)
+    p.add_argument("--collection", help="train collection to draw games from (default train-v1)")
     p.set_defaults(fn=cmd_tasks)
     p = sub.add_parser("rs", help="rejection sampling: pick train games / convert runs to SFT data")
     rs = p.add_subparsers(dest="rs_cmd", required=True)

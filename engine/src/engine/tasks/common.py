@@ -62,8 +62,9 @@ def _games(collection: str) -> tuple[dict, ...]:
     return games
 
 
-def pick_game(rng, collection: str = SOURCE) -> Game:
-    gs = _games(collection)
+def pick_game(rng, collection: str | None = None) -> Game:
+    # SOURCE is read at call time so `engine tasks --collection` (A7) can point it elsewhere
+    gs = _games(collection or SOURCE)
     return Game.from_dict(gs[rng.randrange(len(gs))])
 
 
