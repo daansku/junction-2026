@@ -10,7 +10,8 @@ Differences from h1 (h1 stays as is; h2 is a separate board, never mixed):
   4. Effort: the sweep entry's effort, else the model's `h2_effort`, else "high". Recorded in the trace.
   5. Generous output: the model's `h2_max_tokens`, else 64000 (Anthropic, streamed) / 32768 (OpenAI-compatible).
   6. Provider-default sampling (no temperature etc. sent).
-  7. Context: full text history; the frame (image + RLE grid) is attached to every observation, and only the last
+  7. Context: full text history (OpenAI-compatible: reasoning text kept for the last THINKING_TURNS turns, as
+     Anthropic's server-side thinking clearing); the frame (image + RLE grid) is attached to every observation, and only the last
      IMAGE_TURNS observations keep their frame (Anthropic: server-side context editing, which does not invalidate
      thinking; OpenAI-compatible: older frames replaced by a placeholder client-side). Anthropic thinking older
      than THINKING_TURNS assistant turns is cleared server-side. Same N for every model. Prompt caching on.
@@ -201,6 +202,18 @@ class OpenAICompatH2:
         self.tools = [{"type": "function", "function": {"name": "act", "description": ACT_DESCRIPTION,
                                                         "parameters": act_schema()}}]
 
+    def _drop_old_reasoning(self):
+        """Same window as Anthropic's server-side thinking clearing: only the last THINKING_TURNS assistant turns
+        keep their reasoning text (tool calls, signatures and visible text stay)."""
+        seen = 0
+        for m in reversed(self.messages):
+            if m.get("role") != "assistant":
+                continue
+            seen += 1
+            if seen > THINKING_TURNS:
+                for k in ("reasoning_content", "reasoning"):
+                    m.pop(k, None)
+
     def _drop_old_frames(self):
         seen = 0
         for m in reversed(self.messages):
@@ -227,6 +240,7 @@ class OpenAICompatH2:
         parts.append({"type": "text", "text": text + (f"\n{note}" if note else "")})
         self.messages.append({"role": "user", "content": parts})
         self._drop_old_frames()
+        self._drop_old_reasoning()
 
     def ask(self, allowed: list[str]) -> Turn:
         kw = {"max_tokens": self.max_tokens}

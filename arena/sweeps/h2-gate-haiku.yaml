@@ -4,9 +4,9 @@ name: h2-gate-haiku
 harness: h2
 collection: eval-v1
 games: [gridworld-s900000-d1-l6-33a57ce4]
-attempts: 1
+attempts: 2   # attempt 0 (17:20) was cut by the 3M token-budget bug at 3/6 in 66 actions: ignore it
 concurrency: 1
 est_steps_per_game: 250
 models:
   - {id: claude-haiku-5-5, effort: high}
-budgets: {max_actions: 400, max_turns: 600, max_cost_usd: 1.50, max_wall_s: 14400}
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 1.50, max_wall_s: 14400}
