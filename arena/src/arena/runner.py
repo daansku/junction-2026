@@ -131,6 +131,14 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
     for w in warnings:
         log(f"warning: {w}")
     done = client.finished_run_keys()
+    # A run the server ended by idle_timeout died with our runner or the tunnel, not by the model's play: rerun it
+    # under a derived key (the server refuses to restart a finished key). Analysis drops idle_timeout aborts.
+    infra = getattr(client, "infra_aborted_run_keys", lambda: set())()
+    for j in jobs:
+        n = 0
+        while j.key in infra and n < 5:
+            n += 1
+            j.key = hashlib.sha1(f"{j.key}|retry{n}".encode()).hexdigest()
     todo = [j for j in jobs if j.key not in done]
     total, unknown = estimate(todo)
     log(f"sweep {sw['name']}: {len(jobs)} runs, {len(jobs) - len(todo)} already finished, {len(todo)} to run")

@@ -118,6 +118,16 @@ class HttpClient:
         return {r["run_key"] for r in runs
                 if r.get("run_key") and r.get("ended_at") and r.get("outcome") != "IN_PROGRESS"}
 
+    def infra_aborted_run_keys(self) -> set[str]:
+        """Finished keys the server ended itself (idle_timeout: our runner or the tunnel died), not the model."""
+        params = {"limit": 100000}
+        if self.collection:
+            params["collection"] = self.collection
+        runs = self.http.get("/runs", **params)
+        runs = runs if isinstance(runs, list) else runs.get("runs", [])
+        return {r["run_key"] for r in runs if r.get("run_key") and r.get("outcome") == "ABORTED"
+                and r.get("end_reason") == "idle_timeout"}
+
 
 # ---------------------------------------------------------------- mock
 class MockSession:
