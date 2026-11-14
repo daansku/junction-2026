@@ -126,6 +126,35 @@ def build_policy(a):
     return model
 
 
+def vl_param_name(name: str) -> str:
+    """HF text-only Qwen3.5 (`Qwen3_5ForCausalLM`, what load_model returns) names its weights `model.layers.N...`;
+    vLLM builds the checkpoint's VL class (`Qwen3_5ForConditionalGeneration`), whose loader maps only the
+    checkpoint's own names `model.language_model.*`. Without this, TRL's per-step weight push fails."""
+    if name.startswith("model.") and not name.startswith(("model.language_model.", "model.visual.")):
+        return "model.language_model." + name[len("model."):]
+    return name
+
+
+def patch_vllm_names_for_vl(base: str, policy) -> bool:
+    """Rename pushed weights when the checkpoint is a VL model but the policy was loaded text-only."""
+    from transformers import AutoConfig
+    archs = AutoConfig.from_pretrained(base).architectures or []
+    if not any("ForConditionalGeneration" in x for x in archs):
+        return False
+    if any(".language_model." in n for n, _ in policy.named_parameters()):
+        return False  # loaded as the VL class: names already match
+    from trl.generation import vllm_generation as vg
+    orig = vg.VLLMGeneration._fix_param_name_to_vllm
+    if getattr(orig, "_vl_patched", False):
+        return True
+
+    def fixed(self, name, extra_prefixes=None):
+        return vl_param_name(orig(self, name, extra_prefixes))
+    fixed._vl_patched = True
+    vg.VLLMGeneration._fix_param_name_to_vllm = fixed
+    return True
+
+
 # ------------------------------------------------------------------------------------------ callbacks
 
 
@@ -269,7 +298,11 @@ def main(argv=None):
         logging_steps=a.logging_steps, report_to="none", seed=a.seed, remove_unused_columns=False,
         log_completions=False, use_cpu=not cuda,
     )
-    trainer = GRPOTrainer(model=build_policy(a), reward_funcs=make_reward(a.fake_reward), args=cfg,
+    policy = build_policy(a)
+    if cfg.use_vllm and patch_vllm_names_for_vl(a.base, policy):
+        print("[grpo] VL checkpoint loaded text-only: weight names pushed to vLLM get the model.language_model. prefix",
+              flush=True)
+    trainer = GRPOTrainer(model=policy, reward_funcs=make_reward(a.fake_reward), args=cfg,
                           train_dataset=ds, processing_class=tok, callbacks=make_callbacks(a, tok))
     if trainer.is_world_process_zero():
         prompts_per_step = a.per_device_batch * a.grad_accum * trainer.accelerator.num_processes // a.num_generations
