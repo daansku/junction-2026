@@ -15,9 +15,13 @@
 | When | What | Who uses it |
 |---|---|---|
 | ~19:40 | SFT v2 `ctrl` done; served with games/mix on A100 port 8002 (A2 told before restart) | A2 bench |
-| ~20:30 | base vs SFT v1 on our games (in-domain fine-tune result) | A5 board/deck |
-| ~20:00 | **GRPO RL starts on a Modal H100** (fallback: our H100 ~20:30), from the SFT v2 `games` adapter (decided 19:35 without waiting for bench), on A1's `game_turn` (h1 map turns, ~70%) + aux tasks (~30%); ~3 h | A3 benches checkpoints on the dev slice |
-| ~22:00-23:00 | h1 main sweep first attempts, eval-v2 frontier (Gemini + Kimi), h2 board (Kimi + Gemini Pro) complete | A5 leaderboard, deck |
+
+| 19:48 | **GRPO RL RUNNING on a Modal H100** (started) (fallback: our H100 ~20:30), from the SFT v2 `games` adapter (decided 19:35 without waiting for bench), on A1's `game_turn` (h1 map turns, ~70%) + aux tasks (~30%); ~3 h | A3 benches checkpoints on the dev slice |
+| ~21:30 | h2 board complete (Kimi + Gemini Pro; capped Gemini Pro eval-v2 runs redone after) | A5 h2 board |
+| ~22:00 | eval-v2 Gemini Flash redo of the 7 capped games | A5 |
+| ~23:30 | h1 Kimi subset (10 games) | A5 |
+| ~01:00 | eval-v2 Gemini Flash (all 30, uncapped), eval-v2 Kimi (30, now 12 in parallel), untuned-Qwen game eval (H100) | A5 leaderboard, fine-tune result |
+| ~01:30 | h1 main sweep (Gemini Flash 30x3 + baselines; now 40 in parallel) | A5 leaderboard |
 | ~22:30 | SFT v2 games/mix/ctrl + SFT v1 on the FT_BENCHMARKS suite (A3 runs A2's bench since 19:50, all 4 in parallel; base bench by A2 running) | transfer claim |
 | ~23:00-03:00 | RL checkpoints benched, finalist by the pre-registered rule, finalist on both boards | final numbers |
 | 07:00 | numbers lock | all |

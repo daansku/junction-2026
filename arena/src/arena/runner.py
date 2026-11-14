@@ -137,7 +137,7 @@ def stop_requested(sweep_name: str) -> bool:
 
 
 def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, out_dir: Path, log=print,
-            also_done: list[str] | None = None) -> list[dict]:
+            also_done: list[str] | None = None, skip_running: bool = False) -> list[dict]:
     models = load_models()
     sw["api"] = api
     ledger = out_dir / "mock_ledger.jsonl" if api == "mock" else None
@@ -159,6 +159,10 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
         while j.key in infra and n < 5:
             n += 1
             j.key = hashlib.sha1(f"{j.key}|retry{n}".encode()).hexdigest()
+    if skip_running:  # another runner is playing these right now: don't start duplicates
+        busy = client.running_run_keys()
+        log(f"skip-running: {len(busy)} keys in progress elsewhere")
+        done = done | busy
     todo = [j for j in jobs if j.key not in done]
     # interleave models round-robin: a slow model with a low concurrency limit must not hold the worker threads
     # while other models' jobs wait behind it in the queue

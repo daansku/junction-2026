@@ -118,6 +118,26 @@ class HttpClient:
         return {r["run_key"] for r in runs
                 if r.get("run_key") and r.get("ended_at") and r.get("outcome") != "IN_PROGRESS"}
 
+    def running_run_keys(self, max_age_s: float = 4 * 3600) -> set[str]:
+        """Keys with a run IN_PROGRESS that started within max_age_s (another runner is playing them now)."""
+        import datetime as _dt
+        params = {"limit": 100000}
+        if self.collection:
+            params["collection"] = self.collection
+        runs = self.http.get("/runs", **params)
+        runs = runs if isinstance(runs, list) else runs.get("runs", [])
+        now = _dt.datetime.now(_dt.timezone.utc)
+        out = set()
+        for r in runs:
+            if r.get("run_key") and r.get("outcome") == "IN_PROGRESS" and r.get("started_at"):
+                try:
+                    t = _dt.datetime.fromisoformat(r["started_at"].replace("Z", "+00:00"))
+                except ValueError:
+                    continue
+                if (now - t).total_seconds() < max_age_s:
+                    out.add(r["run_key"])
+        return out
+
     def infra_aborted_run_keys(self) -> set[str]:
         """Finished keys the server ended itself (idle_timeout or server_restart: runner, tunnel or server died)."""
         params = {"limit": 100000}
