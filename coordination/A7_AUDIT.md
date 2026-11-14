@@ -38,3 +38,20 @@ Frozen collections regenerate byte-identical (engine tests: 135 passed).
 **Pitch line (A5/A6):** "On today's levels, a player who never touches the new mechanic still scores >= 0.8 on about
 a quarter to a third of rule uses (one-way tiles: 91% of their teaching levels). With the forcing generator: 0% of
 teaching levels; avoiding the new rule costs at least 2x the optimal moves or makes the level unsolvable."
+
+## Branching generator `gridbranch` (Sat ~20:30, BRANCH_VERSION 1), human request: "more alternative paths"
+
+`engine/src/engine/generator/branching.py`; `gridforce` is untouched so the two can be compared. Topology metrics
+(walls only, rule objects ignored): **real loops** = independent cycles around wall clusters (planar faces of the
+floor graph that are not open 2x2 squares, so open floor does not count); **linear level** = under 20% of the
+optimal route's cells have a bypass (are not cut points of the floor graph).
+
+| Collection (30 games, d1-d3, 6 levels) | Real loops / level | Linear levels | Optimal moves / level | New rule forced | Use-rule avoider >= 0.8 |
+|---|---:|---:|---:|---:|---:|
+| eval-v1 (`gridworld`) | 1.1 | 10% | 15.5 | 73/111 | 28% |
+| eval-v3 (`gridforce`) | 1.2 | 13% | 16.9 | 112/112 | 4% |
+| **eval-v3b (`gridbranch`)** | **4.0** | **0%** | **29.1** | **106/106** | 7% |
+
+Fresh gridbranch samples (12 games each): d1 3.1 loops / 26 moves, d2 4.1 / 30, d3 5.0 / 31, d4 (8 levels) 6.3 / 45;
+median 1.2-3.8 s per game, worst ~40 s (d4). Targets ramp per level: loops >= min(6, 1 + level/2 + (d-1)),
+bypass >= 0.30 + 0.05 x level + 0.05 x (d-1); relaxed one step after 40 attempts.

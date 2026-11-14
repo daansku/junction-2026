@@ -17,7 +17,7 @@ from ..core.rng import rng_for
 from dataclasses import replace
 
 from ..solver import compute_budget, random_walk_win_rate, replay_wins, solve
-from . import curriculum, interaction
+from . import branching, curriculum, interaction
 from .layout import STYLES, make_layout
 from .placement import Draft
 
@@ -49,6 +49,8 @@ def _min_optimal(difficulty: int, level_idx: int, teaching: bool) -> int:
 def try_level(seed: int, family: str, difficulty: int, level_idx: int, rules: tuple[str, ...],
               new_rule: str | None, attempt: int) -> Level | None:
     """One candidate; None if rejected."""
+    if branching.enabled(family):  # A7, gridbranch only
+        return branching.try_level(seed, family, difficulty, level_idx, rules, new_rule, attempt)
     teaching = new_rule is not None
     rng = rng_for(family, seed, difficulty, "level", level_idx, ",".join(rules), attempt)
     w, h = _size(rng, difficulty, teaching)
@@ -117,7 +119,8 @@ def generate_levels(seed: int, family: str, difficulty: int, n_levels: int,
                     rules: list[str] | None = None) -> list[Level]:
     levels: list[Level] = []
     used: set[frozenset] = set()
-    planner = interaction.plan if interaction.forcing(family) else curriculum.plan  # A7, gridforce only
+    planner = (interaction.plan if interaction.forcing(family) or branching.enabled(family)
+               else curriculum.plan)  # A7, gridforce / gridbranch only
     for i, (primary, new, fallbacks) in enumerate(planner(seed, family, difficulty, n_levels, rules)):
         lv = None
         for cand in [primary, *fallbacks]:
