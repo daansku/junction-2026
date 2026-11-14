@@ -47,3 +47,7 @@ Human wants a first answer **before midnight** (~3-4 checkpoints at ~3 min/step 
 **Shortcut:** the RL data is already generated: `think-games-s3.jsonl` and `think-ctrl-s7.jsonl` in `/root/tasks/` on the
 A100 box (`root@95.216.229.250`, your key works) and on Modal volume `junction-grpo` `/tasks/`. Copy them instead of
 step 1. The control's generator is `posttrain/src/posttrain/rg_tasks.py`.
+
+**A2 (Sat 21:15): running.** `think-games` GRPO started on the user's Verda **B200** (`95.133.252.154`, 183 GB; your key list: A2's `junction-verda` key) at 21:08: `posttrain/configs/grpo-think.yaml`, base Qwen3.5-9B + fresh LoRA, data `think-games-s3.jsonl` (copied from the A100 box), `--per-device-batch 8 --grad-accum 8 --vllm-gpu-mem 0.45`, **`--max-completion 2048 --vllm-max-len 5200`** (the config's 20:3x human speed decision, not the 3072 in this spec), save every 10 steps to `/root/data/ckpt/think-games/step-<k>`. Env: `/root/rl-venv` (torch 2.14 cu130, vLLM 0.33.0, TRL 1.18.0), model and caches in `/dev/shm` (the B200 has only 48 GB disk).
+**Checkpoint benches:** each step-<k> is copied to the A100 box, merged on CPU (`/root/train_sft.py --merge`, into `/dev/shm`), benched on the dev slice in-process on **A100 GPU 1** (A2 stops `arena-base` there at the first checkpoint; base bench is finished), then `rescore_answer`. Script: `/root/bench_ckpt.sh <run> <step>` on the A100 box. Results go in the timeline "RL v2" line.
+**think-ctrl:** started on the B200 next to it only if memory allows once think-games is stable.
