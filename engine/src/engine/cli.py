@@ -77,6 +77,53 @@ def cmd_collection(a) -> int:
     return 0
 
 
+def cmd_tasks(a) -> int:
+    """A1-20: auxiliary verifiable tasks for post-training, as chat JSONL."""
+    from .tasks import TASKS, write_jsonl
+    names = list(TASKS) if a.task == "all" else a.task.split(",")
+    t0 = time.time()
+    counts = write_jsonl(a.out, names, a.n, a.seed)
+    print(f"wrote {a.out}: {counts} ({time.time() - t0:.1f}s)", file=sys.stderr)
+    return 0
+
+
+def cmd_probe(a) -> int:
+    """A1-23: transfer-probe collection. Fresh seeds (eval range, never trained) whose levels
+    use rule combinations that appear in no level of train-v1 or eval-v1. Tiers 1-2 only, so it
+    measures near transfer (new combinations of known rules), not unseen rules (that is eval-v2).
+    Each game lists its novel levels in `probe_levels` (1-based)."""
+    from concurrent.futures import ProcessPoolExecutor
+    from .core.game import load_collection
+    from . import splits
+    seen = {frozenset(lv["rules"]) for c in ("train-v1", "eval-v1")
+            for g in load_collection(c)["games"] for lv in g["levels"]}
+    jobs = [(a.seed_start + i, a.levels, 2 + i % 2) for i in range(a.candidates)]
+    t0 = time.time()
+    with ProcessPoolExecutor(a.workers) as ex:
+        built = [g for g in ex.map(_build_one, jobs, chunksize=4) if g]
+    scored = []
+    for g in built:
+        nov = [i + 1 for i, lv in enumerate(g["levels"]) if frozenset(lv["rules"]) not in seen]
+        if nov:
+            g["probe_levels"] = nov
+            g["holdout"] = splits.holdout_tag(g)
+            scored.append((-len(nov), g["spec"]["seed"], g))
+    games = [g for _, _, g in sorted(scored, key=lambda x: x[:2])[:a.n]]
+    games.sort(key=lambda g: g["spec"]["seed"])
+    out = {"name": a.name, "engine_version": ENGINE_VERSION,
+           "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "split": "test", "frozen": True, "holdout": splits.holdout_doc(),
+           "probe": {"novel_vs": ["train-v1", "eval-v1"], "seed_start": a.seed_start,
+                     "candidates": a.candidates},
+           "games": games}
+    path = collection_path(a.name)
+    path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+    nl = sum(len(g["probe_levels"]) for g in games)
+    print(f"wrote {path}: {len(games)} games, {nl} novel levels, from {len(built)} candidates "
+          f"({time.time() - t0:.1f}s)", file=sys.stderr)
+    return 0
+
+
 def _print_frame(frame: list[str]) -> None:
     for row in frame:
         print(row.replace("0", "."))
@@ -282,6 +329,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--n", type=int, default=1000); p.add_argument("--seed-start", type=int, default=500000)
     p.add_argument("--workers", type=int, default=8)
     p.set_defaults(fn=cmd_fuzz)
+    p = sub.add_parser("tasks", help="auxiliary verifiable tasks (JSONL) for post-training")
+    p.add_argument("--task", default="all", help="all or comma list: next_frame,rule_effect,min_moves,full_plan")
+    p.add_argument("--n", type=int, default=1000, help="samples per task")
+    p.add_argument("--seed", type=int, default=0); p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_tasks)
+    p = sub.add_parser("probe", help="transfer-probe collection (novel rule combinations)")
+    p.add_argument("--name", default="probe-v1"); p.add_argument("--n", type=int, default=30)
+    p.add_argument("--seed-start", type=int, default=980000)
+    p.add_argument("--candidates", type=int, default=600)
+    p.add_argument("--levels", type=int, default=6); p.add_argument("--workers", type=int, default=12)
+    p.set_defaults(fn=cmd_probe)
     a = ap.parse_args(argv)
     return a.fn(a)
 
