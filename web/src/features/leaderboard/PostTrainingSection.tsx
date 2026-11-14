@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button, Chip, Empty, Loading, Panel, Stat, Swatch, cx } from '@/design/primitives'
 import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
 import { ModelCardDialog, cardLabel } from './ModelCardDialog'
+import { bestByCompletion, completionCompare } from './ranking'
 import type {
   BenchComparison,
   BenchDeltaCell,
@@ -85,7 +86,7 @@ export function LeaderboardH2View(props: {
   const navigate = useNavigate()
   const [collectionPick, setCollection] = useState<string | null>(null)
   const [kindFilter, setKindFilter] = useState<H2KindFilter>('all')
-  const [sortKey, setSortKey] = useState<H2SortKey>('score')
+  const [sortKey, setSortKey] = useState<H2SortKey>('game_win_rate')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [cardRow, setCardRow] = useState<LeaderboardRow | null>(null)
 
@@ -112,6 +113,7 @@ export function LeaderboardH2View(props: {
       if (av == null) return 1
       if (bv == null) return -1
       const cmp = Number(av) - Number(bv)
+      if (cmp === 0) return completionCompare(a, b) // ties: completion first (ranking.ts)
       return sortDir === 'asc' ? cmp : -cmp
     })
   }, [collectionRows, kindFilter, sortKey, sortDir])
@@ -176,8 +178,7 @@ export function LeaderboardH2View(props: {
 
   const kpi = useMemo(() => {
     const models = collectionRows.filter((r) => r.kind === 'model')
-    const pickBest = (rows: LeaderboardRow[]) =>
-      rows.reduce<LeaderboardRow | null>((acc, cur) => (!acc || cur.score > acc.score ? cur : acc), null)
+    const pickBest = (rows: LeaderboardRow[]) => bestByCompletion(rows)
     // Prefer rows evaluated on more than one game so a lucky single game doesn't headline.
     const best = pickBest(models.filter((r) => r.games >= 2)) ?? pickBest(models)
     const human = collectionRows.find((r) => r.kind === 'human')
@@ -199,14 +200,15 @@ export function LeaderboardH2View(props: {
         <div className="lb-kpi-cell">
           <Stat
             label="Best Model"
-            value={kpi.best ? fmtFloat(kpi.best.score, 3) : '—'}
-            sub={kpi.best ? label(kpi.best) : undefined}
+            value={kpi.best ? `${Math.round((kpi.best.game_win_rate ?? 0) * 100)}%` : '—'}
+            sub={kpi.best ? `games won · ${label(kpi.best)}` : undefined}
           />
         </div>
         <div className="lb-kpi-cell">
           <Stat
             label="Human"
-            value={fmtFloat(kpi.human?.score, 3)}
+            value={kpi.human ? `${Math.round((kpi.human.game_win_rate ?? 0) * 100)}%` : '—'}
+            sub="games won"
           />
         </div>
         <div className="lb-kpi-cell">
@@ -240,9 +242,9 @@ export function LeaderboardH2View(props: {
               <tr>
                 <th>Player</th>
                 <th className="num">Games</th>
-                {sortTh('score', 'Score')}
-                {sortTh('level_solve_rate', 'Levels Won')}
                 {sortTh('game_win_rate', 'Games Won')}
+                {sortTh('level_solve_rate', 'Levels Won')}
+                {sortTh('score', 'Efficiency')}
                 {sortTh('median_actions', 'Med. Actions')}
                 {sortTh('cost_per_game', 'Cost / Game')}
                 <th className="num">Replay</th>
@@ -269,6 +271,12 @@ export function LeaderboardH2View(props: {
                     <td className="num" title={row.subset_note ?? undefined}>
                       {coverage ?? row.games}
                     </td>
+                    <td className={cx('num', isBest(row, 'game_win_rate') && 'lb-best')}>
+                      {fmtPct(row.game_win_rate)}
+                    </td>
+                    <td className={cx('num', isBest(row, 'level_solve_rate') && 'lb-best')}>
+                      {fmtPct(row.level_solve_rate)}
+                    </td>
                     <td
                       className={cx('num', 'lb-score-td', isBest(row, 'score') && 'lb-best')}
                       title={showCi ? `95% CI ${fmtFloat(row.score_ci_low, 3)} – ${fmtFloat(row.score_ci_high, 3)}` : undefined}
@@ -285,12 +293,6 @@ export function LeaderboardH2View(props: {
                           />
                         </div>
                       </div>
-                    </td>
-                    <td className={cx('num', isBest(row, 'level_solve_rate') && 'lb-best')}>
-                      {fmtPct(row.level_solve_rate)}
-                    </td>
-                    <td className={cx('num', isBest(row, 'game_win_rate') && 'lb-best')}>
-                      {fmtPct(row.game_win_rate)}
                     </td>
                     <td className={cx('num', isBest(row, 'median_actions') && 'lb-best')}>
                       {row.median_actions != null ? Math.round(row.median_actions) : '—'}

@@ -18,6 +18,7 @@ import { PlotFigure, cssVar, seriesColors } from '@/lib/PlotFigure'
 import type { RunMeta } from '@/lib/types'
 import { fetchLeaderboardH2 } from './phase2Api'
 import { ModelCardDialog } from './ModelCardDialog'
+import { bestByCompletion, completionCompare } from './ranking'
 import { LeaderboardH2View } from './PostTrainingSection'
 import type { LeaderboardDocument, LeaderboardRow } from './types'
 import './leaderboard.css'
@@ -116,7 +117,7 @@ export function LeaderboardPage() {
 
   const [collectionPick, setCollection] = useState<string | null>(null)
   const [kindFilter, setKindFilter] = useState<KindFilter>('all')
-  const [sortKey, setSortKey] = useState<SortKey>('score')
+  const [sortKey, setSortKey] = useState<SortKey>('game_win_rate')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [frontierMode, setFrontierMode] = useState<'chart' | 'table'>('chart')
   const [frontierAxis, setFrontierAxis] = useState<'auto' | 'tokens' | 'usd'>('auto')
@@ -180,6 +181,7 @@ export function LeaderboardPage() {
       if (av == null) return 1
       if (bv == null) return -1
       const cmp = Number(av) - Number(bv)
+      if (cmp === 0) return completionCompare(a, b) // ties: completion first (ranking.ts)
       return sortDir === 'asc' ? cmp : -cmp
     })
     return copy
@@ -199,10 +201,7 @@ export function LeaderboardPage() {
 
   const kpi = useMemo(() => {
     const modelRows = collectionRows.filter((r) => r.kind === 'model')
-    const bestModel = modelRows.reduce<LeaderboardRow | null>(
-      (best, cur) => (!best || cur.score > best.score ? cur : best),
-      null,
-    )
+    const bestModel = bestByCompletion(modelRows)
     const humanRow = collectionRows.find((r) => r.kind === 'human' || r.player_id === 'human')
     const totalGames = collectionRows.reduce((acc, r) => acc + (r.games || 0), 0)
 
@@ -210,7 +209,8 @@ export function LeaderboardPage() {
       totalGames,
       modelCount: modelRows.length,
       bestModel,
-      humanScore: humanRow?.score ?? null,
+      humanRow: humanRow ?? null,
+      humanScore: humanRow?.score ?? null, // efficiency reference line in the cost chart
     }
   }, [collectionRows])
 
@@ -340,12 +340,16 @@ export function LeaderboardPage() {
             <div className="lb-kpi-cell">
               <Stat
                 label="Best Model"
-                value={kpi.bestModel ? fmtFloat(kpi.bestModel.score, 3) : '—'}
-                sub={kpi.bestModel ? rowLabel(kpi.bestModel, collection !== 'all') : undefined}
+                value={kpi.bestModel ? `${Math.round((kpi.bestModel.game_win_rate ?? 0) * 100)}%` : '—'}
+                sub={kpi.bestModel ? `games won · ${rowLabel(kpi.bestModel, collection !== 'all')}` : undefined}
               />
             </div>
             <div className="lb-kpi-cell">
-              <Stat label="Human" value={fmtFloat(kpi.humanScore, 3)} />
+              <Stat
+                label="Human"
+                value={kpi.humanRow ? `${Math.round((kpi.humanRow.game_win_rate ?? 0) * 100)}%` : '—'}
+                sub="games won"
+              />
             </div>
             <div className="lb-kpi-cell">
               <Stat label="Games Evaluated" value={kpi.totalGames} sub={`${kpi.modelCount} models`} />
@@ -381,9 +385,9 @@ export function LeaderboardPage() {
                   <tr>
                     <th>Player</th>
                     <th className="num">Games</th>
-                    {sortTh('score', 'Score')}
-                    {sortTh('level_solve_rate', 'Levels Won')}
                     {sortTh('game_win_rate', 'Games Won')}
+                    {sortTh('level_solve_rate', 'Levels Won')}
+                    {sortTh('score', 'Efficiency')}
                     {sortTh('median_actions', 'Med. Actions')}
                     {sortTh('cost_per_game', 'Cost / Game')}
                     <th className="num">Replay</th>
@@ -409,6 +413,12 @@ export function LeaderboardPage() {
                         <td className="num" title={row.subset_note ?? undefined}>
                           {coverage ?? row.games}
                         </td>
+                        <td className={cx('num', isBest(row, 'game_win_rate') && 'lb-best')}>
+                          {fmtPct(row.game_win_rate)}
+                        </td>
+                        <td className={cx('num', isBest(row, 'level_solve_rate') && 'lb-best')}>
+                          {fmtPct(row.level_solve_rate)}
+                        </td>
                         <td className={cx('num', 'lb-score-td', isBest(row, 'score') && 'lb-best')}>
                           <div className="lb-score-wrap">
                             <span>{fmtFloat(row.score, 3)}</span>
@@ -422,12 +432,6 @@ export function LeaderboardPage() {
                               />
                             </div>
                           </div>
-                        </td>
-                        <td className={cx('num', isBest(row, 'level_solve_rate') && 'lb-best')}>
-                          {fmtPct(row.level_solve_rate)}
-                        </td>
-                        <td className={cx('num', isBest(row, 'game_win_rate') && 'lb-best')}>
-                          {fmtPct(row.game_win_rate)}
                         </td>
                         <td className={cx('num', isBest(row, 'median_actions') && 'lb-best')}>
                           {fmtInt(row.median_actions)}

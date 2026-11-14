@@ -49,3 +49,13 @@
 - **Post-training re-plan (Sat ~21:15, ignacio, recorded by A3):** the goal is a model that THINKS better. The no-thinking SFT v2 + grpo-1/grpo-2 line is stopped (it trained answer-only replies and dropped the base from 0.758 to ~0.44 on the dev-slice headline; kept as a documented negative result). New: GRPO with thinking ON from the base Qwen3.5-9B (fresh LoRA, no SFT), reward only on the answer after `</think>`: `think-games` (our game_turn + aux tasks) vs `think-ctrl` (generic reasoning-gym puzzles, same budget), two Modal H100s, ~$60, evaluated with thinking ON on the FT_BENCHMARKS dev slice.
 
 - **RL restart on gridbranch (Sat ~22:00, Anssi; recorded by A7):** restart the `think-games` GRPO run on data from the `gridbranch` v2 generator (the eval-v3b one). Training source = new `train-v3b` (gridbranch, train seeds 300000-302999, hold-out filtered, 1,904 games), never eval-v3b itself. Handover to A2: `coordination/requests/A7-to-A2-restart-rl-on-gridbranch.md`.
+
+## Board ranking: completion first (Sat ~23:45, Daniel; recorded by A1)
+- **Boards rank by games won, then levels solved, then efficiency** (the old `score`: mean over levels of
+  min(1, optimal / moves) if solved, else 0) as the tiebreak. The `score` column is shown as "Efficiency".
+  Why: under the old order Gemini 4 Carbon (eval-v2, h1: 56% of games won, efficiency 0.82) ranked above our
+  playtesters (73% won, efficiency 0.73), i.e. fewer games solved but in fewer moves.
+- **Post-hoc, disclosed:** decided after seeing the eval-v2 results; applies to every row on h1 and h2 boards and the
+  front page alike (`web/src/features/leaderboard/ranking.ts`).
+- **The Harbor / RL reward is unchanged** (same formula as the efficiency column), so the judging results in
+  `coordination/JUDGING.md` (reference 1.000, do-nothing 0, stop-early, red team) stay valid.

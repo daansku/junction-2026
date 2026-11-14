@@ -9,6 +9,7 @@ import { PlotFigure, seriesColors, cssVar } from '@/lib/PlotFigure'
 import type { Frame, RunMeta } from '@/lib/types'
 import { useServerInfo } from '@/lib/server'
 import type { LeaderboardDocument, LeaderboardRow } from '@/features/leaderboard/types'
+import { completionCompare } from '@/features/leaderboard/ranking'
 import { XrayOverlay } from '@/features/play/XrayOverlay'
 import { Button, Empty, ErrorState, Kbd, Panel, Swatch } from '@/design/primitives'
 import './overview.css'
@@ -160,7 +161,7 @@ export function OverviewPage() {
     () =>
       [...collectionRows]
         .filter((r) => r.kind !== 'baseline')
-        .sort((a, b) => b.score - a.score)
+        .sort(completionCompare) // completion first: games won, levels solved, then efficiency
         .slice(0, 6),
     [collectionRows],
   )
@@ -306,9 +307,9 @@ export function OverviewPage() {
                   <tr>
                     <th className="num">#</th>
                     <th>player</th>
-                    <th className="num">score</th>
+                    <th className="num">games won</th>
                     <th className="num">levels won</th>
-                    <th className="num">game win</th>
+                    <th className="num">efficiency</th>
                     <th className="num">$/game</th>
                   </tr>
                 </thead>
@@ -329,6 +330,8 @@ export function OverviewPage() {
                             </span>
                           </span>
                         </td>
+                        <td className="num">{pct(r.game_win_rate)}</td>
+                        <td className="num">{pct(r.level_solve_rate)}</td>
                         <td className="num">
                           <div className="ov-score-cell">
                             <span>{r.score.toFixed(3)}</span>
@@ -343,8 +346,6 @@ export function OverviewPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="num">{pct(r.level_solve_rate)}</td>
-                        <td className="num">{pct(r.game_win_rate)}</td>
                         <td className="num">{r.cost_per_game ? `$${r.cost_per_game.toFixed(3)}` : '—'}</td>
                       </tr>
                     )
