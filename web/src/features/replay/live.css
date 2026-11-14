@@ -22,6 +22,8 @@
 .live-last { margin-left: auto; color: var(--accent); }
 .live-hyp {
   font-size: 12px;
+  line-height: 1.4;
+  height: calc(2 * 1.4em);
   color: var(--text-2);
   overflow: hidden;
   display: -webkit-box;

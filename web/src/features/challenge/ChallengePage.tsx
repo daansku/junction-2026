@@ -635,7 +635,10 @@ function Reel({ g, title, tick, scale }: { g: GhostSlice; title: string; tick: n
           move {shown}/{n}
           {ended ? (g.solved ? ' · SOLVED' : ' · NEVER SOLVED') : ''}
         </span>
-        {hyp && <p className="ch-hyp mono">“{hyp.length > 180 ? `${hyp.slice(0, 177)}…` : hyp}”</p>}
+        {/* always rendered at a fixed height so changing model text never moves the layout */}
+        <p className="ch-hyp mono" title={hyp ?? undefined}>
+          {hyp ? `“${hyp}”` : '\u00a0'}
+        </p>
       </figcaption>
     </figure>
   )
