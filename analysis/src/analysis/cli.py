@@ -10,7 +10,7 @@ from typing import Any
 
 from .aggregate import aggregate_runs
 from .claim_check import check_claims, validate_against_schema
-from .explain import build_explanations, build_failure_packets, estimate_judge_cost
+from .explain import build_explanations, build_failure_packets, estimate_judge_cost, make_arena_judge
 from .insights import generate_auto_proposals, synthesize_insights
 from .loader import default_data_dir, find_repo_root, load_collections, load_models, load_runs
 from .rule_discovery import analyze_rules
@@ -331,7 +331,7 @@ def main(argv: list[str] | None = None) -> int:
                 sys.path.insert(0, str(arena_src))
             from arena import judge as _arena_judge  # type: ignore
 
-            judge_fn = lambda pkt: _arena_judge.complete(prompt=pkt, system=None)  # noqa: E731
+            judge_fn = make_arena_judge(_arena_judge.complete)
         exp = build_explanations(
             runs,
             game_descs=games,

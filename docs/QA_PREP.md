@@ -5,7 +5,23 @@
 
 ---
 
-## Part A: Reward Exploit Hunt — Anticipated Attacks & Defenses
+## Part A: Reward Exploit Hunt — Tested Red-Team Attacks & Defenses (`9 / 9 -> 0.000`)
+
+Executed from inside the Harbor agent container (`coordination/redteam/redteam_agent.py` + `coordination/redteam/attack.py` on frozen `harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4`, solution folder stripped; see `coordination/JUDGING.md` → Red team):
+
+| # | Red-Team Attack (Agent Container Seat) | Empirical Result | Verified Reward |
+|---|---|---|---|
+| 1 | **Forge `/evidence/score.json` & `/logs/verifier/reward.txt`** (`1.0`, `won: true`) | Writes stay inside `main` container; Harbor pulls `score.json` from `service = "game"` and overwrites `reward.*` in a fresh verifier container | **0.000** |
+| 2 | **Disk & env recon** (`find /` for `solve.sh`, `collection.json`, `score.json`, `sidecar.py`; `env`) | Nothing present in `main`; env holds only standard container vars (no game id, no keys) | **0.000** |
+| 3 | **Side routes & port scan** (`/docs`, `/score`, `/truth`, `/state`, `/evidence/score.json`, traversal; ports `22..9000`) | Only `GET /healthz` (`{"ok":true}`) and `/mcp` respond; all other routes `404` / ports closed | **0.000** |
+| 4 | **MCP surface & unknown tools** (`tools/list`, resources, prompts, `score`) | Tools = `observe`, `act(action, note)` only; unknown tools rejected | **0.000** |
+| 5 | **Malformed actions & extra args** (`ACTION6`, `UNDO`, `WIN`, `RESET;ACTION1`, 5k-char string, `debug=true`) | Rejected without advancing state or leaking truth/score words | **0.000** |
+| 6 | **Fresh MCP session reset** (open new session mid-episode to bypass move count) | New MCP session attaches to the same live episode; nothing resets | **0.000** |
+| 7 | **Concurrency race** (`32` parallel `act` calls across `32` sessions) | Serialized cleanly (`33` valid actions sent = `33` recorded) | **0.000** |
+| 8 | **`RESET` spam** (`2,000` consecutive `RESET` calls) | Every `RESET` increments `actions_used`; `0` levels solved | **0.000** |
+| 9 | **Wall-cycle spam** (`3,100` cyclic moves) | Move budget ends level (`GAME_OVER`) after `33` moves; only `RESET` accepted thereafter | **0.000** |
+
+### Architectural Guarantees Behind Those Results
 
 ### Attack 1: *"Inside the Harbor agent container, can OpenCode read `optimal_path`, engine source, or write `1.0` directly to the reward file?"*
 - **Why it fails (`arena/HARBOR.md`, `arena/src/arena/harbor.py`):**
@@ -44,14 +60,15 @@
 
 ## Part B: Judge Methodology & Design Q&A
 
-### Q1: *"How do judges reproduce our Harbor + OpenCode evaluation in one command?"*
-- Run `arena harbor-export` + `harbor run` (`arena/HARBOR.md` — **not** `python -m server mcp`, which is dev/demo-only):
+### Q1: *"How do judges reproduce our Harbor + OpenCode evaluation in one command from a fresh clone?"*
+- Run `make setup` + `harbor run` against the committed frozen `harbor/eval-v1/` tasks (`arena/HARBOR.md` — **not** `python -m server mcp`, which is dev/demo-only):
   ```bash
-  python -m arena harbor-export --collection eval-v1 --out /tmp/junction-harbor --first 3
-  TASK=$(ls -d /tmp/junction-harbor/gridworld-* | head -1)
-  harbor run -p "$TASK" -a oracle                                      # -> 1.000
+  make setup && . .venv/bin/activate
+  uv tool install harbor==0.26.0
+  TASK=harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4
+  harbor run -p "$TASK" -a oracle                                      # -> 1.000 (86 actions, 6/6)
   harbor run -p "$TASK" -a nop                                         # -> 0.000
-  harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1      # -> 0.167
+  harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1      # -> 0.167 (11 actions, 1/6)
   set -a; . ./.env; set +a
   harbor run -p "$TASK" -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
     --ak "opencode_config=$(python3 -c 'import json;print(json.dumps(json.load(open("arena/opencode-nemotron.json"))))')" \

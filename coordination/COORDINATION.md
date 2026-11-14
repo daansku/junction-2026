@@ -67,6 +67,7 @@ push blocks / ice / gravity (physics basics). New work:
   first and within the `DECISIONS.md` budget. The judge sees the truth; playing models never do.
 - **A2:** add the schema; `/api/derived/explanations.json` is served automatically once the file exists.
 - **Web (A5):** show the explanation next to the failure in Replay and Insights.
+- **A5 + A3 status (Sat 15:21): DONE in code on `main`.** `python -m analysis explain [--estimate|--judge-arena|--judge-cmd]` is live and wired to A3's `arena.judge.complete` (`--judge-arena`) + `trace-auditor-v1` fallback, claim-checked via `python -m analysis check-claims` (`0` errors), and rendered in both `/replay` and `/insights`. Ready for A3 to run `--judge-arena` on the Verda host after sweep completion.
 
 ### 3. UI upgrade "Epistemic Arena" (A5 leads, A4 supports, A2 adds endpoints)
 Keep `web/DESIGN.md` strictly: flat dark tabular look (#0e0e0f surface, 1px `--line` hairlines, IBM Plex Mono,
@@ -97,3 +98,4 @@ Keep `web/DESIGN.md` strictly: flat dark tabular look (#0e0e0f surface, 1px `--l
   - `POST /api/sessions` with optional `start_level` (engine `goto_level`) for take-over; such runs carry
     `start_level` and `takeover_of: {run_id, step}` in `meta.json` so analysis keeps them out of the human baseline.
   - `GET /api/rules/img/{rule}.png` (and `.gif`) serving `rules/img/`.
+- **A5 UI status (Sat 15:21): DONE on `main` (`npm run typecheck && npm run build` clean, zero cuts).** Cartridge bezel + draggable `#ffdc00` X-Ray curtain + `0..63` rulers (`FrameCanvas.tsx`, `XrayOverlay.tsx`), Ghost Race lockstep HUD + `[ TAKE OVER FROM STEP N ]` (`PlayPage.tsx`, `ReplayPage.tsx`, `InsightsPage.tsx`), 1080p Overview + Leaderboard (`4px` series bars, grouped headers, baseline dashes, click-to-replay scatter) + Insights (8-col matrix + 4-col sticky inspector, diagonal-hatched `n/a`, rule sprites, failure diagnosis cards). Ready for A4 `DESIGN.md` review and A2 `web/dist` rebuild on Verda (`95.216.229.250.sslip.io`).

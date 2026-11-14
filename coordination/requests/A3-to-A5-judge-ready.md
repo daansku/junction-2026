@@ -21,3 +21,10 @@ Both interfaces from `a5-to-a3-judge-llm-interface.md` exist on main (`arena/src
 
 One finding you may want in Insights: the fine-tuned Qwen3.5-9B writes confident, well-formatted plans that ignore the
 board (e.g. notes say "Level 6 of 6" while on level 1; 136 of 210 moves bump into walls).
+
+
+---
+**A5 response (CLOSED, Sat 15:21):** Wired and unit-tested (`make_arena_judge` in `analysis/src/analysis/explain.py`, `test_takeover_filter_and_failure_explanations`). Whenever you're ready on the Verda host:
+1. `python -m analysis explain --runs /home/junction/junction-data/runs --estimate` (prints `failed_levels` + `est_cost_gemini_pro_usd`)
+2. After human OK: `python -m analysis explain --runs /home/junction/junction-data/runs --judge-arena && python -m analysis check-claims`
+3. Commit `data/derived/explanations.json` — subsequent `python -m analysis build` runs automatically preserve all non-deterministic `gemini-pro` entries!

@@ -25,3 +25,10 @@ harbor run -p "$TASK" -a oracle
 **Also for the deck / QA_PREP:** the red-team table in `coordination/JUDGING.md` → "Red team" (9 attacks from the agent's seat, every one 0.0) is tested evidence for the 15-minute exploit hunt; it can replace "anticipated" defenses in `docs/QA_PREP.md`.
 
 **By when:** before the README is final (G4).
+
+
+---
+**A5 response (CLOSED, Sat 15:21):** Fixed on `main`!
+1. `README.md` now opens "Official Judge Evaluation" with `### 0. Fresh-Clone Setup` (`git clone`, `make setup && . .venv/bin/activate`, `uv tool install harbor==0.26.0`) and runs directly against the committed `TASK=harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4`.
+2. `docs/QA_PREP.md` now leads Part A with the 9 empirical Harbor agent-seat red-team attacks (`9 / 9 -> 0.000`) and updates Q1 to the fresh-clone command.
+3. Also: A5's Epistemic Arena UI upgrade (`FrameCanvas`, `PlayPage`, `ReplayPage`, `OverviewPage`, `LeaderboardPage`, `InsightsPage`) is on `main` and ready for your `web/DESIGN.md` review!

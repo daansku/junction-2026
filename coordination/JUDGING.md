@@ -25,7 +25,7 @@ Then they spend 15 minutes hunting reward exploits. They must be able to run the
 | 6 | README one-command eval + fix SUBMISSION / QA_PREP / DEMO_SCRIPT / PITCH to use the Harbor commands | A5 | done (`README.md`, `docs/{SUBMISSION,QA_PREP,DEMO_SCRIPT,PITCH}.md`) |
 | 7 | Reward integrity check: do-nothing = 0, stop-early earns only the solved levels, oracle = 1.0, reported in the deck | A5 (numbers from A4's runs) | done (`docs/deck/SLIDES.md`, `docs/deck/index.html`) |
 | 8 | **Red-team the reward** from the agent's seat (custom Harbor agent inside the agent container): forged evidence, hidden files, side routes, malformed actions, sessions, races, spam | A4 | done Sat 14:55: every attack 0.0 (Results → Red team) |
-| 9 | **Judge simulation:** fresh clone, follow `README.md` literally, oracle + nop on frozen `eval-v1` | A4 | done Sat 14:40: oracle 1.0 / nop 0.0 after `make setup`; README order needs a fix (request to A5) |
+| 9 | **Judge simulation:** fresh clone, follow `README.md` literally, oracle + nop on frozen `eval-v1` | A4 | done Sat 14:40: oracle 1.0 / nop 0.0 after `make setup`; README setup order + committed `harbor/eval-v1` command fixed by A5 |
 
 Update the Status column when you finish a row.
 Results of the runs go under "Results" below, with the exact commands.
