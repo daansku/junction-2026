@@ -35,3 +35,10 @@
 - Suite size: fixed subsample per model (~2,250 generative items + full MedQA; BBH 50/task, MATH 50/subject, GSM8K 250, MMLU-Pro health/law/history 100 each), same items for every model. Full suite was ~13 h per model. Protocol: `bench/PROTOCOL.md` v3.
 - **Gemini credits are unlimited (Sat 19:25, ignacio):** the $300 model budget no longer binds Gemini. Main sweep keeps 3 attempts; Gemini runs get cost caps high enough never to cut a run short (eval-v2 Gemini Flash rerun at $15/run, `arena/sweeps/eval-v2-gemini*.yaml`; the 7 eval-v2 runs capped at $2 are redone as attempt 1). The cap still applies to Anthropic and other paid APIs.
 - **Gemini 4 Argon + Carbon on eval-v2 (Sat 19:28, human, recorded by A4):** all 30 eval-v2 games x1 each, h1, medium, 400 actions, $15/run cap (`arena/sweeps/eval-v2-gemini4.yaml`). Approved with `--approve-cost 340` (dry-run $336; expected ~$210 real at ~$0.01/action). Gemini credits, so outside the $300 model budget (19:25 decision). Argon's earlier eval-v2 runs cut at $4 (`main-subset-argon-v2`, `challenge-argon-v2`) are superseded by these.
+
+## Forced-interaction generator, A7 (Sat ~19:45, Anssi; recorded by A7)
+- **Newest rule (hard requirement):** on every level that introduces a rule, the optimal path must trigger it, and the best plan that never triggers it must be impossible or >= 2x the optimal length (avoider scores <= 0.5 on that level).
+- **Older rules (soft):** generation is encouraged to include and need all/most of the seen mechanics; the newest rule is always required.
+- **Avoid-type rules (hazards, beacon_goal):** "forced" means the rule-blind shortest plan must fail on the real level, so the player has to notice the rule and detour; no near-optimal rule-blind route.
+- **Targets before the 07:00 lock:** a new frozen `eval-v3` collection (fresh seeds; any model sweep on it is a separate human cost decision) and training data (A1/A3). Not the web "New game" switch for now.
+- Opt-in only: `dev`, `train-v1`, `eval-v1`, `eval-v2` stay byte-identical.
