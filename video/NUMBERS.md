@@ -14,3 +14,4 @@ re-fetch with `video/.venv/python.exe video/tools/fetch.py` and re-render before
 | S5 | base / ctrl / ours mean accuracy + 95% CI | **PLACEHOLDER**, drawn in placeholder colour. Target: `data/derived/bench/<run>/summary.json` | 0.600 / 0.610 / 0.630 (invented layout values) | no |
 | S6 | business ideas (no numbers) | **PLACEHOLDER** until `docs/BUSINESS.md` | — | no |
 | S7 | URL / QR | `coordination/API_URL` + `/challenge` | 65.108.33.107.compute.verda.run/challenge | ask Anssi |
+| S0, S3 (spoken) | "walks into the same wall eleven times" | trace `20261114T015741-02f65e44` steps 16–26: 11 consecutive `ACTION4` with event `bump` | 11 | yes (trace) |

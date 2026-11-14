@@ -11,6 +11,7 @@ from manim import (
 )
 
 from common import (
+    pad_to_narration,
     CACHE, FAILURE_MODES, MODE_COLOR, MONO, SANS, TEXT_1, TEXT_2, TEXT_3, frame_image, framed,
     load_json, set_frame,
 )
@@ -22,7 +23,7 @@ REPLAYS = [
     ("20261114T015741-3858885a", 108, 123, "late_reset", "Kimi K3.1 Pro"),
     ("20261114T015741-8260dc79", 98, 109, "belief_mismatch", "Kimi K3.1 Pro"),
 ]
-SPACING = 9.0
+SPACING = 12.0
 FRAME_H = 4.6
 
 
@@ -134,4 +135,5 @@ class S3Failures(Scene):
         self.play(FadeIn(marks, lag_ratio=0.02), run_time=1.6)
         self.wait(1.0)
         tiles.clear_updaters()
+        pad_to_narration(self, "S3", tail=0.5)
         self.play(FadeOut(Group(tiles, marks)), run_time=0.5)

@@ -12,6 +12,7 @@ from manim import (
 )
 
 from common import (
+    pad_to_narration,
     ACCENT, LINE, LINE_STRONG, MONO, PLACEHOLDER, SANS, TEXT_1, TEXT_2, TEXT_3, load_json,
 )
 
@@ -112,4 +113,5 @@ class S2Gap(Scene):
             gap_lab = Text("gap", font=MONO, font_size=16, color=ACCENT).next_to(gap, UP, buff=0.05)
             self.play(FadeIn(gap), FadeIn(gap_lab), run_time=0.5)
         self.wait(2.0)
+        pad_to_narration(self, "S2", tail=0.5)
         self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)

@@ -15,6 +15,7 @@ from manim import (
 )
 
 from common import (
+    pad_to_narration,
     FAILURE_MODES, LINE_STRONG, MONO, PALETTE, PLACEHOLDER, SANS, TEXT_1, TEXT_2, TEXT_3,
     agent_sprite,
 )
@@ -89,4 +90,5 @@ class S5PostTrain(Scene):
         ctrl_box.move_to([x0 + width / 2 - 1.6, 0.0, 0])
         self.play(FadeIn(ctrl_box), run_time=0.4)
         self.wait(2.2)
+        pad_to_narration(self, "S5", tail=0.5)
         self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)

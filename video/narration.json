@@ -1,0 +1,47 @@
+{
+  "note": "Voice-over per scene. Draft lines; SCRIPT.md has the open alternatives (S2 humans line, S5 result line). Lines marked OPEN in SCRIPT.md are left out until the 07:00 lock.",
+  "scenes": [
+    {"key": "S0", "file": "s0_hook", "scene": "S0Hook", "lines": [
+      "Break one AI agent, and you learn one thing: it broke.",
+      "Look closer. This model walks into the same wall eleven times, sure it is one step from the goal.",
+      "This one wanders into a dead end, and resets far too late.",
+      "Now break thousands of them, on games none of them has ever seen.",
+      "The pieces stop being noise. They line up.",
+      "Every failure points at something agents still can't do. We built a factory that finds those things."
+    ]},
+    {"key": "S1", "file": "s1_environment", "scene": "S1Environment", "lines": [
+      "The agent sees only this: sixty-four by sixty-four pixels, sixteen colours. No text, no score, no rule names.",
+      "It has six buttons. That's all.",
+      "Colours and shapes are reshuffled for every game, so nothing can be memorised.",
+      "Each new level hides one new rule, and the agent has to discover it by experimenting.",
+      "And every level is proven solvable by search, so we always know the best possible run."
+    ]},
+    {"key": "S2", "file": "s2_gap", "scene": "S2Gap", "lines": [
+      "We ran frontier models on games nobody had seen. First with our own harness.",
+      "Then the way labs benchmark them: the full conversation, and maximum reasoning effort.",
+      "None of them matches the optimal reference run."
+    ]},
+    {"key": "S3", "file": "s3_failures", "scene": "S3Failures", "lines": [
+      "Every failure is a decision we can point to.",
+      "This model is sure that moving right reaches the goal. The screen never changes.",
+      "This one resets far too late.",
+      "This one acts on a belief the screen has already disproved.",
+      "Everything they needed was on the screen."
+    ]},
+    {"key": "S4", "file": "s4_reward", "scene": "S4Reward", "lines": [
+      "The score rewards solving levels efficiently, and nothing else.",
+      "On the judges' own harness, doing nothing scores zero. Stopping after one level earns only that level.",
+      "Resetting never erases the moves already spent.",
+      "And the score is computed in a separate container that the agent cannot reach."
+    ]},
+    {"key": "S5", "file": "s5_posttrain", "scene": "S5PostTrain", "lines": [
+      "Then we asked: can a small model learn from this experience?",
+      "We compare it against a control trained on the same amount of non-game data, so any gain comes from the games, not just from more training."
+    ]},
+    {"key": "S6S7", "file": "s6_s7_close", "scene": "S6S7Close", "lines": [
+      "A factory of fresh, verified games is useful beyond this hackathon: private evaluations that can't leak, and training environments for labs.",
+      "Every broken agent shows where AI still has to learn.",
+      "Try to beat the AI yourself."
+    ]}
+  ]
+}

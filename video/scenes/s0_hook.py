@@ -15,6 +15,7 @@ from manim import (
 )
 
 from common import (
+    pad_to_narration,
     CACHE, FAILURE_MODES, LINE_STRONG, MONO, PALETTE, SANS, TEXT_1, TEXT_2, TEXT_3,
     agent_sprite, frame_cells, frame_image, framed, load_json, set_frame,
 )
@@ -239,3 +240,4 @@ class S0Hook(Scene):
         missing = VGroup(*cells[len(shards):])
         self.play(FadeIn(border), FadeIn(missing), run_time=0.6)
         self.wait(1.2)
+        pad_to_narration(self, "S0")

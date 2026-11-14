@@ -142,3 +142,18 @@ PLACEHOLDER = "#ff4fd8"  # loud colour reserved for unlocked numbers (see NUMBER
 
 def placeholder_tag(mob, text: str = "PLACEHOLDER") -> Text:
     return Text(text, font=MONO, font_size=14, color=PLACEHOLDER).next_to(mob, UP, buff=0.05)
+
+
+def pad_to_narration(scene, key: str, tail: float = 0.0, extra: float = 0.6) -> None:
+    """Wait until the scene is at least as long as its narration (cache/audio/durations.json).
+    `tail` = seconds of animation still to come after this call (e.g. a final fade)."""
+    p = CACHE / "audio" / "durations.json"
+    if not p.exists():
+        return
+    target = json.loads(p.read_text(encoding="utf-8")).get(key)
+    if target is None:
+        return
+    now = scene.renderer.time
+    missing = target + extra - tail - now
+    if missing > 0.05:
+        scene.wait(missing)

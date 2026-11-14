@@ -13,6 +13,7 @@ from manim import (
 )
 
 from common import (
+    pad_to_narration,
     ACCENT, CACHE, FAILURE_MODES, GOOD, MONO, PALETTE, PLACEHOLDER, ROOT, SANS, TEXT_1, TEXT_2,
     TEXT_3, frame_image, load_json, set_frame,
 )
@@ -135,3 +136,4 @@ class S6S7Close(Scene):
         self.play(FadeIn(line, shift=UP * 0.1), run_time=0.5)
         self.play(FadeIn(url), FadeIn(qr), run_time=0.6)
         self.wait(3.0)
+        pad_to_narration(self, "S6S7")

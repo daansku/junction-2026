@@ -10,6 +10,7 @@ from manim import (
 )
 
 from common import (
+    pad_to_narration,
     ACCENT, LINE_STRONG, MONO, SANS, TEXT_1, TEXT_2, TEXT_3, frame_image, framed, load_json,
     set_frame,
 )
@@ -41,24 +42,23 @@ class S1Environment(Scene):
             (6, 63, "playfield"),
         ]
         side = VGroup()
-        prev_box = None
+        prev = None
         for r0, r1, text in notes:
             box = band(img, r0, r1)
-            lab = Text(text, font=MONO, font_size=22, color=ACCENT)
-            lab.next_to(img, RIGHT, buff=0.5).align_to(box, UP)
-            if r0 == 6:
-                lab.move_to([lab.get_x(), box.get_center()[1], 0])
+            lab = Text(text, font=MONO, font_size=24, color=ACCENT)
+            lab.next_to(img, RIGHT, buff=0.5)
+            lab.move_to([lab.get_x(), max(box.get_center()[1], img.get_top()[1] - 0.3), 0])
             anims = [Create(box), FadeIn(lab, shift=LEFT * 0.1)]
-            if prev_box is not None:
-                anims.append(FadeOut(prev_box))
+            if prev is not None:
+                anims.append(FadeOut(prev))
             self.play(*anims, run_time=0.6)
-            prev_box = box
-            side.add(lab)
+            self.wait(0.5)
+            prev = VGroup(box, lab)
         facts = VGroup(
             Text("64 × 64 pixels · 16 colours", font=SANS, font_size=26, color=TEXT_1),
             Text("no text · no score · no rule names", font=SANS, font_size=26, color=TEXT_2),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.2).next_to(img, RIGHT, buff=0.5).shift(DOWN * 1.5)
-        self.play(FadeOut(prev_box), FadeIn(facts, shift=UP * 0.1), run_time=0.6)
+        self.play(FadeOut(prev), FadeIn(facts, shift=UP * 0.1), run_time=0.6)
         self.wait(1.0)
 
         # ---- six buttons; replay the optimal path ----
@@ -68,7 +68,7 @@ class S1Environment(Scene):
             box = Rectangle(width=t.width + 0.3, height=0.48, stroke_color=LINE_STRONG, stroke_width=2, fill_opacity=0)
             keys.add(VGroup(box, t.move_to(box)))
         keys.arrange(RIGHT, buff=0.12).next_to(img, RIGHT, buff=0.5).shift(DOWN * 0.1)
-        self.play(FadeOut(side), FadeOut(facts), LaggedStart(*[FadeIn(k, shift=UP * 0.1) for k in keys], lag_ratio=0.08), run_time=0.8)
+        self.play(FadeOut(facts), LaggedStart(*[FadeIn(k, shift=UP * 0.1) for k in keys], lag_ratio=0.08), run_time=0.8)
         key_of = {f"ACTION{i}": keys[i] for i in range(1, 6)}
         key_of["RESET"] = keys[0]
         for fr, a in zip(lv1["frames"][1:], lv1["optimal_path"]):
@@ -79,14 +79,44 @@ class S1Environment(Scene):
             k.set_stroke(LINE_STRONG, width=2)
         self.wait(0.3)
 
-        # ---- colours reshuffled per game ----
+        # ---- colours reshuffled per game: same level, three skins side by side ----
         skins = eng["skins"]
-        skin_note = Text("same level, three games: colours reshuffled", font=MONO, font_size=20, color=TEXT_2)
-        skin_note.next_to(img, RIGHT, buff=0.5)
-        self.play(FadeOut(keys), FadeIn(skin_note), run_time=0.4)
-        for s in skins + skins[:1]:
-            set_frame(img, s)
-            self.wait(0.7)
+        self.play(FadeOut(keys), Group(img, border).animate.scale_to_fit_height(3.6).move_to([-4.4, 0.3, 0]), run_time=0.7)
+        set_frame(img, skins[0])
+        trio = [img]
+        for k, sk in enumerate(skins[1:], start=1):
+            t = frame_image(sk, height=3.6).move_to([-4.4 + 4.4 * k, 0.3, 0])
+            trio.append(t)
+        borders = [border] + [framed(t) for t in trio[1:]]
+        # outline the cells whose colour or shape differs between the three games
+        import numpy as np
+        from common import frame_array
+        arrs = [frame_array(sk) for sk in skins]
+        diff = (arrs[0] != arrs[1]) | (arrs[0] != arrs[2])
+        marks = VGroup()
+        for t in trio:
+            cell = t.height / 64
+            ys, xs = np.nonzero(diff)
+            if len(xs):
+                x0, x1, y0, y1 = xs.min(), xs.max(), ys.min(), ys.max()
+            for (yy, xx) in zip(ys, xs):
+                pass
+            # one outline per changed object: group changed cells into 5x5-ish blocks
+            seen = set()
+            for (yy, xx) in zip(ys, xs):
+                key = (yy // 6, xx // 6)
+                if key in seen:
+                    continue
+                seen.add(key)
+                r = Rectangle(width=cell * 7, height=cell * 7, stroke_color=ACCENT, stroke_width=2, fill_opacity=0)
+                r.move_to(t.get_corner(UP + LEFT) + RIGHT * (xx + 2.5) * cell + DOWN * (yy + 2.5) * cell)
+                marks.add(r)
+        self.play(*[FadeIn(Group(t, b)) for t, b in zip(trio[1:], borders[1:])], run_time=0.6)
+        skin_note = Text("same level in three games: object colours and shapes reshuffled", font=MONO, font_size=20, color=TEXT_2)
+        skin_note.next_to(Group(*trio), DOWN, buff=0.5)
+        self.play(FadeIn(marks, lag_ratio=0.02), FadeIn(skin_note), run_time=0.8)
+        self.wait(1.6)
+        self.play(FadeOut(Group(*trio[1:], *borders[1:], marks)), run_time=0.4)
 
         # ---- one new hidden rule per level ----
         strip = Group()
@@ -125,4 +155,5 @@ class S1Environment(Scene):
         proof.next_to(big, DOWN, buff=0.2)
         self.play(FadeIn(proof), run_time=0.4)
         self.wait(1.2)
+        pad_to_narration(self, "S1", tail=0.5)
         self.play(FadeOut(Group(big, bborder, path, proof)), run_time=0.5)
