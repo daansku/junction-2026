@@ -1,0 +1,13 @@
+# Gemma 4 E4B (Google open model, ~4B effective) on our Modal endpoint, all 30 frozen eval-v1 games x 1
+# (human request Sat ~14:50, run from A4's machine, which holds MODAL_API_KEY). Small-open-model row next to
+# the fine-tune story. ~3 s/action, endpoint max_concurrency 4, so ~2-3 h total. Modal GPU time, no per-token
+# price. Same harness h1, budgets as main. A keep-warm loop on A4's machine stops the endpoint scaling to zero.
+name: main-gemma
+collection: eval-v1
+games: all
+attempts: 1
+concurrency: 4
+est_steps_per_game: 250
+models:
+  - {id: modal-gemma-4-e4b, max_concurrency: 4}
+budgets: {max_actions: 400, max_turns: 500, max_cost_usd: 2.00, max_wall_s: 10800}
