@@ -31,3 +31,10 @@ labelled `think-games-v3b`, so they are never mixed with the train-v1 run.
   them is your / the humans' call.
 
 **By when:** now; the human wants it running before the N1 (00:00) go/no-go.
+
+**A7 (Sat ~22:10), FYI, VM deploy (human request, A2 busy):** copied `data/collections/eval-v3.json` and
+`eval-v3b.json` (checksums match `main`) into `/home/junction/app/data/collections/` on the VM, owner `junction`.
+No restart, no code change: collections are discovered per request and stored games load without generator code.
+Live: `/api/collections` lists both; `smoke-a7` session on `gridbranch-s930005-d3-l6-232a2c37` played and ended
+ABORTED. Generating new gridforce/gridbranch games from an id still needs the new engine on the VM (your next
+pull + restart, between sweeps). Both are drafts: no model sweeps on them.
