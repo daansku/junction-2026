@@ -6,7 +6,7 @@ import { FrameCanvas } from '@/lib/FrameCanvas'
 import type { RunMeta } from '@/lib/types'
 import { useServerInfo } from '@/lib/server'
 import type { LeaderboardDocument, LeaderboardRow } from '@/features/leaderboard/types'
-import { Button, Chip, Kbd, Panel, Stat } from '@/design/primitives'
+import { Button, Chip, ErrorState, Kbd, Panel, Stat } from '@/design/primitives'
 import './overview.css'
 
 /** Pick a run worth showing on the front page: the best finished model run, else the optimal baseline. */
@@ -69,6 +69,16 @@ export function OverviewPage() {
 
   return (
     <div className="ov">
+      {games.error && runs.error ? (
+        <ErrorState
+          error={games.error}
+          retry={() => {
+            games.refetch()
+            runs.refetch()
+            lb.refetch()
+          }}
+        />
+      ) : null}
       <section className="ov-top">
         <div className="ov-intro">
           <h1 className="ov-title">Games no model has seen before.</h1>
