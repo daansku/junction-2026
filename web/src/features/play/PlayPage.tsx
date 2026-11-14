@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { API } from '@/lib/config'
@@ -213,7 +213,28 @@ export function PlayPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [act, available, start, finished])
 
+  // Human baseline = first attempt only: mark games this player already played on this server.
+  const me = name.trim().toLowerCase()
+  const myRuns = useQuery({
+    queryKey: ['runs', 'human-mine'],
+    queryFn: () => api.listRuns({ kind: 'human' }),
+    enabled: nameRequired && !!me && me !== 'test',
+    staleTime: 20_000,
+    refetchInterval: 60_000,
+  })
+  const played = useMemo(
+    () =>
+      new Set(
+        (myRuns.data ?? [])
+          .filter((r) => (r.player?.name ?? '').trim().toLowerCase() === me && (r.actions ?? 0) > 0)
+          .map((r) => r.game_id),
+      ),
+    [myRuns.data, me],
+  )
+  const nextUnplayed = games.data?.find((g) => !played.has(g.game_id) && g.game_id !== gameId)?.game_id
+
   const pickGame = (id: string) => {
+    if (nameRequired && me && me !== 'test') myRuns.refetch()
     endCurrent('switched_game')
     setSession(null)
     setFrame(null)
@@ -304,6 +325,7 @@ export function PlayPage() {
                 {games.data?.map((g) => (
                   <option key={g.game_id} value={g.game_id}>
                     {gameLabel(g)}
+                    {played.has(g.game_id) ? '  ·  played' : ''}
                   </option>
                 ))}
               </select>
@@ -316,6 +338,19 @@ export function PlayPage() {
       />
       {games.error ? <ErrorState error={games.error} retry={() => games.refetch()} /> : null}
       {error ? <ErrorState error={error} /> : null}
+      {gameId && played.has(gameId) && !session ? (
+        <p className="play-name-missing" role="status">
+          You already played this game as <span className="mono">{name.trim()}</span>. Only your first attempt counts
+          for the human baseline.{' '}
+          {nextUnplayed ? (
+            <button type="button" className="linklike" onClick={() => pickGame(nextUnplayed)}>
+              Go to the next game you haven't played
+            </button>
+          ) : (
+            'You have played every game in this set.'
+          )}
+        </p>
+      ) : null}
       {nameMissing ? (
         <p className="play-name-missing" role="alert">
           Enter your name first: runs here are recorded as the human baseline. Practising? Use{' '}
