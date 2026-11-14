@@ -7,3 +7,7 @@ node_modules/
 dist/
 data/runs/
 data/derived/
+
+# local secrets (pasted key file, .env backups)
+GEMINI.md
+.env.bak

@@ -1,0 +1,20 @@
+# eval-v4 test set, harness h2 (human request: Daniel, Sun ~01:30; run from A1's machine).
+# eval-v4 = 12 gridbranch games (seeds 940000-940011, d3/d4 alternating, 6 levels), rules drawn only from the
+# mechanics where humans beat frontier models most on the intro-level score (rules.json, Sat 23:02):
+# rotation, plates_gates, no_reverse, phase_walls, ice, teleporters, cracked_floor, remap.
+# Question: do humans beat AI here by more than on eval-v3b? Same settings as the eval-v3b h2 sweeps.
+name: h2-eval-v4
+harness: h2
+collection: eval-v4
+games: all
+attempts: 1
+concurrency: 20
+est_steps_per_game: 250
+models:
+  - {id: gemini-pro, effort: medium, max_concurrency: 4}
+  - {id: gemini-flash, effort: high, max_concurrency: 4}
+  - {id: gemini-4-argon, effort: medium, max_concurrency: 6}
+  - {id: gemini-4-carbon, effort: medium, max_concurrency: 4}
+  - {id: verda-deepseek-4-1-flash, effort: high, max_concurrency: 4}
+baselines: [random, optimal, noop, stop_early]
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 30.0, max_wall_s: 14400}

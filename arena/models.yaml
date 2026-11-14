@@ -119,6 +119,26 @@
   max_concurrency: 2
   verified: true
 
+# Gemma 4 31B served by the Gemini API (A1, Sun 00:20, human request): id from the live /models list on
+# 2026-11-15. Checked through the OpenAI-compatible layer: native tool calls, image input (read a red square)
+# and `reasoning_effort` accepted. Thoughts come back inline in `content`. Gemini credits (DECISIONS Sat 19:25).
+# LIMIT: 16,000 input tokens per minute on our key (paid tier 3), so it cannot play h2 (~20-45k tokens per turn);
+# h1 (one short message per turn) would fit only at ~1 game at a time.
+- id: gemini-gemma-4-31b
+  display_name: Gemma 4 31B (Gemini API)
+  provider: google
+  api_model: gemma-4-31b-it
+  tier: open
+  input_modes: [image, rle]
+  efforts: [low, medium, high]
+  h2_effort: high
+  price_in: null                # Gemini credits; no per-token price recorded
+  price_out: null
+  params: "31B"
+  link: https://ai.google.dev/gemma/docs/core
+  max_concurrency: 4
+  verified: true
+
 # NVIDIA Nemotron served by Verda (DataCrunch) for the hackathon. Endpoint, model id and limits come
 # from the organisers' opencode config (2026-11-14): OpenAI-compatible, key NVIDIA_VERDA_INFERENCE_KEY,
 # context 1,048,576, max output 32,768, text + image input, reasoning returned in `reasoning_content`.

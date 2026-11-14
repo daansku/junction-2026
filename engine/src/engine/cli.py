@@ -34,10 +34,16 @@ def cmd_gen(a) -> int:
 
 
 def _build_one(args: tuple) -> dict | None:
-    seed, levels, d, *fam = args  # optional 4th item: family (A7, gridforce)
+    seed, levels, d, *rest = args  # optional: family (A7, gridforce), rule pool (A1, eval-v4)
+    fam = rest[0] if rest else "gridworld"
+    pool = rest[1] if len(rest) > 1 else None
+    rules = None
+    if pool:  # this game's rules: the pool in a per-seed order (the planner takes new rules in list order)
+        from .core.rng import rng_for
+        rules = list(pool)
+        rng_for("rule-pool", seed, d, ",".join(pool)).shuffle(rules)
     try:
-        return make_game(GameSpec(family=fam[0] if fam else "gridworld", seed=seed, n_levels=levels,
-                                  difficulty=d)).to_dict()
+        return make_game(GameSpec(family=fam, seed=seed, n_levels=levels, difficulty=d, rules=rules)).to_dict()
     except Exception as e:  # noqa: BLE001  a rare unbuildable seed is skipped, not fatal
         print(f"  skip seed {seed} d{d}: {e}", file=sys.stderr)
         return None
@@ -48,7 +54,8 @@ def cmd_collection(a) -> int:
     --workers; output order is by seed regardless of worker count (deterministic file)."""
     from concurrent.futures import ProcessPoolExecutor
     diffs = [int(x) for x in a.difficulties.split(",")]
-    jobs = [(a.seed_start + i, a.levels, diffs[i % len(diffs)], a.family) for i in range(a.n)]
+    pool = tuple(r.strip() for r in a.rule_pool.split(",") if r.strip()) if a.rule_pool else None
+    jobs = [(a.seed_start + i, a.levels, diffs[i % len(diffs)], a.family, pool) for i in range(a.n)]
     t0 = time.time()
     if a.workers > 1:
         with ProcessPoolExecutor(a.workers) as ex:
@@ -327,6 +334,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--limit", type=int, default=0, help="keep at most N games after filtering")
     p.add_argument("--frozen", action="store_true", help="mark the collection frozen")
     p.add_argument("--family", default="gridworld", help="gridforce = forced-interaction generator (A7)")
+    p.add_argument("--rule-pool", default="", help="comma list: each game draws its rules from this pool, "
+                   "in a per-seed order (A1, eval-v4); default = the curriculum's pool")
     p.set_defaults(fn=cmd_collection)
     p = sub.add_parser("play", help="play in the terminal"); _game_args(p); p.set_defaults(fn=cmd_play)
     p = sub.add_parser("render", help="PNG contact sheet of a game"); _game_args(p)

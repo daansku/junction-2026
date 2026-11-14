@@ -1,0 +1,16 @@
+# Gemini 4 Argon + Carbon on all 30 eval-v3b games, harness h2 (human request: Daniel, Sun ~01:00; run from A1's machine).
+# Same settings as h2-eval-v3b-gemini (Pro/Flash) except effort medium (human, Sun ~01:10; a first launch at high
+# was stopped after ~5 min, its runs end as idle_timeout), 1 attempt, 400 actions, 4 h wall cap.
+# Gemini credits are unlimited (DECISIONS Sat 19:25): $ cap high enough never to cut a run short.
+# Baselines for eval-v3b come from h2-eval-v3b-deepseek. eval-v3b is A7's unfrozen gridbranch draft.
+name: h2-eval-v3b-gemini4
+harness: h2
+collection: eval-v3b
+games: all
+attempts: 1
+concurrency: 12
+est_steps_per_game: 200
+models:
+  - {id: gemini-4-argon, effort: medium, max_concurrency: 6}
+  - {id: gemini-4-carbon, effort: medium, max_concurrency: 6}
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 30.0, max_wall_s: 14400}

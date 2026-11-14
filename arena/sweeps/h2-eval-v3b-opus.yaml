@@ -1,0 +1,13 @@
+# Claude Opus 5.5 on all 30 eval-v3b games, harness h2 (human request: Daniel, Sun ~01:00; run from A1's machine).
+# Same settings as the other h2 eval-v3b sweeps: effort medium (human, Sun ~01:10), 1 attempt, 400 actions, 4 h wall cap.
+# Anthropic spend is inside the $300 model budget (DECISIONS): needs an explicit human cost approval.
+name: h2-eval-v3b-opus
+harness: h2
+collection: eval-v3b
+games: all
+attempts: 1
+concurrency: 4
+est_steps_per_game: 200
+models:
+  - {id: claude-opus-5-5, effort: medium, max_concurrency: 4}
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 30.0, max_wall_s: 14400}

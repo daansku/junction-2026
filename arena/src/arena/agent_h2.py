@@ -242,13 +242,29 @@ class OpenAICompatH2:
         self._drop_old_frames()
         self._drop_old_reasoning()
 
+    def _create(self, kw: dict):
+        """One completion, retried with backoff on rate limits (429), overload (5xx) and dropped connections.
+        Per-minute quotas (Gemini TPM) reset within a minute, so the SDK's own short retries (max_retries=2,
+        seconds apart) are not enough: one burst used to kill the whole run (A1, Sun 00:40). Retries cost no
+        action and no turn; only wall time, which max_wall_s still caps."""
+        import random
+        import openai
+        tries = int(os.environ.get("ARENA_H2_RATE_RETRIES", "8"))
+        for n in range(tries + 1):
+            try:
+                return self.client.chat.completions.create(model=self.model["api_model"], messages=self.messages,
+                                                           tools=self.tools, tool_choice="auto", **kw)
+            except (openai.RateLimitError, openai.InternalServerError, openai.APIConnectionError):
+                if n == tries:
+                    raise
+                time.sleep(min(90.0, 10.0 * 2 ** n) * (0.75 + 0.5 * random.random()))
+
     def ask(self, allowed: list[str]) -> Turn:
         kw = {"max_tokens": self.max_tokens}
         if self.effort and self.effort in (self.model.get("efforts") or []):
             kw["reasoning_effort"] = self.effort
         t0 = time.time()
-        resp = self.client.chat.completions.create(model=self.model["api_model"], messages=self.messages,
-                                                   tools=self.tools, tool_choice="auto", **kw)
+        resp = self._create(kw)
         lat = int((time.time() - t0) * 1000)
         ch = resp.choices[0]
         msg = ch.message
