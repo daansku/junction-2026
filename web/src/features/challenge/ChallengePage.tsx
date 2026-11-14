@@ -541,7 +541,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
               }}
             >
               <label className="kicker" htmlFor="ch-name">
-                your name for the board (optional)
+                your name
               </label>
               <input
                 id="ch-name"
@@ -555,20 +555,24 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
               <Button type="submit" variant="primary" disabled={starting} className="ch-go">
                 {starting ? 'Starting…' : 'Play'} <Kbd>Enter</Kbd>
               </Button>
-              <p className="muted ch-keys">
+            </form>
+            <section className="ch-card ch-controls">
+              <span className="kicker">how to play</span>
+              <p className="muted ch-keys ch-control-line">
                 <Kbd>←</Kbd>
                 <Kbd>↑</Kbd>
                 <Kbd>↓</Kbd>
-                <Kbd>→</Kbd> move · <Kbd>Space</Kbd> interact · <Kbd>R</Kbd> restart level. Touch controls on phones.
+                <Kbd>→</Kbd> move
               </p>
-            </form>
-            <BoardCard board={board?.entries ?? []} source={board?.source} />
+              <p className="muted ch-keys ch-control-line"><Kbd>Space</Kbd> interact</p>
+              <p className="muted ch-keys ch-control-line"><Kbd>R</Kbd> restart level</p>
+              <p className="muted ch-keys ch-control-line">Touch controls on phones.</p>
+            </section>
+            <BoardCard board={board?.entries ?? []} />
             <section className="ch-card ch-qr">
+              <span className="kicker">play on your phone</span>
               <QrCode text={shareUrl} size={132} />
-              <div>
-                <span className="kicker">play on your phone</span>
-                {server.published && <p className="muted">Results are frozen; your play is not added to the research data.</p>}
-              </div>
+              {server.published && <p className="muted">Results are frozen; your play is not added to the research data.</p>}
             </section>
           </aside>
         </div>
@@ -812,10 +816,10 @@ function AiReplays({ levels, from }: { levels: Array<{ ghosts: GhostSlice[]; opt
   )
 }
 
-function BoardCard({ board, source, highlight }: { board: BoardEntry[]; source?: 'server' | 'local'; highlight?: string }) {
+function BoardCard({ board, highlight }: { board: BoardEntry[]; highlight?: string }) {
   return (
     <section className="ch-card">
-      <span className="kicker">visitor board{source === 'local' ? ' · this device only' : ''}</span>
+      <span className="kicker">visitor board</span>
       {!board.length ? (
         <p className="muted">No scores yet. Be the first.</p>
       ) : (
@@ -858,7 +862,7 @@ function EndScreen(props: {
   name: string
   onAgain: () => void
 }) {
-  const { outcome, stats, optimal, from, ghostsByLevel, board, boardSource, onAgain } = props
+  const { outcome, stats, optimal, from, ghostsByLevel, board, onAgain } = props
   const n = optimal.length
   const models = (stats?.players ?? []).filter((p) => p.kind === 'model')
   const humans = (stats?.players ?? []).find((p) => p.kind === 'human')
@@ -975,7 +979,7 @@ function EndScreen(props: {
       </section>
 
       <div className="ch-a-board">
-        <BoardCard board={board} source={boardSource ?? outcome.boardSource} />
+        <BoardCard board={board} />
       </div>
 
       {/* right under the verdict so it is on screen at 1080p without scrolling */}

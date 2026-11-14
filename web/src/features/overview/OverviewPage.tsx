@@ -80,7 +80,7 @@ function Showcase({ run }: { run: RunMeta }) {
     <figure className="ov-showcase">
       <div className="ov-showcase-head mono">
         <span className="muted">
-          live playback · L{curLv} · step {i + 1}/{n || '?'}
+          live playback · step {i + 1}/{n || '?'}
         </span>
         <Button
           variant="ghost"
@@ -224,8 +224,6 @@ export function OverviewPage() {
     }
   }
 
-  const firstGame = games.data?.[0]?.game_id
-
   return (
     <div className="ov">
       {games.error && runs.error ? (
@@ -268,9 +266,6 @@ export function OverviewPage() {
           <div className="ov-cta">
             <Link to="/challenge">
               <Button variant="primary">Take the challenge</Button>
-            </Link>
-            <Link to={firstGame ? `/play/${encodeURIComponent(firstGame)}` : '/play'}>
-              <Button>Play a game</Button>
             </Link>
           </div>
         </div>

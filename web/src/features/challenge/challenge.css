@@ -2,8 +2,9 @@
 .challenge { display: flex; flex-direction: column; gap: var(--s3); }
 .challenge-kiosk { padding: var(--s4) var(--s5, 24px); min-height: 100vh; background: var(--bg); }
 
-.ch-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s4); flex-wrap: wrap; }
-.ch-title { margin: 0; font-size: 32px; font-weight: 600; line-height: 1.15; }
+.ch-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s4); flex-wrap: wrap; }
+.ch-title { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.2; }
+.challenge-kiosk .ch-title { font-size: 32px; line-height: 1.15; }
 .ch-sub { margin: var(--s1) 0 0; color: var(--text-2); font-size: 16px; }
 .ch-head-right { display: flex; align-items: center; gap: var(--s3); }
 
@@ -37,11 +38,10 @@
 .ch-keys { margin: 0; line-height: 1.9; }
 .ch-keys .kbd { margin-right: 2px; }
 
-.ch-qr { flex-direction: row; align-items: center; gap: var(--s3); }
+.ch-qr { align-items: flex-start; }
 .ch-qr-box { flex: none; background: #ffffff; }
+.ch-qr .ch-qr-box { align-self: center; }
 .ch-qr-box svg { display: block; width: 100%; height: 100%; }
-.ch-url { margin: var(--s1) 0 0; word-break: break-all; font-size: 13px; color: var(--text-2); }
-
 .ch-race-note { margin: 0; }
 .ch-ghosts { display: flex; flex-direction: column; gap: var(--s2); }
 .ch-ghost { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: var(--s3); align-items: start; }
@@ -119,7 +119,7 @@
   .d-right { grid-area: right; }
   .d-act { grid-area: act; }
   .d-reset { grid-area: reset; color: var(--warn) !important; }
-  .ch-title { font-size: 24px; }
+  .challenge-kiosk .ch-title { font-size: 24px; }
 }
 
 .ch-review-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
