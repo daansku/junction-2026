@@ -13,13 +13,15 @@
   20:10: step 9/150, ~80 s/step (ETA ~23:15), reward 0.25-0.30, game_turn 0.22-0.29, KL 0.003-0.007, no errors.
 - **grpo-2** (Modal H100, started 20:08, human-approved second run): `games` -> GRPO on `game_turn` only (seed 1),
   80 steps, ckpt every 20 (ETA ~22:15). Same lr/KL/G.
-- **Bench of RL checkpoints:** each new step-<k> of either run is benched on the dev slice on its own Modal H100
-  (`posttrain/tools/modal_bench_watch.sh`, A2's generation.yaml unchanged), results pulled to `/srv/bench/out/rl-<run>-step-<k>/`.
-  Baseline for the same dev slice: `games` on A100 GPU 0 (`out/sft-games-dev`, vLLM capped at 0.40 next to :8002)
-  and on Modal (`out/sft-games-dev-modal`, also checks Modal == A100). The earlier `base-dev` run was killed at 15:17, no rows.
+- **Bench of RL checkpoints:** each new step-<k> of either run is MERGED into Qwen3.5-9B and benched on the dev slice
+  on its own Modal H100 (`modal_grpo.py::bench_dev`, `posttrain/tools/modal_bench_watch.sh`, A2's generation.yaml
+  unchanged), results pulled to `/srv/bench/out/rl-<run>-step-<k>/`. Merged, not `--lora`: vLLM 0.33's LoRA path
+  asserts on loglikelihood requests (MedQA), which is what crashed :8002 at 19:50.
+  Baseline for the same items: `games` merged, on Modal (`out/sft-games-dev-merged`, started 20:09).
+  The earlier `base-dev` run was killed at 15:17 (no rows); the A100 LoRA attempt of the baseline was stopped (GPU 0 freed).
 - **In-domain check:** `modal run posttrain/modal_grpo.py::evaluate` = mean game_turn reward on 200 held-out prompts (seed 2).
 - **Modal spend (cap EUR 100, user's rule):** grpo-1 <= ~$16 (4 h cap), grpo-2 ~$10, benches ~$3-4 each (max 10 launches
-  -> <= ~$40), image builds/failed starts ~$1. Committed worst case ~$67.
+  -> <= ~$40), image builds/failed starts ~$1, stopped LoRA bench of games ~$1. Committed worst case ~$68.
 
 ## Timeline (Helsinki)
 | When | What | Who uses it |
