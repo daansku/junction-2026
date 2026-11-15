@@ -1,6 +1,16 @@
-# Junction 2026 — Pixels-Only Inductive RL Curriculum (`junction-2026`)
+# Junction 2026 — Game Factory: can an agent figure out a game nobody explained?
 
-> Built for the **AfterQuery @ Junction 2026** challenge: a procedurally seeded 64×64 pixel grid factory where AI agents and humans discover hidden mechanics through interaction under strict move budgets — with zero prose instructions, per-game color permutation (`skin_shuffle`), BFS-verified solvability, Harbor sidecar isolation, and exploit-resistant action-efficiency scoring.
+An environment for the **AfterQuery @ Junction 2026** challenge. One command runs the judging protocol: `make judge` ([below](#1-one-command-reference-do-nothing-stop-early-and-agent-runs)).
+
+## In plain words
+
+**What the agent has to do.** It plays a small video game it has never seen. Each turn it gets the screen (a 64×64 picture, also given as a grid of colour numbers) and chooses a move: up, down, left, right, or RESET to restart the level. Nobody tells it the goal, the rules or what the colours mean; it finds out by moving and watching what changes. A game has several levels (8 in the judging set). Level 1 is a plain maze; each following level adds one new hidden mechanic, such as ice you slide across, plates that open or close gates elsewhere, keys and doors, a tile that turns the whole map, or a second figure that copies your moves; the last level combines them. Every level has a move budget, shown as the bar at the top of the screen.
+
+**Why it is hard.** Playing well means running a small experiment loop: guess what a new object does, test the guess in as few moves as possible, remember what you learned, plan a route that uses it, and notice when the next level changes the rules again. Everything needed is on screen, and every level is checked solvable by exact search (and every mechanic in it matters for the solution), so a failure comes from the agent's own decisions, not from hidden information or trick wording. The typical frontier-model mistakes are repeating moves that change nothing (walking into walls), holding on to a wrong guess about a rule, and missing what a new level introduced. Games are generated from a seed, so there is an endless supply of fresh games no model has seen in training.
+
+**How it is scored.** For each level: if solved, the shortest possible number of moves divided by the moves used (at most 1); if not solved, 0. The game score is the average over all levels, and every action counts, RESET included. So the shortest-path reference run scores **1.000**, doing nothing scores **0.000**, and stopping after level 1 of 8 scores **0.125**. The score is computed inside the game container and graded in a separate verifier container the agent cannot reach; ten reward-exploit attempts from the agent's seat all scored 0 or were blocked ([coordination/JUDGING.md](coordination/JUDGING.md)).
+
+**Why this setting, and what an agent can learn here.** It exercises four of the challenge's starting points at once: exploring an unfamiliar system, planning several steps ahead, managing a limited budget, and adapting when new information arrives (in the spirit of ARC-AGI-3). A separate training split (different seeds, some rule combinations held out for evaluation) makes it a training environment as well as a test; we post-trained a small open model (Qwen3.5-9B) on it, see [posttrain/](posttrain/) and [bench/](bench/).
 
 ![All 18 Composable Engine Mechanics (6×6 Teaching Frames)](rules/img/all_rules.png)
 
