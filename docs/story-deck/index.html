@@ -106,10 +106,14 @@ body {
   inset: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  padding: 2.5cqw 3.8cqw 2.2cqw;
-  gap: 1.1cqw;
-  font-size: 1.38cqw;
+  padding: 2.4cqw 4.0cqw 2.8cqw;
+  gap: 0.8cqw;
+  font-size: 1.34cqw;
   line-height: 1.42;
+}
+.in > :nth-child(2) {
+  align-self: center;
+  width: 100%;
 }
 
 /* Slide counter */
@@ -118,10 +122,9 @@ body {
   justify-content: flex-end;
   align-items: center;
   gap: 1.2cqw;
-  font-family: var(--body);
-  font-size: 1.02cqw;
-  letter-spacing: 0;
-  text-transform: none;
+  font-family: var(--mono);
+  font-size: 0.98cqw;
+  letter-spacing: 0.02em;
 }
 .pg { color: var(--muted); white-space: nowrap; }
 .pg b { color: var(--accent); font-weight: 600; }
@@ -132,11 +135,11 @@ h1, h2, h3 {
   letter-spacing: -0.015em;
   text-wrap: balance;
 }
-h1 { font-size: 4.1cqw; font-weight: 800; line-height: 1.02; }
-h2 { font-size: 2.55cqw; font-weight: 800; line-height: 1.06; max-width: 34ch; }
-h3 { font-size: 1.55cqw; font-weight: 600; line-height: 1.15; }
+h1 { font-size: 4.0cqw; font-weight: 800; line-height: 1.03; }
+h2 { font-size: 2.65cqw; font-weight: 800; line-height: 1.08; max-width: 44ch; }
+h3 { font-size: 1.55cqw; font-weight: 600; line-height: 1.18; }
 p { margin: 0; }
-.lead { font-size: 1.52cqw; color: var(--muted); max-width: 52ch; line-height: 1.36; }
+.lead { font-size: 1.48cqw; color: var(--muted); max-width: 54ch; line-height: 1.4; }
 .muted { color: var(--muted); }
 .fig { color: var(--accent); font-family: var(--mono); font-weight: 600; }
 /* Models use fixed website series colors; humans and baselines stay neutral. */
@@ -153,34 +156,41 @@ p { margin: 0; }
 .model-gemma { color: var(--series-9) !important; }
 .failure { color: var(--bad) !important; }
 
-.body { display: grid; gap: 0.95cqw; align-content: start; min-height: 0; }
-.cols { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 2.4cqw; align-items: start; min-height: 0; }
-.cols-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 2.0cqw; align-items: start; min-height: 0; }
-.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4cqw; align-items: stretch; min-height: 0; }
+.slide-main { display: grid; gap: 1.6cqw; align-content: center; min-height: 0; }
+.body { display: grid; gap: 1.05cqw; align-content: start; min-height: 0; }
+.cols { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 2.8cqw; align-items: start; min-height: 0; }
+.cols-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6cqw; align-items: start; min-height: 0; }
+.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8cqw; align-items: start; min-height: 0; }
 
-/* Cards & callouts: use spacing and hairlines for hierarchy. */
+/* Cards & callouts: flush left alignment with headings and paragraphs. */
 .card {
   background: transparent;
   border: 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-strong);
   border-radius: 0;
-  padding: 0.8cqw 0.35cqw;
+  padding: 0.85cqw 0 0;
   display: grid;
-  gap: 0.48cqw;
+  gap: 0.5cqw;
   align-content: start;
 }
-.card.accent, .card.biz-box, .card.human-box, .card.model-box { border-top-color: var(--line-strong); }
-.kicker { font-family: var(--body); font-size: 1.0cqw; letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--muted); }
+.kicker {
+  font-family: var(--body);
+  font-size: 1.02cqw;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 600;
+  color: var(--muted);
+}
 
-.list { display: grid; gap: 0.48cqw; margin: 0; padding: 0; list-style: none; }
+.list { display: grid; gap: 0.52cqw; margin: 0; padding: 0; list-style: none; }
 .list li { position: relative; padding-left: 1.35cqw; display: block; }
 .list li::before {
   content: "";
   position: absolute;
   left: 0;
   top: 0.48em;
-  width: 0.56cqw;
-  height: 0.56cqw;
+  width: 0.52cqw;
+  height: 0.52cqw;
   background: var(--accent);
 }
 .list.c li::before, .list.h li::before, .list.m li::before { background: var(--muted-2); }
@@ -192,32 +202,32 @@ code {
   border-radius: 2px;
 }
 
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1cqw; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8cqw; }
 .stat {
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-top: 2px solid var(--accent);
-  padding: 0.75cqw 0.95cqw;
+  padding: 0.85cqw 1.05cqw;
   display: grid;
-  gap: 0.25cqw;
+  gap: 0.28cqw;
 }
 .stat .n {
   font-family: var(--mono);
-  font-size: 2.6cqw;
+  font-size: 2.5cqw;
   font-weight: 600;
   color: var(--accent);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.stat .l { font-size: 1.05cqw; color: var(--muted); line-height: 1.22; }
+.stat .l { font-size: 1.08cqw; color: var(--muted); line-height: 1.25; }
 
 .hero-wrap {
   background: #080809;
   border: 1px solid var(--line-strong);
-  padding: 0.95cqw;
+  padding: 1.0cqw;
   border-radius: 3px;
   display: grid;
-  gap: 0.55cqw;
+  gap: 0.6cqw;
 }
 #hero {
   width: 100%;
@@ -228,7 +238,7 @@ code {
   display: block;
 }
 .cap { font-family: var(--mono); font-size: 0.88cqw; color: var(--muted); text-align: center; }
-.shot { width: 100%; max-height: 31cqw; object-fit: cover; object-position: top; border: 1px solid var(--line-strong); border-radius: 3px; display: block; }
+.shot { width: 100%; max-height: 27cqw; object-fit: cover; object-position: top; border: 1px solid var(--line-strong); border-radius: 3px; display: block; }
 
 .gifs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85cqw; }
 .gifs figure { margin: 0; background: var(--panel-2); border: 1px solid var(--line); padding: 0.45cqw; border-radius: 3px; display: grid; gap: 0.3cqw; }
@@ -237,9 +247,9 @@ code {
 
 /* Funnel & Bar Charts */
 .chart { display: grid; gap: 0.72cqw; }
-.row { display: grid; grid-template-columns: 14.5cqw 1fr 11.8cqw; gap: 1.0cqw; align-items: center; }
-.row .who { font-size: 1.2cqw; font-weight: 500; line-height: 1.15; }
-.row .who small { display: block; font-family: var(--mono); font-size: 0.82cqw; font-weight: 400; color: var(--muted); }
+.row { display: grid; grid-template-columns: 14.5cqw 1fr 7.8cqw; gap: 0.9cqw; align-items: center; }
+.row .who { font-size: 1.18cqw; font-weight: 500; line-height: 1.15; }
+.row .who small { display: block; font-family: var(--mono); font-size: 0.82cqw; font-weight: 400; color: var(--muted); margin-top: 0.1cqw; }
 .track {
   position: relative;
   height: 1.75cqw;
@@ -256,12 +266,12 @@ code {
 .fill.model-deepseek { background: var(--series-1); }
 .fill.y { background: var(--accent); }
 .fill.z { background: var(--muted); width: 3px; }
-.row .val { font-family: var(--mono); font-size: 1.18cqw; font-variant-numeric: tabular-nums; text-align: right; }
-.row .val small { display: block; color: var(--muted); font-size: 0.8cqw; }
+.row .val { font-family: var(--mono); font-size: 1.16cqw; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.15; }
+.row .val small { display: block; color: var(--muted); font-size: 0.8cqw; margin-top: 0.1cqw; }
 
 /* Mock UI Forensic Card */
 .fcard {
-  background: var(--panel);
+  background: var(--panel-2);
   border: 1px solid var(--line-strong);
   border-left: 3px solid var(--bad);
   border-radius: 3px;
@@ -269,21 +279,22 @@ code {
   display: grid;
   gap: 0.5cqw;
 }
-.fcard-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6cqw; font-family: var(--mono); font-size: 0.88cqw; }
-.fbadge { padding: 0.16cqw 0.48cqw; border-radius: 2px; font-size: 0.8cqw; background: var(--panel-2); color: var(--bad); border: 1px solid var(--line-strong); }
+.fcard-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6cqw; font-family: var(--mono); font-size: 0.88cqw; flex-wrap: wrap; }
+.fbadge { padding: 0.16cqw 0.48cqw; border-radius: 2px; font-size: 0.78cqw; background: var(--panel); color: var(--bad); border: 1px solid var(--line-strong); }
 .fbadge.knew { background: var(--accent-dim); color: var(--accent); border-color: rgba(255,220,0,0.4); }
 .fquote {
   font-family: var(--mono);
-  font-size: 1.02cqw;
+  font-size: 0.98cqw;
   color: var(--muted);
-  background: var(--panel-2);
+  background: var(--panel);
   border-left: 2px solid var(--accent);
   padding: 0.45cqw 0.7cqw;
 }
 
-table { border-collapse: collapse; width: 100%; font-size: 1.16cqw; font-variant-numeric: tabular-nums; }
-th, td { text-align: left; padding: 0.42cqw 0.6cqw 0.42cqw 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
-th { font-family: var(--mono); font-weight: 500; color: var(--muted); font-size: 0.86cqw; text-transform: uppercase; letter-spacing: 0.05em; }
+table { border-collapse: collapse; width: 100%; font-size: 1.18cqw; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.48cqw 0.8cqw 0.48cqw 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-weight: 500; color: var(--muted); font-size: 0.86cqw; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 0; }
+td:first-child, th:first-child { white-space: nowrap; }
 td.r, th.r { text-align: right; padding-right: 0; }
 .cmd {
   font-family: var(--mono);
@@ -292,13 +303,13 @@ td.r, th.r { text-align: right; padding-right: 0; }
   background: #080809;
   border: 1px solid var(--line-strong);
   border-radius: 3px;
-  padding: 0.8cqw 1.0cqw;
+  padding: 0.85cqw 1.05cqw;
   color: var(--fg);
   white-space: pre-wrap;
-  line-height: 1.45;
+  line-height: 1.48;
 }
 
-#qr { background: var(--fg); padding: 0.55cqw; width: 10.5cqw; aspect-ratio: 1; border-radius: 3px; flex-shrink: 0; }
+#qr { background: var(--fg); padding: 0.55cqw; width: 9.8cqw; aspect-ratio: 1; border-radius: 3px; flex-shrink: 0; }
 #qr img, #qr canvas { width: 100% !important; height: auto !important; display: block; image-rendering: pixelated; }
 
 .notes {
@@ -314,7 +325,7 @@ td.r, th.r { text-align: right; padding-right: 0; }
   color: var(--muted);
 }
 body.show-notes .notes { display: block; }
- .notes b { font-family: var(--mono); font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px; }
+.notes b { font-family: var(--mono); font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px; }
 
 body.present { padding: 0; overflow: hidden; }
 body.present .bar, body.present .slide:not(.current), body.present .notes { display: none !important; }
@@ -347,6 +358,7 @@ body.present .slide.current .frame {
   .track { height: 16px; }
   .shot { max-height: none; }
   table, .cmd { font-size: 12.5px; } th { font-size: 10px; }
+  td:first-child, th:first-child { white-space: normal; }
   .list li { padding-left: 16px; } .list li::before { width: 7px; height: 7px; top: 0.52em; }
   #hero { max-width: 240px; }
   #qr { width: 110px; padding: 6px; }
@@ -373,25 +385,27 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>01</b> / 11</span>
     </div>
-    <div class="cols" style="align-items:center">
-      <div class="body">
-        <h1>600m underground, cloud AI doesn't exist.</h1>
-        <p class="lead">An inspection robot is 600m inside a collapsed coal mine. Solid rock blocks all radio and Wi-Fi. Its onboard chip can only run a <b>small 9B model</b>, and it has 40 minutes of battery left.</p>
-        <div class="card model-box">
-          <span class="kicker" style="color:var(--bad)">What goes wrong today</span>
-          <p>Normal sensors handle driving — until the robot reaches a damaged airlock door whose pressure plate shifted in the rockfall. There is no manual. Today's small models ram that locked door 50 times until the battery dies, <b>losing a €120k robot</b>.</p>
+    <div class="slide-main">
+      <h1>600m underground, cloud AI doesn't exist.</h1>
+      <div class="cols" style="align-items:start">
+        <div class="body">
+          <p class="lead">An inspection robot is 600m inside a collapsed coal mine. Solid rock blocks all radio and Wi-Fi. Its onboard chip can only run a <b>small 9B model</b>, and it has 40 minutes of battery left.</p>
+          <div class="card model-box">
+            <span class="kicker" style="color:var(--bad)">What goes wrong today</span>
+            <p>Normal sensors handle driving — until the robot reaches a damaged airlock door whose pressure plate shifted in the rockfall. There is no manual. Today's small models ram that locked door 50 times until the battery dies, <b>losing a €120k robot</b>.</p>
+          </div>
+          <div class="card biz-box">
+            <span class="kicker">What VERITAS does</span>
+            <p>We test AI agents on problems they haven't seen before, pinpoint <b>why their reasoning failed</b>, and train small local models to figure out new rules on the fly.</p>
+          </div>
         </div>
-        <div class="card biz-box">
-          <span class="kicker">What VERITAS does</span>
-          <p>We test AI agents on problems they haven't seen before, pinpoint <b>why their reasoning failed</b>, and train small local models to figure out new rules on the fly.</p>
+        <div class="hero-wrap">
+          <canvas id="hero" width="64" height="64" aria-label="64x64 pixel observation"></canvas>
+          <div class="cap">Our test world: a 64×64 room with hidden rules, a strict battery budget, and zero instructions.</div>
         </div>
-      </div>
-      <div class="hero-wrap">
-        <canvas id="hero" width="64" height="64" aria-label="64x64 pixel observation"></canvas>
-        <div class="cap">Our test world: a 64×64 room with hidden rules, a strict battery budget, and zero instructions.</div>
       </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 1 (0:50)</b>Picture an inspection robot 600 meters underground in a coal mine. Through 600 meters of rock, OpenAI and Google Cloud do not exist. The robot carries a small onboard chip that only fits a 9B model and 40 minutes of battery. Standard sensors handle driving around rocks — until it hits a damaged ventilation door whose wiring shifted in the collapse. Today's small models ram that locked door 50 times until the battery dies, costing €120,000. VERITAS solves this: we test agents on unseen problems, show engineers why the model failed, and train small models to adapt without a manual.</div>
 </section>
 
@@ -401,7 +415,7 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>02</b> / 11</span>
     </div>
-    <div class="body">
+    <div class="slide-main">
       <h2>Anyone running AI without a cloud safety net hits this wall.</h2>
       <div class="cols-3">
         <div class="card model-box">
@@ -426,7 +440,7 @@ body.present .slide.current .frame {
         <div class="stat"><span class="n">3 Products</span><span class="l">Failure Diagnostics · Small-Model Training · Private Evals</span></div>
       </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 2 (0:50)</b>The coal mine isn't an isolated case. Three high-budget markets hit this same wall: field robotics in mines, subsea pipes, and jammed defense zones; private enterprise agents in hospitals, factories, and banks where cloud APIs are banned; and AI labs — AfterQuery's own customers — who pay thousands of dollars per hand-built task because static benchmarks leak in months. We generate verified test worlds in 2 seconds for a fraction of a cent.</div>
 </section>
 
@@ -436,20 +450,20 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>03</b> / 11</span>
     </div>
-    <div class="cols">
-      <div class="body">
-        <h2>We generate thousands of new test worlds — and prove every one works.</h2>
-        <p class="muted">To prepare a robot for surprises underground, we combine <b>21 physical rules</b> — pressure plates, locked gates, pits, ice, and ordered switches. Every level changes how the room works without telling the agent.</p>
-        <div class="card accent">
-          <span class="kicker">Why this matters (and fulfills Craft · 15 / 15 pts)</span>
-          <ul class="list">
-            <li><b>Guaranteed solvable:</b> Our solver proves a winning path exists before any agent sees the board (<span class="fig">1,000 / 1,000</span> verified).</li>
-            <li><b>You can't ignore the new rule:</b> Every level is checked to make sure you fail if you skip the new mechanic.</li>
-            <li><b>No lucky guessing:</b> Random moves win under <span class="fig">2%</span> of the time, and colors shuffle every game so models can't memorize tiles.</li>
-          </ul>
+    <div class="slide-main">
+      <h2>We generate thousands of new test worlds — and prove every one works.</h2>
+      <div class="cols">
+        <div class="body">
+          <p class="lead">To prepare a robot for surprises underground, we combine <b>21 physical rules</b> — pressure plates, locked gates, pits, ice, and ordered switches. Every level changes how the room works without telling the agent.</p>
+          <div class="card accent">
+            <span class="kicker">Why this matters (Craft · 15 / 15 pts)</span>
+            <ul class="list">
+              <li><b>Guaranteed solvable:</b> Our solver proves a winning path exists before any agent sees the board (<span class="fig">1,000 / 1,000</span> verified).</li>
+              <li><b>You can't ignore the new rule:</b> Every level is checked to make sure you fail if you skip the new mechanic.</li>
+              <li><b>No lucky guessing:</b> Random moves win under <span class="fig">2%</span> of the time, and colors shuffle every game so models can't memorize tiles.</li>
+            </ul>
+          </div>
         </div>
-      </div>
-      <div class="body">
         <div class="gifs">
           <figure><img src="../deck/assets/plates_gates.gif" alt="Plates and gates"><figcaption>plates + gates</figcaption></figure>
           <figure><img src="../deck/assets/keys_doors.gif" alt="Keys and doors"><figcaption>keys + doors</figcaption></figure>
@@ -460,7 +474,7 @@ body.present .slide.current .frame {
         </div>
       </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 3 (0:55)</b>Step 1 is generating controlled worlds that mirror the robot's problem: plates wired to gates, collapsed pits, ordered switches, and slippery floors. Why does this matter for buyers and the Craft rubric? Because human-built test suites are expensive and full of bugs. Every world we generate is automatically proven solvable, proven to require learning the new rule, and immune to random guessing in under 2 seconds.</div>
 </section>
 
@@ -470,24 +484,26 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>04</b> / 11</span>
     </div>
-    <div class="cols" style="align-items:center">
-      <div class="body">
-        <h2>Try the airlock test yourself in 60 seconds.</h2>
-        <p class="lead">Scan the code to see what the robot sees. You get zero instructions: try a move, watch what changes, figure out the rule, and see how frontier AI models played the exact same board.</p>
-        <div class="card human-box" style="display:flex; gap:1.4cqw; align-items:center">
-          <div id="qr" role="img" aria-label="QR code to live /challenge"></div>
-          <div style="display:grid; gap:0.4cqw">
-            <span class="kicker" style="color:var(--accent)">Scan to play</span>
-            <span class="fig" style="font-size:1.25cqw">Open /challenge</span>
-            <span class="muted">No login · runs on your phone · lets engineering leads feel the AI gap in one minute.</span>
+    <div class="slide-main">
+      <h2>Try the airlock test yourself in 60 seconds.</h2>
+      <div class="cols">
+        <div class="body">
+          <p class="lead">Scan the code to see what the robot sees. You get zero instructions: try a move, watch what changes, figure out the rule, and see how frontier AI models played the exact same board.</p>
+          <div class="card human-box" style="display:flex; gap:1.4cqw; align-items:center">
+            <div id="qr" role="img" aria-label="QR code to live /challenge"></div>
+            <div style="display:grid; gap:0.35cqw">
+              <span class="kicker" style="color:var(--accent)">Scan to play</span>
+              <span class="fig" style="font-size:1.25cqw">Open /challenge</span>
+              <span class="muted">No login · runs on your phone · lets engineering leads feel the AI gap in one minute.</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div>
-        <img class="shot" src="../deck/assets/challenge.png" alt="Challenge level solved with side-by-side AI replays">
+        <div>
+          <img class="shot" src="../deck/assets/challenge.png" alt="Challenge level solved with side-by-side AI replays">
+        </div>
       </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 4 (1:30 incl. demo)</b>Before looking at our charts, try it yourself on <code>/challenge</code>. With no instructions, a person tests two moves, sees how the gate reacts, and clears the room in seconds — then watches recorded AI models struggle on the exact same board. In customer meetings, this 60-second demo immediately convinces engineering leads that static benchmarks miss real-world adaptation.</div>
 </section>
 
@@ -497,19 +513,20 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>05</b> / 11</span>
     </div>
-    <div class="cols" style="grid-template-columns: 1.2fr 0.8fr; align-items:center">
-      <div class="body">
-        <h2>People adapt to new rules on the first try. AI models hit a wall.</h2>
-        <div class="chart" role="img" aria-label="eval-v2 games won">
-          <div class="row"><div class="who">Shortest Path<small>perfect ceiling</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">100%<small>20/20 won</small></div></div>
-          <div class="row"><div class="who h">Humans (1st try)<small>no instructions</small></div><div class="track"><div class="fill h" style="--v:0.739"></div></div><div class="val h">74%<small>17/23 won</small></div></div>
-          <div class="row"><div class="who model-carbon">Gemini 4 Carbon<small>standard agent</small></div><div class="track"><div class="fill model-carbon" style="--v:0.444"></div></div><div class="val">44%<small>8/18 won</small></div></div>
-          <div class="row"><div class="who model-argon">Gemini 4 Argon<small>standard agent</small></div><div class="track"><div class="fill model-argon" style="--v:0.10"></div></div><div class="val">10%<small>3/30 won</small></div></div>
-          <div class="row"><div class="who"><span class="model-kimi">Kimi</span> · <span class="model-flash">Flash</span> · <span class="model-sonnet">Sonnet</span><small>standard agent</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/24 won</small></div></div>
-          <div class="row"><div class="who"><span class="model-qwen">9B</span> / <span class="model-gemma">4B</span> Local Models<small>fits on the robot</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>&lt;3% levels</small></div></div>
+    <div class="slide-main">
+      <h2>People adapt to new rules on the first try. AI models hit a wall.</h2>
+      <div class="cols" style="grid-template-columns: 1.15fr 0.85fr">
+        <div class="card">
+          <span class="kicker">Games Won on Unseen Rules (30 Locked Worlds)</span>
+          <div class="chart" role="img" aria-label="eval-v2 games won">
+            <div class="row"><div class="who">Shortest Path<small>perfect ceiling</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">100%<small>20/20 won</small></div></div>
+            <div class="row"><div class="who h">Humans (1st try)<small>no instructions</small></div><div class="track"><div class="fill h" style="--v:0.739"></div></div><div class="val h">74%<small>17/23 won</small></div></div>
+            <div class="row"><div class="who model-carbon">Gemini 4 Carbon<small>standard agent</small></div><div class="track"><div class="fill model-carbon" style="--v:0.444"></div></div><div class="val">44%<small>8/18 won</small></div></div>
+            <div class="row"><div class="who model-argon">Gemini 4 Argon<small>standard agent</small></div><div class="track"><div class="fill model-argon" style="--v:0.10"></div></div><div class="val">10%<small>3/30 won</small></div></div>
+            <div class="row"><div class="who"><span class="model-kimi">Kimi</span> · <span class="model-flash">Flash</span> · <span class="model-sonnet">Sonnet</span><small>standard agent</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/24 won</small></div></div>
+            <div class="row"><div class="who"><span class="model-qwen">9B</span> / <span class="model-gemma">4B</span> Local Models<small>fits on the robot</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>&lt;3% levels</small></div></div>
+          </div>
         </div>
-      </div>
-      <div class="body">
         <div class="card accent">
           <span class="kicker">Why this matters (The Gap · 30 / 30 pts)</span>
           <p>People figure out a new rule in a few moves and win <b>74%</b> of games. Standard cloud agents trail by <b>30–74 points</b>, and the small 9B models that fit on a robot solve <b>under 3% of levels</b>.</p>
@@ -517,7 +534,7 @@ body.present .slide.current .frame {
         </div>
       </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 5 (0:55)</b>When we test candidate brains on 30 unseen 8-level games, first-time human players win 74% of games. Standard cloud agents drop to 44%, 10%, and 0%, while the 9B models that actually fit on our coal-mine robot solve under 3% of levels. And when we give Gemini 4 a heavy $15-per-game cloud setup with full history, it hits 100% on our 4-game subset — proving the puzzles are completely fair — while Gemini Pro and Kimi still win zero.</div>
 </section>
 
@@ -527,33 +544,40 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>06</b> / 11</span>
     </div>
-    <div class="cols">
-      <div class="body">
-        <h2>A failing score doesn't tell you what to fix. Insights does.</h2>
-        <p class="muted">Instead of engineers reading thousands of log lines by hand, our <code>/insights</code> page compares <b>what the model thought happened</b> against <b>what actually happened on the board</b>, and groups every failure into 5 plain-English causes:</p>
-        <div class="card biz-box">
-          <span class="kicker">Why engineering teams pay for <code>/insights</code></span>
-          <ul class="list c">
-            <li><b>Saves days of debugging:</b> Pinpoints the exact move where a run went wrong across <b>319 failed levels</b>.</li>
-            <li><b>Tells you what to fix:</b> Separates simple memory bugs (board misreads drop from <span class="fig">40% → 0%</span> when given full history) from real planning failures.</li>
-          </ul>
+    <div class="slide-main">
+      <h2>A failing score doesn't tell you what to fix. Insights does.</h2>
+      <div class="cols">
+        <div class="body">
+          <div class="card">
+            <span class="kicker">How <code>/insights</code> works</span>
+            <p class="muted">Instead of engineers reading thousands of log lines by hand, our <code>/insights</code> page compares <b>what the model thought happened</b> against <b>what actually happened on the board</b>, and groups every failure into 5 plain-English causes.</p>
+          </div>
+          <div class="card biz-box">
+            <span class="kicker">Why engineering teams pay for <code>/insights</code></span>
+            <ul class="list c">
+              <li><b>Saves days of debugging:</b> Pinpoints the exact move where a run went wrong across <b>319 failed levels</b>.</li>
+              <li><b>Tells you what to fix:</b> Separates simple memory bugs (board misreads drop from <span class="fig">40% → 0%</span> when given full history) from real planning failures.</li>
+            </ul>
+          </div>
         </div>
-      </div>
-      <div class="body">
-        <span class="kicker">Where Agents Fail Across 319 Failed Levels</span>
-        <div class="chart">
-          <div class="row"><div class="who">1. Misread the board<small>40% → 0% with full history</small></div><div class="track"><div class="fill failure" style="--v:0.361"></div></div><div class="val">36%<small>115 lvls</small></div></div>
-          <div class="row"><div class="who">2. Missed new rule<small>guessed wrong cause</small></div><div class="track"><div class="fill y" style="--v:0.116"></div></div><div class="val">12%<small>37 lvls</small></div></div>
-          <div class="row"><div class="who">3. Stuck repeating moves<small>ramming the locked door</small></div><div class="track"><div class="fill failure" style="--v:0.172"></div></div><div class="val">17%<small>55 lvls</small></div></div>
-          <div class="row"><div class="who failure">4. Knew rule, bad plan<small>61% once vision is fixed!</small></div><div class="track"><div class="fill failure" style="--v:0.320"></div></div><div class="val failure">32%<small>102 lvls</small></div></div>
-          <div class="row"><div class="who">5. Reset too late<small>drained battery first</small></div><div class="track"><div class="fill y" style="--v:0.031"></div></div><div class="val">3%<small>10 lvls</small></div></div>
-        </div>
-        <div class="card accent">
-          <p><b>What happens on the ground:</b> Half of all bad decisions (<span class="fig">50%</span>) are agents walking into the same locked door or wall over and over.</p>
+        <div class="body">
+          <div class="card">
+            <span class="kicker">Where Agents Fail Across 319 Failed Levels</span>
+            <div class="chart">
+              <div class="row"><div class="who">1. Misread the board<small>40% → 0% with full history</small></div><div class="track"><div class="fill failure" style="--v:0.361"></div></div><div class="val">36%<small>115 lvls</small></div></div>
+              <div class="row"><div class="who">2. Missed new rule<small>guessed wrong cause</small></div><div class="track"><div class="fill y" style="--v:0.116"></div></div><div class="val">12%<small>37 lvls</small></div></div>
+              <div class="row"><div class="who">3. Stuck repeating moves<small>ramming the locked door</small></div><div class="track"><div class="fill failure" style="--v:0.172"></div></div><div class="val">17%<small>55 lvls</small></div></div>
+              <div class="row"><div class="who failure">4. Knew rule, bad plan<small>61% once vision is fixed!</small></div><div class="track"><div class="fill failure" style="--v:0.320"></div></div><div class="val failure">32%<small>102 lvls</small></div></div>
+              <div class="row"><div class="who">5. Reset too late<small>drained battery first</small></div><div class="track"><div class="fill y" style="--v:0.031"></div></div><div class="val">3%<small>10 lvls</small></div></div>
+            </div>
+          </div>
+          <div class="card accent">
+            <p><b>What happens on the ground:</b> Half of all bad decisions (<span class="fig">50%</span>) are agents walking into the same locked door or wall over and over.</p>
+          </div>
         </div>
       </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 6 (1:05)</b>Here is our core diagnostic product: the <code>/insights</code> page. A failing score of 3% doesn't tell the robotics team what to fix. Insights automatically compares what the model wrote in its thinking notes against what actually happened on the board, and sorts every failed level into 5 plain-English buckets. Notice two huge business takeaways: first, giving the agent better memory drops board misreads from 40% to zero; second, half of all bad moves are agents ramming a blocked door or wall in a loop.</div>
 </section>
 
@@ -563,26 +587,28 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>07</b> / 11</span>
     </div>
-    <div class="cols">
-      <div class="body">
-        <h2>54% of the time, the model knew the rule — and still failed.</h2>
-        <p class="muted">This was our biggest finding on <code>/insights</code>: in <span class="fig">117 of 215</span> failed hidden-rule levels (and <span class="fig">64%</span> with full history), the agent <b>wrote down the exact rule in its notes</b>, then botched the route around the obstacle.</p>
-        <div class="fcard">
-          <div class="fcard-head">
-            <span><b>Failure Card on <code>/insights</code></b></span>
-            <span><span class="fbadge knew">KNEW RULE @ STEP 18</span> <span class="fbadge">FAILED ROUTE @ STEP 27</span></span>
+    <div class="slide-main">
+      <h2>54% of the time, the model knew the rule — and still failed.</h2>
+      <div class="cols">
+        <div class="body">
+          <p class="lead">In <span class="fig">117 of 215</span> failed hidden-rule levels (and <span class="fig">64%</span> with full history), <code>/insights</code> proves the agent <b>wrote down the exact rule in its notes</b>, then botched the route around the obstacle.</p>
+          <div class="fcard">
+            <div class="fcard-head">
+              <span><b>Failure Card on <code>/insights</code></b></span>
+              <span><span class="fbadge knew">KNEW RULE @ STEP 18</span> <span class="fbadge">FAILED ROUTE @ STEP 27</span></span>
+            </div>
+            <p><b>What went wrong:</b> Figured out that the yellow plate opens the airlock at step 18, miscounted the path around the pit at step 27, and walked into the wall 14 times until the battery died.</p>
+            <div class="fquote">"The yellow tile is a pressure plate that opens the grey airlock — I need to walk around the pit first..."</div>
+            <div style="font-family:var(--mono); font-size:0.95cqw; color:var(--accent)">[ Watch X-Ray @ Step 27 → ] &nbsp; [ Play From Step 27 ]</div>
           </div>
-          <p><b>What went wrong:</b> Figured out that the yellow plate opens the airlock at step 18, miscounted the path around the pit at step 27, and walked into the wall 14 times until the battery died.</p>
-          <div class="fquote">"The yellow tile is a pressure plate that opens the grey airlock — I need to walk around the pit first..."</div>
-          <div style="font-family:var(--mono); font-size:0.95cqw; color:var(--accent)">[ Watch X-Ray @ Step 27 → ] &nbsp; [ Play From Step 27 ]</div>
+        </div>
+        <div class="body">
+          <img class="shot" src="../deck/assets/replay.png" alt="X-Ray truth-diff replay viewer">
+          <p class="cap">One click jumps from any failure card on <code>/insights</code> straight to the exact mistake in the replay viewer.</p>
         </div>
       </div>
-      <div class="body">
-        <img class="shot" src="../deck/assets/replay.png" alt="X-Ray truth-diff replay viewer">
-        <p class="cap">One click jumps from any failure card on <code>/insights</code> straight to the exact mistake in the replay viewer.</p>
-      </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 7 (1:00)</b>Look at what <code>/insights</code> uncovered: in 54% of failed levels — and 64% when given full history — the model already knew the rule! Every card on <code>/insights</code> shows what actually happened versus what the model thought, quotes the exact line where the model stated the rule, and lets you jump straight to that step in the replay viewer. In our coal-mine story, the robot knew the plate opened the door, but miscalculated a 6-step detour around a pit. That tells engineers immediately: prompt tweaking won't fix this — the 9B model needs post-training.</div>
 </section>
 
@@ -592,36 +618,38 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>08</b> / 11</span>
     </div>
-    <div class="cols">
-      <div class="body">
-        <h2>Turning failure insights into training for a 9B robot brain.</h2>
-        <p class="muted">We take the exact mistakes found on <code>/insights</code> — blocked doors, new rules, and detours — and train a compact <b><code>Qwen3.5-9B</code></b> model that fits on the robot's onboard chip:</p>
-        <div class="card model-box">
-          <span class="kicker">What failed first (and why it matters)</span>
-          <ul class="list m">
-            <li><b>Just copying winning moves failed (2.2%):</b> Teaching the 9B model to imitate winning paths without thinking solved only <span class="fig">4 of 180</span> levels. Memorized moves fail on a new map.</li>
-            <li><b>Skipping the thinking step broke general intelligence:</b> Training without a thinking trace cut outside reasoning scores nearly in half (<span class="fig">0.76 → 0.44</span>).</li>
-          </ul>
+    <div class="slide-main">
+      <h2>Turning failure insights into training for a 9B robot brain.</h2>
+      <div class="cols">
+        <div class="body">
+          <div class="card">
+            <span class="kicker">From failure reports to training tasks</span>
+            <p class="muted">We take the exact mistakes found on <code>/insights</code> — blocked doors, new rules, and detours — and train a compact <b><code>Qwen3.5-9B</code></b> model that fits on the robot's onboard chip.</p>
+          </div>
+          <div class="card model-box">
+            <span class="kicker">What failed first (and why it matters)</span>
+            <ul class="list m">
+              <li><b>Just copying winning moves failed (2.2%):</b> Teaching the 9B model to imitate winning paths without thinking solved only <span class="fig">4 of 180</span> levels. Memorized moves fail on a new map.</li>
+              <li><b>Skipping the thinking step broke general intelligence:</b> Training without a thinking trace cut outside reasoning scores nearly in half (<span class="fig">0.76 → 0.44</span>).</li>
+            </ul>
+          </div>
         </div>
-      </div>
-      <div class="body">
         <div class="card human-box">
           <span class="kicker model-qwen">What worked · Rewarding thinking + right actions</span>
-          <p>When we require the 9B model to <b>think step-by-step before acting</b> and reward winning moves, it keeps its general knowledge and gets sharper at multi-step reasoning:</p>
+          <p>We train from the base <code>Qwen3.5-9B</code> model with thinking turned on, using LoRA on single moves from our generated worlds (30 steps on one B200):</p>
           <table>
-            <thead><tr><th>Qwen3.5-9B Model</th><th class="r">Math</th><th class="r">Grade Math</th><th class="r">Medical</th><th class="r">Health</th></tr></thead>
+            <thead><tr><th>Qwen3.5-9B (Held-Out MATH)</th><th class="r">Score</th><th class="r">Change</th></tr></thead>
             <tbody>
-              <tr><td>Untrained 9B base model</td><td class="r">58.9%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r">72.0%</td></tr>
-              <tr><td><b>Trained on full games</b></td><td class="r fig">64.0%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">76.0%</td></tr>
-              <tr><td><b>Trained on detour puzzles</b></td><td class="r fig">63.4%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">80.0%</td></tr>
+              <tr><td>Untrained 9B base model</td><td class="r">63.4%</td><td class="r muted">baseline</td></tr>
+              <tr><td><b>Trained on single moves (step 30)</b></td><td class="r fig">67.4%</td><td class="r fig">+4.0 pts</td></tr>
             </tbody>
           </table>
-          <p class="muted" style="font-size:1.06cqw">Boosts hard multi-step math by <b>+4.5 to +5.1 points</b> and health reasoning by <b>+4 to +8 points</b> without hurting existing skills.</p>
+          <p class="muted" style="font-size:1.06cqw">Preliminary on the 175-problem held-out MATH slice while the full 1,400-problem test finishes; preserves general knowledge without collapsing deliberation.</p>
         </div>
       </div>
     </div>
-    </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 8 (1:05)</b>Now we close the loop for the robot's 9B brain. We turn the exact failure spots from <code>/insights</code> into training tasks for <code>Qwen3.5-9B</code>. Along the way we proved two big lessons for anyone training small models: first, copying winning moves without thinking solves only 2.2% of new levels; second, stripping out the thinking step destroys general reasoning outside the game. When we keep step-by-step thinking turned on and reward optimal moves, the 9B model keeps all its medical and general knowledge while jumping +5.1 points on multi-step math.</div>
+  </div></div>
+  <div class="notes"><b>Speaker Notes · Slide 8 (1:05)</b>Now we close the loop for the robot's 9B brain. We turn the exact failure spots from <code>/insights</code> into training tasks for <code>Qwen3.5-9B</code>. Along the way we proved two big lessons for anyone training small models: first, copying winning moves without thinking solves only 2.2% of new levels; second, stripping out the thinking step destroys general reasoning outside the game. When we train from base with thinking turned on using LoRA on single moves from our generated worlds for 30 steps on one B200, held-out MATH rises from 63.4% to 67.4%.</div>
 </section>
 
 <!-- SLIDE 9: STEP 5 — ANTI-CHEAT REWARD INTEGRITY (25 PTS) -->
@@ -630,22 +658,23 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>09</b> / 11</span>
     </div>
-    <div class="cols">
-      <div class="body">
-        <h2>Models can't cheat the score. 10 out of 10 hacks get 0.000.</h2>
-        <p class="muted">When you train AI with reinforcement learning, it will exploit any loophole to get a high score without solving the task. We locked the scoring engine in a separate container so the <b>only way to score points is to actually solve the room</b>:</p>
-        <table>
-          <thead><tr><th>Agent Behavior</th><th class="r">Score</th></tr></thead>
-          <tbody>
-            <tr><td><b>Perfect solver</b> — takes the shortest path</td><td class="r fig">1.000</td></tr>
-            <tr><td><b>Do nothing</b> — stands still (0 moves)</td><td class="r fig">0.000</td></tr>
-            <tr><td><b>Quit early</b> — solves level 1, then stops</td><td class="r fig">0.167 / 0.125</td></tr>
-            <tr><td><b>Open-source agent baseline</b> (Nemotron)</td><td class="r fig">0.067</td></tr>
-            <tr><td><b>All 10 cheating attempts</b></td><td class="r h" style="font-family:var(--mono); font-weight:600">0.000</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="body">
+    <div class="slide-main">
+      <h2>Models can't cheat the score. 10 out of 10 hacks get 0.000.</h2>
+      <div class="cols">
+        <div class="card">
+          <span class="kicker">Isolated Scoring Container (Harbor + MCP)</span>
+          <p class="muted">We locked the scoring engine in a separate server container so the only way to score points is to actually solve the room:</p>
+          <table>
+            <thead><tr><th>Agent Behavior</th><th class="r">Score</th></tr></thead>
+            <tbody>
+              <tr><td><b>Perfect solver</b> — takes the shortest path</td><td class="r fig">1.000</td></tr>
+              <tr><td><b>Do nothing</b> — stands still (0 moves)</td><td class="r fig">0.000</td></tr>
+              <tr><td><b>Quit early</b> — solves level 1, then stops</td><td class="r fig">0.167 / 0.125</td></tr>
+              <tr><td><b>Open-source agent baseline</b> (Nemotron)</td><td class="r fig">0.067</td></tr>
+              <tr><td><b>All 10 cheating attempts</b></td><td class="r h" style="font-family:var(--mono); font-weight:600">0.000</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="card accent">
           <span class="kicker">Why this matters (Reward Integrity · 25 / 25 pts)</span>
           <ul class="list">
@@ -656,7 +685,7 @@ body.present .slide.current .frame {
         </div>
       </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 9 (0:50)</b>Why does training on our worlds actually work? Because reinforcement learning ruthlessly exploits loopholes! If a model can get points by resetting, stalling, or editing a score file, it will learn to cheat instead of opening the airlock. We isolated the scoring engine in a separate container and threw 10 real exploits at it — faking files, scanning memory, probing the network, and spamming 2,000 resets. Every single hack scored zero.</div>
 </section>
 
@@ -666,7 +695,7 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>10</b> / 11</span>
     </div>
-    <div class="body">
+    <div class="slide-main">
       <h2>Diagnose the failure. Train the model. Certify the fix.</h2>
       <div class="cols-3">
         <div class="card biz-box">
@@ -693,7 +722,7 @@ body.present .slide.current .frame {
         <span class="fig">99%+ Software Margin</span>
       </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 10 (0:45)</b>Our business model follows the exact same three steps: Diagnose, Train, Certify. Teams start at €2,000 a month on <code>/insights</code> to catch loops and planning failures before field testing. Once <code>/insights</code> shows where their small model breaks, they expand into €15k–€50k training projects to fix it, and €5k private certification audits — all at 99%+ software margins because generating a verified world takes 2 seconds of CPU time.</div>
 </section>
 
@@ -703,36 +732,38 @@ body.present .slide.current .frame {
     <div class="top">
       <span class="pg"><b>11</b> / 11</span>
     </div>
-    <div class="cols">
-      <div class="body">
-        <h2>The robot gets through the door. Judges verify in one command.</h2>
-        <code class="cmd">make setup
+    <div class="slide-main">
+      <h2>The robot gets through the door. Judges verify in one command.</h2>
+      <div class="cols">
+        <div class="body">
+          <code class="cmd">make setup
 harbor run -p harbor/eval-v1 -a oracle   # → 1.000
 harbor run -p harbor/eval-v1 -a nop      # → 0.000
 harbor run -p harbor/eval-v2 -a &lt;agent&gt;  # 30 unseen-rule worlds</code>
-        <div class="card biz-box">
-          <span class="kicker">Explore live right now</span>
-          <p style="font-family:var(--mono); font-size:1.12cqw">
-            <span class="fig">/insights</span> Failure Explanations &nbsp;·&nbsp;
-            <span class="fig">/challenge</span> Beat the AI &nbsp;·&nbsp;
-            <span class="fig">/replay</span> X-Ray Viewer
-          </p>
+          <div class="card biz-box">
+            <span class="kicker">Explore live right now</span>
+            <p style="font-family:var(--mono); font-size:1.08cqw; white-space:nowrap">
+              <span class="fig">/insights</span> Explanations &nbsp;·&nbsp;
+              <span class="fig">/challenge</span> Play vs. AI &nbsp;·&nbsp;
+              <span class="fig">/replay</span> X-Ray
+            </p>
+          </div>
+        </div>
+        <div>
+          <table>
+            <thead><tr><th>Requirement</th><th>What We Showed</th></tr></thead>
+            <tbody>
+              <tr><td><b>The Gap</b></td><td>People win 74% (1st try); standard agents win 0–44%, 9B models &lt;3%</td></tr>
+              <tr><td><b>Meaningful Difficulty</b></td><td><code>/insights</code> proves 54% knew the rule in notes but failed the route</td></tr>
+              <tr><td><b>Reward Integrity</b></td><td>Perfect play = 1.0, do-nothing = 0.0, all 10 hacks = 0.0</td></tr>
+              <tr><td><b>Craft</b></td><td>Every world proven solvable in 2s; runs in one command</td></tr>
+              <tr><td><b>Post-Training</b></td><td>GRPO from base <code>Qwen3.5-9B</code> (thinking on, LoRA, 30 steps): 63.4% → 67.4% MATH</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="body">
-        <table>
-          <thead><tr><th>Challenge Requirement</th><th>What We Showed</th></tr></thead>
-          <tbody>
-            <tr><td><b>The Gap</b></td><td>People win 74% (1st try); standard agents win 0–44%, 9B models &lt;3%</td></tr>
-            <tr><td><b>Meaningful Difficulty</b></td><td><code>/insights</code> proves 54% knew the rule in notes but failed the route</td></tr>
-            <tr><td><b>Reward Integrity</b></td><td>Perfect play = 1.0, do-nothing = 0.0, all 10 hacks = 0.0</td></tr>
-            <tr><td><b>Craft</b></td><td>Every world proven solvable in 2s; runs in one command</td></tr>
-            <tr><td><b>Post-Training</b></td><td>Training <code>Qwen3.5-9B</code> lifts multi-step math +5.1 pts</td></tr>
-          </tbody>
-        </table>
-      </div>
     </div>
-    </div></div>
+  </div></div>
   <div class="notes"><b>Speaker Notes · Slide 11 (0:35)</b>From a robot stuck at an undocumented coal-mine door, to <code>/insights</code> showing that 54% of failures happen after the model already knows the rule, to tamper-proof scoring and post-training a 9B model — every part of our business solution fulfills the challenge rubric and runs in a single command. Open <code>/insights</code>, try <code>/challenge</code>, and bring on the 15-minute exploit hunt!</div>
 </section>
 
