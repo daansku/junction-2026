@@ -266,6 +266,14 @@ class OpenAICompatH2:
         t0 = time.time()
         resp = self._create(kw)
         lat = int((time.time() - t0) * 1000)
+        if not resp.choices or resp.choices[0].message is None:
+            # Gemini sometimes answers with no message at all: an invalid turn (costs a turn, not an action),
+            # nothing appended to the history. Used to crash the run with AttributeError (A1, Sun 02:50).
+            from .providers.openai_compat import billed_tokens
+            tin, tout = billed_tokens(resp.usage) if resp.usage else (0, 0)
+            return Turn(invalid="empty reply (no message)", tokens_in=tin, tokens_out=tout,
+                        cost=price(self.model, tin, tout) or 0.0, latency_ms=lat,
+                        stop=resp.choices[0].finish_reason if resp.choices else None)
         ch = resp.choices[0]
         msg = ch.message
         # reasoning retained: the assistant message goes back exactly as returned (all provider fields kept)

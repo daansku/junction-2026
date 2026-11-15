@@ -32,6 +32,14 @@ class GameSpec:
     difficulty: int = 2
     rules: list[str] | None = None   # None -> curriculum picks
     skin_shuffle: bool = True
+    view: str | None = None          # A1, eval-v6: "fog2,glimpse,recolor" (generator/view.py); rendering only
+
+
+def _spec_dict(spec: GameSpec) -> dict[str, Any]:
+    d = asdict(spec)
+    if d.get("view") is None:  # games without a view serialise exactly as before
+        d.pop("view", None)
+    return d
 
 
 class Game:
@@ -52,7 +60,7 @@ class Game:
         return f"{s.family}-s{s.seed}-d{s.difficulty}-l{len(self.levels)}-{short_hash(body)}"
 
     def to_dict(self) -> dict[str, Any]:
-        return {"game_id": self.game_id, "spec": asdict(self.spec),
+        return {"game_id": self.game_id, "spec": _spec_dict(self.spec),
                 "engine_version": self.engine_version,
                 "skin": {k: list(v) for k, v in sorted(self.skin.items())},
                 "levels": [lv.to_dict() for lv in self.levels]}
@@ -172,7 +180,7 @@ class Game:
 
     def meta(self) -> dict[str, Any]:
         """Compact metadata for catalogues (list_games)."""
-        return {"game_id": self.game_id, "spec": asdict(self.spec),
+        return {"game_id": self.game_id, "spec": _spec_dict(self.spec),
                 "engine_version": self.engine_version, "levels_total": len(self.levels),
                 "difficulty": self.spec.difficulty,
                 "rules": sorted({r for lv in self.levels for r in lv.rules}),
@@ -218,6 +226,9 @@ def make_game(spec: GameSpec) -> Game:
     from ..generator import generate_levels
     from ..generator.skin import make_skin
     levels = generate_levels(spec.seed, spec.family, spec.difficulty, spec.n_levels, spec.rules)
+    if spec.view:
+        from ..generator import view as view_mod
+        view_mod.apply(levels, spec.family, spec.seed, spec.view)
     used = sorted({r for lv in levels for r in lv.rules})
     return Game(spec, levels, make_skin(spec.seed, spec.family, spec.skin_shuffle, used))
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ..core.level import Level, State
 from .. import components as comps
-from .canvas import SIZE, Canvas
+from .canvas import HUD_ROWS, SIZE, Canvas
 
 from .colors import LOSE_COLOR, PIP_CURRENT, PIP_DONE, PIP_TODO, WIN_COLOR
 
@@ -15,6 +15,23 @@ def _budget_bar(cv: Canvas, level: Level, state: State) -> None:
     n = (left * SIZE + level.move_budget - 1) // level.move_budget  # ceil: 1 move left -> >=1 px
     cv.rect(0, 0, SIZE, 2, cv.color("budget_empty"))
     cv.rect(0, 0, n, 2, cv.color("budget_bar"))
+
+
+def _recolor(cv: Canvas, m: list[int], y0: int, y1: int, x0: int = 0) -> None:
+    for y in range(y0, min(SIZE, y1)):
+        row = cv.px[y]
+        for x in range(x0, SIZE):
+            row[x] = m[row[x]]
+
+
+def _fog(cv: Canvas, level: Level, pos: tuple[int, int], radius: int, fog: int) -> None:
+    """Grid cells farther than `radius` (Chebyshev) from the player show only the fog colour."""
+    cs = cv.cs
+    for y in range(level.h):
+        for x in range(level.w):
+            if max(abs(x - pos[0]), abs(y - pos[1])) > radius:
+                sx, sy = cv._xf(x, y, cv.lw, cv.lh)
+                cv.rect(cv.ox + sx * cs, cv.oy + sy * cs, cs, cs, fog)
 
 
 def _pips(cv: Canvas, level_idx: int, levels_total: int, won_all: bool) -> int:
@@ -66,9 +83,16 @@ def render(level: Level, state: State, skin: dict[str, tuple[int, str]], level_i
     for c in comps.active(level):
         c.draw(level, state, cv)
     cv.cell(state.pos, "player")
+    view = level.data.get("view") or {}  # A1, eval-v6 (generator/view.py): what the player sees, never the rules
+    if view.get("recolor"):
+        _recolor(cv, view["recolor"], HUD_ROWS, SIZE)
+    if view.get("radius") is not None and not (view.get("glimpse") and state.moves == 0):
+        _fog(cv, level, state.pos, int(view["radius"]), int(view["fog"]))
     _budget_bar(cv, level, state)
     x = _pips(cv, level_idx, levels_total, False)
     _hud_items(cv, level, state, x)
+    if view.get("recolor"):  # held items in the HUD match the recoloured objects
+        _recolor(cv, view["recolor"], 3, HUD_ROWS, x + 1)
 
     if status == "GAME_OVER":
         floor = skin["floor"][0]

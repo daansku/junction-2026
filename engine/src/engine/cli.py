@@ -37,13 +37,17 @@ def _build_one(args: tuple) -> dict | None:
     seed, levels, d, *rest = args  # optional: family (A7, gridforce), rule pool (A1, eval-v4)
     fam = rest[0] if rest else "gridworld"
     pool = rest[1] if len(rest) > 1 else None
+    view = rest[2] if len(rest) > 2 else None
     rules = None
     if pool:  # this game's rules: the pool in a per-seed order (the planner takes new rules in list order)
         from .core.rng import rng_for
         rules = list(pool)
         rng_for("rule-pool", seed, d, ",".join(pool)).shuffle(rules)
     try:
-        return make_game(GameSpec(family=fam, seed=seed, n_levels=levels, difficulty=d, rules=rules)).to_dict()
+        g = make_game(GameSpec(family=fam, seed=seed, n_levels=levels, difficulty=d, rules=rules, view=view or None))
+        if view and "fog" in view and any(r == "hole" for r in g.skin):
+            raise ValueError("fog colour is the cracked_floor hole colour: leave cracked_floor out of fog games")
+        return g.to_dict()
     except Exception as e:  # noqa: BLE001  a rare unbuildable seed is skipped, not fatal
         print(f"  skip seed {seed} d{d}: {e}", file=sys.stderr)
         return None
@@ -55,7 +59,7 @@ def cmd_collection(a) -> int:
     from concurrent.futures import ProcessPoolExecutor
     diffs = [int(x) for x in a.difficulties.split(",")]
     pool = tuple(r.strip() for r in a.rule_pool.split(",") if r.strip()) if a.rule_pool else None
-    jobs = [(a.seed_start + i, a.levels, diffs[i % len(diffs)], a.family, pool) for i in range(a.n)]
+    jobs = [(a.seed_start + i, a.levels, diffs[i % len(diffs)], a.family, pool, a.view) for i in range(a.n)]
     t0 = time.time()
     if a.workers > 1:
         with ProcessPoolExecutor(a.workers) as ex:
@@ -336,6 +340,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--family", default="gridworld", help="gridforce = forced-interaction generator (A7)")
     p.add_argument("--rule-pool", default="", help="comma list: each game draws its rules from this pool, "
                    "in a per-seed order (A1, eval-v4); default = the curriculum's pool")
+    p.add_argument("--view", default="", help="what the player sees, rules untouched (A1, eval-v6): "
+                   "comma list of fog<r>, glimpse, recolor (generator/view.py)")
     p.set_defaults(fn=cmd_collection)
     p = sub.add_parser("play", help="play in the terminal"); _game_args(p); p.set_defaults(fn=cmd_play)
     p = sub.add_parser("render", help="PNG contact sheet of a game"); _game_args(p)

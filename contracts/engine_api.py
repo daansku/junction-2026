@@ -41,6 +41,9 @@ class GameSpec:
     difficulty: int = 2            # 1..3
     rules: Optional[list[str]] = None  # None -> curriculum picks from the seed
     skin_shuffle: bool = True
+    # A1, eval-v6: what the player sees, never the rules ("fog2,glimpse,recolor", engine generator/view.py).
+    # Optional: games without a view omit the key in their spec dict, exactly as before.
+    view: Optional[str] = None
 
 
 class Truth(TypedDict):

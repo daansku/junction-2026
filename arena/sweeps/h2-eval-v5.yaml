@@ -1,0 +1,20 @@
+# eval-v5 test set, harness h2 (human request: Daniel, Sun ~02:00: "way harder for AI"; run from A1's machine).
+# eval-v5 = 12 gridbranch games (seeds 950000-950011, d3/d4 alternating, 6 levels). Rules chosen by where frontier
+# models get STUCK (not by intro efficiency, which picked eval-v4 and Argon played it near-optimally): control
+# changers rotation / twin / remap / gravity with route-commitment rules ice / push_blocks / one_way / hazards /
+# phase_walls. 48 of 72 levels have a control changer (eval-v4: 27). Same settings as the other h2 sweeps.
+name: h2-eval-v5
+harness: h2
+collection: eval-v5
+games: all
+attempts: 1
+concurrency: 20
+est_steps_per_game: 250
+models:
+  - {id: gemini-pro, effort: medium, max_concurrency: 4}
+  - {id: gemini-flash, effort: high, max_concurrency: 4}
+  - {id: gemini-4-argon, effort: medium, max_concurrency: 6}
+  - {id: gemini-4-carbon, effort: medium, max_concurrency: 4}
+  - {id: verda-deepseek-4-1-flash, effort: high, max_concurrency: 4}
+baselines: [random, optimal, noop, stop_early]
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 30.0, max_wall_s: 14400}

@@ -1,0 +1,20 @@
+# eval-v6 test set, harness h2 (human request: Daniel, Sun ~02:40: limited view + "something else cool").
+# eval-v6 = eval-v5's 12 games (same levels, skins, rules, budgets) with a view: fog2 (only the 5x5 cells around the
+# player are drawn), glimpse (the full level is visible until the first move of each level, and again after RESET),
+# recolor (from level 2 each level swaps object colours one-to-one; shapes stay). Rules are untouched, so the
+# v5 -> v6 difference measures map memory and object re-identification only. Same settings as the other h2 sweeps.
+name: h2-eval-v6
+harness: h2
+collection: eval-v6
+games: all
+attempts: 1
+concurrency: 20
+est_steps_per_game: 250
+models:
+  - {id: gemini-pro, effort: medium, max_concurrency: 4}
+  - {id: gemini-flash, effort: high, max_concurrency: 4}
+  - {id: gemini-4-argon, effort: medium, max_concurrency: 6}
+  - {id: gemini-4-carbon, effort: medium, max_concurrency: 4}
+  - {id: verda-deepseek-4-1-flash, effort: high, max_concurrency: 4}
+baselines: [random, optimal, noop, stop_early]
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 30.0, max_wall_s: 14400}
