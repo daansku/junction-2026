@@ -81,13 +81,13 @@ export function Layout() {
             aria-checked={devMode}
             className={`dev-switch ${devMode ? 'on' : ''}`}
             onClick={() => setDevMode(!devMode)}
-            title="Toggle developer mode to show all pages"
-            aria-label="Developer mode"
+            title="Show more info: all pages"
+            aria-label="More info"
           >
             <span className="dev-switch-track" aria-hidden="true">
               <span className="dev-switch-thumb" />
             </span>
-            <span className="dev-switch-label mono">Developer mode</span>
+            <span className="dev-switch-label mono">More info</span>
           </button>
         </div>
       </header>

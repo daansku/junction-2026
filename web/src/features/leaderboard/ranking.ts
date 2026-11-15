@@ -18,3 +18,6 @@ export function completionCompare(a: LeaderboardRow, b: LeaderboardRow): number 
 export function bestByCompletion(rows: LeaderboardRow[]): LeaderboardRow | null {
   return rows.reduce<LeaderboardRow | null>((acc, cur) => (!acc || completionCompare(cur, acc) < 0 ? cur : acc), null)
 }
+
+/** Collections left off the h1 and h2 boards entirely (Anssi, Sun 15.11): no filter button, rows not shown under "all". */
+export const HIDDEN_COLLECTIONS = new Set(['eval-v3', 'eval-v3b', 'eval-v5'])

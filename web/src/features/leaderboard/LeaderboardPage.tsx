@@ -20,7 +20,7 @@ import { playerColor } from '@/lib/modelColors'
 import type { RunMeta } from '@/lib/types'
 import { fetchLeaderboardH2, fetchLeaderboardH2b } from './phase2Api'
 import { ModelCardDialog } from './ModelCardDialog'
-import { bestByCompletion, completionCompare } from './ranking'
+import { HIDDEN_COLLECTIONS, bestByCompletion, completionCompare } from './ranking'
 import { LeaderboardH2View } from './PostTrainingSection'
 import type { LeaderboardDocument, LeaderboardRow } from './types'
 import './leaderboard.css'
@@ -133,7 +133,7 @@ export function LeaderboardPage() {
   const [frontierAxis, setFrontierAxis] = useState<'auto' | 'tokens' | 'usd'>('auto')
   const [cardRow, setCardRow] = useState<LeaderboardRow | null>(null)
 
-  const allRows = (lb.data?.rows ?? []).filter((row) => row.kind !== 'baseline')
+  const allRows = (lb.data?.rows ?? []).filter((row) => row.kind !== 'baseline' && !HIDDEN_COLLECTIONS.has(row.collection ?? ''))
 
   // Map each player_id (and effort) to its best finished recorded run for 1-click scatter/ledger replay navigation
   const bestRunByPlayer = useMemo(() => {

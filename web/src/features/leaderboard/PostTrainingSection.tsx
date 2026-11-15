@@ -5,7 +5,7 @@ import { Button, Chip, Empty, Loading, Panel, Stat, Swatch, cx } from '@/design/
 import { PlotFigure, cssVar } from '@/lib/PlotFigure'
 import { playerColor } from '@/lib/modelColors'
 import { ModelCardDialog, cardLabel } from './ModelCardDialog'
-import { bestByCompletion, completionCompare } from './ranking'
+import { HIDDEN_COLLECTIONS, bestByCompletion, completionCompare } from './ranking'
 import type {
   BenchComparison,
   BenchDeltaCell,
@@ -84,7 +84,7 @@ export function LeaderboardH2View(props: {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [cardRow, setCardRow] = useState<LeaderboardRow | null>(null)
 
-  const allRows = (doc?.rows ?? []).filter((row) => row.kind !== 'baseline')
+  const allRows = (doc?.rows ?? []).filter((row) => row.kind !== 'baseline' && !HIDDEN_COLLECTIONS.has(row.collection ?? ''))
   const collections = useMemo(() => {
     const s = new Set<string>()
     for (const r of allRows) s.add(r.collection || 'eval-v1')
