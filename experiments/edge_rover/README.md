@@ -1,11 +1,8 @@
 # Edge rover: does game training transfer to a robot-style task?
 
-**Status (Sun 03:55):**
-- **Final:** the thinking-off results, Gemini Flash/Argon, and the thinking-ON RL model on hidden controls: **51/100**.
-- **Still running:**
-  - The thinking-ON base: hidden controls ~04:20, then fixed controls ~05:15.
-  - The RL model's fixed-controls run.
-- This file will be updated.
+**Status (Sun 04:20):**
+- **Final:** the thinking-off results, Gemini Flash/Argon, and thinking-ON hidden controls (base **60/100** vs our RL **51/100**, p=0.175).
+- **Still running:** thinking-ON fixed controls (RL ~04:30, base ~05:15). This file will be updated.
 
 ## The question
 Our games ask a model to discover unseen rules by acting. Does training on them make a model better at a separate task that
@@ -99,8 +96,10 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
 
 | Model (thinking on) | Hidden controls | Fixed controls |
 |---|---|---|
-| **think-h2-s60 (RL on our games)** | **51/100 (51%)**, 95% CI 41-61% | running (~04:20) |
-| base Qwen3.5-9B | running: **37 completed at step 31**, the same as the RL model at step 31 (37) | after hidden (~05:15) |
+| base Qwen3.5-9B | **60/100 (60%)**, 95% CI 50-69% | running (~05:15) |
+| think-h2-s60 (RL on our games) | **51/100 (51%)**, 95% CI 41-61%; paired vs base: 13 better / 22 worse, McNemar p=0.175 (not significant) | running (~04:30) |
+
+**Like-for-like check:** both models hit the 2,048-token thinking cap on **99.5%** of turns (base 3,472/3,488, RL 3,522/3,541; ~2,045 tokens per turn). Both had 1.4 bumps per mission and ~1.4 invalid turns per mission.
 
 **The RL model's hidden-controls run, in numbers:**
 - **Beacons:** found on 59 of 100 missions; 51 completed the return to base.
@@ -108,11 +107,28 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
 - **Bumps:** 1.4 per mission, against 30 for thinking-off base.
 - **The thinking cap:** 3,522 of its 3,541 turns hit the 2,048-token cap, so almost every action was a budget-forced answer. 148 turns were still invalid.
 
-**Reading so far (not final):**
-- **Thinking is what matters for this task.** It takes the 9B from 5% (thinking off) to about 50% on hidden controls.
-- **Our thinking RL has shown no measurable advantage over base-with-thinking yet:** at step 31 both have 37 completed missions.
-- **Thinking-off RL is significantly worse than base** (see above).
-- The paired base-vs-RL result goes here when the base finishes.
+**Reading (hidden controls final):**
+- **Thinking is the whole effect.** The same base model goes from 5% (thinking off) to **60%** (thinking on) on hidden controls, with no training.
+- **Our thinking RL did not improve transfer.** It scored 51% against the base's 60%. That is not a significant difference (p=0.175), so read it as "no gain", not "harm".
+- **Thinking-off RL made transfer significantly worse** (see above).
+- **The difficulty ladder is clear:**
+
+  | Policy | Hidden controls |
+  |---|---|
+  | Random | 0% |
+  | 9B, thinking off | 5% |
+  | 9B, thinking on | 60% |
+  | Gemini | 97-100% |
+
+  The hidden-rule condition is where thinking matters.
+
+### Why our RL did not help: the training targeted the wrong skill
+We checked the reward and task code: `engine/src/engine/tasks/gameturn.py`, `engine/src/engine/tasks/rationale.py`, `posttrain/src/posttrain/grpo.py`.
+- **Single-turn proxy reward, not episodes.** Each sample is one game state. The reward is 1 if the chosen action starts a *shortest path to finishing the level*, computed by BFS over the true engine state with all hidden rules known. The model never plays an episode and never earns the official score (levels solved, optimal/actions).
+- **Probing is punished.** Any informative experiment ("what does this tile do?", "which action is up?") scores 0, because it is not on the oracle's shortest path. Rule discovery needs exactly those actions; on the rover, it is how the scrambled controls are found.
+- **The discovery is supplied.** Prompts come from oracle playthroughs, with NOTES written by a Narrator from engine truth. The notes only state effects already seen, but they are the oracle's correct reading. The model is handed correct rule notes and asked for the next move, so it never has to form, test or revise hypotheses itself.
+- **Too little training to move the model.** About 60-70 GRPO steps x 64 completions, KL ~1e-3 (A2's log). A2's benchmark runs also found no measurable transfer.
+- **What training should look like to test "training makes models think better":** multi-turn episodic RL on full games (h2/h2b format), with the official per-level score as the reward and the model writing its own notes. Exploration is then paid only through outcomes. It did not fit before the 06:30 lock.
 
 - **Decoding settings:**
   - Qwen3.5 model-card sampling: T=0.6, top_p=0.95, top_k=20, seeded per mission and turn.
