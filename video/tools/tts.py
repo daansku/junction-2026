@@ -1,6 +1,7 @@
 """Draft voice-over with a local Piper voice (free, offline).
 
-Reads video/narration.json and writes, per scene, one wav per line
+Reads video/narration.json and writes, per scene (only lines whose text changed are re-synthesised;
+Piper's output length varies run to run, so unchanged lines keep their audio), one wav per line
 (video/cache/audio/<key>_<i>.wav) plus video/cache/audio/<key>.lines.json (text and length of
 each line). The scenes read the lengths (scenes/common.py Narration) to time their beats;
 tools/build.py places each line at the time the scene cued it.
@@ -35,13 +36,17 @@ def synth(voice: PiperVoice, text: str) -> tuple[bytes, int]:
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    for old in OUT.glob("*.wav"):
-        old.unlink()
     voice = PiperVoice.load(str(VOICE))
     spec = json.loads((VIDEO / "narration.json").read_text(encoding="utf-8"))
     for sc in spec["scenes"]:
         lines = []
+        old_p = OUT / f"{sc['key']}.lines.json"
+        old = json.loads(old_p.read_text(encoding="utf-8")) if old_p.exists() else []
         for i, text in enumerate(sc["lines"]):
+            wav = OUT / f"{sc['key']}_{i}.wav"
+            if i < len(old) and old[i]["text"] == text and wav.exists():
+                lines.append(old[i])      # unchanged line: keep its audio, so the other scenes' timing stays valid
+                continue
             data, rate = synth(voice, text)
             with wave.open(str(OUT / f"{sc['key']}_{i}.wav"), "wb") as w:
                 w.setnchannels(1)

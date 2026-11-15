@@ -1,0 +1,12 @@
+{
+  "note": "What S5 shows for Anssi's training. Source: A2 message Sun ~04:10 (B200 /root/b200bench/out/, not in data/derived yet). A fresh test on MATH items 51-250/subject (1,400 items) lands ~04:35 and supersedes these: replace the values, then render S5.",
+  "title": "MATH, held-out items (not used to pick the checkpoint)",
+  "sub": "Qwen3.5-9B · thinking on · same 175 items for both · paired",
+  "rows": [
+    {"label": "Qwen3.5-9B base", "score": 0.634, "kind": "base"},
+    {"label": "RL on our games, step 30", "score": 0.674, "kind": "ours"}
+  ],
+  "delta_line": "+0.040 · 95% CI -0.029 to +0.103 · not significant (p = 0.31, n = 175)",
+  "footnote": "step 30 = best MATH on the selection items; the strict PROTOCOL v5 finalist is step 40 (+0.011)",
+  "final": false
+}

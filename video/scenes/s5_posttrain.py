@@ -15,18 +15,13 @@ from manim import (
 )
 
 from common import (
-    Narration,
+    Narration, ACCENT,
     FAILURE_MODES, LINE_STRONG, MONO, PALETTE, PLACEHOLDER, SANS, TEXT_1, TEXT_2, TEXT_3,
     agent_sprite,
 )
 
 random.seed(5)
-# (row, label, mean, ci_low, ci_high): PLACEHOLDER layout values, NOT results
-ROWS = [
-    ("base", "Qwen3.5-9B base", 0.60, 0.58, 0.62),
-    ("ours", "trained on our games", 0.63, 0.61, 0.65),
-]
-PLACEHOLDER_DATA = True
+# values: video/s5_training.json
 
 
 class S5PostTrain(Scene):
@@ -51,42 +46,42 @@ class S5PostTrain(Scene):
         vo.cue(1, delay=0.4)
         self.play(FadeOut(VGroup(bot, name, bits)), q.animate.scale(0.75).to_edge(UP, buff=0.4), run_time=0.6)
 
-        # ---- three bars with 95% CIs ----
-        sub = Text("mean accuracy, outside reasoning benchmarks (BBH, MATH, GSM8K, MedQA, MMLU-Pro) · 95% CI",
-                   font=MONO, font_size=14, color=TEXT_3).next_to(q, DOWN, buff=0.2)
-        lo, hi = 0.5, 0.7             # visible axis range
-        width = 7.0
-        x0 = -2.0
+        # ---- the result: base vs RL on our games (values from video/s5_training.json) ----
+        import json
+        from common import VIDEO, GOOD
+        res = json.loads((VIDEO / "s5_training.json").read_text(encoding="utf-8"))
+        num_color = TEXT_1 if res.get("final") else PLACEHOLDER
+        title = Text(res["title"], font=SANS, font_size=24, color=TEXT_1).next_to(q, DOWN, buff=0.35)
+        sub = Text(res["sub"], font=MONO, font_size=14, color=TEXT_3).next_to(title, DOWN, buff=0.12)
+        lo, hi, width, x0 = 0.5, 0.75, 7.0, -2.0
 
         def x(v):
             return x0 + (v - lo) / (hi - lo) * width
 
-        g = VGroup()
-        bars, cis = [], []
-        y = 1.0
-        for key, label, m, a, b in ROWS:
-            lab = Text(label, font=SANS, font_size=18, color=TEXT_1 if key == "ours" else TEXT_2)
+        labels, bars, nums = VGroup(), [], VGroup()
+        y = 0.4
+        for row in res["rows"]:
+            lab = Text(row["label"], font=SANS, font_size=20, color=TEXT_1 if row["kind"] == "ours" else TEXT_2)
             lab.move_to([x0 - 0.3 - lab.width / 2, y, 0])
-            color = "#3987e5" if key != "ours" else "#199e70"
-            bar = Rectangle(width=x(m) - x0, height=0.42, fill_color=color, fill_opacity=1, stroke_width=0)
+            bar = Rectangle(width=x(row["score"]) - x0, height=0.5, fill_color="#199e70" if row["kind"] == "ours" else "#3987e5",
+                            fill_opacity=1, stroke_width=0)
             bar.move_to([x0 + bar.width / 2, y, 0])
-            ci = VGroup(Line([x(a), y, 0], [x(b), y, 0], stroke_color=TEXT_1, stroke_width=3),
-                        Line([x(a), y - 0.12, 0], [x(a), y + 0.12, 0], stroke_color=TEXT_1, stroke_width=3),
-                        Line([x(b), y - 0.12, 0], [x(b), y + 0.12, 0], stroke_color=TEXT_1, stroke_width=3))
-            num = Text(f"{m:.3f}", font=MONO, font_size=16, color=PLACEHOLDER if PLACEHOLDER_DATA else TEXT_1)
-            num.next_to(ci, RIGHT, buff=0.15)
-            g.add(lab)
+            nums.add(Text(f"{row['score']:.3f}", font=MONO, font_size=18, color=num_color).next_to(bar, RIGHT, buff=0.15))
+            labels.add(lab)
             bars.append(bar)
-            cis.append(VGroup(ci, num))
-            y -= 1.0
-        axis = Line([x0, 1.5, 0], [x0, y + 0.5, 0], stroke_color=LINE_STRONG, stroke_width=1)
-        self.play(FadeIn(sub), FadeIn(g), FadeIn(axis), run_time=0.5)
-        self.play(LaggedStart(*[GrowFromEdge(b, LEFT) for b in bars], lag_ratio=0.2, run_time=1.4))
-        self.play(LaggedStart(*[FadeIn(c) for c in cis], lag_ratio=0.2, run_time=0.8))
-        if PLACEHOLDER_DATA:
-            tag = Text("PLACEHOLDER: post-training result not in yet", font=MONO, font_size=18, color=PLACEHOLDER)
-            tag.to_edge(DOWN, buff=0.5)
+            y -= 0.95
+        axis = Line([x0, 0.85, 0], [x0, y + 0.45, 0], stroke_color=LINE_STRONG, stroke_width=1)
+        axis_note = Text(f"axis starts at {lo:.2f}", font=MONO, font_size=12, color=TEXT_3).next_to(axis, DOWN, buff=0.08)
+        delta = Text(res["delta_line"], font=MONO, font_size=18, color=ACCENT).move_to([0, y - 0.15, 0])
+        foot = Text(res["footnote"], font=MONO, font_size=13, color=TEXT_3).next_to(delta, DOWN, buff=0.2)
+        self.play(FadeIn(title), FadeIn(sub), FadeIn(labels), FadeIn(axis), FadeIn(axis_note), run_time=0.5)
+        self.play(LaggedStart(*[GrowFromEdge(b, LEFT) for b in bars], lag_ratio=0.3, run_time=1.2))
+        self.play(FadeIn(nums), run_time=0.4)
+        self.play(FadeIn(delta, shift=UP * 0.1), FadeIn(foot), run_time=0.5)
+        if not res.get("final"):
+            tag = Text("PRELIMINARY: larger fresh test (1,400 items) pending", font=MONO, font_size=16, color=PLACEHOLDER)
+            tag.to_edge(DOWN, buff=0.35)
             self.add(tag)
-        self.wait(2.2)
+        self.wait(1.5)
         vo.finish(tail=0.5)
         self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)
