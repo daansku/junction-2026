@@ -398,25 +398,25 @@ body.present .slide.current .frame {
 
 <!-- Part of unslop by Damir Sokolovsky (@heydamir), CC BY 4.0 -->
 
-<!-- SLIDE 1: THE COAL MINE STORY HOOK -->
+<!-- SLIDE 1: FAILURE PATTERNS HOOK -->
 <section class="slide current" id="s1" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>01</b> / 11</span>
+      <span class="pg"><b>01</b> / 12</span>
     </div>
     <div class="slide-main">
-      <h1>600 meters underground, online AI can't help.</h1>
+      <h1>Break one AI agent, and you learn one thing: it broke.</h1>
       <div class="cols" style="align-items:start">
         <div class="body">
-          <p class="lead">An inspection robot is deep inside a collapsed coal mine, where rock blocks all signals. A small AI model runs on the robot. Its battery has 40 minutes left.</p>
+          <p class="lead">One run shows a failure. Across thousands of new games, those failures line up into patterns that show what AI still cannot do.</p>
           <div class="card model-box">
-            <span class="kicker">What goes wrong today</span>
-            <p>Sensors handle the driving until the robot reaches a damaged door controlled by a floor plate. There is no manual. Today's small AI models push against the locked door 50 times, <b>putting a €120,000 robot at risk</b> as its battery runs down.</p>
+            <span class="kicker">What one failure can show</span>
+            <p>In one run, an AI walked into the same wall <b>eleven times</b>, sure it was one step from the goal. Other runs show agents wandering into dead ends or resetting too late.</p>
           </div>
           <div class="card biz-box">
             <span class="kicker">What Game Factory does</span>
-            <p>We <b>test AI on new problems</b>, <b>show where its reasoning breaks</b>, and <b>improve small models</b> so they can work out new rules.</p>
+            <p>We <b>generate fresh games</b>, <b>group failures into patterns</b>, and use them to <b>improve AI reasoning</b>.</p>
           </div>
         </div>
         <div class="hero-wrap">
@@ -426,7 +426,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 1 (0:50)</b>An inspection robot is deep underground, with no internet and a limited battery. It reaches a damaged door with no instructions and has to work out how the door operates before it can move on. Small AI models can repeat the same failed move until the battery runs out. Game Factory tests whether they can adapt, shows where they fail, and helps improve them.</div>
+  <div class="notes"><b>Speaker Notes: Slide 1 (0:50)</b>One failed run only tells us that an agent failed. In one trace, a model walked into the same wall eleven times, sure it was near the goal. We run agents on thousands of fresh games so those mistakes form patterns. Game Factory generates the games and helps teams see what their models still need to learn.</div>
 </section>
 
 <!-- SLIDE 2: THE BUSINESS CASE & MARKET -->
@@ -434,7 +434,7 @@ body.present .slide.current .frame {
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>02</b> / 11</span>
+      <span class="pg"><b>02</b> / 12</span>
     </div>
     <div class="slide-main">
       <h2>Offline AI has to handle surprises on its own.</h2>
@@ -462,7 +462,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 2 (0:50)</b>The mine is one example. Field robots, companies with strict privacy rules, and AI test teams all need systems that can handle surprises. Public tests may enter training data, while custom tests take time to build. Game Factory creates and checks a new puzzle in about two seconds for a fraction of a cent.</div>
+  <div class="notes"><b>Speaker Notes: Slide 2 (0:50)</b>Field robots, private business AI, and AI test teams all need a way to test systems on problems they have not seen before. Public tests may enter training data, while custom tests take time to build. Game Factory creates and checks a new puzzle in about two seconds for a fraction of a cent.</div>
 </section>
 
 <!-- SLIDE 3: STEP 1 — SIMULATING UNSEEN PROBLEMS (FULFILLS CRAFT 15 PTS) -->
@@ -470,19 +470,19 @@ body.present .slide.current .frame {
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>03</b> / 11</span>
+      <span class="pg"><b>03</b> / 12</span>
     </div>
     <div class="slide-main">
-      <h2>We generate new test worlds and verify each puzzle.</h2>
+      <h2>Every new seed gives us another test game.</h2>
       <div class="cols">
         <div class="body">
-          <p class="lead">We combine <b>21 physical rules</b>, including pressure plates, locked gates, pits, ice, and switches. Each level changes how the room works without telling the AI what changed.</p>
+          <p class="lead">Each seed creates a new <b>64×64 game</b> with 16 colours and six actions. Across <b>21 mechanics</b>, every level hides a rule for the AI to discover.</p>
           <div class="card accent">
             <span class="kicker">How we check each puzzle</span>
             <ul class="list">
               <li><b>Every puzzle can be solved:</b> A computer finds a winning path before the AI sees the board. All <span class="fig">1,000</span> checks passed.</li>
               <li><b>Players must use the new rule:</b> Ignoring it leads to failure.</li>
-              <li><b>Guessing rarely works:</b> Random moves win less than <span class="fig">2%</span> of the time. Colours change each game to prevent memorizing tiles.</li>
+              <li><b>Layouts cannot be memorized:</b> Colours and shapes change each game. Random moves win less than <span class="fig">2%</span> of the time.</li>
             </ul>
           </div>
         </div>
@@ -497,7 +497,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 3 (0:55)</b>We generate puzzle worlds with the kinds of obstacles a robot might face: plates that open gates, collapsed pits, ordered switches, and slippery floors. A computer checks that each puzzle has a solution, that players need the new rule, and that random moves rarely win.</div>
+  <div class="notes"><b>Speaker Notes: Slide 3 (0:55)</b>The factory writes games from code. Each new seed makes another board. The AI sees a 64 by 64 grid, 16 colours, and six actions, with no text, score, or rule names. Colours and shapes change between games, and each level hides a new mechanic. A search confirms every level can be solved.</div>
 </section>
 
 <!-- SLIDE 4: LIVE DEMO (/CHALLENGE) -->
@@ -505,13 +505,13 @@ body.present .slide.current .frame {
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>04</b> / 11</span>
+      <span class="pg"><b>04</b> / 12</span>
     </div>
     <div class="slide-main">
       <h2>Try the puzzle yourself in 60 seconds.</h2>
       <div class="cols">
         <div class="body">
-          <p class="lead">Scan the code to see what the robot sees. There are no instructions. Try a move, watch what changes, work out the rule, then compare your play with leading AI models on the same board.</p>
+          <p class="lead">Scan the code to see what the AI sees. There are no instructions. Try a move, watch what changes, work out the rule, then compare your play with leading AI models on the same board.</p>
           <div class="card human-box" style="display:flex; gap:1.4cqw; align-items:center">
             <div id="qr" role="img" aria-label="QR code to live /challenge"></div>
             <div style="display:grid; gap:0.35cqw">
@@ -534,10 +534,10 @@ body.present .slide.current .frame {
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>05</b> / 11</span>
+      <span class="pg"><b>05</b> / 12</span>
     </div>
     <div class="slide-main">
-      <h2>People won 74% of games. The best AI model won 44%.</h2>
+      <h2>On fresh games, people beat AI. No model matched the optimal run.</h2>
       <div class="cols" style="grid-template-columns: 1.15fr 0.85fr">
         <div class="card">
           <span class="kicker">Games won on new rules (30 test games)</span>
@@ -551,14 +551,14 @@ body.present .slide.current .frame {
           </div>
         </div>
         <div class="card accent">
-          <span class="kicker">Why people do better</span>
+          <span class="kicker">Results on games AI had not seen</span>
           <p>People work out new rules and win <b>74%</b> of games. Leading AI models win <b>0% to 44%</b>. Small models that fit on a robot solve <b>under 3% of levels</b>.</p>
-          <p class="muted">With extra memory and time to think, Gemini 4 won all <span class="fig">4 of 4</span> games in a small test. That confirms the puzzles can be solved. An underground robot cannot use the online service, which costs <b>$15 per game</b>.</p>
+          <p class="muted">With the full conversation and maximum reasoning effort, Gemini 4 finished all <span class="fig">4 of 4</span> games, but used more moves than the optimal solver. Most models finished none.</p>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 5 (0:55)</b>People won 74% of games with rules they had never seen. The strongest AI model won 44%. Small models that fit on a robot solved under 3% of levels. Gemini 4 won all four games in a small test when given extra memory and time. An underground robot cannot use that online service for every move, at $15 per game.</div>
+  <div class="notes"><b>Speaker Notes: Slide 5 (0:55)</b>We ran frontier models on fresh games, first with our standard setup, then with the full conversation and maximum reasoning effort used in lab benchmarks. People won 74% of games. In the lab setup, Gemini 4 finished all four games but needed more moves than the optimal solver. Most models finished none.</div>
 </section>
 
 <!-- SLIDE 6: STEP 3 — /INSIGHTS REASONING FORENSICS ENGINE (MEANINGFUL DIFFICULTY PT 1) -->
@@ -566,7 +566,7 @@ body.present .slide.current .frame {
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>06</b> / 11</span>
+      <span class="pg"><b>06</b> / 12</span>
     </div>
     <div class="slide-main">
       <h2>A score shows when AI fails. Insights shows where.</h2>
@@ -610,7 +610,7 @@ body.present .slide.current .frame {
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>07</b> / 11</span>
+      <span class="pg"><b>07</b> / 12</span>
     </div>
     <div class="slide-main">
       <h2>The AI knew the rule in 117 failed levels.</h2>
@@ -637,15 +637,53 @@ body.present .slide.current .frame {
   <div class="notes"><b>Speaker Notes: Slide 7 (1:00)</b>In more than half of these failures, the AI described the new rule correctly but still could not finish the level. The failure card shows what it understood and where its plan went wrong. In this example, it knew the plate opened the door, miscounted the route around a pit, and pushed into a wall repeatedly.</div>
 </section>
 
-<!-- SLIDE 8: STEP 4 — SOLVING IT VIA 9B MODEL POST-TRAINING (TIEBREAKER) -->
+<!-- SLIDE 8: REWARD INTEGRITY -->
 <section class="slide" id="s8" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>08</b> / 11</span>
+      <span class="pg"><b>08</b> / 12</span>
     </div>
     <div class="slide-main">
-      <h2>Use failure reports to train a small AI model.</h2>
+      <h2>The score rewards efficient solutions, not shortcuts.</h2>
+      <div class="cols">
+        <div class="card">
+          <span class="kicker">How the score works</span>
+          <p class="muted">Solved levels score better when the AI uses fewer moves. Unsolved levels score zero. The score is computed in a separate container the AI cannot access:</p>
+          <table>
+            <thead><tr><th>What the AI did</th><th class="r">Score</th></tr></thead>
+            <tbody>
+              <tr><td><b>Perfect solver</b> (fewest moves)</td><td class="r fig">1.000</td></tr>
+              <tr><td><b>Do nothing</b> (no moves)</td><td class="r fig">0.000</td></tr>
+              <tr><td><b>Stop after level 1</b> (partial credit)</td><td class="r fig">0.167 / 0.125</td></tr>
+              <tr><td><b>Open-source AI</b> (Nemotron)</td><td class="r fig">0.067</td></tr>
+              <tr><td><b>All 10 cheating attempts</b></td><td class="r h" style="font-family:var(--mono); font-weight:600">0.000</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card accent">
+          <span class="kicker">How we stop cheating</span>
+          <ul class="list">
+            <li><b>Moves still count after a reset:</b> Restarting does not erase actions already spent.</li>
+            <li><b>Stopping early earns partial credit:</b> The AI gets credit only for levels it solved.</li>
+            <li><b>We tested ten cheats:</b> Faking scores, reading hidden files, and other attacks all scored <span class="fig">0.000</span>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div class="notes"><b>Speaker Notes: Slide 8 (0:50)</b>The score rewards solved levels and efficient play. Doing nothing scores zero, and stopping after one level earns only that level's credit. A reset does not erase moves already spent. The grader runs in a separate container the agent cannot access.</div>
+</section>
+
+<!-- SLIDE 9: POST-TRAINING -->
+<section class="slide" id="s9" tabindex="-1">
+  <div class="frame"><div class="in">
+    <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
+      <span class="pg"><b>09</b> / 12</span>
+    </div>
+    <div class="slide-main">
+      <h2>Can a small model learn from these games?</h2>
       <div class="cols">
         <div class="body">
           <div class="card">
@@ -661,13 +699,13 @@ body.present .slide.current .frame {
           </div>
         </div>
         <div class="card human-box">
-          <span class="kicker model-qwen">What worked: reward good moves after reasoning</span>
-          <p>We started with the untrained <code>Qwen3.5-9B</code> model and trained it on individual moves from our puzzles while keeping its reasoning step on:</p>
+            <span class="kicker model-qwen">Training with reasoning switched on</span>
+          <p>We trained <code>Qwen3.5-9B</code> on single moves from our games, using reinforcement learning and keeping its reasoning enabled:</p>
           <table>
             <thead><tr><th>Qwen3.5-9B math test</th><th class="r">Score</th><th class="r">Change</th></tr></thead>
             <tbody>
               <tr><td>Untrained 9B base model</td><td class="r">58.9%</td><td class="r muted">baseline</td></tr>
-              <tr><td><b>After puzzle training</b></td><td class="r fig">64.0%</td><td class="r fig">+5.1 points</td></tr>
+              <tr><td><b>After 30 training steps</b></td><td class="r fig">64.0%</td><td class="r fig">+5.1 points</td></tr>
             </tbody>
           </table>
           <p class="muted" style="font-size:1.06cqw">This result is from 175 math questions.</p>
@@ -675,56 +713,52 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 8 (1:05)</b>We turn failures from <code>/insights</code> into practice for a small AI model. Copying winning moves solved only 4 of 180 levels. Removing the reasoning step also hurt the model on other tests. After training, its score on a 175-question math test rose from 58.9% to 64.0%.</div>
+  <div class="notes"><b>Speaker Notes: Slide 9 (1:05)</b>The games are training data too. We trained a nine-billion-parameter model on single moves from our games, using reinforcement learning with reasoning switched on. After 30 steps, its score on 175 math questions rose from 58.9% to 64.0%.</div>
 </section>
 
-<!-- SLIDE 9: STEP 5 — ANTI-CHEAT REWARD INTEGRITY (25 PTS) -->
-<section class="slide" id="s9" tabindex="-1">
-  <div class="frame"><div class="in">
-    <div class="top">
-      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>09</b> / 11</span>
-    </div>
-    <div class="slide-main">
-      <h2>All ten cheating attempts scored 0.000.</h2>
-      <div class="cols">
-        <div class="card">
-          <span class="kicker">The game keeps its score on a separate server</span>
-          <p class="muted">The AI cannot access or change the score. It must solve the puzzle to earn points:</p>
-          <table>
-            <thead><tr><th>What the AI did</th><th class="r">Score</th></tr></thead>
-            <tbody>
-              <tr><td><b>Perfect solver</b> (fewest moves)</td><td class="r fig">1.000</td></tr>
-              <tr><td><b>Do nothing</b> (no moves)</td><td class="r fig">0.000</td></tr>
-              <tr><td><b>Stop after level 1</b> (partial credit)</td><td class="r fig">0.167 / 0.125</td></tr>
-              <tr><td><b>Open-source AI</b> (Nemotron)</td><td class="r fig">0.067</td></tr>
-              <tr><td><b>All 10 cheating attempts</b></td><td class="r h" style="font-family:var(--mono); font-weight:600">0.000</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="card accent">
-          <span class="kicker">How we stop cheating</span>
-          <ul class="list">
-            <li><b>Wasted moves count:</b> Hitting a wall or restarting lowers the score.</li>
-            <li><b>The AI cannot change its score:</b> Scorekeeping happens on a separate server.</li>
-            <li><b>We tried 10 ways to cheat:</b> Faking scores, inspecting hidden files, visiting other websites, and restarting 2,000 times all score <span class="fig">0.000</span>.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 9 (0:50)</b>An AI trained to earn points may find ways to exploit the scoring system. We keep the score on a separate server and tried ten ways to cheat, including faking scores and restarting repeatedly. Every attempt scored zero.</div>
-</section>
-
-<!-- SLIDE 10: B2B REVENUE MODEL & GO-TO-MARKET -->
+<!-- SLIDE 10: ROVER TRANSFER TEST -->
 <section class="slide" id="s10" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>10</b> / 11</span>
+      <span class="pg"><b>10</b> / 12</span>
     </div>
     <div class="slide-main">
-      <h2>Find failures, train better models, run private tests.</h2>
+      <h2>We also tested the model on a rover task.</h2>
+      <div class="cols">
+        <div class="body">
+          <p class="lead">This simulated rover has scrambled controls. It must discover what each button does, find a beacon, and get home.</p>
+          <div class="card">
+            <span class="kicker">What happened after training</span>
+            <p><code>Qwen3.5-4B</code> completed <b>39 of 100</b> missions before training and <b>44 of 100</b> after training on our games.</p>
+            <p class="muted">The five-mission increase was not statistically significant (paired test, p = 0.42).</p>
+          </div>
+        </div>
+        <div class="card human-box">
+          <span class="kicker">Missions completed out of 100</span>
+          <div class="chart">
+            <div class="row"><div class="who">Scripted explorer<small>reference</small></div><div class="track"><div class="fill o" style="--v:0.98"></div></div><div class="val">98%</div></div>
+            <div class="row"><div class="who">Random driving<small>reference</small></div><div class="track"><div class="fill o" style="--v:0.04"></div></div><div class="val">4%</div></div>
+            <div class="row"><div class="who model-qwen">Qwen3.5-4B<small>before training</small></div><div class="track"><div class="fill" style="--v:0.39; background:var(--series-10)"></div></div><div class="val">39%</div></div>
+            <div class="row"><div class="who model-qwen">Qwen3.5-4B<small>after training on our games</small></div><div class="track"><div class="fill" style="--v:0.44; background:var(--series-10)"></div></div><div class="val">44%</div></div>
+          </div>
+          <p class="muted" style="font-size:1.06cqw">Same 100 simulated missions for each model. No physical rover was used.</p>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div class="notes"><b>Speaker Notes: Slide 10 (0:40)</b>We also tested a model outside our games. The controls on this simulated rover are scrambled, so the model has to learn which button moves it in each direction, reach a beacon, and return. The 4B model completed 39 of 100 missions before training and 44 after training on our games. This result is small and not statistically significant.</div>
+</section>
+
+<!-- SLIDE 11: B2B REVENUE MODEL & GO-TO-MARKET -->
+<section class="slide" id="s11" tabindex="-1">
+  <div class="frame"><div class="in">
+    <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
+      <span class="pg"><b>11</b> / 12</span>
+    </div>
+    <div class="slide-main">
+      <h2>Fresh games for private tests and model training.</h2>
       <div class="cols-3">
         <div class="card biz-box">
           <span class="kicker">1. Find failures</span>
@@ -751,18 +785,18 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 10 (0:45)</b>We sell failure reports, puzzles for training small AI models, and private tests for companies. A new puzzle takes about two seconds to create and check, which keeps the cost of serving another customer low.</div>
+  <div class="notes"><b>Speaker Notes: Slide 11 (0:45)</b>We sell failure reports, puzzles for training small AI models, and private tests for companies. A new puzzle takes about two seconds to create and check, which keeps the cost of serving another customer low.</div>
 </section>
 
-<!-- SLIDE 11: FULL CHALLENGE SCORECARD & REPRODUCIBILITY -->
-<section class="slide" id="s11" tabindex="-1">
+<!-- SLIDE 12: CHALLENGE SCORECARD & REPRODUCIBILITY -->
+<section class="slide" id="s12" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
       <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
-      <span class="pg"><b>11</b> / 11</span>
+      <span class="pg"><b>12</b> / 12</span>
     </div>
     <div class="slide-main">
-      <h2>Run the tests yourself. Then try to break them.</h2>
+      <h2>Game Factory. Try to beat the AI yourself.</h2>
       <div class="cols">
         <div class="body">
           <p class="muted" style="font-size:1.08cqw">Install the tools, then compare a perfect solver, a player that makes no moves, or your own AI. Replace <code>&lt;agent&gt;</code> with your AI's name.</p>
@@ -793,14 +827,14 @@ harbor run -p harbor/eval-v2 -a &lt;agent&gt;</code>
               <tr><td><b>Fair challenge</b></td><td>In 54% of failed runs, the AI knew the rule but could not act on it.</td></tr>
               <tr><td><b>Reliable scoring</b></td><td>Perfect play scores 1. Doing nothing or cheating scores 0.</td></tr>
               <tr><td><b>Working software</b></td><td>Puzzles are checked as solvable and tests run with one command.</td></tr>
-              <tr><td><b>Extra result</b></td><td>Training raised a small model's math score from 58.9% to 64.0%.</td></tr>
+              <tr><td><b>Transfer test</b></td><td>Qwen3.5-4B completed 39 of 100 rover missions before training and 44 after. The change was not significant.</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 11 (0:35)</b>Game Factory creates new puzzles, shows why AI fails, and helps teams improve and test their models. The score is protected from cheating, and the commands here let you reproduce our results. Try a puzzle, inspect a failure, and see if you can break the tests.</div>
+  <div class="notes"><b>Speaker Notes: Slide 12 (0:35)</b>Game Factory makes fresh games for testing and training AI. You can replay model decisions, check the score, and run the tests yourself. Try to beat the AI on <code>/challenge</code>.</div>
 </section>
 
 </main>
