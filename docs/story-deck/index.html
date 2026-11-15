@@ -145,9 +145,12 @@ p { margin: 0; }
 .who.h, .val.h { color: var(--fg); }
 .model-carbon { color: var(--series-2) !important; }
 .model-argon { color: var(--series-3) !important; }
+.model-kimi { color: var(--series-4) !important; }
 .model-flash { color: var(--series-5) !important; }
+.model-sonnet { color: var(--series-6) !important; }
 .model-deepseek { color: var(--series-1) !important; }
 .model-qwen { color: var(--series-10) !important; }
+.model-gemma { color: var(--series-9) !important; }
 .failure { color: var(--bad) !important; }
 
 .body { display: grid; gap: 0.95cqw; align-content: start; min-height: 0; }
@@ -503,8 +506,8 @@ body.present .slide.current .frame {
           <div class="row"><div class="who h">Humans (1st try)<small>unseen eval-v2</small></div><div class="track"><div class="fill h" style="--v:0.739"></div></div><div class="val h">74%<small>17/23 · 92% lvls</small></div></div>
           <div class="row"><div class="who model-carbon">Gemini 4 Carbon<small>cloud h1 · medium</small></div><div class="track"><div class="fill model-carbon" style="--v:0.444"></div></div><div class="val">44%<small>8/18 · 83% lvls</small></div></div>
           <div class="row"><div class="who model-argon">Gemini 4 Argon<small>cloud h1 · medium</small></div><div class="track"><div class="fill model-argon" style="--v:0.10"></div></div><div class="val">10%<small>3/30 · 65% lvls</small></div></div>
-          <div class="row"><div class="who m">Kimi K3.1 · Flash · Sonnet<small>cloud h1</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/24 · 13–33% lvls</small></div></div>
-          <div class="row"><div class="who">Qwen3.5-9B / Gemma 4B<small>Unit-7 onboard edge class</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>&lt;3% lvls solved</small></div></div>
+          <div class="row"><div class="who"><span class="model-kimi">Kimi K3.1</span> · <span class="model-flash">Flash</span> · <span class="model-sonnet">Sonnet</span><small>cloud h1</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/24 · 13–33% lvls</small></div></div>
+          <div class="row"><div class="who"><span class="model-qwen">Qwen3.5-9B</span> / <span class="model-gemma">Gemma 4B</span><small>Unit-7 onboard edge class</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>&lt;3% lvls solved</small></div></div>
         </div>
       </div>
       <div class="body">
