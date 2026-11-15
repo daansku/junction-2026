@@ -1,0 +1,40 @@
+LiteLLM could not resolve model 'verda-nemotron/nemotron-3.5-super-vl'; passing it unchanged to the agent. For an OpenAI-compatible endpoint, use openai/<model-id> with OPENAI_API_KEY and OPENAI_BASE_URL. Use --api-format if supported, or --api-key-name and --base-url to override the connection.
+LiteLLM could not resolve model 'verda-nemotron/nemotron-3.5-super-vl'; passing it unchanged to the agent. For an OpenAI-compatible endpoint, use openai/<model-id> with OPENAI_API_KEY and OPENAI_BASE_URL. Use --api-format if supported, or --api-key-name and --base-url to override the connection.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+  1/1 Actions: 187.000 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0:18:30 0:00:00
+adhoc • opencode • verda-nemotron/nemotron-3.5-super-vl
+┏━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Excepti… ┃ Actions ┃ Invalid… ┃ Levels_… ┃ Levels… ┃ Reward ┃   Won ┃
+┡━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│      1 │        1 │ 187.000 │    1.000 │    0.000 │   8.000 │  0.000 │ 0.000 │
+└────────┴──────────┴─────────┴──────────┴──────────┴─────────┴────────┴───────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 0.0    │     1 │
+│ 0      │     1 │
+│ 8      │     1 │
+│ 187    │     1 │
+│ 1      │     1 │
+│ 0      │     1 │
+└────────┴───────┘
+
+┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ Exception         ┃ Count ┃
+┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ AgentTimeoutError │     1 │
+└───────────────────┴───────┘
+
+Job Info
+Total runtime: 18m 30s
+Results written to 
+harbor/run-logs/partial-15min/verda-nemotron_nemotron-3.5-super-vl/agent-verda-n
+emotron_nemotron-3.5-super-vl/2026-11-15__05-40-32/result.json
+Inspect results by running `harbor view 
+harbor/run-logs/partial-15min/verda-nemotron_nemotron-3.5-super-vl/agent-verda-n
+emotron_nemotron-3.5-super-vl`
+Share results by running `harbor upload 
+harbor/run-logs/partial-15min/verda-nemotron_nemotron-3.5-super-vl/agent-verda-n
+emotron_nemotron-3.5-super-vl/2026-11-15__05-40-32`
+

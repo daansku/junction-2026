@@ -1,0 +1,34 @@
+LiteLLM could not resolve model 'verda/deepseek-4-1-flash-1017'; passing it unchanged to the agent. For an OpenAI-compatible endpoint, use openai/<model-id> with OPENAI_API_KEY and OPENAI_BASE_URL. Use --api-format if supported, or --api-key-name and --base-url to override the connection.
+LiteLLM could not resolve model 'verda/deepseek-4-1-flash-1017'; passing it unchanged to the agent. For an OpenAI-compatible endpoint, use openai/<model-id> with OPENAI_API_KEY and OPENAI_BASE_URL. Use --api-format if supported, or --api-key-name and --base-url to override the connection.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+  1/1 Actions: 43.000 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0:05:30 0:00:00
+adhoc • opencode • verda/deepseek-4-1-flash-1017
+┏━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Excepti… ┃ Actions ┃ Invalid… ┃ Levels_… ┃ Levels… ┃ Reward ┃   Won ┃
+┡━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│      1 │        0 │  43.000 │    0.000 │    1.000 │   8.000 │  0.125 │ 0.000 │
+└────────┴──────────┴─────────┴──────────┴──────────┴─────────┴────────┴───────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 0.125  │     1 │
+│ 1      │     1 │
+│ 8      │     1 │
+│ 43     │     1 │
+│ 0      │     1 │
+│ 0      │     1 │
+└────────┴───────┘
+
+Job Info
+Total runtime: 5m 30s
+Results written to 
+harbor/run-logs/partial-15min/verda_deepseek-4-1-flash-1017/agent-verda_deepseek
+-4-1-flash-1017/2026-11-15__05-51-27/result.json
+Inspect results by running `harbor view 
+harbor/run-logs/partial-15min/verda_deepseek-4-1-flash-1017/agent-verda_deepseek
+-4-1-flash-1017`
+Share results by running `harbor upload 
+harbor/run-logs/partial-15min/verda_deepseek-4-1-flash-1017/agent-verda_deepseek
+-4-1-flash-1017/2026-11-15__05-51-27`
+

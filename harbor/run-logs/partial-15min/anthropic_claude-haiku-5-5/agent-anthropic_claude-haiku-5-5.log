@@ -1,0 +1,31 @@
+  1/1 Actions: 76.000 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0:05:33 0:00:00
+adhoc • opencode • claude-haiku-5-5
+┏━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Excepti… ┃ Actions ┃ Invalid… ┃ Levels_… ┃ Levels… ┃ Reward ┃   Won ┃
+┡━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│      1 │        0 │  76.000 │    0.000 │    1.000 │   8.000 │  0.111 │ 0.000 │
+└────────┴──────────┴─────────┴──────────┴──────────┴─────────┴────────┴───────┘
+
+┏━━━━━━━━━━┳━━━━━━━┓
+┃ Reward   ┃ Count ┃
+┡━━━━━━━━━━╇━━━━━━━┩
+│ 0.110714 │     1 │
+│ 1        │     1 │
+│ 8        │     1 │
+│ 76       │     1 │
+│ 0        │     1 │
+│ 0        │     1 │
+└──────────┴───────┘
+
+Job Info
+Total runtime: 5m 33s
+Results written to 
+harbor/run-logs/partial-15min/anthropic_claude-haiku-5-5/agent-anthropic_claude-
+haiku-5-5/2026-11-15__05-51-23/result.json
+Inspect results by running `harbor view 
+harbor/run-logs/partial-15min/anthropic_claude-haiku-5-5/agent-anthropic_claude-
+haiku-5-5`
+Share results by running `harbor upload 
+harbor/run-logs/partial-15min/anthropic_claude-haiku-5-5/agent-anthropic_claude-
+haiku-5-5/2026-11-15__05-51-23`
+

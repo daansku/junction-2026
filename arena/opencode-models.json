@@ -119,6 +119,23 @@
           }
         }
       }
+    },
+    "verda": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Verda managed inference",
+      "options": {
+        "baseURL": "https://inference.verda.com/v1",
+        "apiKey": "{env:VERDA_INFERENCE_KEY}"
+      },
+      "models": {
+        "deepseek-4-1-flash-1017": {
+          "name": "DeepSeek 4.1 Flash",
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          }
+        }
+      }
     }
   }
 }

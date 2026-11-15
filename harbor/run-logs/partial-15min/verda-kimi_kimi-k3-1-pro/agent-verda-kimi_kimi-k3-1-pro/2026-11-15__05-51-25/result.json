@@ -1,0 +1,74 @@
+{
+    "schema_version": 1,
+    "id": "3433e89a-ebd6-47f3-8aaa-eca544175adb",
+    "started_at": "2026-11-15T05:51:30.064479",
+    "updated_at": "2026-11-15T06:08:47.248528",
+    "finished_at": "2026-11-15T06:08:47.248528",
+    "n_total_trials": 1,
+    "stats": {
+        "n_completed_trials": 1,
+        "n_errored_trials": 1,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+        "n_retries": 0,
+        "evals": {
+            "opencode__verda-kimi/kimi-k3-1-pro__adhoc": {
+                "n_trials": 1,
+                "n_errors": 1,
+                "metrics": [
+                    {
+                        "actions": 160.0,
+                        "invalid_actions": 0.0,
+                        "levels_solved": 4.0,
+                        "levels_total": 8.0,
+                        "reward": 0.388731,
+                        "won": 0.0
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "0.388731": [
+                            "gridworld-s910000-d4-l8-f71ee29e__r5FU4SQ"
+                        ]
+                    },
+                    "levels_solved": {
+                        "4": [
+                            "gridworld-s910000-d4-l8-f71ee29e__r5FU4SQ"
+                        ]
+                    },
+                    "levels_total": {
+                        "8": [
+                            "gridworld-s910000-d4-l8-f71ee29e__r5FU4SQ"
+                        ]
+                    },
+                    "actions": {
+                        "160": [
+                            "gridworld-s910000-d4-l8-f71ee29e__r5FU4SQ"
+                        ]
+                    },
+                    "invalid_actions": {
+                        "0": [
+                            "gridworld-s910000-d4-l8-f71ee29e__r5FU4SQ"
+                        ]
+                    },
+                    "won": {
+                        "0": [
+                            "gridworld-s910000-d4-l8-f71ee29e__r5FU4SQ"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "AgentTimeoutError": [
+                        "gridworld-s910000-d4-l8-f71ee29e__r5FU4SQ"
+                    ]
+                }
+            }
+        },
+        "n_input_tokens": 18894391,
+        "n_cache_tokens": 18468800,
+        "n_output_tokens": 18178,
+        "cost_usd": null
+    }
+}

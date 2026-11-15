@@ -1,0 +1,70 @@
+{
+    "schema_version": 1,
+    "id": "36622d2f-2b9b-454f-96ac-af3598a80495",
+    "started_at": "2026-11-15T05:51:32.003720",
+    "updated_at": "2026-11-15T05:57:02.146227",
+    "finished_at": "2026-11-15T05:57:02.146227",
+    "n_total_trials": 1,
+    "stats": {
+        "n_completed_trials": 1,
+        "n_errored_trials": 0,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+        "n_retries": 0,
+        "evals": {
+            "opencode__verda/deepseek-4-1-flash-1017__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "actions": 43.0,
+                        "invalid_actions": 0.0,
+                        "levels_solved": 1.0,
+                        "levels_total": 8.0,
+                        "reward": 0.125,
+                        "won": 0.0
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "0.125": [
+                            "gridworld-s910000-d4-l8-f71ee29e__XV32rSc"
+                        ]
+                    },
+                    "levels_solved": {
+                        "1": [
+                            "gridworld-s910000-d4-l8-f71ee29e__XV32rSc"
+                        ]
+                    },
+                    "levels_total": {
+                        "8": [
+                            "gridworld-s910000-d4-l8-f71ee29e__XV32rSc"
+                        ]
+                    },
+                    "actions": {
+                        "43": [
+                            "gridworld-s910000-d4-l8-f71ee29e__XV32rSc"
+                        ]
+                    },
+                    "invalid_actions": {
+                        "0": [
+                            "gridworld-s910000-d4-l8-f71ee29e__XV32rSc"
+                        ]
+                    },
+                    "won": {
+                        "0": [
+                            "gridworld-s910000-d4-l8-f71ee29e__XV32rSc"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        },
+        "n_input_tokens": 3943757,
+        "n_cache_tokens": 3787008,
+        "n_output_tokens": 22486,
+        "cost_usd": null
+    }
+}

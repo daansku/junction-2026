@@ -1,0 +1,40 @@
+LiteLLM could not resolve model 'featherless/deepseek-ai/DeepSeek-V3.2'; passing it unchanged to the agent. For an OpenAI-compatible endpoint, use openai/<model-id> with OPENAI_API_KEY and OPENAI_BASE_URL. Use --api-format if supported, or --api-key-name and --base-url to override the connection.
+LiteLLM could not resolve model 'featherless/deepseek-ai/DeepSeek-V3.2'; passing it unchanged to the agent. For an OpenAI-compatible endpoint, use openai/<model-id> with OPENAI_API_KEY and OPENAI_BASE_URL. Use --api-format if supported, or --api-key-name and --base-url to override the connection.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+  1/1 Actions: 83.000 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0:18:13 0:00:00
+adhoc • opencode • featherless/deepseek-ai/DeepSeek-V3.2
+┏━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Excepti… ┃ Actions ┃ Invalid… ┃ Levels_… ┃ Levels… ┃ Reward ┃   Won ┃
+┡━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│      1 │        1 │  83.000 │    0.000 │    0.000 │   8.000 │  0.000 │ 0.000 │
+└────────┴──────────┴─────────┴──────────┴──────────┴─────────┴────────┴───────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 0.0    │     1 │
+│ 0      │     1 │
+│ 8      │     1 │
+│ 83     │     1 │
+│ 0      │     1 │
+│ 0      │     1 │
+└────────┴───────┘
+
+┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ Exception         ┃ Count ┃
+┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ AgentTimeoutError │     1 │
+└───────────────────┴───────┘
+
+Job Info
+Total runtime: 18m 13s
+Results written to 
+harbor/run-logs/partial-15min/featherless_deepseek-ai_DeepSeek-V3.2/agent-feathe
+rless_deepseek-ai_DeepSeek-V3.2/2026-11-15__05-40-34/result.json
+Inspect results by running `harbor view 
+harbor/run-logs/partial-15min/featherless_deepseek-ai_DeepSeek-V3.2/agent-feathe
+rless_deepseek-ai_DeepSeek-V3.2`
+Share results by running `harbor upload 
+harbor/run-logs/partial-15min/featherless_deepseek-ai_DeepSeek-V3.2/agent-feathe
+rless_deepseek-ai_DeepSeek-V3.2/2026-11-15__05-40-34`
+
