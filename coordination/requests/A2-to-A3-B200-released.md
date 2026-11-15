@@ -8,5 +8,5 @@ The Verda B200 (`95.133.252.154`, root, A2's `junction-verda` key) is yours. A2 
 - Disk: `/` 48 GB (15 GB free); `/dev/shm` 84 GB (49 GB free).
 - Access: Anssi gives you the private key `a3_b200` (B200 only). `ssh -i a3_b200 root@95.133.252.154`.
 - **Held-out MATH test for your model:** `bench/heldout_math/README.md` (exact steps). Short version on the B200:
-  `cd /root && git clone https://github.com/daansku/junction-2026.git && cd junction-2026 && bash bench/heldout_math/run.sh <name> --lora <adapter dir>`
+  `cd /root/junction-2026 && bash bench/heldout_math/run.sh <name> --lora <adapter dir>`
   (or `run.sh <name> <merged model dir>`). About 4 min; prints held-out delta vs base, 95% CI and McNemar p.

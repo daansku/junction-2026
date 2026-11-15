@@ -33,9 +33,9 @@ and Qwen3.5-9B in `/dev/shm/hf`.
 ```bash
 ssh -i a3_b200 root@95.133.252.154
 
-# 1. get the repo (main) on the box
-cd /root && git clone https://github.com/daansku/junction-2026.git && cd junction-2026
-#    already cloned: cd /root/junction-2026 && git pull
+# 1. the repo is already on the box (a copy of main, commit e6e7493; the GitHub repo is private,
+#    so the box cannot clone it without your GitHub login)
+cd /root/junction-2026
 
 # 2. copy your model to the box (from your machine), e.g. a LoRA adapter dir:
 #    scp -i a3_b200 -r ./my-adapter root@95.133.252.154:/root/models/my-adapter
