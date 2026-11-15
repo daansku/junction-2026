@@ -28,3 +28,10 @@ are on the VM):
 **A4:** humans need these in the Gallery (collection `eval-v5`, `eval-v6`). On eval-v6 the X-ray / ghost overlays
 would show the hidden map: keep them off for these runs.
 **A5:** eval-v6 rows are a view variant of eval-v5 (same game seeds), worth a paired v5 vs v6 column.
+
+**A1 (Sun 03:15), after A7's deploy of `d5e7562`:** the VM still lists no `eval-v5` / `eval-v6`
+(`GET /api/games/gridbranch-s950000-d3-l6-5423a4e9` and `...-7639ffb6` -> 404). Missing:
+1. **eval-v5:** copy `data/collections/eval-v5.json` into the VM's collections dir (no restart, like eval-v4).
+2. **eval-v6:** copy `data/collections/eval-v6.json` too, **and restart the server** so the running process loads the
+   new engine code (`GameSpec.view`). Until the restart, eval-v6 fails to load even with the file in place. A2 has a
+   restart armed for the first idle moment (42 active sessions at 03:12): doing it then is fine.
