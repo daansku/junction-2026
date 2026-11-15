@@ -174,12 +174,27 @@ p { margin: 0; }
 }
 
 /* Bullets */
-.list { display: grid; gap: 0.85cqw; margin: 0; padding: 0; list-style: none; }
-.list li { display: grid; grid-template-columns: 0.9cqw 1fr; gap: 0.9cqw; align-items: baseline; }
-.list li::before { content: ""; width: 0.65cqw; height: 0.65cqw; background: var(--accent); transform: translateY(-0.12cqw); }
+.list { display: grid; gap: 0.72cqw; margin: 0; padding: 0; list-style: none; }
+.list li { position: relative; padding-left: 1.45cqw; display: block; }
+.list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.48em;
+  width: 0.62cqw;
+  height: 0.62cqw;
+  background: var(--accent);
+}
 .list.c li::before { background: var(--cyan); }
 .list.h li::before { background: var(--human); }
 .list.m li::before { background: var(--model); }
+code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: rgba(255,255,255,0.06);
+  padding: 0.08em 0.32em;
+  border-radius: 2px;
+}
 
 /* Stats strip */
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4cqw; }
@@ -329,6 +344,7 @@ body.present .slide.current .frame {
   .row .who, .row .val { font-size: 13px; } .row .who small, .row .val small { font-size: 10px; }
   .track { height: 16px; }
   table, .cmd { font-size: 12.5px; } th { font-size: 10px; }
+  .list li { padding-left: 16px; } .list li::before { width: 7px; height: 7px; top: 0.52em; }
   #hero { max-width: 240px; }
   #qr { width: 110px; padding: 6px; }
 }
@@ -372,7 +388,7 @@ body.present .slide.current .frame {
       </div>
       <div class="hero-wrap">
         <canvas id="hero" width="64" height="64" aria-label="64x64 pixel observation from eval-v2"></canvas>
-        <div class="cap">Exact agent observation (`eval-v2`, s910004 L8): 64×64 grid, 16 colours, 6 actions, zero text hints.</div>
+        <div class="cap">Exact agent observation (<code>eval-v2</code>, s910004 L8): 64×64 grid, 16 colours, 6 actions, zero text hints.</div>
       </div>
     </div>
     <div class="foot">
@@ -407,8 +423,8 @@ body.present .slide.current .frame {
           <span class="kicker">Our 4-Gate Automated Verification (&lt; 2s / Seed on CPU)</span>
           <ul class="list">
             <li><b>1. Solvability Proof:</b> Exact BFS finds shortest optimal path (<span class="fig">1,000 / 1,000</span> fuzzed seeds pass).</li>
-            <li><b>2. Forced Discovery (`gridforce`):</b> Ablation proves <span class="fig">100%</span> of teaching levels fail if the new rule is ignored.</li>
-            <li><b>3. Real Branching (`gridbranch`):</b> <span class="fig">4.0</span> state-space loops/level; <span class="fig">0%</span> trivial corridors.</li>
+            <li><b>2. Forced Discovery (<code>gridforce</code>):</b> Ablation proves <span class="fig">100%</span> of teaching levels fail if the new rule is ignored.</li>
+            <li><b>3. Real Branching (<code>gridbranch</code>):</b> <span class="fig">4.0</span> state-space loops/level; <span class="fig">0%</span> trivial corridors.</li>
             <li><b>4. Anti-Guessing + Skin Shuffle:</b> Random walk wins <span class="fig">&lt; 2%</span>; colours &amp; glyphs reshuffle every seed.</li>
           </ul>
         </div>
@@ -422,7 +438,7 @@ body.present .slide.current .frame {
           <figure><img src="../deck/assets/pits.gif" alt="Pits"><figcaption>pits (held-out)</figcaption></figure>
           <figure><img src="../deck/assets/checkpoints.gif" alt="Checkpoints"><figcaption>checkpoints (held-out)</figcaption></figure>
         </div>
-        <p class="muted" style="font-size:1.18cqw">2,035 training worlds (`train-v1`) + 60 frozen held-out test worlds (`eval-v1`, `eval-v2`) with disjoint rule pairs.</p>
+        <p class="muted" style="font-size:1.18cqw">2,035 training worlds (<code>train-v1</code>) + 60 frozen held-out test worlds (<code>eval-v1</code>, <code>eval-v2</code>) with disjoint rule pairs.</p>
       </div>
     </div>
     <div class="foot">
@@ -465,7 +481,7 @@ body.present .slide.current .frame {
       <span>web/src/features/challenge · fallback video: web/screenshots/video/challenge-full-run.mp4</span>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 3 (1:45 incl. live demo)</b>Let's show rather than tell. Scan this QR code or watch live on `/challenge`. Notice there is no text tutorial. A human taps right, sees how the tile reacts, figures out the mechanic in 3 seconds, and clears the level — and immediately sees how Gemini, Kimi, and Qwen handled that exact same board.</div>
+  <div class="notes"><b>Speaker Notes · Slide 3 (1:45 incl. live demo)</b>Let's show rather than tell. Scan this QR code or watch live on <code>/challenge</code>. Notice there is no text tutorial. A human taps right, sees how the tile reacts, figures out the mechanic in 3 seconds, and clears the level — and immediately sees how Gemini, Kimi, and Qwen handled that exact same board.</div>
 </section>
 
 <!-- SLIDE 4: PRODUCT #1 (PRIVATE EVALS) x THE GAP (h1) -->
@@ -492,17 +508,17 @@ body.present .slide.current .frame {
         </div>
         <div class="card biz-box">
           <span class="kicker">Commercial Value · Fresh Seed Per Contract</span>
-          <p>Enterprise procurement &amp; safety institutes get a <b>private seed range (`s950000+`)</b> never published online.</p>
-          <p class="muted" style="font-size:1.15cqw">On 8-level games with 3 held-out rules (`eval-v2`), standard agent loops (`h1`) collapse from easy levels to <span class="fig">0%–44%</span> full-game wins vs <span class="fig">74%</span> for humans — while local `&lt;10B` edge models score near zero.</p>
+          <p>Enterprise procurement &amp; safety institutes get a <b>private seed range (<code>s950000+</code>)</b> never published online.</p>
+          <p class="muted" style="font-size:1.15cqw">On 8-level games with 3 held-out rules (<code>eval-v2</code>), standard agent loops (<code>h1</code>) collapse from easy levels to <span class="fig">0%–44%</span> full-game wins vs <span class="fig">74%</span> for humans — while local <code>&lt;10B</code> edge models score near zero.</p>
         </div>
       </div>
     </div>
     <div class="foot">
       <span class="bridge">Ranked by games won → levels solved → action efficiency. Finished runs only.</span>
-      <span>Source: live leaderboard.json (`eval-v2`, 30 games × 8 levels)</span>
+      <span>Source: live leaderboard.json (<code>eval-v2</code>, 30 games × 8 levels)</span>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 4 (1:00)</b>Here is our core benchmark gap on `eval-v2` — 30 frozen 8-level games containing 3 mechanics never seen in training. Humans playing on their very first attempt win 74% of full games and clear 92% of levels. Under our standard agent loop, Gemini 4 Carbon wins 44%, Argon drops to 10%, Kimi K3.1, Gemini Flash, and Claude Sonnet win 0%, and local 4B–9B edge models solve under 3% of levels. For model buyers and labs, every evaluation contract draws a fresh seed range — mathematically immune to benchmark contamination.</div>
+  <div class="notes"><b>Speaker Notes · Slide 4 (1:00)</b>Here is our core benchmark gap on <code>eval-v2</code> — 30 frozen 8-level games containing 3 mechanics never seen in training. Humans playing on their very first attempt win 74% of full games and clear 92% of levels. Under our standard agent loop, Gemini 4 Carbon wins 44%, Argon drops to 10%, Kimi K3.1, Gemini Flash, and Claude Sonnet win 0%, and local 4B–9B edge models solve under 3% of levels. For model buyers and labs, every evaluation contract draws a fresh seed range — mathematically immune to benchmark contamination.</div>
 </section>
 
 <!-- SLIDE 5: CLOUD LAB HARNESS (h2) VS EDGE REALITY -->
@@ -520,18 +536,18 @@ body.present .slide.current .frame {
         <h2>Full lab memory closes the top gap — at $5–$18/game in the cloud.</h2>
         <div class="card accent">
           <span class="kicker">Why This Proves 100% Fair Difficulty</span>
-          <p>When given multi-turn history, persistent `<think>` traces, and 5-move batching (`h2` / `h2b`), the very newest frontier models (`Gemini 4 Argon &amp; Carbon`) reach <span class="fig">100%</span> on the 4-game subset — proving <b>nothing is unfairly hidden or broken</b>.</p>
+          <p>When given multi-turn history, persistent <code>&lt;think&gt;</code> traces, and 5-move batching (<code>h2</code> / <code>h2b</code>), the very newest frontier models (<code>Gemini 4 Argon &amp; Carbon</code>) reach <span class="fig">100%</span> on the 4-game subset — proving <b>nothing is unfairly hidden or broken</b>.</p>
         </div>
         <div class="card biz-box">
           <span class="kicker">Why Edge &amp; Production Teams Still Have a Problem</span>
           <ul class="list c">
-            <li><b>Cloud cost &amp; latency:</b> `h2` burns tens of thousands of reasoning tokens and `$5–$18` per game.</li>
-            <li><b>No cloud underground or subsea:</b> A `9B` model on a robot's Jetson Orin cannot call a $15 cloud API — and `Gemini Pro` + `Kimi K3.1` still win <span class="fig">0 / 4</span> even under `h2`.</li>
+            <li><b>Cloud cost &amp; latency:</b> <code>h2</code> burns tens of thousands of reasoning tokens and <code>$5–$18</code> per game.</li>
+            <li><b>No cloud underground or subsea:</b> A <code>9B</code> model on a robot's Jetson Orin cannot call a $15 cloud API — and <code>Gemini Pro</code> + <code>Kimi K3.1</code> still win <span class="fig">0 / 4</span> even under <code>h2</code>.</li>
           </ul>
         </div>
       </div>
       <div class="body">
-        <span class="kicker">Lab-Standard Multi-Turn (`eval-v2` subset)</span>
+        <span class="kicker">Lab-Standard Multi-Turn (<code>eval-v2</code> subset)</span>
         <div class="chart">
           <div class="row"><div class="who m">Gemini 4 Carbon / Argon<small>h2 / h2b · cloud high</small></div><div class="track"><div class="fill m" style="--v:1"></div></div><div class="val">100%<small>eff 0.86–0.93</small></div></div>
           <div class="row"><div class="who h">Humans<small>same subset · zero API</small></div><div class="track"><div class="fill h" style="--v:0.90"></div></div><div class="val h">90%<small>9/10 won · eff 0.66</small></div></div>
@@ -539,7 +555,7 @@ body.present .slide.current .frame {
           <div class="row"><div class="who m">DeepSeek 4.1 Flash<small>h2 · high</small></div><div class="track"><div class="fill m" style="--v:0.125"></div></div><div class="val">13%<small>1/8 won · eff 0.48</small></div></div>
           <div class="row"><div class="who m">Gemini Pro · Kimi K3.1<small>h2 · high / max</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/4 &amp; 0/4 won</small></div></div>
         </div>
-        <p class="muted" style="font-size:1.12cqw">Board misreads drop from <span class="fig">40% → 0%</span> (`h1 → h2`), isolating pure causal induction and spatial planning.</p>
+        <p class="muted" style="font-size:1.12cqw">Board misreads drop from <span class="fig">40% → 0%</span> (<code>h1 → h2</code>), isolating pure causal induction and spatial planning.</p>
       </div>
     </div>
     <div class="foot">
@@ -547,7 +563,7 @@ body.present .slide.current .frame {
       <span>Source: leaderboard_h2.json · arena/src/arena/agent_h2.py</span>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 5 (0:50)</b>We didn't stop at one harness. When we run the lab-standard multi-turn harness (`h2`/`h2b`) with persistent CoT and high effort, Gemini 4 Argon and Carbon catch up to humans on the 4-game subset. That proves a crucial rubric point: every pixel of information needed to win is right there on screen! Yet look at the cost and spread: Gemini Pro and Kimi K3.1 still win 0 of 4, cloud runs cost dollars and minutes per game, and an offline robot or budget-capped enterprise agent can't afford that.</div>
+  <div class="notes"><b>Speaker Notes · Slide 5 (0:50)</b>We didn't stop at one harness. When we run the lab-standard multi-turn harness (<code>h2</code>/<code>h2b</code>) with persistent CoT and high effort, Gemini 4 Argon and Carbon catch up to humans on the 4-game subset. That proves a crucial rubric point: every pixel of information needed to win is right there on screen! Yet look at the cost and spread: Gemini Pro and Kimi K3.1 still win 0 of 4, cloud runs cost dollars and minutes per game, and an offline robot or budget-capped enterprise agent can't afford that.</div>
 </section>
 
 <!-- SLIDE 6: PRODUCT #2 (READINESS AUDIT) x MEANINGFUL DIFFICULTY (WHY MODELS FAIL) -->
@@ -567,22 +583,22 @@ body.present .slide.current .frame {
           <div class="card model-box">
             <span class="n fig" style="font-size:2.9cqw; color:var(--model)">54.4%</span>
             <b>The Knowing–Doing Gap</b>
-            <p class="muted" style="font-size:1.12cqw">In <span class="fig">117 / 215</span> failed hidden-rule levels (`64%` in `h2`), the model <b>stated the exact mechanic in CoT</b>, then failed multi-step spatial execution.</p>
+            <p class="muted" style="font-size:1.12cqw">In <span class="fig">117 / 215</span> failed hidden-rule levels (<code>64%</code> in <code>h2</code>), the model <b>stated the exact mechanic in CoT</b>, then failed multi-step spatial execution.</p>
           </div>
           <div class="card accent">
             <span class="n fig" style="font-size:2.9cqw">50% + 44%</span>
             <b>Loops &amp; Sunk-Cost Resets</b>
-            <p class="muted" style="font-size:1.12cqw"><span class="fig">50%</span> repeat zero-effect moves (ramming a jammed wall/valve); <span class="fig">44%</span> refuse to `RESET` a doomed state in time.</p>
+            <p class="muted" style="font-size:1.12cqw"><span class="fig">50%</span> repeat zero-effect moves (ramming a jammed wall/valve); <span class="fig">44%</span> refuse to <code>RESET</code> a doomed state in time.</p>
           </div>
         </div>
         <div class="card biz-box">
           <span class="kicker">Real-World Value · Catch Runaway Loops Before Production</span>
-          <p>In a mine robot, repeating a zero-effect action drains the battery on a jammed valve. In enterprise RPA, it clicks a dead button 50 times. Our `/insights` Truth-Diff auditor catches this automatically before deployment.</p>
+          <p>In a mine robot, repeating a zero-effect action drains the battery on a jammed valve. In enterprise RPA, it clicks a dead button 50 times. Our <code>/insights</code> Truth-Diff auditor catches this automatically before deployment.</p>
         </div>
       </div>
       <div class="body">
         <img class="shot" src="../deck/assets/replay.png" alt="X-Ray replay comparing model hypothesis against engine ground truth">
-        <p class="cap">`/insights` &amp; `/replay`: Every failure links to the exact divergence step, verbatim CoT quote, and X-Ray ground truth.</p>
+        <p class="cap"><code>/insights</code> &amp; <code>/replay</code>: Every failure links to the exact divergence step, verbatim CoT quote, and X-Ray ground truth.</p>
       </div>
     </div>
     <div class="foot">
@@ -607,23 +623,23 @@ body.present .slide.current .frame {
       <div class="body">
         <h2>10 of 10 container exploits scored 0.000.</h2>
         <table>
-          <thead><tr><th>Harbor (`0.26.0`) + MCP Sidecar Run</th><th class="r">Reward</th></tr></thead>
+          <thead><tr><th>Harbor (<code>0.26.0</code>) + MCP Sidecar Run</th><th class="r">Reward</th></tr></thead>
           <tbody>
-            <tr><td><b>Oracle reference (`solve.sh`)</b> — shortest path</td><td class="r fig">1.000</td></tr>
-            <tr><td><b>Do-nothing baseline (`nop`)</b> — 0 actions</td><td class="r fig">0.000</td></tr>
-            <tr><td><b>Stop-early (`eval-v1` L1 / `eval-v2` L1)</b></td><td class="r fig">0.167 / 0.125</td></tr>
+            <tr><td><b>Oracle reference (<code>solve.sh</code>)</b> — shortest path</td><td class="r fig">1.000</td></tr>
+            <tr><td><b>Do-nothing baseline (<code>nop</code>)</b> — 0 actions</td><td class="r fig">0.000</td></tr>
+            <tr><td><b>Stop-early (<code>eval-v1</code> L1 / <code>eval-v2</code> L1)</b></td><td class="r fig">0.167 / 0.125</td></tr>
             <tr><td><b>OpenCode + Nemotron</b> (mean of 3 agent runs)</td><td class="r fig">0.067</td></tr>
             <tr><td><b>All 10 red-team exploit scripts</b> (inside agent container)</td><td class="r" style="color:var(--human); font-family:var(--mono); font-weight:600">0.000</td></tr>
           </tbody>
         </table>
-        <p class="muted" style="font-size:1.15cqw">Reward = mean over levels of `min(1, optimal_moves / actions_used)` if solved, else `0`. Every `RESET` and wall bump counts as an action.</p>
+        <p class="muted" style="font-size:1.15cqw">Reward = mean over levels of <code>min(1, optimal_moves / actions_used)</code> if solved, else <code>0</code>. Every <code>RESET</code> and wall bump counts as an action.</p>
       </div>
       <div class="body">
         <div class="card accent">
           <span class="kicker">How We Hardened the Agent Seat</span>
           <ul class="list">
-            <li><b>Isolated Sidecar Grading:</b> Game engine runs in a separate container; `/evidence/score.json` is never mounted into the agent container.</li>
-            <li><b>Network Egress Allowlist:</b> Agent container can only reach `localhost:8000/mcp` and LLM APIs — GitHub, PyPI, and public servers blocked.</li>
+            <li><b>Isolated Sidecar Grading:</b> Game engine runs in a separate container; <code>/evidence/score.json</code> is never mounted into the agent container.</li>
+            <li><b>Network Egress Allowlist:</b> Agent container can only reach <code>localhost:8000/mcp</code> and LLM APIs — GitHub, PyPI, and public servers blocked.</li>
             <li><b> Torture-Tested:</b> Forged score files, env/disk scraping, malformed MCP payloads, 32x race conditions, 2,000 resets, and 3,100 wall bumps all earn <span class="fig">0.000</span>.</li>
           </ul>
         </div>
@@ -654,35 +670,35 @@ body.present .slide.current .frame {
     <div class="cols">
       <div class="body">
         <h2>Training a 9B edge-sized model: 3 honest scientific lessons.</h2>
-        <p style="font-size:1.32cqw; color:#d5dae2">Offline robots (mines, pipes, jammed drones) and air-gapped workstations can only fit a <b>`4B–9B` local model</b>. We post-trained <b>`Qwen3.5-9B`</b> on our factory under a pre-registered outside-benchmark protocol (`PROTOCOL v3`):</p>
+        <p style="font-size:1.32cqw; color:#d5dae2">Offline robots (mines, pipes, jammed drones) and air-gapped workstations can only fit a <b><code>4B–9B</code> local model</b>. We post-trained <b><code>Qwen3.5-9B</code></b> on our factory under a pre-registered outside-benchmark protocol (<code>PROTOCOL v3</code>):</p>
         <div class="card model-box">
-          <span class="kicker">1 · Action Cloning Alone Fails (`SFT v1`)</span>
-          <p>Cloning 4k optimal trajectories solved just <span class="fig">4 / 180</span> test levels (`2.2%`). Copying answers without discovery reasoning teaches JSON syntax, not adaptation.</p>
+          <span class="kicker">1 · Action Cloning Alone Fails (<code>SFT v1</code>)</span>
+          <p>Cloning 4k optimal trajectories solved just <span class="fig">4 / 180</span> test levels (<code>2.2%</code>). Copying answers without discovery reasoning teaches JSON syntax, not adaptation.</p>
         </div>
         <div class="card model-box">
-          <span class="kicker">2 · Stripping `&lt;think&gt;` Collapses General Reasoning</span>
+          <span class="kicker">2 · Stripping <code>&lt;think&gt;</code> Collapses General Reasoning</span>
           <p>No-thinking SFT/RL taught the 9B model to skip deliberation, dropping outside benchmarks from <span class="fig">0.758 → 0.44</span>.</p>
         </div>
       </div>
       <div class="body">
         <div class="card human-box">
-          <span class="kicker" style="color:var(--human)">3 · Thinking-On GRPO (`RL v2` on B200 · `gridbranch` / `v3b`)</span>
-          <p>Rewarding engine-verified optimal moves <b>after closed `&lt;/think&gt;`</b> (`95–100%` closure, ~600 reasoning tokens):</p>
+          <span class="kicker" style="color:var(--human)">3 · Thinking-On GRPO (<code>RL v2</code> on B200 · <code>gridbranch</code> / <code>v3b</code>)</span>
+          <p>Rewarding engine-verified optimal moves <b>after closed <code>&lt;/think&gt;</code></b> (<code>95–100%</code> closure, ~600 reasoning tokens):</p>
           <table style="margin-top:0.4cqw">
             <thead><tr><th>Qwen3.5-9B (dev-slice v3)</th><th class="r">MATH</th><th class="r">GSM8K</th><th class="r">MedQA</th><th class="r">Health</th></tr></thead>
             <tbody>
-              <tr><td>Untuned `base`</td><td class="r">58.9%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r">72.0%</td></tr>
-              <tr><td><b>`think-games-h2` (step 30)</b></td><td class="r fig">64.0%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">76.0%</td></tr>
-              <tr><td><b>`think-gridbranch` (step 10)</b></td><td class="r fig">63.4%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">80.0%</td></tr>
+              <tr><td>Untuned <code>base</code></td><td class="r">58.9%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r">72.0%</td></tr>
+              <tr><td><b><code>think-games-h2</code> (step 30)</b></td><td class="r fig">64.0%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">76.0%</td></tr>
+              <tr><td><b><code>think-gridbranch</code> (step 10)</b></td><td class="r fig">63.4%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">80.0%</td></tr>
             </tbody>
           </table>
-          <p class="muted" style="font-size:1.05cqw; margin-top:0.3cqw"><b>Pre-registered honesty rule:</b> MATH lifts `+4.5–5.1 pp` with zero reasoning collapse; full-suite paired CIs vs `think-ctrl` lock at N5 (`/leaderboard?view=bench`).</p>
+          <p class="muted" style="font-size:1.05cqw; margin-top:0.3cqw"><b>Pre-registered honesty rule:</b> MATH lifts <code>+4.5–5.1 pp</code> with zero reasoning collapse; full-suite paired CIs vs <code>think-ctrl</code> lock at N5 (<code>/leaderboard?view=bench</code>).</p>
         </div>
       </div>
     </div>
     <div class="foot">
       <span class="bridge">Win-win: if full-suite beats control → scalable RL gym; where unseen rules resist SFT → ungameable eval proof.</span>
-      <span>Source: bench/PROTOCOL.md v3 · data/derived/bench/ (`think-games-h2-s30`, `think-gridbranch-s10`)</span>
+      <span>Source: bench/PROTOCOL.md v3 · data/derived/bench/ (<code>think-games-h2-s30</code>, <code>think-gridbranch-s10</code>)</span>
     </div>
   </div></div>
   <div class="notes"><b>Speaker Notes · Slide 8 (1:00)</b>Back to our offline mine robot: it can only carry a 9-billion-parameter model on edge hardware. Can our factory improve a 9B model? We ran three stages with strict pre-registered honesty rules. First, cloning optimal moves without reasoning solved only 4 of 180 test levels. Second, training without thinking tags collapsed outside reasoning from 0.758 to 0.44 — a vital lesson for anyone distilling edge agents. Third, when we ran Thinking-On GRPO on a B200 rewarding BFS-optimal decisions after closed think blocks, reasoning stayed 95–100% intact and MATH rose from 58.9% to 64.0% on the dev slice, with full paired control benchmarks locking automatically on our dashboard.</div>
@@ -704,8 +720,8 @@ body.present .slide.current .frame {
         <div class="card biz-box">
           <span class="kicker" style="color:var(--cyan)">1 · RL Gym &amp; Edge Distillation</span>
           <h3>Verifiable Reasoning Curricula</h3>
-          <p class="muted" style="font-size:1.18cqw"><b>Buyers:</b> Frontier AI labs (AfterQuery's core clients) &amp; offline robotics / defense teams (`4B–9B` on-device planners).</p>
-          <p style="font-size:1.18cqw"><b>Edge:</b> Infinite CPU tasks (`game_turn`, `rule_effect`, `full_plan`) weighted toward mined failure modes — zero human labelling.</p>
+          <p class="muted" style="font-size:1.18cqw"><b>Buyers:</b> Frontier AI labs (AfterQuery's core clients) &amp; offline robotics / defense teams (<code>4B–9B</code> on-device planners).</p>
+          <p style="font-size:1.18cqw"><b>Edge:</b> Infinite CPU tasks (<code>game_turn</code>, <code>rule_effect</code>, <code>full_plan</code>) weighted toward mined failure modes — zero human labelling.</p>
         </div>
         <div class="card accent">
           <span class="kicker" style="color:var(--accent)">2 · Private Evals-as-a-Service</span>
@@ -717,7 +733,7 @@ body.present .slide.current .frame {
           <span class="kicker" style="color:var(--human)">3 · Pre-Launch Sanity Gate</span>
           <h3>Agent Loop &amp; Budget Diagnostics</h3>
           <p class="muted" style="font-size:1.18cqw"><b>Buyers:</b> Teams shipping autonomous computer-use, RPA, or field-robotics agents.</p>
-          <p style="font-size:1.18cqw"><b>Edge:</b> Quantifies zero-effect action waste (`50%`), Knowing–Doing Gap (`54%`), and late-reset burn before production launch.</p>
+          <p style="font-size:1.18cqw"><b>Edge:</b> Quantifies zero-effect action waste (<code>50%</code>), Knowing–Doing Gap (<code>54%</code>), and late-reset burn before production launch.</p>
         </div>
       </div>
     </div>
@@ -759,11 +775,11 @@ harbor run -p harbor/eval-v2 -a &lt;agent&gt;  # 30 unseen-rule worlds</code>
         <table>
           <thead><tr><th>AfterQuery Criterion</th><th>Our Verified Evidence</th><th class="r">Pts</th></tr></thead>
           <tbody>
-            <tr><td><b>The Gap</b></td><td>74% Humans vs 0–44% `h1` models (`eval-v2`); full CIs</td><td class="r fig">30</td></tr>
-            <tr><td><b>Meaningful Difficulty</b></td><td>100% forced rules (`gridforce`); 54% Knowing–Doing Gap</td><td class="r fig">30</td></tr>
+            <tr><td><b>The Gap</b></td><td>74% Humans vs 0–44% <code>h1</code> models (<code>eval-v2</code>); full CIs</td><td class="r fig">30</td></tr>
+            <tr><td><b>Meaningful Difficulty</b></td><td>100% forced rules (<code>gridforce</code>); 54% Knowing–Doing Gap</td><td class="r fig">30</td></tr>
             <tr><td><b>Reward Integrity</b></td><td>Oracle 1.0, Nop 0.0, Stop-early 1/N, 10/10 attacks = 0.0</td><td class="r fig">25</td></tr>
             <tr><td><b>Craft</b></td><td>Engine 0.6.0, 143 tests, 1k/1k fuzz, 1-cmd Harbor eval</td><td class="r fig">15</td></tr>
-            <tr><td><b>Stretch / Tiebreaker</b></td><td>`Qwen3.5-9B` SFT v1 → Thinking-On GRPO (`PROTOCOL v3`)</td><td class="r h" style="font-family:var(--mono); font-weight:600">+TB</td></tr>
+            <tr><td><b>Stretch / Tiebreaker</b></td><td><code>Qwen3.5-9B</code> SFT v1 → Thinking-On GRPO (<code>PROTOCOL v3</code>)</td><td class="r h" style="font-family:var(--mono); font-weight:600">+TB</td></tr>
           </tbody>
         </table>
       </div>
@@ -773,7 +789,7 @@ harbor run -p harbor/eval-v2 -a &lt;agent&gt;  # 30 unseen-rule worlds</code>
       <span>README.md · coordination/JUDGING.md · 65.108.33.107.compute.verda.run</span>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 10 (0:30)</b>Everything we showed today is reproducible from our README in one command on Harbor and live right now on our site. Across the gap, meaningful difficulty, reward integrity, craft, and our 9B post-training pipeline, every number comes directly from verified traces in our repo. Grab a phone for `/challenge`, inspect our failures on `/insights`, and bring on the 15-minute exploit hunt. Thank you!</div>
+  <div class="notes"><b>Speaker Notes · Slide 10 (0:30)</b>Everything we showed today is reproducible from our README in one command on Harbor and live right now on our site. Across the gap, meaningful difficulty, reward integrity, craft, and our 9B post-training pipeline, every number comes directly from verified traces in our repo. Grab a phone for <code>/challenge</code>, inspect our failures on <code>/insights</code>, and bring on the 15-minute exploit hunt. Thank you!</div>
 </section>
 
 </main>
