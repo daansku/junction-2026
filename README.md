@@ -34,7 +34,7 @@ The frozen evaluation tasks are committed at `harbor/eval-v2/` (`30` tasks, diff
 
 ```bash
 make judge                                          # eval-v2 game 1: reference + do-nothing + stop-early (no model cost)
-make judge MODEL=gemini/gemini-4-argon K=3          # + 3 OpenCode agent runs (60-min cap each)
+make judge MODEL=gemini/gemini-4-argon K=3          # + 3 OpenCode agent runs in parallel (2 h cap each)
 make judge TASK=harbor/eval-v2/<task> MODEL=anthropic/claude-sonnet-5-5 K=3
 ```
 
@@ -48,7 +48,7 @@ harbor run -p "$TASK" -a oracle                                    # reference: 
 harbor run -p "$TASK" -a nop                                       # do-nothing -> 0.000
 harbor run -p "$TASK" -a oracle --ae ORACLE_STOP_AFTER_LEVELS=1    # stop-early after level 1 -> 1/8 = 0.125
 set -a; . ./.env; set +a
-harbor run -p "$TASK" -a opencode -m gemini/gemini-4-argon -k 3 -n 1 \
+harbor run -p "$TASK" -a opencode -m gemini/gemini-4-argon -k 3 -n 3 \
   --ae 'GOOGLE_GENERATIVE_AI_API_KEY=${GEMINI_API_KEY}'              # Gemini: OpenCode reads this name, not GEMINI_API_KEY
 ```
 
@@ -61,6 +61,23 @@ harbor run -p "$TASK" -a opencode -m gemini/gemini-4-argon -k 3 -n 1 \
 | **Do-nothing (`nop`)** | eval-v2 game 1 | 0 | 0 / 8 | **0.000** |
 | **Reference (`oracle`)** | eval-v1 game 1 (`s900000`) | 86 | 6 / 6 | **1.000** |
 | **OpenCode + Nemotron (`k=3`, 30-min cap)** | dev game `s1000` | 155 / 135 / 227 | 1/6 each | **0.067 mean** (`0.020`, `0.094`, `0.087`) |
+
+**What to expect from the agent runs on this game.** eval-v2 game 1 (`s910000`, 8 levels, shortest solution 187
+moves) has been the default task since Sat 14:00. Frontier models on it through our own multi-turn harness `h2`
+(one continuous conversation, reasoning kept between turns, tool calls: the closest of our harnesses to OpenCode),
+finished runs only, one attempt each:
+
+| Model (h2, `arena/agent_h2.py`) | Levels solved | Moves | Wall time | Ended by |
+|---|---:|---:|---:|---|
+| Reference (`oracle`) | 8 / 8 | 187 | - | win |
+| Gemini 4 Carbon (medium) | 6 / 8 | 209 | 84 min | cost cap |
+| Gemini 3.8 Flash (high) | 3 / 8 | 289 | 50 min | cost cap |
+| Gemini 3.1 Pro (medium) | 1 / 8 | 365 | 88 min | cost cap |
+| DeepSeek 4.1 Flash (high) | 1 / 8 | 400 | 92 min | move budget |
+
+No model has won this game. Gemini 4 Argon (2/8 after 67 moves) and Kimi K3.1 (1/8 after 146 moves) runs ended on
+provider stalls and are not counted. Because these runs take up to ~90 min, every Harbor task gives the agent
+**2 h** (`[agent] timeout_sec = 7200`), and `make judge` runs the K agent attempts in parallel (`N=1` for one at a time).
 
 Every model in [arena/HARBOR.md](arena/HARBOR.md) ("Other models through OpenCode") plays through Harbor + OpenCode (smoke runs: Claude Haiku 5.5, Kimi K3.1, Gemini 4 Argon / Carbon, Gemini 3.8 Flash, Nemotron, DeepSeek V3.2, GLM 5.3). Reward-exploit red team (10 attacks from the agent's seat, all 0.0 or blocked): [coordination/JUDGING.md](coordination/JUDGING.md).
 

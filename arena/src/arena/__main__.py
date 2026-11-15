@@ -69,7 +69,7 @@ def main(argv=None):
     h.add_argument("--collection", required=True)
     h.add_argument("--out", required=True)
     h.add_argument("--first", type=int)
-    h.add_argument("--agent-timeout", type=int, default=3600)
+    h.add_argument("--agent-timeout", type=int, default=7200)
     h.add_argument("--extra-ca", help="LOCAL ONLY: PEM root CA to trust inside task containers (antivirus TLS scanning)")
     h.add_argument("--vendor", help="LOCAL ONLY: Linux py3.12 site-packages dir for the sidecar (built with uv --target)")
     j = sub.add_parser("judge", help="judge-LLM calls for failure explanations (prompts jsonl from A5's analysis)")

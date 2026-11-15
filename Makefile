@@ -69,4 +69,4 @@ share:
 # Judging protocol through Harbor (arena/judge.sh): reference + do-nothing + stop-early, and K OpenCode runs if MODEL is set.
 #   make judge [TASK=harbor/eval-v2/<task>] [MODEL=gemini/gemini-4-argon] [K=3] [OUT=<dir>]
 judge:
-	TASK="$(TASK)" MODEL="$(MODEL)" K="$(K)" OUT="$(OUT)" bash arena/judge.sh
+	TASK="$(TASK)" MODEL="$(MODEL)" K="$(K)" N="$(N)" OUT="$(OUT)" bash arena/judge.sh

@@ -57,7 +57,7 @@ set -a; . ./.env; set +a      # host env must hold NVIDIA_VERDA_INFERENCE_KEY
 harbor run -p <task> -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
   --ak "opencode_config=$(python3 -c 'import json;print(json.dumps(json.load(open("arena/opencode-nemotron.json"))))')" \
   --ae 'NVIDIA_VERDA_INFERENCE_KEY=${NVIDIA_VERDA_INFERENCE_KEY}' \
-  --agent-timeout-multiplier 0.25        # 15 min cap for testing; judges use the task default (60 min)
+  --agent-timeout-multiplier 0.25        # 15 min cap for testing; judges use the task default (2 h since Sun 05:00; was 60 min)
 ```
 - The `${...}` template is required: without `--ae`, the key never reaches the agent container, and Verda answers 404. Harbor stores only the template in the job's `config.json`, not the key.
 - `--ak config=<file>` is rejected by Harbor 0.26 for opencode ("does not support config"). Use `opencode_config`.
