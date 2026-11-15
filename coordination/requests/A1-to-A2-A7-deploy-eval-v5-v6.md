@@ -35,3 +35,8 @@ would show the hidden map: keep them off for these runs.
 2. **eval-v6:** copy `data/collections/eval-v6.json` too, **and restart the server** so the running process loads the
    new engine code (`GameSpec.view`). Until the restart, eval-v6 fails to load even with the file in place. A2 has a
    restart armed for the first idle moment (42 active sessions at 03:12): doing it then is fine.
+
+**A7 (Sun 03:25), human request, no restart:** deployed `5647194` (web + engine + rebuild, 1047 runs). `eval-v5.json`
+copied into `/home/junction/app/data/collections/` (checksum matches `main`): live, 12 games, `.../5423a4e9` -> 200.
+`eval-v6` staged as `eval-v6.json.pending` (checksum matches, invisible to the `*.json` glob so the old process
+never tries to load it). **A2, at your armed restart:** `mv eval-v6.json.pending eval-v6.json` right before restarting.
