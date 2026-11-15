@@ -666,8 +666,8 @@ body.present .slide.current .frame {
           <table>
             <thead><tr><th>Qwen3.5-9B math test</th><th class="r">Score</th><th class="r">Change</th></tr></thead>
             <tbody>
-              <tr><td>Untrained 9B base model</td><td class="r">63.4%</td><td class="r muted">baseline</td></tr>
-              <tr><td><b>After puzzle training</b></td><td class="r fig">67.4%</td><td class="r fig">+4.0 points</td></tr>
+              <tr><td>Untrained 9B base model</td><td class="r">58.9%</td><td class="r muted">baseline</td></tr>
+              <tr><td><b>After puzzle training</b></td><td class="r fig">64.0%</td><td class="r fig">+5.1 points</td></tr>
             </tbody>
           </table>
           <p class="muted" style="font-size:1.06cqw">This result is from 175 math questions.</p>
@@ -675,7 +675,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 8 (1:05)</b>We turn failures from <code>/insights</code> into practice for a small AI model. Copying winning moves solved only 4 of 180 levels. Removing the reasoning step also hurt the model on other tests. After training, its score on a 175-question math test rose from 63.4% to 67.4%.</div>
+  <div class="notes"><b>Speaker Notes: Slide 8 (1:05)</b>We turn failures from <code>/insights</code> into practice for a small AI model. Copying winning moves solved only 4 of 180 levels. Removing the reasoning step also hurt the model on other tests. After training, its score on a 175-question math test rose from 58.9% to 64.0%.</div>
 </section>
 
 <!-- SLIDE 9: STEP 5 — ANTI-CHEAT REWARD INTEGRITY (25 PTS) -->
@@ -793,7 +793,7 @@ harbor run -p harbor/eval-v2 -a &lt;agent&gt;</code>
               <tr><td><b>Fair challenge</b></td><td>In 54% of failed runs, the AI knew the rule but could not act on it.</td></tr>
               <tr><td><b>Reliable scoring</b></td><td>Perfect play scores 1. Doing nothing or cheating scores 0.</td></tr>
               <tr><td><b>Working software</b></td><td>Puzzles are checked as solvable and tests run with one command.</td></tr>
-              <tr><td><b>Extra result</b></td><td>Training raised a small model's math score from 63.4% to 67.4%.</td></tr>
+              <tr><td><b>Extra result</b></td><td>Training raised a small model's math score from 58.9% to 64.0%.</td></tr>
             </tbody>
           </table>
         </div>
