@@ -82,7 +82,7 @@ class S0Hook(Scene):
         name = Text(text, font=SANS, font_size=30, color=color).move_to(quote)
         self.add(tint)
         self.play(tint.animate.set_fill(opacity=0.85), FadeOut(quote), FadeIn(name, shift=UP * 0.1), run_time=1.0)
-        self.wait(0.6)
+        self.wait(0.2)
         shards = shards_for(img, color)
         self.remove(img, tint)
         self.add(shards)
@@ -123,6 +123,7 @@ class S0Hook(Scene):
         self.play(FadeOut(n1), c1.animate.scale(0.35).to_edge(LEFT, buff=0.6).shift(UP * 2.2), run_time=0.6)
         vo.cue(2, delay=0.0)
         c2, n2 = self.closeup(KIMI, 104, 123, 1, vo.dur(2), 115)
+        vo.cue(3, delay=0.0)  # "now break thousands" starts as the second close-up shrinks into the grid
         self.play(FadeOut(n2), c2.animate.scale(0.35).next_to(c1, RIGHT, buff=0.3), run_time=0.6)
 
         # ---------------- zoom out: many agents moving, then failing ----------------
@@ -169,7 +170,6 @@ class S0Hook(Scene):
                 set_frame(p, p.frames[idx])
 
         tiles.add_updater(step_frames)
-        vo.cue(3, delay=0.2)
         self.play(
             FadeIn(tiles),
             c1.animate.scale_to_fit_height(tile_h * zoom * 0.95).move_to(slot0),
@@ -178,7 +178,7 @@ class S0Hook(Scene):
         )
         self.play(Group(tiles, c1, c2).animate.scale(1 / zoom, about_point=ORIGIN), run_time=2.4,
                   rate_func=rate_functions.ease_in_out_cubic)
-        self.wait(0.8)
+        self.wait(0.4)
 
         # each tile turns its failure colour, then breaks into shards
         all_shards = [None] * n_tiles
@@ -193,13 +193,14 @@ class S0Hook(Scene):
             tints.append((k, t))
             tint_anims.append(t.animate.set_fill(opacity=0.85))
         self.add(*[t for _, t in tints])
-        self.play(LaggedStart(*tint_anims, lag_ratio=0.015, run_time=2.4))
+        vo.cue(4, delay=0.0)  # "the failures stop being noise" lands as the tiles take their colours
+        self.play(LaggedStart(*tint_anims, lag_ratio=0.015, run_time=2.0))
         tiles.clear_updaters()
         for k, t in tints:
             all_shards[k] = shards_for(tiles[k - 2], FAILURE_MODES[modes[k]][2])
         self.remove(tiles, *[t for _, t in tints])
         self.add(*all_shards[2:])
-        self.wait(0.3)
+        self.wait(0.1)
 
         # ---------------- shards stack into the failure-mode chart (no solid bars) ----------------
         base_y = -2.5
@@ -224,12 +225,11 @@ class S0Hook(Scene):
             labels.add(lab)
             nums.add(Text(f"{counts.get(mode, 0):,}", font=MONO, font_size=20, color=TEXT_1).move_to([x, top + 0.25, 0]))
         axis = Rectangle(width=chart_w + 0.4, height=0.03, fill_color=LINE_STRONG, fill_opacity=1, stroke_width=0).move_to([0, base_y - 0.05, 0])
-        vo.cue(4, delay=0.3)
         self.play(LaggedStart(*moves, lag_ratio=0.0006, run_time=2.4, rate_func=rate_functions.ease_in_out_cubic))
         note = Text("failure-mode counts, all model runs (log scale)", font=MONO, font_size=14, color=TEXT_3).to_corner(UP + LEFT, buff=0.5)
         self.play(FadeIn(axis), LaggedStart(*[FadeIn(l, shift=UP * 0.1) for l in labels], lag_ratio=0.1),
                   LaggedStart(*[FadeIn(n) for n in nums], lag_ratio=0.1), FadeIn(note), run_time=1.0)
-        self.wait(1.8)
+        self.wait(0.7)
 
         # ---------------- the stacked shards morph straight into a game frame ----------------
         steps = load_json(f"steps/{NEMOTRON}.json")
