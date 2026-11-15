@@ -20,7 +20,7 @@
     {"key": "S2", "file": "s2_gap", "scene": "S2Gap", "lines": [
       "We ran frontier models on fresh games, first with our own harness.",
       "Then the way labs benchmark them: the full conversation, and maximum reasoning effort.",
-      "None of them matches the optimal run."
+      "Run that way, the best model finishes every game, but still needs more moves than the optimal run. Most models finish none."
     ]},
     {"key": "S3", "file": "s3_failures", "scene": "S3Failures", "lines": [
       "Where does the gap come from? We log every move, with what the model believed. This one is sure that moving right reaches the goal. The screen never changes.",

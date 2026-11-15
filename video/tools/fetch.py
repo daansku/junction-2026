@@ -28,7 +28,7 @@ REPLAYS = [
 ]
 WALL_RUNS = 48          # how many other failed runs to sample for the wall of agents
 WALL_FRAMES = 24        # frames kept per wall run
-DERIVED = ["leaderboard.json", "rules.json", "insights.json", "explanations.json"]
+DERIVED = ["leaderboard.json", "leaderboard_h2.json", "rules.json", "insights.json", "explanations.json"]
 
 
 def get(path: str):
