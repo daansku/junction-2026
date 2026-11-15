@@ -152,6 +152,50 @@ h1 = one fresh request per turn (notes + last 12 actions + frame); h2 = how labs
 
 ---
 
+## Tools and Infrastructure We Used
+
+### Verda (DataCrunch)
+
+- **Shared server and live site:** a Verda CPU VM (CPU.4V.16G, about $0.048/h) at `https://65.108.33.107.compute.verda.run` hosts the game server, every recorded run and the web app since Sat 15:15. Deploys go through [scripts/deploy_vm.sh](scripts/deploy_vm.sh).
+- **GPU training and benchmarks:**
+  - a 2x A100 80 GB box for the benchmark runs, SFT and the first GRPO runs ([posttrain/README.md](posttrain/README.md)),
+  - a B200 for the `think-games` and `think-gridbranch` GRPO runs on Qwen3.5-9B and the held-out MATH test ([bench/heldout_math/README.md](bench/heldout_math/README.md)),
+  - an A100 80 GB and an H100 80 GB for the rover transfer test and episodic RL on Qwen3.5-4B ([experiments/edge_rover/README.md](experiments/edge_rover/README.md)).
+- **Model inference:**
+  - Nemotron 3.5 Super VL from the hackathon deployment (see Nemotron below),
+  - Kimi K3.1 Pro and DeepSeek 4.1 Flash through Verda's managed inference API (`https://inference.verda.com/v1`). Kimi ran in the overnight `dev` sweep (52% of levels solved) and in the `h2` runs until the account was suspended. Both have short Harbor + OpenCode runs in [harbor/run-logs/README.md](harbor/run-logs/README.md).
+
+  Endpoints and keys: [arena/models.yaml](arena/models.yaml), [coordination/KEYS.md](coordination/KEYS.md).
+
+### NVIDIA Nemotron
+
+- Nemotron 3.5 Super VL (120B MoE, 12B active, NVFP4) on the organisers' Verda endpoint, with text and image input. Registered as `nemotron-3-5-super-vl` in [arena/models.yaml](arena/models.yaml).
+- **Harbor judge path:** OpenCode + Nemotron played the dev game `s1000` through Harbor with the organisers' OpenCode config ([arena/opencode-nemotron.json](arena/opencode-nemotron.json)). It scored 0.067 on average over three attempts ([coordination/JUDGING.md](coordination/JUDGING.md)).
+- **Arena runs:** the overnight `dev` sweep (12% of levels) and a 3-game `eval-v1` subset ([arena/sweeps/main-subset-nemotron.yaml](arena/sweeps/main-subset-nemotron.yaml)). The endpoint takes about 30 s per action, so a full sweep was not practical.
+
+### Gemma
+
+- Gemma 4 E4B, served on our own Modal endpoint (see Modal below), finished 21 runs of the `eval-v1` sweep ([arena/sweeps/main-gemma.yaml](arena/sweeps/main-gemma.yaml)) and solved 4 of 126 levels (3%).
+- Gemma 4 31B through the Gemini API was registered but dropped. The key allows 16k input tokens per minute, and one `h2` turn sends 20k to 45k.
+
+### Gemini API
+
+- **Frontier reference models:** Gemini 4 Carbon, Argon and Hydrogen, Gemini 3.8 Flash and Gemini 3.1 Pro, in the `h1`, `h2` and `h2b` sweeps on `eval-v1` and `eval-v2` (the gap numbers above).
+- **Harbor:** OpenCode + Gemini 4 Carbon averaged 0.762 over three attempts on the first `eval-v2` game ([harbor/run-logs/README.md](harbor/run-logs/README.md)).
+- **Rover transfer test:** Gemini 4 Argon, Carbon and Flash are the frontier reference on the simulated rover ([experiments/edge_rover/README.md](experiments/edge_rover/README.md)).
+
+### Modal
+
+- **RL training:** GRPO runs `grpo-1` and `grpo-2` on Qwen3.5-9B, each on a Modal H100, using the same trainer as the Verda boxes ([posttrain/modal_grpo.py](posttrain/modal_grpo.py)). Checkpoints and the Hugging Face cache live in Modal volumes.
+- **Model serving:** an SGLang endpoint serving Gemma 4 E4B (OpenAI-compatible, provider `modal` in [arena/src/arena/providers/openai_compat.py](arena/src/arena/providers/openai_compat.py)).
+
+### Codex (development)
+
+- Wrote the first version of the rover transfer experiment (`mission.py`, `run_eval.py`, the game bootcamp LoRA on Qwen2.5-1.5B), kept for the record in [experiments/edge_rover/README.md](experiments/edge_rover/README.md).
+- Worked on the story deck on the `codex/*` branches: slide copy, model colours, styling, the rover cover slide, video alignment and the PDF export ([docs/story-deck/](docs/story-deck/)).
+
+---
+
 ## Repository Structure
 
 | Directory | Role | Key Files |
