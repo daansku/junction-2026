@@ -155,8 +155,11 @@ The corrected training recipe, run on Sunday 04:30-06:20 on the B200 + H100.
 | Rover-lite, hidden controls, same 100 missions | Completed | 95% CI | Bumps/mission | JSON failures | vs base (paired) |
 |---|---|---|---|---|---|
 | Qwen3.5-4B base (repair on) | 41/100 | 32-51% | 10.1 | 0 | - |
-| after round 1 (no repair) | 44/100 | 35-54% | 11.1 | 17 | 16 / 13, p=0.71 |
+| after round 1 (repair on) | 50/100 | 40-60% | 9.0 | 0 | 19 / 10, p=0.14 |
 | **after round 2 (repair on)** | **54/100** | 44-63% | **7.8** | 0 | **20 / 7, p=0.019** |
+| (after round 1, earlier run without repair) | 44/100 | 35-54% | 11.1 | 17 | 16 / 13, p=0.71 |
+
+**The gain grows with each RL round: 41 -> 50 -> 54**, and bumps fall 10.1 -> 9.0 -> 7.8. Round 3 on fresh levels (320 levels with 10 optimal moves never played before, 2 shots each) is running.
 
 **Reading (round 1):**
 - The direction is positive: +5 points, and 15 vs 10 discordant missions. This is too small to claim at n=100.
