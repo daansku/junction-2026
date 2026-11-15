@@ -66,7 +66,15 @@ class S5PostTrain(Scene):
             bar = Rectangle(width=x(row["score"]) - x0, height=0.5, fill_color="#199e70" if row["kind"] == "ours" else "#3987e5",
                             fill_opacity=1, stroke_width=0)
             bar.move_to([x0 + bar.width / 2, y, 0])
-            nums.add(Text(f"{row['score']:.3f}", font=MONO, font_size=18, color=num_color).next_to(bar, RIGHT, buff=0.15))
+            cis = VGroup()
+            if row.get("lo") is not None:
+                xa, xb = x(row["lo"]), x(row["hi"])
+                cis = VGroup(Line([xa, y, 0], [xb, y, 0], stroke_color=TEXT_1, stroke_width=3),
+                             Line([xa, y - 0.13, 0], [xa, y + 0.13, 0], stroke_color=TEXT_1, stroke_width=3),
+                             Line([xb, y - 0.13, 0], [xb, y + 0.13, 0], stroke_color=TEXT_1, stroke_width=3))
+            right = max(bar.get_right()[0], cis.get_right()[0] if len(cis) else bar.get_right()[0])
+            num = Text(f"{row['score']:.3f}", font=MONO, font_size=18, color=num_color)
+            nums.add(VGroup(cis, num.move_to([right + 0.15 + num.width / 2, y, 0])))
             labels.add(lab)
             bars.append(bar)
             y -= 0.95
