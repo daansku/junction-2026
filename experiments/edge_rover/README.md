@@ -203,13 +203,23 @@ The round-3 model (3 rounds of episodic RL on our games) on A2's held-out MATH t
 | Model | MATH held-out (doc 25-49, 175 items) | other half (doc 0-24, 175) |
 |---|---|---|
 | Qwen3.5-4B base | 0.623 | 0.577 |
-| **4B after 3 RL rounds on our games** | **0.686** | **0.651** |
+| 4B after 2 RL rounds on our games | 0.680 | 0.680 |
+| 4B after 3 RL rounds on our games | 0.686 | 0.651 |
 | (ref) Qwen3.5-9B base, A2's stored run | 0.634 | 0.589 |
 | (ref) A2's 9B `think-games-h2` step 30 | 0.674 | 0.623 |
 
 **Trained 4B vs 4B base, paired (A2's `compare.py`):**
 - **Held-out:** **+0.063**, 95% CI [-0.006, +0.131]; only-trained-right 25 vs only-base-right 14; McNemar p=0.108. Just short of significance.
 - **Other half:** +0.074, CI [+0.006, +0.143], p=0.060. We never used MATH to select anything, but by A2's rule the held-out half is the reported number.
+
+**Round 2 vs 4B base, paired:**
+- **Held-out:** +0.057, CI [-0.011, +0.126], McNemar p=0.154.
+- **Selection half:** +0.103, CI [+0.040, +0.171], p=0.004.
+
+**Checkpoint choice, by A2's protocol:** the selection half picks **round 2** (0.680 vs round 3's 0.651).
+- **Number to report:** round 2 held-out MATH **0.623 -> 0.680** (+5.7 points, p=0.15, not significant).
+- The selection-half gain of +10.3 (p=0.004) may be shown only with the label "used for selection".
+- Round 2 is also the best rover checkpoint (54/100, p=0.019).
 
 **Reading:**
 - Training on our games did not hurt math. It moved the 4B up by about 6 points, past the untrained 9B.

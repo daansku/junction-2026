@@ -76,3 +76,9 @@ Fixed controls, thinking on: RL s60 61/100 (base run stopped to free the GPU). U
 - Paired: +0.063, 95% CI [-0.006, +0.131], McNemar p=0.108 (just short of significance).
 - References: 9B base 0.634; A2's 9B step 30 0.674.
 - Wording: "RL on our games also raised held-out MATH for the 4B by 6 points (not yet significant)". Do not claim a proven math gain.
+
+**Update 07:38: MATH checkpoint choice (A2's protocol: pick on the selection half, report held-out for that one).**
+- The selection half picks round 2 (0.680) over round 3 (0.651).
+- **Report: 4B base 0.623 -> round 2 0.680 on held-out MATH** (+5.7, CI [-0.011, +0.126], p=0.15).
+- Selection half (label "used for selection"): 0.577 -> 0.680, p=0.004.
+- Round 2 is also the rover checkpoint (41 -> 54/100, p=0.019).
