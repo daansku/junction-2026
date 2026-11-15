@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { API } from '@/lib/config'
 import { useDevMode } from '@/lib/devMode'
@@ -48,13 +49,20 @@ export function Layout() {
 
   const redirectPublic = !devMode && !isAllowedInPublicMode(location.pathname)
 
+  // narrow screens scroll the menu sideways: keep the current page's link in view
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>('.nav-link.active')
+    active?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [location.pathname, devMode])
+
   return (
     <div className="app">
       <header className="topbar">
         <NavLink to="/" className="brand" aria-label="Home">
           <Wordmark />
         </NavLink>
-        <nav className="nav" aria-label="Main">
+        <nav className="nav" aria-label="Main" ref={navRef}>
           {nav.map((n) => (
             <NavLink
               key={n.to}
@@ -74,6 +82,7 @@ export function Layout() {
             className={`dev-switch ${devMode ? 'on' : ''}`}
             onClick={() => setDevMode(!devMode)}
             title="Toggle developer mode to show all pages"
+            aria-label="Developer mode"
           >
             <span className="dev-switch-track" aria-hidden="true">
               <span className="dev-switch-thumb" />

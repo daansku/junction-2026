@@ -108,6 +108,11 @@ function pct(x: number) {
   return `${Math.round(100 * x)}%`
 }
 
+/** "1 move", "4 moves" */
+function nMoves(n: number) {
+  return `${n} ${n === 1 ? 'move' : 'moves'}`
+}
+
 export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
   const [params] = useSearchParams()
   const challengeStageRef = useRef<HTMLDivElement>(null)
@@ -176,6 +181,15 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
   }, [stats, nLevels, levelList, ghostQs])
 
   const models = useMemo(() => (stats?.players ?? []).filter((p) => p.kind === 'model'), [stats])
+  // count models, not harness variants: "gemini-flash" and "gemini-flash@h2b" are one model (won if any variant won)
+  const modelWins = useMemo(() => {
+    const won = new Map<string, boolean>()
+    for (const m of models) {
+      const k = (m.model_id ?? m.id).split('@')[0]
+      won.set(k, (won.get(k) ?? false) || m.cleared_all_rate > 0)
+    }
+    return { won: [...won.values()].filter(Boolean).length, total: won.size }
+  }, [models])
   const humans = useMemo(() => (stats?.players ?? []).find((p) => p.kind === 'human') ?? null, [stats])
   const bestModel = useMemo(() => [...models].sort((a, b) => b.mean_score - a.mean_score)[0] ?? null, [models])
 
@@ -549,7 +563,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
                   {models.length ? (
                     <div className="ch-fact">
                       <span className="ch-big mono">
-                        {models.filter((m) => m.cleared_all_rate > 0).length}/{models.length}
+                        {modelWins.won}/{modelWins.total}
                       </span>
                       <span>Computer players won all {nLevels}</span>
                     </div>
@@ -621,7 +635,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
           <aside className="ch-side">
             <section className="ch-card">
               <span className="kicker">
-                level {levelIdx + 1} of {nLevels} · you {levelMoves} moves
+                Level {levelIdx + 1} of {nLevels} · {nMoves(levelMoves)}
               </span>
               <p className="muted ch-race-note">
                 No hints. The AI played these same levels from the same pixels; you see its recorded attempts after the challenge.
@@ -709,6 +723,7 @@ function Reel({ g, title, tick, scale }: { g: GhostSlice; title: string; tick: n
   const shown = Math.min(m, n)
   const frame = ghostFrameAt(g, shown)
   const hyp = hypothesisAt(g, shown)
+  const hasNotes = g.steps.some((s) => s.hypothesis?.trim())
   const ended = shown >= n
   return (
     <figure className="ch-reel-card">
@@ -719,10 +734,12 @@ function Reel({ g, title, tick, scale }: { g: GhostSlice; title: string; tick: n
           Move {shown}/{n}
           {ended ? (g.solved ? ' · SOLVED' : ' · NEVER SOLVED') : ''}
         </span>
-        {/* always rendered at a fixed height so changing model text never moves the layout */}
-        <p className="ch-hyp mono" title={hyp ?? undefined}>
-          {hyp ? `“${hyp}”` : '\u00a0'}
-        </p>
+        {/* fixed height so changing model text never moves the layout; players without notes (humans) get none */}
+        {hasNotes && (
+          <p className="ch-hyp mono" title={hyp ?? undefined}>
+            {hyp ? `“${hyp}”` : '\u00a0'}
+          </p>
+        )}
       </figcaption>
     </figure>
   )
@@ -744,10 +761,10 @@ function LevelReview(props: {
   const { review, levelNo, nLevels, optimal, frame, ghosts, optimalGhost, humanGhost, onPrimary, onSecondary } = props
   const headline =
     review.kind === 'solved'
-      ? `Level ${levelNo} solved in ${review.actions} moves.`
+      ? `Level ${levelNo} solved in ${nMoves(review.actions)}.`
       : review.kind === 'lost'
-        ? `Level ${levelNo} lost after ${review.actions} moves.`
-        : `You stopped level ${levelNo} after ${review.actions} moves.`
+        ? `Level ${levelNo} lost after ${nMoves(review.actions)}.`
+        : `You stopped level ${levelNo} after ${nMoves(review.actions)}.`
   const primary =
     review.kind === 'solved' ? (review.last ? 'See results' : `Next level (${levelNo + 1} of ${nLevels})`) : review.kind === 'lost' ? 'Retry level' : 'Keep trying'
   const card = (
@@ -907,6 +924,10 @@ function EndScreen(props: {
 }) {
   const { outcome, stats, optimal, from, ghostsByLevel, board, onAgain } = props
   const n = optimal.length
+  // optimal moves for the levels this visitor actually played (not all 8 when they stopped early)
+  // levels are played in order: the cleared ones plus the one the visitor stopped on
+  const reached = Math.min(n, outcome.cleared + (outcome.cleared < n ? 1 : 0))
+  const optimalPlayed = optimal.slice(0, reached).reduce((a, b) => a + b, 0)
 
   // "The AI needed N moves to figure out what you saw in M": biggest gap on a level you solved.
   const insight = useMemo(() => {
@@ -948,7 +969,7 @@ function EndScreen(props: {
           </div>
           <div>
             <span className="ch-big mono">{outcome.moves}</span>
-            <span className="muted">Moves (optimal {optimal.reduce((a, b) => a + b, 0)})</span>
+            <span className="muted">Moves (optimal {optimalPlayed})</span>
           </div>
         </div>
         {insight && <p className="ch-insight">{insight}</p>}
@@ -1031,13 +1052,13 @@ function ResultsTable({
           <thead>
             <tr>
               <th className="l">Player</th>
+              <th>Score</th>
               {optimal.map((o, i) => (
                 <th key={i} title={`Optimal: ${o} moves`}>
                   L{i + 1}
                   <span className="ch-th-sub">{o} mv</span>
                 </th>
               ))}
-              <th>Score</th>
               <th>Runs</th>
             </tr>
           </thead>
@@ -1049,6 +1070,7 @@ function ResultsTable({
                   You{name ? ` (${name})` : ''}
                 </span>
               </td>
+              {scoreCell(outcome.score, youColor)}
               {outcome.results.map((r) => (
                 <td
                   key={r.level}
@@ -1059,7 +1081,6 @@ function ResultsTable({
                   {r.solved ? `${r.actions} mv` : '✗'}
                 </td>
               ))}
-              {scoreCell(outcome.score, youColor)}
               <td>1</td>
             </tr>
             {rows.map((p, idx) => {
@@ -1073,8 +1094,8 @@ function ResultsTable({
                       {label}
                     </span>
                   </td>
-                  {p.per_level_solve_rate.map((x, i) => rateCell(x, color, i))}
                   {scoreCell(p.mean_score, color)}
+                  {p.per_level_solve_rate.map((x, i) => rateCell(x, color, i))}
                   <td>{p.attempts}</td>
                 </tr>
               )

@@ -671,7 +671,7 @@ export function ReplayPage() {
                 ) : null
               }
             >
-              <div className="step-fields">
+              <div className={m?.player?.kind === 'model' ? 'step-fields' : 'step-fields step-fields-auto'}>
                 {step?.reasoning && (
                   <div>
                     <span className="kicker">

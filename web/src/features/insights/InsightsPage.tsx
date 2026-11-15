@@ -265,7 +265,7 @@ export function InsightsPage() {
               <span className="ins-stat-num ins-accent mono">{kdGapPct}%</span>
               <span className="ins-stat-title">Knew the rule, still failed</span>
               <span className="ins-stat-sub mono muted">
-                {expSummary.knowing_doing_gap_count}/{expSummary.non_tier0_failed_levels} named rule, failed plan
+                {expSummary.knowing_doing_gap_count} of {expSummary.non_tier0_failed_levels} failed levels
               </span>
             </button>
 
@@ -275,10 +275,10 @@ export function InsightsPage() {
               onClick={() => jumpToFailures({ stage: expStageFilter === 'h2' ? 'all' : 'h2' })}
             >
               <span className="ins-stat-num mono">
-                {h1PerceptionPct}% to {h2PerceptionPct}%
+                {h1PerceptionPct}% → {h2PerceptionPct}%
               </span>
-              <span className="ins-stat-title">Board misreads: standard to extended</span>
-              <span className="ins-stat-sub mono muted">Multi-turn memory fixes vision</span>
+              <span className="ins-stat-title">Misread the board, standard → extended</span>
+              <span className="ins-stat-sub mono muted">Remembering earlier turns removes misreads</span>
             </button>
 
             <button
@@ -288,7 +288,7 @@ export function InsightsPage() {
             >
               <span className="ins-stat-num mono">{explanations.length}</span>
               <span className="ins-stat-title">Audited failed levels</span>
-              <span className="ins-stat-sub mono muted">Pinned to X-Ray replay steps</span>
+              <span className="ins-stat-sub mono muted">Each one links to the moment it went wrong</span>
             </button>
           </div>
 
@@ -378,7 +378,7 @@ export function InsightsPage() {
                     <thead>
                       <tr>
                         <th>Model</th>
-                        <th>Mode</th>
+                        <th className="ins-col-mode">Mode</th>
                         <th className="num">Failed</th>
                         <th>Main Issue</th>
                       </tr>
@@ -398,8 +398,9 @@ export function InsightsPage() {
                           >
                             <td>
                               <strong>{friendlyPlayer(m.player_id)}</strong>
+                              {m.harness_version === 'h2' && <span className="ins-h2-tag ins-mode-inline mono"> extended</span>}
                             </td>
-                            <td className="mono">
+                            <td className="mono ins-col-mode">
                               <span className={m.harness_version === 'h2' ? 'ins-h2-tag' : 'muted'}>
                                 {m.harness_version === 'h2' ? 'extended' : 'standard'}
                               </span>
@@ -501,7 +502,7 @@ export function InsightsPage() {
                         <span className="ins-card-badges">
                           {ex.deduced_rule_in_cot && (
                             <span className="ins-kd-badge mono">
-                              knew rule{ex.deduced_rule_step != null ? ` @${ex.deduced_rule_step}` : ''}
+                              Knew rule{ex.deduced_rule_step != null ? ` at step ${ex.deduced_rule_step}` : ''}
                             </span>
                           )}
                           <Chip
@@ -527,11 +528,11 @@ export function InsightsPage() {
 
                       <div className="ins-exp-card-foot mono">
                         <Link to={replayHref} className="ins-pill">
-                          View X-Ray at step {ex.step ?? 0}
+                          Watch from step {ex.step ?? 0}
                         </Link>
                         {tkHref && (
-                          <Link to={tkHref} className="ins-takeover-pill">
-                            Play @{ex.step ?? 1}
+                          <Link to={tkHref} className="ins-takeover-pill" title="Take over the game at this step and play it yourself">
+                            Try it yourself
                           </Link>
                         )}
                       </div>

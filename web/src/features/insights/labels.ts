@@ -1,3 +1,4 @@
+import { modelName } from '@/lib/modelNames'
 export interface StageDisplayMeta {
   step: number
   title: string
@@ -135,7 +136,8 @@ export function friendlyRule(rule?: string | null): string {
 export function friendlyPlayer(raw?: string | null): string {
   if (!raw) return 'Model'
   const [base, effort] = raw.includes(':') ? raw.split(':', 2) : [raw, null]
-  const clean = PLAYER_NAMES[base] ?? base.replace(/^(verda|featherless|modal)-/, '')
+  // registry display names first, so Insights matches the leaderboard and challenge
+  const clean = modelName(base) ?? PLAYER_NAMES[base] ?? base.replace(/^(verda|featherless|modal)-/, '')
   return effort ? `${clean} (${effort})` : clean
 }
 

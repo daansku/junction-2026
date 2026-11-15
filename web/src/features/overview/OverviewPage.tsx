@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { FrameCanvas } from '@/lib/FrameCanvas'
 import { PALETTE } from '@/lib/palette'
+import { modelName } from '@/lib/modelNames'
+import { logTicks } from '@/lib/logTicks'
 import { PlotFigure, cssVar } from '@/lib/PlotFigure'
 import type { Frame, RunMeta } from '@/lib/types'
 import { buildRowColorMap } from '@/features/leaderboard/LeaderboardPage'
@@ -114,9 +116,9 @@ function Showcase({ run }: { run: RunMeta }) {
       </div>
       <figcaption className="mono muted">
         <Link to={`/replay/${encodeURIComponent(run.run_id)}?step=${i}`}>
-          {run.player?.name ?? run.player?.model_id}
-        </Link>{' '}
-        on {run.game_id}
+          {modelName(run.player?.model_id) ?? run.player?.name ?? run.player?.model_id}
+        </Link>
+        {step?.truth?.level ? ` · level ${step.truth.level}` : ''}
         <span className="ov-hyp" title={step?.hypothesis ?? undefined}>{step?.hypothesis ? `“${step.hypothesis}”` : '\u00a0'}</span>
       </figcaption>
     </figure>
@@ -283,9 +285,9 @@ export function OverviewPage() {
                     <th className="num">#</th>
                     <th>Player</th>
                     <th className="num">Games won</th>
-                    <th className="num">Levels won</th>
+                    <th className="num ov-col-opt">Levels won</th>
                     <th className="num">Efficiency</th>
-                    <th className="num">$/game</th>
+                    <th className="num ov-col-opt">$/game</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -298,15 +300,14 @@ export function OverviewPage() {
                           <span className="ov-player-cell">
                             <Swatch color={col} />
                             <span>
-                              {r.display_name ?? r.model?.display_name ?? r.player_id}
-                              {r.effort && <span className="muted"> · {r.effort}</span>}
-                              {r.kind !== 'model' && <span className="muted"> · {r.kind}</span>}
-                              {r.collection && <span className="muted"> · {r.collection}</span>}
+                              {modelName(r.player_id) ??
+                                (r.display_name ?? r.model?.display_name ?? r.player_id).replace(` [${r.collection}]`, '')}
+                              {r.effort && <span className="muted ov-effort"> ({r.effort})</span>}
                             </span>
                           </span>
                         </td>
                         <td className="num">{pct(r.game_win_rate)}</td>
-                        <td className="num">{pct(r.level_solve_rate)}</td>
+                        <td className="num ov-col-opt">{pct(r.level_solve_rate)}</td>
                         <td className="num">
                           <div className="ov-score-cell">
                             <span>{r.score.toFixed(3)}</span>
@@ -321,7 +322,7 @@ export function OverviewPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="num">{r.cost_per_game ? `$${r.cost_per_game.toFixed(3)}` : '—'}</td>
+                        <td className="num ov-col-opt">{r.cost_per_game ? fmtUsd(r.cost_per_game) : '—'}</td>
                       </tr>
                     )
                   })}
@@ -457,8 +458,10 @@ export function OverviewPage() {
                   const dotRefs = refLines.filter((r) => r.style === 'dotted')
 
                   const height = 260
+                  // phones: line labels go inside the plot and dots are named by the legend below the chart
+                  const narrow = width < 520
                   const mL = 44
-                  const mR = 112
+                  const mR = narrow ? 12 : 112
                   const mT = 20
                   const mB = 38
                   const innerW = width - mL - mR
@@ -501,7 +504,7 @@ export function OverviewPage() {
                   const order = frontierPoints
                     .map((_, i) => i)
                     .sort((a, b) => frontierPoints[b].score - frontierPoints[a].score)
-                  for (const i of order) {
+                  for (const i of narrow ? [] : order) {
                     const p = frontierPoints[i]
                     const text = shortLabel(p)
                     const w = text.length * 6 + 4
@@ -544,6 +547,7 @@ export function OverviewPage() {
                     x: {
                       type: 'log',
                       domain: [xMin, xMax],
+                      ticks: logTicks(xMin, xMax, Math.floor(width / 110)),
                       label: effectiveAxis === 'usd' ? 'Cost per game (USD, log)' : 'Tokens per game (log)',
                       tickFormat: (d: number) =>
                         effectiveAxis === 'usd'
@@ -574,8 +578,9 @@ export function OverviewPage() {
                         x: xMax,
                         y: 'y',
                         text: 'label',
-                        textAnchor: 'start',
-                        dx: 6,
+                        textAnchor: narrow ? 'end' : 'start',
+                        dx: narrow ? 0 : 6,
+                        dy: narrow ? -7 : 0,
                         fill: (d: (typeof refLines)[number]) => d.color ?? cssVar('--text-2'),
                       }),
                       Plot.dot(frontierPoints, {
@@ -607,6 +612,15 @@ export function OverviewPage() {
                   }
                 }}
               />
+              {/* phones: dots are unlabeled in the plot, so name them here (hidden on wide screens) */}
+              <ul className="ov-plot-legend mono">
+                {frontierPoints.map((pt) => (
+                  <li key={`${pt.row.player_id}-${pt.row.effort ?? ''}`}>
+                    <Swatch color={pt.color} />
+                    {pt.label}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </Panel>
