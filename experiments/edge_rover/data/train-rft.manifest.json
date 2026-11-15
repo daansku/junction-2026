@@ -1,0 +1,15 @@
+{
+  "episodes": 2006,
+  "solved": 32,
+  "solve_rate": 0.016,
+  "mean_reward_solved": 0.581,
+  "examples": 498,
+  "games": 30,
+  "levels": {
+    "1": 22,
+    "4": 3,
+    "3": 2,
+    "5": 2,
+    "2": 3
+  }
+}
