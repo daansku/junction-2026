@@ -1,7 +1,7 @@
 {
  "note": "What S5 shows for Anssi's training. Source: A2 message Sun ~04:10 (B200 /root/b200bench/out/). Anssi chose the dev-slice MATH items used for checkpoint selection (items 1-25/subject); held-out items 26-50 gave base 0.634 vs step 30 0.674.",
  "title": "MATH, 175 problems",
- "sub": "the problems used to pick the checkpoint · same problems for both · step 30: 95% CI (Wilson)",
+ "sub": "the problems used to pick the checkpoint · same problems for both",
  "rows": [
   {
    "label": "Qwen3.5-9B base",
@@ -15,9 +15,7 @@
    "score": 0.64,
    "kind": "ours",
    "k": 112,
-   "n": 175,
-   "lo": 0.567,
-   "hi": 0.707
+   "n": 175
   }
  ],
  "footnote": "step 30 = best of checkpoints 10-70 on these problems; the strict PROTOCOL v5 finalist is step 40 (0.611)",
