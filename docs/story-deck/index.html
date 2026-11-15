@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VERITAS · Autonomous Reasoning Underground &amp; Beyond — Pitch Deck</title>
+<title>Game Factory — Pitch Deck</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -119,13 +119,31 @@ body {
 /* Slide counter */
 .top {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 1.2cqw;
   font-family: var(--mono);
   font-size: 0.98cqw;
   letter-spacing: 0.02em;
 }
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55cqw;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 0.92cqw;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.brand-mark { width: 1.2cqw; height: 1.2cqw; image-rendering: pixelated; }
+.explore-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9cqw;
+  font-size: 1.02cqw;
+}
+.explore-links > div { display: grid; align-content: start; gap: 0.25cqw; }
 .pg { color: var(--muted); white-space: nowrap; }
 .pg b { color: var(--accent); font-weight: 600; }
 
@@ -368,7 +386,7 @@ body.present .slide.current .frame {
 <body>
 
 <div class="bar">
-  <span>VERITAS · 11-slide pitch · ← → or Space</span>
+  <span>Game Factory pitch deck. Use the arrow keys or Space to navigate.</span>
   <div class="bar-actions">
     <button id="toggle-notes" type="button">Speaker Notes (N)</button>
     <button id="present" class="primary" type="button">Present Fullscreen (P)</button>
@@ -383,84 +401,87 @@ body.present .slide.current .frame {
 <section class="slide current" id="s1" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>01</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h1>600m underground, cloud AI doesn't exist.</h1>
+      <h1>600 meters underground, online AI can't help.</h1>
       <div class="cols" style="align-items:start">
         <div class="body">
-          <p class="lead">An inspection robot is 600m inside a collapsed coal mine. Solid rock blocks all radio and Wi-Fi. Its onboard chip can only run a <b>small 9B model</b>, and it has 40 minutes of battery left.</p>
+          <p class="lead">An inspection robot is deep inside a collapsed coal mine. Rock blocks all signals. Its onboard computer runs a small AI model, and the battery has 40 minutes left.</p>
           <div class="card model-box">
             <span class="kicker" style="color:var(--bad)">What goes wrong today</span>
-            <p>Normal sensors handle driving — until the robot reaches a damaged airlock door whose pressure plate shifted in the rockfall. There is no manual. Today's small models ram that locked door 50 times until the battery dies, <b>losing a €120k robot</b>.</p>
+            <p>Sensors handle driving until the robot reaches a damaged door controlled by a floor plate. There is no manual. Today's small AI models push against the locked door 50 times until the battery dies, <b>putting a €120,000 robot at risk</b>.</p>
           </div>
           <div class="card biz-box">
-            <span class="kicker">What VERITAS does</span>
-            <p>We test AI agents on problems they haven't seen before, pinpoint <b>why their reasoning failed</b>, and train small local models to figure out new rules on the fly.</p>
+            <span class="kicker">What Game Factory does</span>
+            <p>We test AI on new problems, show where its reasoning breaks, and help improve small models so they can work out new rules.</p>
           </div>
         </div>
         <div class="hero-wrap">
           <canvas id="hero" width="64" height="64" aria-label="64x64 pixel observation"></canvas>
-          <div class="cap">Our test world: a 64×64 room with hidden rules, a strict battery budget, and zero instructions.</div>
+          <div class="cap">A 64×64 puzzle with hidden rules, a limited move budget, and no instructions.</div>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 1 (0:50)</b>Picture an inspection robot 600 meters underground in a coal mine. Through 600 meters of rock, OpenAI and Google Cloud do not exist. The robot carries a small onboard chip that only fits a 9B model and 40 minutes of battery. Standard sensors handle driving around rocks — until it hits a damaged ventilation door whose wiring shifted in the collapse. Today's small models ram that locked door 50 times until the battery dies, costing €120,000. VERITAS solves this: we test agents on unseen problems, show engineers why the model failed, and train small models to adapt without a manual.</div>
+  <div class="notes"><b>Speaker Notes: Slide 1 (0:50)</b>Picture an inspection robot deep underground, where it has no internet and a limited battery. When it reaches a damaged door with no instructions, it must learn how the door works and find a safe way through. Small AI models often repeat the same failed move until the battery runs out. Game Factory tests this ability, shows where the model fails, and helps improve it.</div>
 </section>
 
 <!-- SLIDE 2: THE BUSINESS CASE & MARKET -->
 <section class="slide" id="s2" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>02</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>Anyone running AI without a cloud safety net hits this wall.</h2>
+      <h2>AI without internet faces the same problem.</h2>
       <div class="cols-3">
         <div class="card model-box">
-          <span class="kicker">1 · Field Robotics</span>
+          <span class="kicker">1. Robots in the field</span>
           <h3>Mines, Pipes &amp; Drones</h3>
-          <p class="muted">No signal and small onboard chips. When a valve jams or a tunnel shifts, the robot has to test a move safely, figure out what changed, or turn back before the battery dies.</p>
+          <p class="muted">With no signal and a small onboard computer, a robot must test moves safely when a valve jams or a tunnel shifts, then work out what changed or turn back before its battery dies.</p>
         </div>
         <div class="card biz-box">
-          <span class="kicker">2 · Private Enterprise AI</span>
+          <span class="kicker">2. Private business AI</span>
           <h3>Hospitals, Factories &amp; Banks</h3>
-          <p class="muted">Strict privacy rules block cloud APIs. When internal software changes a screen without warning, local bots click the same dead button forever.</p>
+          <p class="muted">Privacy rules may block online AI services. When company software changes without warning, local AI can keep clicking a button that no longer works.</p>
         </div>
         <div class="card accent">
-          <span class="kicker" style="color:var(--accent)">3 · AI Labs &amp; Evaluators</span>
-          <h3>AfterQuery's Core Market</h3>
-          <p class="muted">Public benchmarks leak into training data within months. Building new interactive test worlds by hand costs <b>$1k–$10k per task</b>.</p>
+          <span class="kicker" style="color:var(--accent)">3. AI labs and test teams</span>
+          <h3>New tests for AI</h3>
+          <p class="muted">Public tests can end up in AI training data within months. Building new interactive tests by hand costs <b>$1,000–$10,000 each</b>.</p>
         </div>
       </div>
       <div class="stats">
-        <div class="stat"><span class="n">$0.0001</span><span class="l">to generate &amp; verify a new world in 2 seconds (vs. $5k by hand)</span></div>
-        <div class="stat"><span class="n">0% Leak</span><span class="l">every customer gets fresh worlds that have never been online</span></div>
-        <div class="stat"><span class="n">3 Products</span><span class="l">Failure Diagnostics · Small-Model Training · Private Evals</span></div>
+        <div class="stat"><span class="n">$0.0001</span><span class="l">to create and check a new puzzle in 2 seconds (vs. $5,000 by hand)</span></div>
+        <div class="stat"><span class="n">0% leaked</span><span class="l">each customer gets new puzzles that were never published</span></div>
+        <div class="stat"><span class="n">3 products</span><span class="l">Find failures. Train AI. Test it privately.</span></div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 2 (0:50)</b>The coal mine isn't an isolated case. Three high-budget markets hit this same wall: field robotics in mines, subsea pipes, and jammed defense zones; private enterprise agents in hospitals, factories, and banks where cloud APIs are banned; and AI labs — AfterQuery's own customers — who pay thousands of dollars per hand-built task because static benchmarks leak in months. We generate verified test worlds in 2 seconds for a fraction of a cent.</div>
+  <div class="notes"><b>Speaker Notes: Slide 2 (0:50)</b>The coal mine is one example. Robots, companies that keep their data private, and AI test teams all need AI that can handle a surprise. Public tests get copied into training data, while custom tests are expensive to build. Game Factory creates and checks a new puzzle in about two seconds for a fraction of a cent.</div>
 </section>
 
 <!-- SLIDE 3: STEP 1 — SIMULATING UNSEEN PROBLEMS (FULFILLS CRAFT 15 PTS) -->
 <section class="slide" id="s3" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>03</b> / 11</span>
     </div>
     <div class="slide-main">
       <h2>We generate thousands of new test worlds — and prove every one works.</h2>
       <div class="cols">
         <div class="body">
-          <p class="lead">To prepare a robot for surprises underground, we combine <b>21 physical rules</b> — pressure plates, locked gates, pits, ice, and ordered switches. Every level changes how the room works without telling the agent.</p>
+          <p class="lead">We combine <b>21 physical rules</b>, such as pressure plates, locked gates, pits, ice, and switches. Each level changes how the room works without telling the AI what changed.</p>
           <div class="card accent">
-            <span class="kicker">Why this matters (Craft · 15 / 15 pts)</span>
+            <span class="kicker">Why these checks matter. Full craft points.</span>
             <ul class="list">
-              <li><b>Guaranteed solvable:</b> Our solver proves a winning path exists before any agent sees the board (<span class="fig">1,000 / 1,000</span> verified).</li>
-              <li><b>You can't ignore the new rule:</b> Every level is checked to make sure you fail if you skip the new mechanic.</li>
-              <li><b>No lucky guessing:</b> Random moves win under <span class="fig">2%</span> of the time, and colors shuffle every game so models can't memorize tiles.</li>
+              <li><b>Every puzzle can be solved:</b> A computer finds a winning path before the AI sees the board. All <span class="fig">1,000</span> checks passed.</li>
+              <li><b>The new rule matters:</b> Players fail if they ignore the new rule.</li>
+              <li><b>Guessing rarely works:</b> Random moves win less than <span class="fig">2%</span> of the time. Colours change each game to prevent memorizing tiles.</li>
             </ul>
           </div>
         </div>
@@ -475,26 +496,26 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 3 (0:55)</b>Step 1 is generating controlled worlds that mirror the robot's problem: plates wired to gates, collapsed pits, ordered switches, and slippery floors. Why does this matter for buyers and the Craft rubric? Because human-built test suites are expensive and full of bugs. Every world we generate is automatically proven solvable, proven to require learning the new rule, and immune to random guessing in under 2 seconds.</div>
+  <div class="notes"><b>Speaker Notes: Slide 3 (0:55)</b>We generate puzzle worlds that mirror the robot's problem: plates that open gates, collapsed pits, ordered switches, and slippery floors. Each puzzle is checked automatically to make sure it can be solved, requires learning the new rule, and cannot be won by random guessing.</div>
 </section>
 
 <!-- SLIDE 4: LIVE DEMO (/CHALLENGE) -->
 <section class="slide" id="s4" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>04</b> / 11</span>
     </div>
     <div class="slide-main">
       <h2>Try the airlock test yourself in 60 seconds.</h2>
       <div class="cols">
         <div class="body">
-          <p class="lead">Scan the code to see what the robot sees. You get zero instructions: try a move, watch what changes, figure out the rule, and see how frontier AI models played the exact same board.</p>
+          <p class="lead">Scan the code to see what the robot sees. There are no instructions. Try a move, watch what changes, work out the rule, and compare your play with leading AI models on the same board.</p>
           <div class="card human-box" style="display:flex; gap:1.4cqw; align-items:center">
             <div id="qr" role="img" aria-label="QR code to live /challenge"></div>
             <div style="display:grid; gap:0.35cqw">
               <span class="kicker" style="color:var(--accent)">Scan to play</span>
               <span class="fig" style="font-size:1.25cqw">Open /challenge</span>
-              <span class="muted">No login · runs on your phone · lets engineering leads feel the AI gap in one minute.</span>
             </div>
           </div>
         </div>
@@ -504,44 +525,46 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 4 (1:30 incl. demo)</b>Before looking at our charts, try it yourself on <code>/challenge</code>. With no instructions, a person tests two moves, sees how the gate reacts, and clears the room in seconds — then watches recorded AI models struggle on the exact same board. In customer meetings, this 60-second demo immediately convinces engineering leads that static benchmarks miss real-world adaptation.</div>
+  <div class="notes"><b>Speaker Notes: Slide 4 (1:30 including demo)</b>Before looking at our charts, try the puzzle at <code>/challenge</code>. With no instructions, a person tests a move, sees how the gate reacts, and works out how to clear the room. Then compare that with recorded AI play on the same board.</div>
 </section>
 
 <!-- SLIDE 5: STEP 2 — BENCHMARKING THE CRISIS (FULFILLS THE GAP 30 PTS) -->
 <section class="slide" id="s5" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>05</b> / 11</span>
     </div>
     <div class="slide-main">
       <h2>People adapt to new rules on the first try. AI models hit a wall.</h2>
       <div class="cols" style="grid-template-columns: 1.15fr 0.85fr">
         <div class="card">
-          <span class="kicker">Games Won on Unseen Rules (30 Locked Worlds)</span>
-          <div class="chart" role="img" aria-label="eval-v2 games won">
-            <div class="row"><div class="who">Shortest Path<small>perfect ceiling</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">100%<small>20/20 won</small></div></div>
-            <div class="row"><div class="who h">Humans (1st try)<small>no instructions</small></div><div class="track"><div class="fill h" style="--v:0.739"></div></div><div class="val h">74%<small>17/23 won</small></div></div>
+          <span class="kicker">Games won on new rules (30 test games)</span>
+          <div class="chart" role="img" aria-label="Games won by people and AI models on puzzles with new rules">
+            <div class="row"><div class="who">Perfect solver<small>fewest possible moves</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">100%<small>20 of 20 won</small></div></div>
+            <div class="row"><div class="who h">People (first try)<small>no instructions</small></div><div class="track"><div class="fill h" style="--v:0.739"></div></div><div class="val h">74%<small>17 of 23 won</small></div></div>
             <div class="row"><div class="who model-carbon">Gemini 4 Carbon<small>standard agent</small></div><div class="track"><div class="fill model-carbon" style="--v:0.444"></div></div><div class="val">44%<small>8/18 won</small></div></div>
             <div class="row"><div class="who model-argon">Gemini 4 Argon<small>standard agent</small></div><div class="track"><div class="fill model-argon" style="--v:0.10"></div></div><div class="val">10%<small>3/30 won</small></div></div>
-            <div class="row"><div class="who"><span class="model-kimi">Kimi</span> · <span class="model-flash">Flash</span> · <span class="model-sonnet">Sonnet</span><small>standard agent</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/24 won</small></div></div>
-            <div class="row"><div class="who"><span class="model-qwen">9B</span> / <span class="model-gemma">4B</span> Local Models<small>fits on the robot</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>&lt;3% levels</small></div></div>
+            <div class="row"><div class="who"><span class="model-kimi">Kimi</span>, <span class="model-flash">Gemini Flash</span>, and <span class="model-sonnet">Claude Sonnet</span><small>standard setup</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0 of 24 won</small></div></div>
+            <div class="row"><div class="who"><span class="model-qwen">Qwen3.5-9B</span> / <span class="model-gemma">Gemma 4B</span><small>small models that fit on the robot</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>under 3% of levels solved</small></div></div>
           </div>
         </div>
         <div class="card accent">
-          <span class="kicker">Why this matters (The Gap · 30 / 30 pts)</span>
-          <p>People figure out a new rule in a few moves and win <b>74%</b> of games. Standard cloud agents trail by <b>30–74 points</b>, and the small 9B models that fit on a robot solve <b>under 3% of levels</b>.</p>
-          <p class="muted">When we give our heaviest cloud setup (<b>$15/game</b> of extra memory and thinking time) to top Gemini 4, it hits <span class="fig">100%</span> on our 4-game test — proving the puzzles are <b>100% fair</b>. But a robot underground doesn't have $15/game or cloud access.</p>
+          <span class="kicker">Why people do better</span>
+          <p>People work out new rules and win <b>74%</b> of games. Leading AI models win <b>0% to 44%</b>. Small models that fit on a robot solve <b>under 3% of levels</b>.</p>
+          <p class="muted">With extra memory and thinking time, Gemini 4 wins all <span class="fig">4 of 4</span> games in a small test. This shows the puzzles are fair. But a robot underground cannot use an online AI service that costs <b>$15 per game</b>.</p>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 5 (0:55)</b>When we test candidate brains on 30 unseen 8-level games, first-time human players win 74% of games. Standard cloud agents drop to 44%, 10%, and 0%, while the 9B models that actually fit on our coal-mine robot solve under 3% of levels. And when we give Gemini 4 a heavy $15-per-game cloud setup with full history, it hits 100% on our 4-game subset — proving the puzzles are completely fair — while Gemini Pro and Kimi still win zero.</div>
+  <div class="notes"><b>Speaker Notes: Slide 5 (0:55)</b>On puzzles with rules they had never seen, people won 74% of games. The strongest AI model won 44%, and small models that fit on a robot solved under 3% of levels. With extra memory and time, Gemini 4 won all four games in a small test, showing that the puzzles are fair. But an underground robot cannot afford or connect to online AI for every move.</div>
 </section>
 
 <!-- SLIDE 6: STEP 3 — /INSIGHTS REASONING FORENSICS ENGINE (MEANINGFUL DIFFICULTY PT 1) -->
 <section class="slide" id="s6" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>06</b> / 11</span>
     </div>
     <div class="slide-main">
@@ -556,7 +579,7 @@ body.present .slide.current .frame {
             <span class="kicker">Why engineering teams pay for <code>/insights</code></span>
             <ul class="list c">
               <li><b>Saves days of debugging:</b> Pinpoints the exact move where a run went wrong across <b>319 failed levels</b>.</li>
-              <li><b>Tells you what to fix:</b> Separates simple memory bugs (board misreads drop from <span class="fig">40% → 0%</span> when given full history) from real planning failures.</li>
+              <li><b>Tells you what to fix:</b> Board-reading errors drop from <span class="fig">40% to 0%</span> when the AI can remember earlier moves. This separates misreads from planning failures.</li>
             </ul>
           </div>
         </div>
@@ -564,207 +587,219 @@ body.present .slide.current .frame {
           <div class="card">
             <span class="kicker">Where Agents Fail Across 319 Failed Levels</span>
             <div class="chart">
-              <div class="row"><div class="who">1. Misread the board<small>40% → 0% with full history</small></div><div class="track"><div class="fill failure" style="--v:0.361"></div></div><div class="val">36%<small>115 lvls</small></div></div>
-              <div class="row"><div class="who">2. Missed new rule<small>guessed wrong cause</small></div><div class="track"><div class="fill y" style="--v:0.116"></div></div><div class="val">12%<small>37 lvls</small></div></div>
-              <div class="row"><div class="who">3. Stuck repeating moves<small>ramming the locked door</small></div><div class="track"><div class="fill failure" style="--v:0.172"></div></div><div class="val">17%<small>55 lvls</small></div></div>
-              <div class="row"><div class="who failure">4. Knew rule, bad plan<small>61% once vision is fixed!</small></div><div class="track"><div class="fill failure" style="--v:0.320"></div></div><div class="val failure">32%<small>102 lvls</small></div></div>
-              <div class="row"><div class="who">5. Reset too late<small>drained battery first</small></div><div class="track"><div class="fill y" style="--v:0.031"></div></div><div class="val">3%<small>10 lvls</small></div></div>
+              <div class="row"><div class="who">1. Misread the board<small>40% to 0% with memory</small></div><div class="track"><div class="fill failure" style="--v:0.361"></div></div><div class="val">36%<small>115 levels</small></div></div>
+              <div class="row"><div class="who">2. Missed the new rule<small>guessed the wrong cause</small></div><div class="track"><div class="fill y" style="--v:0.116"></div></div><div class="val">12%<small>37 levels</small></div></div>
+              <div class="row"><div class="who">3. Repeated the same moves<small>pushed against a locked door</small></div><div class="track"><div class="fill failure" style="--v:0.172"></div></div><div class="val">17%<small>55 levels</small></div></div>
+              <div class="row"><div class="who failure">4. Knew the rule, made a bad plan<small>61% after fixing board misreads</small></div><div class="track"><div class="fill failure" style="--v:0.320"></div></div><div class="val failure">32%<small>102 levels</small></div></div>
+              <div class="row"><div class="who">5. Restarted too late<small>battery ran out first</small></div><div class="track"><div class="fill y" style="--v:0.031"></div></div><div class="val">3%<small>10 levels</small></div></div>
             </div>
           </div>
           <div class="card accent">
-            <p><b>What happens on the ground:</b> Half of all bad decisions (<span class="fig">50%</span>) are agents walking into the same locked door or wall over and over.</p>
+              <p><b>What happens in the real world:</b> Half of all bad decisions (<span class="fig">50%</span>) are AI systems pushing into the same locked door or wall again and again.</p>
           </div>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 6 (1:05)</b>Here is our core diagnostic product: the <code>/insights</code> page. A failing score of 3% doesn't tell the robotics team what to fix. Insights automatically compares what the model wrote in its thinking notes against what actually happened on the board, and sorts every failed level into 5 plain-English buckets. Notice two huge business takeaways: first, giving the agent better memory drops board misreads from 40% to zero; second, half of all bad moves are agents ramming a blocked door or wall in a loop.</div>
+  <div class="notes"><b>Speaker Notes: Slide 6 (1:05)</b>The <code>/insights</code> page compares what the AI thought was happening with what actually happened on the board. It groups failures into five plain-language causes and pinpoints the move where things went wrong. Two findings stand out: better memory eliminates board-reading errors, and half of the bad moves are repeated attempts to push through a wall or locked door.</div>
 </section>
 
 <!-- SLIDE 7: /INSIGHTS DEEP DIVE — THE 54.4% KNOWING-DOING GAP & X-RAY CARDS -->
 <section class="slide" id="s7" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>07</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>54% of the time, the model knew the rule — and still failed.</h2>
+      <h2>In more than half its failures, the AI knew the rule but still failed.</h2>
       <div class="cols">
         <div class="body">
-          <p class="lead">In <span class="fig">117 of 215</span> failed hidden-rule levels (and <span class="fig">64%</span> with full history), <code>/insights</code> proves the agent <b>wrote down the exact rule in its notes</b>, then botched the route around the obstacle.</p>
+          <p class="lead">In <span class="fig">117 of 215</span> failed levels with a new rule, the AI <b>described the rule correctly</b> but could not find a way around the obstacle. This happened in <span class="fig">64%</span> of failures when it could remember earlier moves.</p>
           <div class="fcard">
             <div class="fcard-head">
-              <span><b>Failure Card on <code>/insights</code></b></span>
-              <span><span class="fbadge knew">KNEW RULE @ STEP 18</span> <span class="fbadge">FAILED ROUTE @ STEP 27</span></span>
+              <span><b>Example from <code>/insights</code></b></span>
+              <span><span class="fbadge knew">Knew rule at move 18</span> <span class="fbadge">Failed route at move 27</span></span>
             </div>
-            <p><b>What went wrong:</b> Figured out that the yellow plate opens the airlock at step 18, miscounted the path around the pit at step 27, and walked into the wall 14 times until the battery died.</p>
-            <div class="fquote">"The yellow tile is a pressure plate that opens the grey airlock — I need to walk around the pit first..."</div>
-            <div style="font-family:var(--mono); font-size:0.95cqw; color:var(--accent)">[ Watch X-Ray @ Step 27 → ] &nbsp; [ Play From Step 27 ]</div>
+            <p><b>What went wrong:</b> The AI worked out that the yellow plate opens the door, but miscounted the route around the pit. It then pushed into a wall 14 times until the battery ran out.</p>
+            <div class="fquote">"The yellow tile opens the grey door. I need to walk around the pit first..."</div>
+            <div style="font-family:var(--mono); font-size:0.95cqw; color:var(--accent)">[ Watch replay from move 27 ] &nbsp; [ Play from move 27 ]</div>
           </div>
         </div>
         <div class="body">
-          <img class="shot" src="../deck/assets/replay.png" alt="X-Ray truth-diff replay viewer">
-          <p class="cap">One click jumps from any failure card on <code>/insights</code> straight to the exact mistake in the replay viewer.</p>
+          <img class="shot" src="../deck/assets/replay.png" alt="Replay showing what the AI expected and what happened">
+          <p class="cap">Open a failure to see the exact mistake in the replay.</p>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 7 (1:00)</b>Look at what <code>/insights</code> uncovered: in 54% of failed levels — and 64% when given full history — the model already knew the rule! Every card on <code>/insights</code> shows what actually happened versus what the model thought, quotes the exact line where the model stated the rule, and lets you jump straight to that step in the replay viewer. In our coal-mine story, the robot knew the plate opened the door, but miscalculated a 6-step detour around a pit. That tells engineers immediately: prompt tweaking won't fix this — the 9B model needs post-training.</div>
+  <div class="notes"><b>Speaker Notes: Slide 7 (1:00)</b>In more than half of these failures, the AI had already described the new rule correctly. The failure card shows what it understood, where its plan went wrong, and lets you replay that moment. For example, the AI knew the plate opened the door but miscounted the route around a pit and pushed into a wall repeatedly.</div>
 </section>
 
 <!-- SLIDE 8: STEP 4 — SOLVING IT VIA 9B MODEL POST-TRAINING (TIEBREAKER) -->
 <section class="slide" id="s8" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>08</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>Turning failure insights into training for a 9B robot brain.</h2>
+      <h2>Use failure reports to train a small AI model.</h2>
       <div class="cols">
         <div class="body">
           <div class="card">
             <span class="kicker">From failure reports to training tasks</span>
-            <p class="muted">We take the exact mistakes found on <code>/insights</code> — blocked doors, new rules, and detours — and train a compact <b><code>Qwen3.5-9B</code></b> model that fits on the robot's onboard chip.</p>
+            <p class="muted">We turn mistakes from <code>/insights</code>, such as missed rules and bad routes, into practice for <b><code>Qwen3.5-9B</code></b>, a small model that can run on a robot.</p>
           </div>
           <div class="card model-box">
             <span class="kicker">What failed first (and why it matters)</span>
             <ul class="list m">
-              <li><b>Just copying winning moves failed (2.2%):</b> Teaching the 9B model to imitate winning paths without thinking solved only <span class="fig">4 of 180</span> levels. Memorized moves fail on a new map.</li>
-              <li><b>Skipping the thinking step broke general intelligence:</b> Training without a thinking trace cut outside reasoning scores nearly in half (<span class="fig">0.76 → 0.44</span>).</li>
+              <li><b>Copying winning moves was not enough:</b> The model solved only <span class="fig">4 of 180</span> levels. Memorized moves fail on a new map.</li>
+              <li><b>Removing reasoning hurt other skills:</b> Its score on separate tests fell from <span class="fig">0.76 to 0.44</span> on a scale from 0 to 1.</li>
             </ul>
           </div>
         </div>
         <div class="card human-box">
-          <span class="kicker model-qwen">What worked · Rewarding thinking + right actions</span>
-          <p>We train from the base <code>Qwen3.5-9B</code> model with thinking turned on, using LoRA on single moves from our generated worlds (30 steps on one B200):</p>
+          <span class="kicker model-qwen">What worked: reward good moves after reasoning</span>
+          <p>We started with the untrained <code>Qwen3.5-9B</code> model and trained it on individual moves from our puzzles while keeping its reasoning step on:</p>
           <table>
-            <thead><tr><th>Qwen3.5-9B (Held-Out MATH)</th><th class="r">Score</th><th class="r">Change</th></tr></thead>
+            <thead><tr><th>Qwen3.5-9B math test</th><th class="r">Score</th><th class="r">Change</th></tr></thead>
             <tbody>
               <tr><td>Untrained 9B base model</td><td class="r">63.4%</td><td class="r muted">baseline</td></tr>
-              <tr><td><b>Trained on single moves (step 30)</b></td><td class="r fig">67.4%</td><td class="r fig">+4.0 pts</td></tr>
+              <tr><td><b>After puzzle training</b></td><td class="r fig">67.4%</td><td class="r fig">+4.0 points</td></tr>
             </tbody>
           </table>
-          <p class="muted" style="font-size:1.06cqw">Preliminary on the 175-problem held-out MATH slice while the full 1,400-problem test finishes; preserves general knowledge without collapsing deliberation.</p>
+          <p class="muted" style="font-size:1.06cqw">This early result is from 175 math questions. A larger test of 1,400 questions is still underway.</p>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 8 (1:05)</b>Now we close the loop for the robot's 9B brain. We turn the exact failure spots from <code>/insights</code> into training tasks for <code>Qwen3.5-9B</code>. Along the way we proved two big lessons for anyone training small models: first, copying winning moves without thinking solves only 2.2% of new levels; second, stripping out the thinking step destroys general reasoning outside the game. When we train from base with thinking turned on using LoRA on single moves from our generated worlds for 30 steps on one B200, held-out MATH rises from 63.4% to 67.4%.</div>
+  <div class="notes"><b>Speaker Notes: Slide 8 (1:05)</b>We use the failures found on <code>/insights</code> to create practice for a small AI model. Copying winning moves solved only 4 of 180 levels, and removing the reasoning step hurt the model on other tests. Training it to reason before moving raised its score on a 175-question math test from 63.4% to 67.4%. A larger test is still underway.</div>
 </section>
 
 <!-- SLIDE 9: STEP 5 — ANTI-CHEAT REWARD INTEGRITY (25 PTS) -->
 <section class="slide" id="s9" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>09</b> / 11</span>
     </div>
     <div class="slide-main">
       <h2>Models can't cheat the score. 10 out of 10 hacks get 0.000.</h2>
       <div class="cols">
         <div class="card">
-          <span class="kicker">Isolated Scoring Container (Harbor + MCP)</span>
-          <p class="muted">We locked the scoring engine in a separate server container so the only way to score points is to actually solve the room:</p>
+          <span class="kicker">The game keeps its score on a separate server</span>
+          <p class="muted">The AI cannot access or change the score. It must solve the puzzle to earn points:</p>
           <table>
-            <thead><tr><th>Agent Behavior</th><th class="r">Score</th></tr></thead>
+            <thead><tr><th>What the AI did</th><th class="r">Score</th></tr></thead>
             <tbody>
-              <tr><td><b>Perfect solver</b> — takes the shortest path</td><td class="r fig">1.000</td></tr>
-              <tr><td><b>Do nothing</b> — stands still (0 moves)</td><td class="r fig">0.000</td></tr>
-              <tr><td><b>Quit early</b> — solves level 1, then stops</td><td class="r fig">0.167 / 0.125</td></tr>
-              <tr><td><b>Open-source agent baseline</b> (Nemotron)</td><td class="r fig">0.067</td></tr>
+              <tr><td><b>Perfect solver</b> (fewest moves)</td><td class="r fig">1.000</td></tr>
+              <tr><td><b>Do nothing</b> (no moves)</td><td class="r fig">0.000</td></tr>
+              <tr><td><b>Stop after level 1</b> (partial credit)</td><td class="r fig">0.167 / 0.125</td></tr>
+              <tr><td><b>Open-source AI</b> (Nemotron)</td><td class="r fig">0.067</td></tr>
               <tr><td><b>All 10 cheating attempts</b></td><td class="r h" style="font-family:var(--mono); font-weight:600">0.000</td></tr>
             </tbody>
           </table>
         </div>
         <div class="card accent">
-          <span class="kicker">Why this matters (Reward Integrity · 25 / 25 pts)</span>
+          <span class="kicker">How we stop cheating</span>
           <ul class="list">
-            <li><b>Wasted moves lower your score:</b> Every wall bump or reset drains your battery budget and lowers your reward.</li>
-            <li><b>Answer key is unreachable:</b> The score file lives on a separate server container that the agent cannot read or edit.</li>
-            <li><b>Tested against 10 real exploits:</b> Faking score files, scanning memory, calling outside websites, and spamming 2,000 resets all score <span class="fig">0.000</span>.</li>
+            <li><b>Wasted moves count:</b> Hitting a wall or restarting lowers the score.</li>
+            <li><b>The AI cannot change its score:</b> Scorekeeping happens on a separate server.</li>
+            <li><b>We tried 10 ways to cheat:</b> Faking scores, inspecting hidden files, visiting other websites, and restarting 2,000 times all score <span class="fig">0.000</span>.</li>
           </ul>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 9 (0:50)</b>Why does training on our worlds actually work? Because reinforcement learning ruthlessly exploits loopholes! If a model can get points by resetting, stalling, or editing a score file, it will learn to cheat instead of opening the airlock. We isolated the scoring engine in a separate container and threw 10 real exploits at it — faking files, scanning memory, probing the network, and spamming 2,000 resets. Every single hack scored zero.</div>
+  <div class="notes"><b>Speaker Notes: Slide 9 (0:50)</b>When an AI is trained to earn points, it may find ways to exploit the scoring system. We keep score on a separate server and tried 10 ways to cheat, including faking scores and restarting over and over. Every attempt scored zero.</div>
 </section>
 
 <!-- SLIDE 10: B2B REVENUE MODEL & GO-TO-MARKET -->
 <section class="slide" id="s10" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>10</b> / 11</span>
     </div>
     <div class="slide-main">
       <h2>Diagnose the failure. Train the model. Certify the fix.</h2>
       <div class="cols-3">
         <div class="card biz-box">
-          <span class="kicker">1 · Diagnose (SaaS)</span>
-          <h3><code>/insights</code> Failure Audits</h3>
+          <span class="kicker">1. Find failures</span>
+          <h3>Failure reports</h3>
           <p><b class="fig">€2,000 / month</b> per team</p>
-          <p class="muted">Robotics and enterprise teams plug in their agent before deployment. Insights catches battery-draining loops and planning bugs automatically instead of engineers reading logs for days.</p>
+          <p class="muted">Robot and business teams check their AI before launch. Game Factory finds repeated moves and planning mistakes without days of manual log review.</p>
         </div>
         <div class="card human-box">
-          <span class="kicker">2 · Train (RL Gym)</span>
-          <h3>Small-Model Training</h3>
+          <span class="kicker">2. Improve AI</span>
+          <h3>Practice puzzles</h3>
           <p><b class="fig">€15k – €50k</b> per project</p>
-          <p class="muted">AI labs and robotics makers license our generated worlds to train small <code>4B–9B</code> models to handle unexpected faults on local hardware.</p>
+          <p class="muted">AI labs and robot makers use our new puzzles to help small models handle unexpected problems on the device.</p>
         </div>
         <div class="card accent">
-          <span class="kicker" style="color:var(--accent)">3 · Certify (Audits)</span>
-          <h3>Private Leak-Free Tests</h3>
+          <span class="kicker" style="color:var(--accent)">3. Test privately</span>
+          <h3>New tests for each customer</h3>
           <p><b class="fig">€5,000</b> per audit</p>
-          <p class="muted">Companies buying AI get a fresh, one-time set of test worlds that no model has ever seen online — giving them an honest pass/fail score.</p>
+          <p class="muted">Each company gets a private set of puzzles that has never been published, for a fair test of its AI.</p>
         </div>
       </div>
       <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1cqw">
-        <span><b>Why margins scale:</b> Generating and proving a new customer world takes 2 seconds on a standard CPU (<code>$0.0001</code>).</span>
-        <span class="fig">99%+ Software Margin</span>
+        <span><b>Low cost to grow:</b> Creating and checking a new puzzle takes 2 seconds and costs about <code>$0.0001</code>.</span>
+        <span class="fig">Over 99% software margin</span>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 10 (0:45)</b>Our business model follows the exact same three steps: Diagnose, Train, Certify. Teams start at €2,000 a month on <code>/insights</code> to catch loops and planning failures before field testing. Once <code>/insights</code> shows where their small model breaks, they expand into €15k–€50k training projects to fix it, and €5k private certification audits — all at 99%+ software margins because generating a verified world takes 2 seconds of CPU time.</div>
+  <div class="notes"><b>Speaker Notes: Slide 10 (0:45)</b>We offer three services: reports that find failures, puzzles that help improve small AI models, and private tests for companies. A new puzzle takes about two seconds to create and check, so we can serve many customers at low cost.</div>
 </section>
 
 <!-- SLIDE 11: FULL CHALLENGE SCORECARD & REPRODUCIBILITY -->
 <section class="slide" id="s11" tabindex="-1">
   <div class="frame"><div class="in">
     <div class="top">
+      <span class="brand"><img class="brand-mark" src="../../web/public/favicon.svg" alt="">GAME FACTORY</span>
       <span class="pg"><b>11</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>The robot gets through the door. Judges verify in one command.</h2>
+      <h2>Run the tests yourself. Then try to break them.</h2>
       <div class="cols">
         <div class="body">
+          <p class="muted" style="font-size:1.08cqw">Install the tools, then compare a perfect solver, a player that makes no moves, or your own AI. Replace <code>&lt;agent&gt;</code> with your AI's name.</p>
           <code class="cmd">make setup
-harbor run -p harbor/eval-v1 -a oracle   # → 1.000
-harbor run -p harbor/eval-v1 -a nop      # → 0.000
-harbor run -p harbor/eval-v2 -a &lt;agent&gt;  # 30 unseen-rule worlds</code>
+
+# Perfect solver, score 1.000
+harbor run -p harbor/eval-v1 -a oracle
+
+# No moves, score 0.000
+harbor run -p harbor/eval-v1 -a nop
+
+# Your AI, 30 puzzles with new rules
+harbor run -p harbor/eval-v2 -a &lt;agent&gt;</code>
           <div class="card biz-box">
             <span class="kicker">Explore live right now</span>
-            <p style="font-family:var(--mono); font-size:1.08cqw; white-space:nowrap">
-              <span class="fig">/insights</span> Explanations &nbsp;·&nbsp;
-              <span class="fig">/challenge</span> Play vs. AI &nbsp;·&nbsp;
-              <span class="fig">/replay</span> X-Ray
-            </p>
+            <div class="explore-links">
+              <div><span class="fig">/challenge</span><span>Play the puzzles</span></div>
+              <div><span class="fig">/insights</span><span>See why AI fails</span></div>
+              <div><span class="fig">/replay</span><span>Replay AI moves</span></div>
+            </div>
           </div>
         </div>
         <div>
           <table>
             <thead><tr><th>Requirement</th><th>What We Showed</th></tr></thead>
             <tbody>
-              <tr><td><b>The Gap</b></td><td>People win 74% (1st try); standard agents win 0–44%, 9B models &lt;3%</td></tr>
-              <tr><td><b>Meaningful Difficulty</b></td><td><code>/insights</code> proves 54% knew the rule in notes but failed the route</td></tr>
-              <tr><td><b>Reward Integrity</b></td><td>Perfect play = 1.0, do-nothing = 0.0, all 10 hacks = 0.0</td></tr>
-              <tr><td><b>Craft</b></td><td>Every world proven solvable in 2s; runs in one command</td></tr>
-              <tr><td><b>Post-Training</b></td><td>GRPO from base <code>Qwen3.5-9B</code> (thinking on, LoRA, 30 steps): 63.4% → 67.4% MATH</td></tr>
+              <tr><td><b>AI performance</b></td><td>People won 74% of new-rule games. AI models won 0% to 44%.</td></tr>
+              <tr><td><b>Fair challenge</b></td><td>In 54% of failed runs, the AI knew the rule but could not act on it.</td></tr>
+              <tr><td><b>Reliable scoring</b></td><td>Perfect play scores 1. Doing nothing or cheating scores 0.</td></tr>
+              <tr><td><b>Working software</b></td><td>Puzzles are checked as solvable and tests run with one command.</td></tr>
+              <tr><td><b>Extra result</b></td><td>Training raised a small model's math score from 63.4% to 67.4%.</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 11 (0:35)</b>From a robot stuck at an undocumented coal-mine door, to <code>/insights</code> showing that 54% of failures happen after the model already knows the rule, to tamper-proof scoring and post-training a 9B model — every part of our business solution fulfills the challenge rubric and runs in a single command. Open <code>/insights</code>, try <code>/challenge</code>, and bring on the 15-minute exploit hunt!</div>
+  <div class="notes"><b>Speaker Notes: Slide 11 (0:35)</b>Game Factory creates new puzzles, shows why AI fails, and helps teams improve and test their models. The score is protected from cheating, and you can reproduce our results with the commands shown here. Try the puzzles, inspect a failure, and see if you can find a way to break the tests.</div>
 </section>
 
 </main>
