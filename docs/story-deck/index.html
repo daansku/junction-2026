@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Game Factory — Pitch Deck</title>
+<title>Game Factory Pitch Deck</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -409,10 +409,10 @@ body.present .slide.current .frame {
       <h1>600 meters underground, online AI can't help.</h1>
       <div class="cols" style="align-items:start">
         <div class="body">
-          <p class="lead">An inspection robot is deep inside a collapsed coal mine. Rock blocks all signals. Its onboard computer runs a small AI model, and the battery has 40 minutes left.</p>
+          <p class="lead">An inspection robot is deep inside a collapsed coal mine, where rock blocks all signals. A small AI model runs on the robot. Its battery has 40 minutes left.</p>
           <div class="card model-box">
             <span class="kicker">What goes wrong today</span>
-            <p>Sensors handle driving until the robot reaches a damaged door controlled by a floor plate. There is no manual. Today's small AI models push against the locked door 50 times until the battery dies, <b>putting a €120,000 robot at risk</b>.</p>
+            <p>Sensors handle the driving until the robot reaches a damaged door controlled by a floor plate. There is no manual. Today's small AI models push against the locked door 50 times, <b>putting a €120,000 robot at risk</b> as its battery runs down.</p>
           </div>
           <div class="card biz-box">
             <span class="kicker">What Game Factory does</span>
@@ -426,7 +426,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 1 (0:50)</b>Picture an inspection robot deep underground, where it has no internet and a limited battery. When it reaches a damaged door with no instructions, it must learn how the door works and find a safe way through. Small AI models often repeat the same failed move until the battery runs out. Game Factory tests this ability, shows where the model fails, and helps improve it.</div>
+  <div class="notes"><b>Speaker Notes: Slide 1 (0:50)</b>An inspection robot is deep underground, with no internet and a limited battery. It reaches a damaged door with no instructions and has to work out how the door operates before it can move on. Small AI models can repeat the same failed move until the battery runs out. Game Factory tests whether they can adapt, shows where they fail, and helps improve them.</div>
 </section>
 
 <!-- SLIDE 2: THE BUSINESS CASE & MARKET -->
@@ -437,22 +437,22 @@ body.present .slide.current .frame {
       <span class="pg"><b>02</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>AI without internet faces the same problem.</h2>
+      <h2>Offline AI has to handle surprises on its own.</h2>
       <div class="cols-3">
         <div class="card model-box">
           <span class="kicker">1. Robots in the field</span>
           <h3>Mines, Pipes &amp; Drones</h3>
-          <p class="muted">With no signal and a small onboard computer, a robot must test moves safely when a valve jams or a tunnel shifts, then work out what changed or turn back before its battery dies.</p>
+          <p class="muted">With no signal and a small onboard computer, a robot must test moves safely. If a valve jams or a tunnel shifts, it has to work out what changed or turn back before its battery dies.</p>
         </div>
         <div class="card biz-box">
           <span class="kicker">2. Private business AI</span>
           <h3>Hospitals, Factories &amp; Banks</h3>
-          <p class="muted">Privacy rules may block online AI services. When company software changes without warning, local AI can keep clicking a button that no longer works.</p>
+          <p class="muted">Privacy rules may prevent a company from sending data to online AI services. If its software changes without warning, local AI can keep clicking a button that no longer works.</p>
         </div>
         <div class="card accent">
           <span class="kicker" style="color:var(--accent)">3. AI labs and test teams</span>
           <h3>New tests for AI</h3>
-          <p class="muted">Public tests can end up in AI training data within months. Building custom interactive tests by hand takes design, engineering, and quality checks.</p>
+          <p class="muted">Public tests can end up in AI training data within months. Teams that build custom interactive tests by hand need design and engineering time, then quality checks.</p>
         </div>
       </div>
       <div class="stats">
@@ -462,7 +462,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 2 (0:50)</b>The coal mine is one example. Robots, companies that keep their data private, and AI test teams all need AI that can handle a surprise. Public tests get copied into training data, while custom tests are expensive to build. Game Factory creates and checks a new puzzle in about two seconds for a fraction of a cent.</div>
+  <div class="notes"><b>Speaker Notes: Slide 2 (0:50)</b>The mine is one example. Field robots, companies with strict privacy rules, and AI test teams all need systems that can handle surprises. Public tests may enter training data, while custom tests take time to build. Game Factory creates and checks a new puzzle in about two seconds for a fraction of a cent.</div>
 </section>
 
 <!-- SLIDE 3: STEP 1 — SIMULATING UNSEEN PROBLEMS (FULFILLS CRAFT 15 PTS) -->
@@ -473,15 +473,15 @@ body.present .slide.current .frame {
       <span class="pg"><b>03</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>We generate thousands of new test worlds — and prove every one works.</h2>
+      <h2>We generate new test worlds and verify each puzzle.</h2>
       <div class="cols">
         <div class="body">
-          <p class="lead">We combine <b>21 physical rules</b>, such as pressure plates, locked gates, pits, ice, and switches. Each level changes how the room works without telling the AI what changed.</p>
+          <p class="lead">We combine <b>21 physical rules</b>, including pressure plates, locked gates, pits, ice, and switches. Each level changes how the room works without telling the AI what changed.</p>
           <div class="card accent">
-            <span class="kicker">Why these checks matter. Full craft points.</span>
+            <span class="kicker">How we check each puzzle</span>
             <ul class="list">
               <li><b>Every puzzle can be solved:</b> A computer finds a winning path before the AI sees the board. All <span class="fig">1,000</span> checks passed.</li>
-              <li><b>The new rule matters:</b> Players fail if they ignore the new rule.</li>
+              <li><b>Players must use the new rule:</b> Ignoring it leads to failure.</li>
               <li><b>Guessing rarely works:</b> Random moves win less than <span class="fig">2%</span> of the time. Colours change each game to prevent memorizing tiles.</li>
             </ul>
           </div>
@@ -497,7 +497,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 3 (0:55)</b>We generate puzzle worlds that mirror the robot's problem: plates that open gates, collapsed pits, ordered switches, and slippery floors. Each puzzle is checked automatically to make sure it can be solved, requires learning the new rule, and cannot be won by random guessing.</div>
+  <div class="notes"><b>Speaker Notes: Slide 3 (0:55)</b>We generate puzzle worlds with the kinds of obstacles a robot might face: plates that open gates, collapsed pits, ordered switches, and slippery floors. A computer checks that each puzzle has a solution, that players need the new rule, and that random moves rarely win.</div>
 </section>
 
 <!-- SLIDE 4: LIVE DEMO (/CHALLENGE) -->
@@ -511,7 +511,7 @@ body.present .slide.current .frame {
       <h2>Try the airlock test yourself in 60 seconds.</h2>
       <div class="cols">
         <div class="body">
-          <p class="lead">Scan the code to see what the robot sees. There are no instructions. Try a move, watch what changes, work out the rule, and compare your play with leading AI models on the same board.</p>
+          <p class="lead">Scan the code to see what the robot sees. There are no instructions. Try a move, watch what changes, work out the rule, then compare your play with leading AI models on the same board.</p>
           <div class="card human-box" style="display:flex; gap:1.4cqw; align-items:center">
             <div id="qr" role="img" aria-label="QR code to live /challenge"></div>
             <div style="display:grid; gap:0.35cqw">
@@ -526,7 +526,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 4 (1:30 including demo)</b>Before looking at our charts, try the puzzle at <code>/challenge</code>. With no instructions, a person tests a move, sees how the gate reacts, and works out how to clear the room. Then compare that with recorded AI play on the same board.</div>
+  <div class="notes"><b>Speaker Notes: Slide 4 (1:30 including demo)</b>Try the puzzle at <code>/challenge</code>. There are no instructions. Make a move, watch how the gate reacts, and work out how to clear the room. Then compare your run with recorded AI play on the same board.</div>
 </section>
 
 <!-- SLIDE 5: STEP 2 — BENCHMARKING THE CRISIS (FULFILLS THE GAP 30 PTS) -->
@@ -537,7 +537,7 @@ body.present .slide.current .frame {
       <span class="pg"><b>05</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>People adapt to new rules on the first try. AI models hit a wall.</h2>
+      <h2>People won 74% of games. The best AI model won 44%.</h2>
       <div class="cols" style="grid-template-columns: 1.15fr 0.85fr">
         <div class="card">
           <span class="kicker">Games won on new rules (30 test games)</span>
@@ -553,12 +553,12 @@ body.present .slide.current .frame {
         <div class="card accent">
           <span class="kicker">Why people do better</span>
           <p>People work out new rules and win <b>74%</b> of games. Leading AI models win <b>0% to 44%</b>. Small models that fit on a robot solve <b>under 3% of levels</b>.</p>
-          <p class="muted">With extra memory and thinking time, Gemini 4 wins all <span class="fig">4 of 4</span> games in a small test. This shows the puzzles are fair. But a robot underground cannot use an online AI service that costs <b>$15 per game</b>.</p>
+          <p class="muted">With extra memory and time to think, Gemini 4 won all <span class="fig">4 of 4</span> games in a small test. That confirms the puzzles can be solved. An underground robot cannot use the online service, which costs <b>$15 per game</b>.</p>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 5 (0:55)</b>On puzzles with rules they had never seen, people won 74% of games. The strongest AI model won 44%, and small models that fit on a robot solved under 3% of levels. With extra memory and time, Gemini 4 won all four games in a small test, showing that the puzzles are fair. But an underground robot cannot afford or connect to online AI for every move.</div>
+  <div class="notes"><b>Speaker Notes: Slide 5 (0:55)</b>People won 74% of games with rules they had never seen. The strongest AI model won 44%. Small models that fit on a robot solved under 3% of levels. Gemini 4 won all four games in a small test when given extra memory and time. An underground robot cannot use that online service for every move, at $15 per game.</div>
 </section>
 
 <!-- SLIDE 6: STEP 3 — /INSIGHTS REASONING FORENSICS ENGINE (MEANINGFUL DIFFICULTY PT 1) -->
@@ -569,12 +569,12 @@ body.present .slide.current .frame {
       <span class="pg"><b>06</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>A failing score doesn't tell you what to fix. Insights does.</h2>
+      <h2>A score shows when AI fails. Insights shows where.</h2>
       <div class="cols">
         <div class="body">
           <div class="card">
             <span class="kicker">How <code>/insights</code> works</span>
-            <p class="muted">Instead of engineers reading thousands of log lines by hand, our <code>/insights</code> page compares <b>what the model thought happened</b> against <b>what actually happened on the board</b>, and groups every failure into 5 plain-English causes.</p>
+            <p class="muted">Our <code>/insights</code> page compares <b>what the model thought happened</b> with <b>what actually happened on the board</b>. It groups failures into five plain-English causes, so engineers do not have to read thousands of log lines by hand.</p>
           </div>
           <div class="card biz-box">
             <span class="kicker">Why engineering teams pay for <code>/insights</code></span>
@@ -602,7 +602,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 6 (1:05)</b>The <code>/insights</code> page compares what the AI thought was happening with what actually happened on the board. It groups failures into five plain-language causes and pinpoints the move where things went wrong. Two findings stand out: better memory eliminates board-reading errors, and half of the bad moves are repeated attempts to push through a wall or locked door.</div>
+  <div class="notes"><b>Speaker Notes: Slide 6 (1:05)</b>The <code>/insights</code> page compares the AI's account of a run with what happened on the board. It sorts failures into five plain-language causes and identifies the move where each run went wrong. With better memory, board-reading errors dropped to zero. Half of the bad moves were repeated attempts to push through a wall or locked door.</div>
 </section>
 
 <!-- SLIDE 7: /INSIGHTS DEEP DIVE — THE 54.4% KNOWING-DOING GAP & X-RAY CARDS -->
@@ -613,16 +613,16 @@ body.present .slide.current .frame {
       <span class="pg"><b>07</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>In more than half its failures, the AI knew the rule but still failed.</h2>
+      <h2>The AI knew the rule in 117 failed levels.</h2>
       <div class="cols">
         <div class="body">
-          <p class="lead">In <span class="fig">117 of 215</span> failed levels with a new rule, the AI <b>described the rule correctly</b> but could not find a way around the obstacle. This happened in <span class="fig">64%</span> of failures when it could remember earlier moves.</p>
+          <p class="lead">Across <span class="fig">215</span> failed levels with a new rule, the AI <b>described the rule correctly in 117</b> but could not find a way around the obstacle. This was <span class="fig">64%</span> of failures when it could remember earlier moves.</p>
           <div class="fcard">
             <div class="fcard-head">
               <span><b>Example from <code>/insights</code></b></span>
               <span><span class="fbadge knew">Knew rule at move 18</span> <span class="fbadge">Failed route at move 27</span></span>
             </div>
-            <p><b>What went wrong:</b> The AI worked out that the yellow plate opens the door, but miscounted the route around the pit. It then pushed into a wall 14 times until the battery ran out.</p>
+            <p><b>What went wrong:</b> The AI figured out that the yellow plate opens the door, but miscounted the route around the pit. It pushed into a wall 14 times before the battery ran out.</p>
             <div class="fquote">"The yellow tile opens the grey door. I need to walk around the pit first..."</div>
             <div style="font-family:var(--mono); font-size:0.95cqw; color:var(--accent)">[ Watch replay from move 27 ] &nbsp; [ Play from move 27 ]</div>
           </div>
@@ -634,7 +634,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 7 (1:00)</b>In more than half of these failures, the AI had already described the new rule correctly. The failure card shows what it understood, where its plan went wrong, and lets you replay that moment. For example, the AI knew the plate opened the door but miscounted the route around a pit and pushed into a wall repeatedly.</div>
+  <div class="notes"><b>Speaker Notes: Slide 7 (1:00)</b>In more than half of these failures, the AI described the new rule correctly but still could not finish the level. The failure card shows what it understood and where its plan went wrong. In this example, it knew the plate opened the door, miscounted the route around a pit, and pushed into a wall repeatedly.</div>
 </section>
 
 <!-- SLIDE 8: STEP 4 — SOLVING IT VIA 9B MODEL POST-TRAINING (TIEBREAKER) -->
@@ -653,7 +653,7 @@ body.present .slide.current .frame {
             <p class="muted">We turn mistakes from <code>/insights</code>, such as missed rules and bad routes, into practice for <b><code>Qwen3.5-9B</code></b>, a small model that can run on a robot.</p>
           </div>
           <div class="card model-box">
-            <span class="kicker">What failed first (and why it matters)</span>
+            <span class="kicker">Two approaches that failed</span>
             <ul class="list m">
               <li><b>Copying winning moves was not enough:</b> The model solved only <span class="fig">4 of 180</span> levels. Memorized moves fail on a new map.</li>
               <li><b>Removing reasoning hurt other skills:</b> Its score on separate tests fell from <span class="fig">0.76 to 0.44</span> on a scale from 0 to 1.</li>
@@ -675,7 +675,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 8 (1:05)</b>We use the failures found on <code>/insights</code> to create practice for a small AI model. Copying winning moves solved only 4 of 180 levels, and removing the reasoning step hurt the model on other tests. Training it to reason before moving raised its score on a 175-question math test from 63.4% to 67.4%.</div>
+  <div class="notes"><b>Speaker Notes: Slide 8 (1:05)</b>We turn failures from <code>/insights</code> into practice for a small AI model. Copying winning moves solved only 4 of 180 levels. Removing the reasoning step also hurt the model on other tests. After training, its score on a 175-question math test rose from 63.4% to 67.4%.</div>
 </section>
 
 <!-- SLIDE 9: STEP 5 — ANTI-CHEAT REWARD INTEGRITY (25 PTS) -->
@@ -686,7 +686,7 @@ body.present .slide.current .frame {
       <span class="pg"><b>09</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>Models can't cheat the score. 10 out of 10 hacks get 0.000.</h2>
+      <h2>All ten cheating attempts scored 0.000.</h2>
       <div class="cols">
         <div class="card">
           <span class="kicker">The game keeps its score on a separate server</span>
@@ -713,7 +713,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 9 (0:50)</b>When an AI is trained to earn points, it may find ways to exploit the scoring system. We keep score on a separate server and tried 10 ways to cheat, including faking scores and restarting over and over. Every attempt scored zero.</div>
+  <div class="notes"><b>Speaker Notes: Slide 9 (0:50)</b>An AI trained to earn points may find ways to exploit the scoring system. We keep the score on a separate server and tried ten ways to cheat, including faking scores and restarting repeatedly. Every attempt scored zero.</div>
 </section>
 
 <!-- SLIDE 10: B2B REVENUE MODEL & GO-TO-MARKET -->
@@ -724,7 +724,7 @@ body.present .slide.current .frame {
       <span class="pg"><b>10</b> / 11</span>
     </div>
     <div class="slide-main">
-      <h2>Diagnose the failure. Train the model. Certify the fix.</h2>
+      <h2>Find failures, train better models, run private tests.</h2>
       <div class="cols-3">
         <div class="card biz-box">
           <span class="kicker">1. Find failures</span>
@@ -735,7 +735,7 @@ body.present .slide.current .frame {
         <div class="card human-box">
           <span class="kicker">2. Improve AI</span>
           <h3>Practice puzzles</h3>
-          <p><b class="fig">€15k – €50k</b> per project</p>
+          <p><b class="fig">€15k to €50k</b> per project</p>
           <p class="muted">AI labs and robot makers use our new puzzles to help small models handle unexpected problems on the device.</p>
         </div>
         <div class="card accent">
@@ -751,7 +751,7 @@ body.present .slide.current .frame {
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 10 (0:45)</b>We offer three services: reports that find failures, puzzles that help improve small AI models, and private tests for companies. A new puzzle takes about two seconds to create and check, so we can serve many customers at low cost.</div>
+  <div class="notes"><b>Speaker Notes: Slide 10 (0:45)</b>We sell failure reports, puzzles for training small AI models, and private tests for companies. A new puzzle takes about two seconds to create and check, which keeps the cost of serving another customer low.</div>
 </section>
 
 <!-- SLIDE 11: FULL CHALLENGE SCORECARD & REPRODUCIBILITY -->
@@ -800,7 +800,7 @@ harbor run -p harbor/eval-v2 -a &lt;agent&gt;</code>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 11 (0:35)</b>Game Factory creates new puzzles, shows why AI fails, and helps teams improve and test their models. The score is protected from cheating, and you can reproduce our results with the commands shown here. Try the puzzles, inspect a failure, and see if you can find a way to break the tests.</div>
+  <div class="notes"><b>Speaker Notes: Slide 11 (0:35)</b>Game Factory creates new puzzles, shows why AI fails, and helps teams improve and test their models. The score is protected from cheating, and the commands here let you reproduce our results. Try a puzzle, inspect a failure, and see if you can break the tests.</div>
 </section>
 
 </main>
