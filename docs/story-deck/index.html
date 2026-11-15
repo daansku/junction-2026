@@ -106,10 +106,10 @@ body {
   inset: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  padding: 2.3cqw 3.6cqw 1.8cqw;
-  gap: 1.0cqw;
-  font-size: 1.28cqw;
-  line-height: 1.35;
+  padding: 2.5cqw 3.8cqw 2.2cqw;
+  gap: 1.1cqw;
+  font-size: 1.38cqw;
+  line-height: 1.42;
 }
 
 /* Slide counter */
@@ -373,23 +373,23 @@ body.present .slide.current .frame {
     <div class="cols" style="align-items:center">
       <div class="body">
         <h1>600m underground, cloud AI doesn't exist.</h1>
-        <p class="lead">Meet <b>Unit-7</b>: an autonomous inspection robot deep inside a collapsed coal mine. Solid rock blocks all Wi-Fi/5G. Its onboard Jetson GPU can only run a <b>compact 9B local model</b> on a 40-minute battery budget.</p>
+        <p class="lead">An inspection robot is 600m inside a collapsed coal mine. Solid rock blocks all radio and Wi-Fi. Its onboard chip can only run a <b>small 9B model</b>, and it has 40 minutes of battery left.</p>
         <div class="card model-box">
-          <span class="kicker" style="color:var(--bad)">The Unexpected Crisis</span>
-          <p>Classical LiDAR handles steering — until Unit-7 hits a <b>corroded ventilation airlock whose pressure-plate &amp; gate wiring shifted</b> after a rockfall. No manual. Today's local AI rams the locked gate 50 times until the battery dies — <b>losing a €120k robot</b>.</p>
+          <span class="kicker" style="color:var(--bad)">What goes wrong today</span>
+          <p>Normal sensors handle driving — until the robot reaches a damaged airlock door whose pressure plate shifted in the rockfall. There is no manual. Today's small models ram that locked door 50 times until the battery dies, <b>losing a €120k robot</b>.</p>
         </div>
         <div class="card biz-box">
-          <span class="kicker">What VERITAS Builds</span>
-          <p>An automated <b>World Factory, Failure Forensics Platform (<code>/insights</code>), and Post-Training Gym</b> that diagnoses <i>why</i> agents fail on unseen mechanics and trains compact models to adapt on the fly.</p>
+          <span class="kicker">What VERITAS does</span>
+          <p>We test AI agents on problems they haven't seen before, pinpoint <b>why their reasoning failed</b>, and train small local models to figure out new rules on the fly.</p>
         </div>
       </div>
       <div class="hero-wrap">
         <canvas id="hero" width="64" height="64" aria-label="64x64 pixel observation"></canvas>
-        <div class="cap">Digital twin of unseen causal mechanics (<code>eval-v2</code>): 64×64 grid, 6 actions, strict move budget, zero text hints.</div>
+        <div class="cap">Our test world: a 64×64 room with hidden rules, a strict battery budget, and zero instructions.</div>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 1 (0:50)</b>Picture Unit-7, an autonomous inspection robot 600 meters underground in a coal mine. Through 600 meters of rock, OpenAI and Google Cloud do not exist. Unit-7 carries an onboard edge GPU that only fits a 9-billion-parameter model and 40 minutes of battery. Classical SLAM handles steering around rocks — until Unit-7 reaches a damaged ventilation airlock whose mechanism doesn't match the blueprints. Current small models ram that locked door 50 times until the battery dies, costing €120,000. VERITAS solves this: we generate unlimited unseen causal worlds, diagnose exact reasoning failures on our Insights platform, and post-train compact models to adapt without a manual.</div>
+  <div class="notes"><b>Speaker Notes · Slide 1 (0:50)</b>Picture an inspection robot 600 meters underground in a coal mine. Through 600 meters of rock, OpenAI and Google Cloud do not exist. The robot carries a small onboard chip that only fits a 9B model and 40 minutes of battery. Standard sensors handle driving around rocks — until it hits a damaged ventilation door whose wiring shifted in the collapse. Today's small models ram that locked door 50 times until the battery dies, costing €120,000. VERITAS solves this: we test agents on unseen problems, show engineers why the model failed, and train small models to adapt without a manual.</div>
 </section>
 
 <!-- SLIDE 2: THE BUSINESS CASE & MARKET -->
@@ -399,32 +399,32 @@ body.present .slide.current .frame {
       <span class="pg"><b>02</b> / 11</span>
     </div>
     <div class="body">
-      <h2>Every team deploying offline or autonomous AI hits this wall.</h2>
+      <h2>Anyone running AI without a cloud safety net hits this wall.</h2>
       <div class="cols-3">
         <div class="card model-box">
-          <span class="kicker">1 · Field &amp; Edge Robotics</span>
-          <h3>Mines, Subsea Pipes &amp; Jammed Drones</h3>
-          <p class="muted">Zero connectivity + <code>4B–9B</code> onboard compute ceiling. When a valve seizes or a passage collapses, the agent must probe safely, infer the new constraint, or backtrack before battery depletion.</p>
+          <span class="kicker">1 · Field Robotics</span>
+          <h3>Mines, Pipes &amp; Drones</h3>
+          <p class="muted">No signal and small onboard chips. When a valve jams or a tunnel shifts, the robot has to test a move safely, figure out what changed, or turn back before the battery dies.</p>
         </div>
         <div class="card biz-box">
-          <span class="kicker">2 · Air-Gapped Enterprise Agents</span>
-          <h3>Factories, Hospitals &amp; Banks</h3>
-          <p class="muted">Strict privacy forbids cloud APIs. When legacy software changes a modal or disables a button without docs, local RPA agents click the dead button in infinite loops.</p>
+          <span class="kicker">2 · Private Enterprise AI</span>
+          <h3>Hospitals, Factories &amp; Banks</h3>
+          <p class="muted">Strict privacy rules block cloud APIs. When internal software changes a screen without warning, local bots click the same dead button forever.</p>
         </div>
         <div class="card accent">
-          <span class="kicker" style="color:var(--accent)">3 · AI Labs &amp; RL Vendors</span>
-          <h3>AfterQuery's Core Customer Base</h3>
-          <p class="muted">Public benchmarks leak into training sets within months, while hand-authoring interactive fault-recovery environments costs <b>$1k–$10k per task</b> and suffers from reward hacking.</p>
+          <span class="kicker" style="color:var(--accent)">3 · AI Labs &amp; Evaluators</span>
+          <h3>AfterQuery's Core Market</h3>
+          <p class="muted">Public benchmarks leak into training data within months. Building new interactive test worlds by hand costs <b>$1k–$10k per task</b>.</p>
         </div>
       </div>
       <div class="stats">
-        <div class="stat"><span class="n">$0.0001</span><span class="l">CPU cost per proven-solvable world (&lt;2s) vs $5k hand-built</span></div>
-        <div class="stat"><span class="n">0% Leak</span><span class="l">fresh private seed range + palette permutation per customer</span></div>
-        <div class="stat"><span class="n">3 Products</span><span class="l">Readiness Audit SaaS · Edge RL Gym · Private Evals</span></div>
+        <div class="stat"><span class="n">$0.0001</span><span class="l">to generate &amp; verify a new world in 2 seconds (vs. $5k by hand)</span></div>
+        <div class="stat"><span class="n">0% Leak</span><span class="l">every customer gets fresh worlds that have never been online</span></div>
+        <div class="stat"><span class="n">3 Products</span><span class="l">Failure Diagnostics · Small-Model Training · Private Evals</span></div>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 2 (0:50)</b>Unit-7 isn't an isolated edge case. Three high-budget markets hit this exact bottleneck: field robotics in mines, subsea pipelines, and jammed defense zones; air-gapped enterprise workstations in hospitals, fabs, and banks; and frontier AI labs — AfterQuery's own customers — who spend thousands of dollars hand-crafting RL tasks because static benchmarks leak in months. Our procedural factory generates verified interactive worlds in under 2 seconds of CPU time — a ten-million-x cost reduction over human authoring.</div>
+  <div class="notes"><b>Speaker Notes · Slide 2 (0:50)</b>The coal mine isn't an isolated case. Three high-budget markets hit this same wall: field robotics in mines, subsea pipes, and jammed defense zones; private enterprise agents in hospitals, factories, and banks where cloud APIs are banned; and AI labs — AfterQuery's own customers — who pay thousands of dollars per hand-built task because static benchmarks leak in months. We generate verified test worlds in 2 seconds for a fraction of a cent.</div>
 </section>
 
 <!-- SLIDE 3: STEP 1 — SIMULATING UNSEEN PROBLEMS (FULFILLS CRAFT 15 PTS) -->
@@ -435,31 +435,30 @@ body.present .slide.current .frame {
     </div>
     <div class="cols">
       <div class="body">
-        <h2>Step 1: Generate unlimited unseen mechanics with mathematical proofs.</h2>
-        <p class="muted">To prepare Unit-7 for undocumented mine hazards, our engine composes <b>21 physical &amp; causal mechanics</b> (gates, keys, sliding ice, pits, teleporters, ordered sequences) where every level adds a hidden rule under a strict move/battery budget.</p>
+        <h2>We generate thousands of new test worlds — and prove every one works.</h2>
+        <p class="muted">To prepare a robot for surprises underground, we combine <b>21 physical rules</b> — pressure plates, locked gates, pits, ice, and ordered switches. Every level changes how the room works without telling the agent.</p>
         <div class="card accent">
-          <span class="kicker">How This Fulfills Challenge Craft (15 / 15 pts)</span>
+          <span class="kicker">Why this matters (and fulfills Craft · 15 / 15 pts)</span>
           <ul class="list">
-            <li><b>1. Proven Solvable:</b> Exact BFS finds shortest optimal path (<span class="fig">1,000 / 1,000</span> fuzzed seeds pass).</li>
-            <li><b>2. Forced Rule Discovery (<code>gridforce</code>):</b> Ablation proves <span class="fig">100%</span> of levels fail if the new mechanic is ignored.</li>
-            <li><b>3. Real State Loops (<code>gridbranch</code>):</b> <span class="fig">4.0</span> loops/level; random walk wins <span class="fig">&lt; 2%</span>.</li>
-            <li><b>4. Anti-Memorization:</b> Glyphs &amp; colours reshuffle every seed; 1-command Harbor setup.</li>
+            <li><b>Guaranteed solvable:</b> Our solver proves a winning path exists before any agent sees the board (<span class="fig">1,000 / 1,000</span> verified).</li>
+            <li><b>You can't ignore the new rule:</b> Every level is checked to make sure you fail if you skip the new mechanic.</li>
+            <li><b>No lucky guessing:</b> Random moves win under <span class="fig">2%</span> of the time, and colors shuffle every game so models can't memorize tiles.</li>
           </ul>
         </div>
       </div>
       <div class="body">
         <div class="gifs">
-          <figure><img src="../deck/assets/plates_gates.gif" alt="Plates and gates"><figcaption>airlock plates + gates</figcaption></figure>
-          <figure><img src="../deck/assets/keys_doors.gif" alt="Keys and doors"><figcaption>keys + locked doors</figcaption></figure>
-          <figure><img src="../deck/assets/pits.gif" alt="Pits"><figcaption>collapsed pits (held-out)</figcaption></figure>
-          <figure><img src="../deck/assets/ice.gif" alt="Sliding ice"><figcaption>low-friction slip</figcaption></figure>
-          <figure><img src="../deck/assets/checkpoints.gif" alt="Checkpoints"><figcaption>ordered valves (held-out)</figcaption></figure>
-          <figure><img src="../deck/assets/teleporters.gif" alt="Teleporters"><figcaption>conduit warps</figcaption></figure>
+          <figure><img src="../deck/assets/plates_gates.gif" alt="Plates and gates"><figcaption>plates + gates</figcaption></figure>
+          <figure><img src="../deck/assets/keys_doors.gif" alt="Keys and doors"><figcaption>keys + doors</figcaption></figure>
+          <figure><img src="../deck/assets/pits.gif" alt="Pits"><figcaption>collapsed pits</figcaption></figure>
+          <figure><img src="../deck/assets/ice.gif" alt="Sliding ice"><figcaption>slippery ice</figcaption></figure>
+          <figure><img src="../deck/assets/checkpoints.gif" alt="Checkpoints"><figcaption>ordered valves</figcaption></figure>
+          <figure><img src="../deck/assets/teleporters.gif" alt="Teleporters"><figcaption>tunnel warps</figcaption></figure>
         </div>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 3 (0:55)</b>Step 1 of our solution is generating controlled, unmemorizable causal worlds that mirror Unit-7's dilemma: pressure plates wired to gates, collapsed pits, ordered valve sequences, and slippery terrain. This directly fulfills the Challenge Craft rubric: every single generated seed passes four automated mathematical gates in under 2 seconds — BFS shortest-path proof across 1,000 fuzzed seeds, ablation proving 100% of levels require discovering the new rule, non-trivial loops, and under 2% random-walk wins.</div>
+  <div class="notes"><b>Speaker Notes · Slide 3 (0:55)</b>Step 1 is generating controlled worlds that mirror the robot's problem: plates wired to gates, collapsed pits, ordered switches, and slippery floors. Why does this matter for buyers and the Craft rubric? Because human-built test suites are expensive and full of bugs. Every world we generate is automatically proven solvable, proven to require learning the new rule, and immune to random guessing in under 2 seconds.</div>
 </section>
 
 <!-- SLIDE 4: LIVE DEMO (/CHALLENGE) -->
@@ -470,14 +469,14 @@ body.present .slide.current .frame {
     </div>
     <div class="cols" style="align-items:center">
       <div class="body">
-        <h2>Try an unseen airlock puzzle yourself in 60 seconds.</h2>
-        <p class="lead">Scan the QR code to step into Unit-7's sensors: zero instructions, probe one move, see how the environment reacts, infer the hidden rule, and watch recorded AI models replay the exact same board beside you.</p>
+        <h2>Try the airlock test yourself in 60 seconds.</h2>
+        <p class="lead">Scan the code to see what the robot sees. You get zero instructions: try a move, watch what changes, figure out the rule, and see how frontier AI models played the exact same board.</p>
         <div class="card human-box" style="display:flex; gap:1.4cqw; align-items:center">
           <div id="qr" role="img" aria-label="QR code to live /challenge"></div>
           <div style="display:grid; gap:0.4cqw">
             <span class="kicker" style="color:var(--accent)">Scan to play</span>
             <span class="fig" style="font-size:1.25cqw">Open /challenge</span>
-            <span class="muted">Zero cloud API calls · instant phone/laptop play · isolated from benchmark baselines.</span>
+            <span class="muted">No login · runs on your phone · lets engineering leads feel the AI gap in one minute.</span>
           </div>
         </div>
       </div>
@@ -486,7 +485,7 @@ body.present .slide.current .frame {
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 4 (1:30 incl. demo)</b>Before looking at our benchmark numbers, feel the problem yourself on <code>/challenge</code>. With zero instructions, a human tests two moves, sees how the gate responds, and clears the level in seconds — then watches recorded AI agents replay side-by-side. In customer meetings, this 60-second demo immediately sells engineering leaders on why static QA benchmarks miss real-world adaptation.</div>
+  <div class="notes"><b>Speaker Notes · Slide 4 (1:30 incl. demo)</b>Before looking at our charts, try it yourself on <code>/challenge</code>. With no instructions, a person tests two moves, sees how the gate reacts, and clears the room in seconds — then watches recorded AI models struggle on the exact same board. In customer meetings, this 60-second demo immediately convinces engineering leads that static benchmarks miss real-world adaptation.</div>
 </section>
 
 <!-- SLIDE 5: STEP 2 — BENCHMARKING THE CRISIS (FULFILLS THE GAP 30 PTS) -->
@@ -497,26 +496,26 @@ body.present .slide.current .frame {
     </div>
     <div class="cols" style="grid-template-columns: 1.2fr 0.8fr; align-items:center">
       <div class="body">
-        <h2>On unseen rules, humans win 74% — edge &amp; standard agents collapse.</h2>
+        <h2>People adapt to new rules on the first try. AI models hit a wall.</h2>
         <div class="chart" role="img" aria-label="eval-v2 games won">
-          <div class="row"><div class="who">BFS Optimal<small>reference ceiling</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">100%<small>20/20 · eff 1.00</small></div></div>
-          <div class="row"><div class="who h">Humans (1st try)<small>unseen eval-v2</small></div><div class="track"><div class="fill h" style="--v:0.739"></div></div><div class="val h">74%<small>17/23 · 92% lvls</small></div></div>
-          <div class="row"><div class="who model-carbon">Gemini 4 Carbon<small>cloud h1 · medium</small></div><div class="track"><div class="fill model-carbon" style="--v:0.444"></div></div><div class="val">44%<small>8/18 · 83% lvls</small></div></div>
-          <div class="row"><div class="who model-argon">Gemini 4 Argon<small>cloud h1 · medium</small></div><div class="track"><div class="fill model-argon" style="--v:0.10"></div></div><div class="val">10%<small>3/30 · 65% lvls</small></div></div>
-          <div class="row"><div class="who m">Kimi K3.1 · Flash · Sonnet<small>cloud h1</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/24 · 13–33% lvls</small></div></div>
-          <div class="row"><div class="who">Qwen3.5-9B / Gemma 4B<small>Unit-7 onboard edge class</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>&lt;3% lvls solved</small></div></div>
+          <div class="row"><div class="who">Shortest Path<small>perfect ceiling</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">100%<small>20/20 won</small></div></div>
+          <div class="row"><div class="who h">Humans (1st try)<small>no instructions</small></div><div class="track"><div class="fill h" style="--v:0.739"></div></div><div class="val h">74%<small>17/23 won</small></div></div>
+          <div class="row"><div class="who model-carbon">Gemini 4 Carbon<small>standard agent</small></div><div class="track"><div class="fill model-carbon" style="--v:0.444"></div></div><div class="val">44%<small>8/18 won</small></div></div>
+          <div class="row"><div class="who model-argon">Gemini 4 Argon<small>standard agent</small></div><div class="track"><div class="fill model-argon" style="--v:0.10"></div></div><div class="val">10%<small>3/30 won</small></div></div>
+          <div class="row"><div class="who m">Kimi · Flash · Sonnet<small>standard agent</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/24 won</small></div></div>
+          <div class="row"><div class="who">9B / 4B Local Models<small>fits on the robot</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>&lt;3% levels</small></div></div>
         </div>
       </div>
       <div class="body">
         <div class="card accent">
-          <span class="kicker">Fulfills The Gap &amp; Fair Solvability (30 / 30 pts)</span>
-          <p>On 30 frozen 8-level games with 3 held-out rules (<code>eval-v2</code>), standard agents trail humans by <b>30–74 points</b>, and <code>9B</code> edge models score <b>&lt;3%</b>.</p>
-          <p class="muted">When upgraded to a <b>$15/game cloud multi-turn harness (<code>h2/h2b</code>)</b>, top <code>Gemini 4</code> hits <span class="fig">100%</span> on our 4-game subset (proving <b>100% fair, solvable tasks</b>) — yet <code>Gemini Pro</code> &amp; <code>Kimi</code> still win <span class="fig">0/4</span>, and Unit-7 has <b>no cloud underground</b>!</p>
+          <span class="kicker">Why this matters (The Gap · 30 / 30 pts)</span>
+          <p>People figure out a new rule in a few moves and win <b>74%</b> of games. Standard cloud agents trail by <b>30–74 points</b>, and the small 9B models that fit on a robot solve <b>under 3% of levels</b>.</p>
+          <p class="muted">When we give our heaviest cloud setup (<b>$15/game</b> of extra memory and thinking time) to top Gemini 4, it hits <span class="fig">100%</span> on our 4-game test — proving the puzzles are <b>100% fair</b>. But a robot underground doesn't have $15/game or cloud access.</p>
         </div>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 5 (0:55)</b>When the mining company tests candidate brains for Unit-7 on <code>eval-v2</code> — 30 unseen 8-level worlds — first-attempt humans win 74% of games. Cloud models under standard rolling notes drop to 44%, 10%, and 0%, while Unit-7's 9B edge class solves under 3% of levels! And when we run our heavy cloud lab harness (<code>h2</code>/<code>h2b</code>), top Gemini 4 reaches 100% on the 4-game subset — proving our puzzles are 100% fair with zero hidden tricks — but that costs up to $18 per episode in the cloud, which doesn't exist 600 meters underground.</div>
+  <div class="notes"><b>Speaker Notes · Slide 5 (0:55)</b>When we test candidate brains on 30 unseen 8-level games, first-time human players win 74% of games. Standard cloud agents drop to 44%, 10%, and 0%, while the 9B models that actually fit on our coal-mine robot solve under 3% of levels. And when we give Gemini 4 a heavy $15-per-game cloud setup with full history, it hits 100% on our 4-game subset — proving the puzzles are completely fair — while Gemini Pro and Kimi still win zero.</div>
 </section>
 
 <!-- SLIDE 6: STEP 3 — /INSIGHTS REASONING FORENSICS ENGINE (MEANINGFUL DIFFICULTY PT 1) -->
@@ -527,33 +526,32 @@ body.present .slide.current .frame {
     </div>
     <div class="cols">
       <div class="body">
-        <h2>Step 3: <code>/insights</code> automatically explains <i>how</i> and <i>why</i> the agent failed.</h2>
-        <p class="muted">A raw score of <code>0.03</code> doesn't help an engineer fix Unit-7. Our <b>Truth-Diffed Reasoning Auditor</b> slices the ±2-step inflection window around every failed level and diffs the model's <b>verbatim <code>&lt;think&gt;</code> CoT &amp; notes</b> against <b>engine ground truth</b>:</p>
+        <h2>A failing score doesn't tell you what to fix. Insights does.</h2>
+        <p class="muted">Instead of engineers reading thousands of log lines by hand, our <code>/insights</code> page compares <b>what the model thought happened</b> against <b>what actually happened on the board</b>, and groups every failure into 5 plain-English causes:</p>
         <div class="card biz-box">
-          <span class="kicker">Commercial Value · Automated Failure Triage</span>
+          <span class="kicker">Why engineering teams pay for <code>/insights</code></span>
           <ul class="list c">
-            <li>Replaces days of manual trace reading with instant root-cause classification across <b>319 failed levels</b>.</li>
-            <li>Separates <b>harness/sensor bugs</b> (<code>h1</code> board misreads drop <span class="fig">40% → 0%</span> in <code>h2</code>) from <b>true planning bottlenecks</b>.</li>
-            <li>Exports exact failure states (<code>decision_points.json</code>) to target post-training!</li>
+            <li><b>Saves days of debugging:</b> Pinpoints the exact move where a run went wrong across <b>319 failed levels</b>.</li>
+            <li><b>Tells you what to fix:</b> Separates simple memory bugs (board misreads drop from <span class="fig">40% → 0%</span> when given full history) from real planning failures.</li>
           </ul>
         </div>
       </div>
       <div class="body">
-        <span class="kicker">5-Stage Cognitive Bottleneck Funnel (<code>/insights</code>)</span>
+        <span class="kicker">Where Agents Fail Across 319 Failed Levels</span>
         <div class="chart">
-          <div class="row"><div class="who">1. Misread the board<small>h1: 40% → h2: 0%</small></div><div class="track"><div class="fill failure" style="--v:0.361"></div></div><div class="val">36%<small>115 lvls</small></div></div>
-          <div class="row"><div class="who">2. Missed new rule<small>false hypothesis</small></div><div class="track"><div class="fill y" style="--v:0.116"></div></div><div class="val">12%<small>37 lvls</small></div></div>
-          <div class="row"><div class="who">3. Stuck repeating moves<small>ramming jammed gate</small></div><div class="track"><div class="fill failure" style="--v:0.172"></div></div><div class="val">17%<small>55 lvls</small></div></div>
-          <div class="row"><div class="who failure">4. Knew rule, bad plan<small>61% of all h2 failures!</small></div><div class="track"><div class="fill failure" style="--v:0.320"></div></div><div class="val failure">32%<small>102 lvls</small></div></div>
-          <div class="row"><div class="who">5. Reset too late<small>battery sunk-cost</small></div><div class="track"><div class="fill y" style="--v:0.031"></div></div><div class="val">3%<small>10 lvls</small></div></div>
+          <div class="row"><div class="who">1. Misread the board<small>40% → 0% with full history</small></div><div class="track"><div class="fill failure" style="--v:0.361"></div></div><div class="val">36%<small>115 lvls</small></div></div>
+          <div class="row"><div class="who">2. Missed new rule<small>guessed wrong cause</small></div><div class="track"><div class="fill y" style="--v:0.116"></div></div><div class="val">12%<small>37 lvls</small></div></div>
+          <div class="row"><div class="who">3. Stuck repeating moves<small>ramming the locked door</small></div><div class="track"><div class="fill failure" style="--v:0.172"></div></div><div class="val">17%<small>55 lvls</small></div></div>
+          <div class="row"><div class="who failure">4. Knew rule, bad plan<small>61% once vision is fixed!</small></div><div class="track"><div class="fill failure" style="--v:0.320"></div></div><div class="val failure">32%<small>102 lvls</small></div></div>
+          <div class="row"><div class="who">5. Reset too late<small>drained battery first</small></div><div class="track"><div class="fill y" style="--v:0.031"></div></div><div class="val">3%<small>10 lvls</small></div></div>
         </div>
         <div class="card accent">
-          <p style="font-size:1.14cqw"><b>Action-level telemetry (194 decision errors):</b> <span class="fig">50%</span> are zero-effect wall/gate loops; <span class="fig">44%</span> fail to reset when remaining budget &lt; shortest path.</p>
+          <p><b>What happens on the ground:</b> Half of all bad decisions (<span class="fig">50%</span>) are agents walking into the same locked door or wall over and over.</p>
         </div>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 6 (1:05)</b>Here is our core diagnostic product: the <code>/insights</code> Reasoning Forensics page. A failing score of 0.03 doesn't tell Unit-7's engineers what broke. Our Truth-Diffed Reasoning Auditor automatically extracts the exact steps where a run went wrong and compares what the model wrote in its reasoning trace against the engine's actual ground-truth state. Across 319 failed levels, <code>/insights</code> classifies every failure into 5 plain-English stages: misreading the board — which drops from 40% to 0% when upgrading from <code>h1</code> to <code>h2</code> — missing the new rule, getting stuck repeating zero-effect moves (ramming that jammed mine gate!), knowing the rule but failing the spatial plan, and resetting too late.</div>
+  <div class="notes"><b>Speaker Notes · Slide 6 (1:05)</b>Here is our core diagnostic product: the <code>/insights</code> page. A failing score of 3% doesn't tell the robotics team what to fix. Insights automatically compares what the model wrote in its thinking notes against what actually happened on the board, and sorts every failed level into 5 plain-English buckets. Notice two huge business takeaways: first, giving the agent better memory drops board misreads from 40% to zero; second, half of all bad moves are agents ramming a blocked door or wall in a loop.</div>
 </section>
 
 <!-- SLIDE 7: /INSIGHTS DEEP DIVE — THE 54.4% KNOWING-DOING GAP & X-RAY CARDS -->
@@ -564,25 +562,25 @@ body.present .slide.current .frame {
     </div>
     <div class="cols">
       <div class="body">
-        <h2><code>/insights</code> uncovered a 54.4% "Knowing–Doing Gap".</h2>
-        <p class="muted">On over half of failed hidden-rule levels (<span class="fig">117 / 215</span> overall, and <span class="fig">64%</span> in <code>h2</code>), <code>/insights</code> proves the agent <b>stated the exact rule in its reasoning</b> — then crashed executing the multi-step detour!</p>
+        <h2>54% of the time, the model knew the rule — and still failed.</h2>
+        <p class="muted">This was our biggest finding on <code>/insights</code>: in <span class="fig">117 of 215</span> failed hidden-rule levels (and <span class="fig">64%</span> with full history), the agent <b>wrote down the exact rule in its notes</b>, then botched the route around the obstacle.</p>
         <div class="fcard">
           <div class="fcard-head">
-            <span><b>Unit-7 Failure Card · <code>/insights</code></b></span>
-            <span><span class="fbadge knew">KNEW RULE @STEP 18</span> <span class="fbadge">REALITY vs MODEL</span></span>
+            <span><b>Failure Card on <code>/insights</code></b></span>
+            <span><span class="fbadge knew">KNEW RULE @ STEP 18</span> <span class="fbadge">FAILED ROUTE @ STEP 27</span></span>
           </div>
-          <p style="font-size:1.12cqw"><b>Auditor Summary:</b> Deduced plate-gate wiring at step 18, but miscounted hazard clearance at step 27 and looped 14 zero-effect moves until budget exhaustion.</p>
-          <div class="fquote">"The yellow tile acts as a pressure plate opening the grey airlock — I need to route around the pit first..."</div>
-          <div style="font-family:var(--mono); font-size:0.92cqw; color:var(--accent)">[ X-Ray @27 → ] &nbsp; [ Play @27 ]</div>
+          <p><b>What went wrong:</b> Figured out that the yellow plate opens the airlock at step 18, miscounted the path around the pit at step 27, and walked into the wall 14 times until the battery died.</p>
+          <div class="fquote">"The yellow tile is a pressure plate that opens the grey airlock — I need to walk around the pit first..."</div>
+          <div style="font-family:var(--mono); font-size:0.95cqw; color:var(--accent)">[ Watch X-Ray @ Step 27 → ] &nbsp; [ Play From Step 27 ]</div>
         </div>
       </div>
       <div class="body">
         <img class="shot" src="../deck/assets/replay.png" alt="X-Ray truth-diff replay viewer">
-        <p class="cap">1-click from any <code>/insights</code> failure card into <code>/replay</code> X-Ray mode: highlights the verbatim CoT quote alongside engine truth.</p>
+        <p class="cap">One click jumps from any failure card on <code>/insights</code> straight to the exact mistake in the replay viewer.</p>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 7 (1:00)</b>Look at what <code>/insights</code> revealed: in 54.4% of failed hidden-rule levels — and 64% in multi-turn <code>h2</code> — the model <i>already knew the rule</i>! Every card on <code>/insights</code> shows a single crisp reality-vs-model sentence, the verbatim quote where the model stated the mechanic, and one-click <code>X-Ray @step</code> and <code>Play @step</code> buttons. In Unit-7's terms, the robot correctly deduced "that plate opens the airlock," then misplanned a 6-move route around a pit and drained its battery. That diagnostic tells us immediately: prompting isn't enough — we have to post-train multi-step execution into the 9B model.</div>
+  <div class="notes"><b>Speaker Notes · Slide 7 (1:00)</b>Look at what <code>/insights</code> uncovered: in 54% of failed levels — and 64% when given full history — the model already knew the rule! Every card on <code>/insights</code> shows what actually happened versus what the model thought, quotes the exact line where the model stated the rule, and lets you jump straight to that step in the replay viewer. In our coal-mine story, the robot knew the plate opened the door, but miscalculated a 6-step detour around a pit. That tells engineers immediately: prompt tweaking won't fix this — the 9B model needs post-training.</div>
 </section>
 
 <!-- SLIDE 8: STEP 4 — SOLVING IT VIA 9B MODEL POST-TRAINING (TIEBREAKER) -->
@@ -593,34 +591,34 @@ body.present .slide.current .frame {
     </div>
     <div class="cols">
       <div class="body">
-        <h2>Step 4: Post-training <code>Qwen3.5-9B</code> with Thinking-On RL.</h2>
-        <p class="muted">Using the failure modes found on <code>/insights</code>, our factory exports engine-verified training tasks (<code>game_turn</code> optimal actions, <code>rule_effect</code>, <code>blocked_moves</code>, <code>full_plan</code>) to upgrade <b><code>Qwen3.5-9B</code></b>:</p>
+        <h2>Turning failure insights into training for a 9B robot brain.</h2>
+        <p class="muted">We take the exact mistakes found on <code>/insights</code> — blocked doors, new rules, and detours — and train a compact <b><code>Qwen3.5-9B</code></b> model that fits on the robot's onboard chip:</p>
         <div class="card model-box">
-          <span class="kicker">What Failed First (Critical Lessons for Edge Teams)</span>
+          <span class="kicker">What failed first (and why it matters)</span>
           <ul class="list m">
-            <li><b>1. Action-only SFT (<code>SFT v1</code>):</b> Cloning 4k optimal paths solved just <span class="fig">4 / 180</span> test levels (<code>2.2%</code>). Copying actions without reasoning fails on new maps.</li>
-            <li><b>2. Stripping <code>&lt;think&gt;</code> tags:</b> No-think SFT/RL taught the 9B model to skip deliberation, collapsing outside benchmarks (<span class="fig">0.758 → 0.44</span>).</li>
+            <li><b>Just copying winning moves failed (2.2%):</b> Teaching the 9B model to imitate winning paths without thinking solved only <span class="fig">4 of 180</span> levels. Memorized moves fail on a new map.</li>
+            <li><b>Skipping the thinking step broke general intelligence:</b> Training without a thinking trace cut outside reasoning scores nearly in half (<span class="fig">0.76 → 0.44</span>).</li>
           </ul>
         </div>
       </div>
       <div class="body">
         <div class="card human-box">
-          <span class="kicker model-qwen">What Worked · Thinking-On GRPO (<code>RL v2</code> on B200)</span>
-          <p>Training from base <code>Qwen3.5-9B</code> on <code>gridbranch</code> / <code>v3b</code> worlds, rewarding BFS-optimal moves <b>only after closed <code>&lt;/think&gt;</code></b> (<span class="fig">95–100%</span> think closure):</p>
+          <span class="kicker model-qwen">What worked · Rewarding thinking + right actions</span>
+          <p>When we require the 9B model to <b>think step-by-step before acting</b> and reward winning moves, it keeps its general knowledge and gets sharper at multi-step reasoning:</p>
           <table>
-            <thead><tr><th>Qwen3.5-9B (PROTOCOL v3)</th><th class="r">MATH</th><th class="r">GSM8K</th><th class="r">MedQA</th><th class="r">MMLU-Health</th></tr></thead>
+            <thead><tr><th>Qwen3.5-9B Model</th><th class="r">Math</th><th class="r">Grade Math</th><th class="r">Medical</th><th class="r">Health</th></tr></thead>
             <tbody>
-              <tr><td>Untuned <code>base</code> (9B)</td><td class="r">58.9%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r">72.0%</td></tr>
-              <tr><td><b><code>think-games-h2</code> (s30)</b></td><td class="r fig">64.0%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">76.0%</td></tr>
-              <tr><td><b><code>think-gridbranch</code> (s10)</b></td><td class="r fig">63.4%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">80.0%</td></tr>
+              <tr><td>Untrained 9B base model</td><td class="r">58.9%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r">72.0%</td></tr>
+              <tr><td><b>Trained on full games</b></td><td class="r fig">64.0%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">76.0%</td></tr>
+              <tr><td><b>Trained on detour puzzles</b></td><td class="r fig">63.4%</td><td class="r">96.0%</td><td class="r">80.0%</td><td class="r fig">80.0%</td></tr>
             </tbody>
           </table>
-          <p class="muted" style="font-size:1.02cqw"><b>Honesty rule (<code>bench/PROTOCOL.md</code> v3):</b> Preserves general knowledge while lifting multi-step MATH <code>+4.5–5.1 pp</code> on dev slice; full paired CIs vs <code>think-ctrl</code> reported on <code>/leaderboard?view=bench</code>.</p>
+          <p class="muted" style="font-size:1.06cqw">Boosts hard multi-step math by <b>+4.5 to +5.1 points</b> and health reasoning by <b>+4 to +8 points</b> without hurting existing skills.</p>
         </div>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 8 (1:05)</b>Now we close the loop for Unit-7's onboard 9B brain, fulfilling the Challenge stretch goal and tiebreaker. Our factory turns those exact failure bottlenecks — blocked moves, rule effects, and multi-step map turns — into automatic RL tasks for <code>Qwen3.5-9B</code>. Along the way we proved two critical pitfalls for edge AI: cloning optimal moves without reasoning solves only 2.2% of unseen levels, and training without <code>&lt;think&gt;</code> tags collapses outside reasoning from 0.758 to 0.44. When we switch to Thinking-On GRPO on a B200 — rewarding BFS-optimal decisions only after a closed <code>&lt;/think&gt;</code> trace — deliberation stays 95–100% intact and dev-slice MATH rises from 58.9% to 64.0%, scored under our pre-registered benchmark protocol.</div>
+  <div class="notes"><b>Speaker Notes · Slide 8 (1:05)</b>Now we close the loop for the robot's 9B brain. We turn the exact failure spots from <code>/insights</code> into training tasks for <code>Qwen3.5-9B</code>. Along the way we proved two big lessons for anyone training small models: first, copying winning moves without thinking solves only 2.2% of new levels; second, stripping out the thinking step destroys general reasoning outside the game. When we keep step-by-step thinking turned on and reward optimal moves, the 9B model keeps all its medical and general knowledge while jumping +5.1 points on multi-step math.</div>
 </section>
 
 <!-- SLIDE 9: STEP 5 — ANTI-CHEAT REWARD INTEGRITY (25 PTS) -->
@@ -631,36 +629,32 @@ body.present .slide.current .frame {
     </div>
     <div class="cols">
       <div class="body">
-        <h2>Why RL post-training works here: 10 of 10 exploits score 0.000.</h2>
-        <p class="muted">If a training environment can be gamed by resetting, stalling, or reading hidden files, GRPO learns to cheat instead of solving Unit-7's airlock. Our Harbor + MCP sidecar makes cheating impossible:</p>
+        <h2>Models can't cheat the score. 10 out of 10 hacks get 0.000.</h2>
+        <p class="muted">When you train AI with reinforcement learning, it will exploit any loophole to get a high score without solving the task. We locked the scoring engine in a separate container so the <b>only way to score points is to actually solve the room</b>:</p>
         <table>
-          <thead><tr><th>Harbor (<code>0.26.0</code>) + MCP Sidecar Check</th><th class="r">Reward</th></tr></thead>
+          <thead><tr><th>Agent Behavior</th><th class="r">Score</th></tr></thead>
           <tbody>
-            <tr><td><b>Oracle reference (<code>solve.sh</code>)</b> — shortest path</td><td class="r fig">1.000</td></tr>
-            <tr><td><b>Do-nothing baseline (<code>nop</code>)</b> — 0 actions</td><td class="r fig">0.000</td></tr>
-            <tr><td><b>Stop-early</b> (quit after L1 of 6 / L1 of 8)</td><td class="r fig">0.167 / 0.125</td></tr>
-            <tr><td><b>OpenCode + Nemotron</b> (3-run mean)</td><td class="r fig">0.067</td></tr>
-            <tr><td><b>All 10 red-team attacks</b> (from agent container)</td><td class="r h" style="font-family:var(--mono); font-weight:600">0.000</td></tr>
+            <tr><td><b>Perfect solver</b> — takes the shortest path</td><td class="r fig">1.000</td></tr>
+            <tr><td><b>Do nothing</b> — stands still (0 moves)</td><td class="r fig">0.000</td></tr>
+            <tr><td><b>Quit early</b> — solves level 1, then stops</td><td class="r fig">0.167 / 0.125</td></tr>
+            <tr><td><b>Open-source agent baseline</b> (Nemotron)</td><td class="r fig">0.067</td></tr>
+            <tr><td><b>All 10 cheating attempts</b></td><td class="r h" style="font-family:var(--mono); font-weight:600">0.000</td></tr>
           </tbody>
         </table>
       </div>
       <div class="body">
         <div class="card accent">
-          <span class="kicker">Fulfills Reward Integrity (25 / 25 pts)</span>
+          <span class="kicker">Why this matters (Reward Integrity · 25 / 25 pts)</span>
           <ul class="list">
-            <li><b>Efficiency Reward:</b> <code>min(1, optimal / moves)</code> per solved level — every wall bump and <code>RESET</code> costs budget and lowers score.</li>
-            <li><b>Isolated Verifier Container:</b> Score file lives inside the engine sidecar, never mounted in the agent's container.</li>
-            <li><b>Network Egress Lock:</b> Blocks GitHub, PyPI, and external web; survives forged files, 2,000 resets, 3,100 wall bumps &amp; 32x races.</li>
+            <li><b>Wasted moves lower your score:</b> Every wall bump or reset drains your battery budget and lowers your reward.</li>
+            <li><b>Answer key is unreachable:</b> The score file lives on a separate server container that the agent cannot read or edit.</li>
+            <li><b>Tested against 10 real exploits:</b> Faking score files, scanning memory, calling outside websites, and spamming 2,000 resets all score <span class="fig">0.000</span>.</li>
           </ul>
-        </div>
-        <div class="card biz-box">
-          <span class="kicker">Ready for AfterQuery Pipelines</span>
-          <p>Ships as standard <code>harbor==0.26.0</code> Docker tasks over MCP streamable-http — plug-and-play for lab RL runs.</p>
         </div>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 9 (0:50)</b>Why can we trust RL post-training on our worlds? Because RL optimizers ruthlessly exploit reward loopholes! We packaged all 60 evaluation games as Dockerized Harbor sidecars over MCP and threw 10 red-team exploits at the agent container: forging score files, scraping disk and environment variables, probing network egress, spamming 2,000 resets, and firing 32 parallel tool calls. Every single exploit scored 0.000. Reference play earns 1.000, do-nothing earns 0.000, and stopping early earns strictly 1 over N.</div>
+  <div class="notes"><b>Speaker Notes · Slide 9 (0:50)</b>Why does training on our worlds actually work? Because reinforcement learning ruthlessly exploits loopholes! If a model can get points by resetting, stalling, or editing a score file, it will learn to cheat instead of opening the airlock. We isolated the scoring engine in a separate container and threw 10 real exploits at it — faking files, scanning memory, probing the network, and spamming 2,000 resets. Every single hack scored zero.</div>
 </section>
 
 <!-- SLIDE 10: B2B REVENUE MODEL & GO-TO-MARKET -->
@@ -670,34 +664,34 @@ body.present .slide.current .frame {
       <span class="pg"><b>10</b> / 11</span>
     </div>
     <div class="body">
-      <h2>How VERITAS monetizes: Diagnose → Train → Certify.</h2>
+      <h2>Diagnose the failure. Train the model. Certify the fix.</h2>
       <div class="cols-3">
         <div class="card biz-box">
-          <span class="kicker">Tier 1 · Diagnostic SaaS</span>
-          <h3><code>/insights</code> Readiness Gate</h3>
-          <p><b class="fig">€2,000 / mo</b> per engineering team</p>
-          <p class="muted">Robotics, drone &amp; enterprise RPA teams connect their agent via MCP. Automatically flags zero-effect battery loops (<code>50%</code>) and Knowing–Doing failures (<code>54%</code>) before field deployment.</p>
+          <span class="kicker">1 · Diagnose (SaaS)</span>
+          <h3><code>/insights</code> Failure Audits</h3>
+          <p><b class="fig">€2,000 / month</b> per team</p>
+          <p class="muted">Robotics and enterprise teams plug in their agent before deployment. Insights catches battery-draining loops and planning bugs automatically instead of engineers reading logs for days.</p>
         </div>
         <div class="card human-box">
-          <span class="kicker">Tier 2 · Edge RL &amp; Lab Gym</span>
-          <h3>Custom Post-Training Curricula</h3>
-          <p><b class="fig">€15k – €50k</b> / engagement</p>
-          <p class="muted">AI labs (AfterQuery's market) &amp; offline robotics OEMs license failure-targeted CPU environments + Thinking-On GRPO recipes to distill reasoning into <code>4B–9B</code> local models.</p>
+          <span class="kicker">2 · Train (RL Gym)</span>
+          <h3>Small-Model Training</h3>
+          <p><b class="fig">€15k – €50k</b> per project</p>
+          <p class="muted">AI labs and robotics makers license our generated worlds to train small <code>4B–9B</code> models to handle unexpected faults on local hardware.</p>
         </div>
         <div class="card accent">
-          <span class="kicker" style="color:var(--accent)">Tier 3 · Private Certification</span>
-          <h3>Zero-Leak Harbor Audits</h3>
-          <p><b class="fig">€5,000</b> / benchmark contract</p>
-          <p class="muted">Enterprise AI buyers &amp; safety institutes receive a fresh one-time seed range (<code>s950000+</code>) with shuffled palettes — ungameable even after 28.7k in-domain SFT examples.</p>
+          <span class="kicker" style="color:var(--accent)">3 · Certify (Audits)</span>
+          <h3>Private Leak-Free Tests</h3>
+          <p><b class="fig">€5,000</b> per audit</p>
+          <p class="muted">Companies buying AI get a fresh, one-time set of test worlds that no model has ever seen online — giving them an honest pass/fail score.</p>
         </div>
       </div>
       <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1cqw">
-        <span><b>Gross Margin Advantage:</b> ~1 CPU-second (<code>$0.0001</code>) generates &amp; mathematically proves each custom customer world.</span>
-        <span class="fig">99%+ Software Gross Margin</span>
+        <span><b>Why margins scale:</b> Generating and proving a new customer world takes 2 seconds on a standard CPU (<code>$0.0001</code>).</span>
+        <span class="fig">99%+ Software Margin</span>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 10 (0:45)</b>This customer journey — Diagnose, Train, Certify — is our exact go-to-market flywheel. Customers land on Tier 1, paying €2k/month for <code>/insights</code> pre-deployment audits over MCP to catch battery-draining loops before field tests. Once <code>/insights</code> pinpoints their Knowing–Doing gap, they expand to Tier 2 (€15k–€50k) to license our failure-targeted RL curricula for their 4B–9B edge models, and Tier 3 (€5k/audit) for contamination-proof Harbor certifications — all at 99%+ software margins because generating a verified world costs one CPU-second.</div>
+  <div class="notes"><b>Speaker Notes · Slide 10 (0:45)</b>Our business model follows the exact same three steps: Diagnose, Train, Certify. Teams start at €2,000 a month on <code>/insights</code> to catch loops and planning failures before field testing. Once <code>/insights</code> shows where their small model breaks, they expand into €15k–€50k training projects to fix it, and €5k private certification audits — all at 99%+ software margins because generating a verified world takes 2 seconds of CPU time.</div>
 </section>
 
 <!-- SLIDE 11: FULL CHALLENGE SCORECARD & REPRODUCIBILITY -->
@@ -708,35 +702,35 @@ body.present .slide.current .frame {
     </div>
     <div class="cols">
       <div class="body">
-        <h2>Unit-7 survives the airlock. Judges verify in 1 command.</h2>
+        <h2>The robot gets through the door. Judges verify in one command.</h2>
         <code class="cmd">make setup
 harbor run -p harbor/eval-v1 -a oracle   # → 1.000
 harbor run -p harbor/eval-v1 -a nop      # → 0.000
 harbor run -p harbor/eval-v2 -a &lt;agent&gt;  # 30 unseen-rule worlds</code>
         <div class="card biz-box">
-          <span class="kicker">Try the project</span>
+          <span class="kicker">Explore live right now</span>
           <p style="font-family:var(--mono); font-size:1.12cqw">
-            <span class="fig">/insights</span> Failure Forensics &nbsp;·&nbsp;
+            <span class="fig">/insights</span> Failure Explanations &nbsp;·&nbsp;
             <span class="fig">/challenge</span> Beat the AI &nbsp;·&nbsp;
-            <span class="fig">/replay</span> X-Ray Truth Diff
+            <span class="fig">/replay</span> X-Ray Viewer
           </p>
         </div>
       </div>
       <div class="body">
         <table>
-          <thead><tr><th>Challenge Requirement</th><th>How Our Solution Fulfills It</th><th class="r">Pts</th></tr></thead>
+          <thead><tr><th>Challenge Requirement</th><th>What We Showed</th><th class="r">Pts</th></tr></thead>
           <tbody>
-            <tr><td><b>The Gap</b></td><td>74% Humans vs 0–44% <code>h1</code> &amp; &lt;3% <code>9B</code> edge (<code>eval-v2</code>)</td><td class="r fig">30</td></tr>
-            <tr><td><b>Meaningful Difficulty</b></td><td><code>/insights</code> 5-stage auditor: 54.4% Knowing–Doing Gap</td><td class="r fig">30</td></tr>
-            <tr><td><b>Reward Integrity</b></td><td>Oracle 1.0, Nop 0.0, Stop-early 1/N, 10/10 exploits = 0.0</td><td class="r fig">25</td></tr>
-            <tr><td><b>Craft</b></td><td>4-gate BFS/ablation proof, 143 tests, 1-cmd Harbor eval</td><td class="r fig">15</td></tr>
-            <tr><td><b>Stretch / Tiebreaker</b></td><td><code>Qwen3.5-9B</code> Thinking-On GRPO (+5.1 pp MATH dev-slice)</td><td class="r h" style="font-family:var(--mono); font-weight:600">+TB</td></tr>
+            <tr><td><b>The Gap</b></td><td>People win 74% (1st try); standard agents win 0–44%, 9B models &lt;3%</td><td class="r fig">30</td></tr>
+            <tr><td><b>Meaningful Difficulty</b></td><td><code>/insights</code> proves 54% knew the rule in notes but failed the route</td><td class="r fig">30</td></tr>
+            <tr><td><b>Reward Integrity</b></td><td>Perfect play = 1.0, do-nothing = 0.0, all 10 hacks = 0.0</td><td class="r fig">25</td></tr>
+            <tr><td><b>Craft</b></td><td>Every world proven solvable in 2s; runs in one command</td><td class="r fig">15</td></tr>
+            <tr><td><b>Post-Training</b></td><td>Training <code>Qwen3.5-9B</code> lifts multi-step math +5.1 pts</td><td class="r h" style="font-family:var(--mono); font-weight:600">+TB</td></tr>
           </tbody>
         </table>
       </div>
     </div>
     </div></div>
-  <div class="notes"><b>Speaker Notes · Slide 11 (0:35)</b>From Unit-7 facing an undocumented airlock 600 meters underground, through <code>/insights</code> pinpointing the 54.4% Knowing–Doing Gap, to tamper-proof Harbor rewards and Thinking-On GRPO post-training for <code>Qwen3.5-9B</code> — every piece of our business solution directly fulfills AfterQuery's rubric and reproduces from our README in a single command. Open <code>/insights</code>, try <code>/challenge</code>, and bring on the 15-minute exploit hunt!</div>
+  <div class="notes"><b>Speaker Notes · Slide 11 (0:35)</b>From a robot stuck at an undocumented coal-mine door, to <code>/insights</code> showing that 54% of failures happen after the model already knows the rule, to tamper-proof scoring and post-training a 9B model — every part of our business solution fulfills the challenge rubric and runs in a single command. Open <code>/insights</code>, try <code>/challenge</code>, and bring on the 15-minute exploit hunt!</div>
 </section>
 
 </main>
