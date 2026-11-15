@@ -248,14 +248,18 @@ code {
   display: grid;
   gap: 0.6cqw;
 }
+.hero-visuals { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65cqw; align-items: stretch; }
+.hero-item { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 0.35cqw; min-width: 0; }
+.visual-label { font-family: var(--mono); font-size: 0.8cqw; color: var(--muted); text-align: center; }
 #hero {
   width: 100%;
-  max-width: 23.5cqw;
+  max-width: 100%;
   margin: 0 auto;
   aspect-ratio: 1;
   image-rendering: pixelated;
   display: block;
 }
+.rover-model { display: block; width: 100%; height: 100%; min-height: 0; border: 1px solid var(--line); background: #171312; }
 .cap { font-family: var(--mono); font-size: 0.88cqw; color: var(--muted); text-align: center; }
 .shot { width: 100%; max-height: 27cqw; object-fit: cover; object-position: top; border: 1px solid var(--line-strong); border-radius: 3px; display: block; }
 
@@ -420,8 +424,67 @@ body.present .slide.current .frame {
           </div>
         </div>
         <div class="hero-wrap">
-          <canvas id="hero" width="64" height="64" aria-label="64x64 pixel observation"></canvas>
-          <div class="cap">A 64×64 puzzle with hidden rules, a limited move budget, and no instructions.</div>
+          <div class="hero-visuals">
+            <div class="hero-item">
+              <span class="visual-label">NEW GAME</span>
+              <canvas id="hero" width="64" height="64" aria-label="64 by 64 pixel puzzle observation"></canvas>
+              <span class="cap">Hidden rule</span>
+            </div>
+            <div class="hero-item">
+              <span class="visual-label">ROVER TEST</span>
+              <svg class="rover-model" viewBox="0 0 280 230" role="img" aria-label="Illustration of a six-wheel Mars-style rover on low-poly terrain">
+                <title>A simulated rover with scrambled controls</title>
+                <rect width="280" height="230" fill="#171312"/>
+                <g stroke="#44271d" stroke-width="1">
+                  <path d="M140 34 225 79 140 124 55 79Z" fill="#713d29"/>
+                  <path d="M55 79 140 124 140 139 55 94Z" fill="#4a2d22"/>
+                  <path d="M225 79 140 124 140 139 225 94Z" fill="#583020"/>
+                  <path d="M157 43 225 79 208 88 140 52Z" fill="#b5582f"/>
+                  <path d="M140 52 208 88 191 97 123 61Z" fill="#9d4a27"/>
+                  <path d="M123 61 191 97 174 106 106 70Z" fill="#c0663a"/>
+                  <path d="M106 70 174 106 157 115 89 79Z" fill="#a64f2a"/>
+                  <path d="M89 79 157 115 140 124 72 88Z" fill="#b5582f"/>
+                  <path d="M140 52 208 88 191 97 123 61Z" fill="#bd6038"/>
+                  <path d="M123 61 191 97 174 106 106 70Z" fill="#9d4a27"/>
+                  <path d="M106 70 174 106 157 115 89 79Z" fill="#bf6037"/>
+                  <path d="M89 79 157 115 140 124 72 88Z" fill="#a64f2a"/>
+                  <path d="M140 34 157 43 140 52 123 43Z" fill="#c0663a"/>
+                  <path d="M123 43 140 52 123 61 106 52Z" fill="#8f4428"/>
+                  <path d="M106 52 123 61 106 70 89 61Z" fill="#b5582f"/>
+                  <path d="M89 61 106 70 89 79 72 70Z" fill="#9d4a27"/>
+                  <path d="M72 70 89 79 72 88 55 79Z" fill="#c0663a"/>
+                  <path d="M174 52 191 61 174 70 157 61Z" fill="#7d4329"/>
+                  <path d="M157 61 174 70 157 79 140 70Z" fill="#b5582f"/>
+                  <path d="M140 70 157 79 140 88 123 79Z" fill="#9d4a27"/>
+                  <path d="M123 79 140 88 123 97 106 88Z" fill="#c0663a"/>
+                  <path d="M106 88 123 97 106 106 89 97Z" fill="#713b27"/>
+                  <path d="M191 61 208 70 191 79 174 70Z" fill="#a64f2a"/>
+                  <path d="M174 70 191 79 174 88 157 79Z" fill="#c0663a"/>
+                  <path d="M157 79 174 88 157 97 140 88Z" fill="#9d4a27"/>
+                  <path d="M140 88 157 97 140 106 123 97Z" fill="#b5582f"/>
+                  <path d="M123 97 140 106 123 115 106 106Z" fill="#a64f2a"/>
+                </g>
+                <path d="M216 108v-20" stroke="#ffdc00" stroke-width="4"/>
+                <path d="M209 88h14l-7-9Z" fill="#ffdc00"/>
+                <ellipse cx="151" cy="135" rx="44" ry="16" fill="#080809" opacity=".55"/>
+                <g transform="translate(150 123) rotate(-25)">
+                  <g fill="#26262a" stroke="#111113" stroke-width="2">
+                    <rect x="-42" y="-26" width="18" height="13" rx="5"/><rect x="-44" y="-6" width="18" height="13" rx="5"/><rect x="-42" y="14" width="18" height="13" rx="5"/>
+                    <rect x="24" y="-26" width="18" height="13" rx="5"/><rect x="26" y="-6" width="18" height="13" rx="5"/><rect x="24" y="14" width="18" height="13" rx="5"/>
+                  </g>
+                  <path d="M-25-27-12-37 20-34 28-20 25 22 11 34-20 28-28 11Z" fill="#e4dfd4" stroke="#b9b4aa" stroke-width="2"/>
+                  <path d="M-14-17 12-22 21-13 19 8-12 12-20 2Z" fill="#2f5fb3" stroke="#1d3d75" stroke-width="2"/>
+                  <path d="M-13-9 18-13M-12-2 19-6M-12 5 19 1" stroke="#7395cf" stroke-width="1.5"/>
+                  <path d="M0-24v-18" stroke="#d8d8d8" stroke-width="4"/>
+                  <path d="M-7-45 0-54 7-45 5-40H-5Z" fill="#e8e8e8" stroke="#a9a8a2" stroke-width="1.5"/>
+                  <circle cx="0" cy="-47" r="2.5" fill="#0e0e0f"/>
+                </g>
+                <text x="140" y="208" fill="#a9a8a2" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">SIMULATED ROVER</text>
+              </svg>
+              <span class="cap">Scrambled controls</span>
+            </div>
+          </div>
+          <div class="cap">New games test reasoning. The rover checks whether learning transfers.</div>
         </div>
       </div>
     </div>
@@ -724,30 +787,29 @@ body.present .slide.current .frame {
       <span class="pg"><b>10</b> / 12</span>
     </div>
     <div class="slide-main">
-      <h2>We also tested the model on a rover task.</h2>
+      <h2>Game training improved results on a rover task.</h2>
       <div class="cols">
         <div class="body">
           <p class="lead">This simulated rover has scrambled controls. It must discover what each button does, find a beacon, and get home.</p>
           <div class="card">
             <span class="kicker">What happened after training</span>
-            <p><code>Qwen3.5-4B</code> completed <b>39 of 100</b> missions before training and <b>44 of 100</b> after training on our games.</p>
-            <p class="muted">The five-mission increase was not statistically significant (paired test, p = 0.42).</p>
+            <p><code>Qwen3.5-4B</code> completed <b>41 of 100</b> missions before training, <b>50</b> after one round, and <b>54</b> after two rounds on our games.</p>
+            <p class="muted">The gain after two rounds was statistically significant (paired test, p = 0.019).</p>
           </div>
         </div>
         <div class="card human-box">
           <span class="kicker">Missions completed out of 100</span>
           <div class="chart">
-            <div class="row"><div class="who">Scripted explorer<small>reference</small></div><div class="track"><div class="fill o" style="--v:0.98"></div></div><div class="val">98%</div></div>
-            <div class="row"><div class="who">Random driving<small>reference</small></div><div class="track"><div class="fill o" style="--v:0.04"></div></div><div class="val">4%</div></div>
-            <div class="row"><div class="who model-qwen">Qwen3.5-4B<small>before training</small></div><div class="track"><div class="fill" style="--v:0.39; background:var(--series-10)"></div></div><div class="val">39%</div></div>
-            <div class="row"><div class="who model-qwen">Qwen3.5-4B<small>after training on our games</small></div><div class="track"><div class="fill" style="--v:0.44; background:var(--series-10)"></div></div><div class="val">44%</div></div>
+            <div class="row"><div class="who model-qwen">Qwen3.5-4B<small>before training</small></div><div class="track"><div class="fill" style="--v:0.41; background:var(--series-10)"></div></div><div class="val">41%</div></div>
+            <div class="row"><div class="who model-qwen">After 1 round<small>training on our games</small></div><div class="track"><div class="fill" style="--v:0.50; background:var(--series-10)"></div></div><div class="val">50%</div></div>
+            <div class="row"><div class="who model-qwen">After 2 rounds<small>training on our games</small></div><div class="track"><div class="fill" style="--v:0.54; background:var(--series-10)"></div></div><div class="val">54%</div></div>
           </div>
-          <p class="muted" style="font-size:1.06cqw">Same 100 simulated missions for each model. No physical rover was used.</p>
+          <p class="muted" style="font-size:1.06cqw">Same 100 simulated missions with scrambled controls. No physical rover was used.</p>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 10 (0:40)</b>We also tested a model outside our games. The controls on this simulated rover are scrambled, so the model has to learn which button moves it in each direction, reach a beacon, and return. The 4B model completed 39 of 100 missions before training and 44 after training on our games. This result is small and not statistically significant.</div>
+  <div class="notes"><b>Speaker Notes: Slide 10 (0:40)</b>We tested the model outside our games on a simulated rover with scrambled controls. It completed 41 of 100 missions before training, 50 after one round of training on our games, and 54 after two rounds. The improvement after two rounds was statistically significant.</div>
 </section>
 
 <!-- SLIDE 11: B2B REVENUE MODEL & GO-TO-MARKET -->
@@ -827,7 +889,7 @@ harbor run -p harbor/eval-v2 -a &lt;agent&gt;</code>
               <tr><td><b>Fair challenge</b></td><td>In 54% of failed runs, the AI knew the rule but could not act on it.</td></tr>
               <tr><td><b>Reliable scoring</b></td><td>Perfect play scores 1. Doing nothing or cheating scores 0.</td></tr>
               <tr><td><b>Working software</b></td><td>Puzzles are checked as solvable and tests run with one command.</td></tr>
-              <tr><td><b>Transfer test</b></td><td>Qwen3.5-4B completed 39 of 100 rover missions before training and 44 after. The change was not significant.</td></tr>
+              <tr><td><b>Transfer test</b></td><td>Qwen3.5-4B completed 41 of 100 rover missions before training and 54 after two rounds. The gain was significant.</td></tr>
             </tbody>
           </table>
         </div>

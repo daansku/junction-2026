@@ -21,7 +21,7 @@ The deck follows the video: one failed run becomes a pattern across many fresh g
 | **07** | **`/insights` Deep Dive — The 54.4% "Knowing–Doing Gap":** Across `117 / 215` failed hidden-rule levels (`64%` in `h2`), `/insights` proves the model **stated the exact mechanic in its CoT** yet failed multi-step spatial execution — with 1-click `[ X-Ray @step to ]` into `/replay`. | **Meaningful Difficulty (`30 / 30 pts`, Part 2):** Verbatim quote-vs-reality evidence proving prompting isn't enough | `1:00` |
 | **08** | **Reward Integrity:** A level scores for efficient completion. Doing nothing scores zero, stopping early earns credit only for completed levels, and resets do not erase moves. The grader runs in a separate container. | **Reward Integrity (`25 / 25 pts`):** Protected scoring with tested cheat attempts | `0:50` |
 | **09** | **Training on Games:** Training Qwen3.5-9B on single moves with reasoning enabled raised its score from `58.9%` to `64.0%` after 30 steps on 175 math questions. | **Stretch Goal & Tiebreaker:** Post-training a compact open model | `1:05` |
-| **10** | **Rover Transfer Test:** On 100 simulated missions with scrambled controls, Qwen3.5-4B went from `39` completed missions before training to `44` after. The difference was not statistically significant (`p = 0.42`). | Checks whether game training transfers beyond the games | `0:40` |
+| **10** | **Rover Transfer Test:** On 100 simulated missions with scrambled controls, Qwen3.5-4B completed `41` missions before training, `50` after one round, and `54` after two rounds on our games. The round-two gain was statistically significant (`p = 0.019`). | Checks whether game training transfers beyond the games | `0:40` |
 | **11** | **Business Model:** Failure reports, training games, and private tests for each customer. | Sustainable B2B model based on fresh, verified games | `0:45` |
 | **12** | **Try the AI:** Reproduce results with `make setup` and `harbor run`, then try to beat the AI yourself. | **Reproducibility Gate:** Run the evaluation in one command | `0:35` |
 
@@ -47,4 +47,4 @@ Every metric on the slides is pulled directly from live repository artifacts and
 5. **Commercial Model (`Slides 02 & 11`):**
    - [`docs/BUSINESS.md`](../BUSINESS.md).
 6. **Rover Transfer Test (`Slide 10`):**
-   - [`video/rover.json`](../../video/rover.json) (39/100 before training, 44/100 after, paired test `p = 0.42`; simulator, not physical hardware).
+   - [`video/rover.json`](../../video/rover.json) (41/100 before training, 50/100 after one round, 54/100 after two rounds; paired test `p = 0.019`; simulator, not physical hardware).
