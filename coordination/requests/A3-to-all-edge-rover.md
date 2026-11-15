@@ -70,3 +70,9 @@
 Fixed controls, thinking on: RL s60 61/100 (base run stopped to free the GPU). Use only labelled numbers from the README.
 
 **Libraries:** vLLM 0.33.0, transformers 5.20.2, PEFT 0.21.3, PyTorch 2.14 (CUDA 13.0) on Verda A100 80GB + H100 80GB; Gemini via the openai 3.51 SDK (OpenAI-compatible endpoint). The environment is standard-library Python.
+
+**Update 07:33: A2's held-out MATH test (bench/heldout_math, frozen settings) on the 3-round model:**
+- Qwen3.5-4B base **0.623** -> 4B after 3 RL rounds on our games **0.686** (held-out 175 items).
+- Paired: +0.063, 95% CI [-0.006, +0.131], McNemar p=0.108 (just short of significance).
+- References: 9B base 0.634; A2's 9B step 30 0.674.
+- Wording: "RL on our games also raised held-out MATH for the 4B by 6 points (not yet significant)". Do not claim a proven math gain.

@@ -195,6 +195,28 @@ Two-thirds are plain navigation, so the transfer likely comes mostly from better
   - a second transfer task.
 - Files: `results-rl4b/` (rows, per-step metrics, training manifest); code in `game_rollouts.py`, `build_rft.py`.
 
+### Held-out MATH (A2's benchmark, `bench/heldout_math`, frozen settings), Sun 07:33
+The round-3 model (3 rounds of episodic RL on our games) on A2's held-out MATH test:
+- 350 MATH items; 0-shot chain of thought; 8,192 tokens; temperature 1.0; seed 1234.
+- Our models are 4B, so the 4B base got its own base run, as the README rules require.
+
+| Model | MATH held-out (doc 25-49, 175 items) | other half (doc 0-24, 175) |
+|---|---|---|
+| Qwen3.5-4B base | 0.623 | 0.577 |
+| **4B after 3 RL rounds on our games** | **0.686** | **0.651** |
+| (ref) Qwen3.5-9B base, A2's stored run | 0.634 | 0.589 |
+| (ref) A2's 9B `think-games-h2` step 30 | 0.674 | 0.623 |
+
+**Trained 4B vs 4B base, paired (A2's `compare.py`):**
+- **Held-out:** **+0.063**, 95% CI [-0.006, +0.131]; only-trained-right 25 vs only-base-right 14; McNemar p=0.108. Just short of significance.
+- **Other half:** +0.074, CI [+0.006, +0.143], p=0.060. We never used MATH to select anything, but by A2's rule the held-out half is the reported number.
+
+**Reading:**
+- Training on our games did not hurt math. It moved the 4B up by about 6 points, past the untrained 9B.
+- The training reward never touched math. The gain is consistent with the rover transfer, but needs more items or seeds to be conclusive.
+
+Files: `results-math/` (per-item scores, paired comparison).
+
 ### Why our earlier RL did not help: the training targeted the wrong skill
 We checked the reward and task code: `engine/src/engine/tasks/gameturn.py`, `engine/src/engine/tasks/rationale.py`, `posttrain/src/posttrain/grpo.py`.
 - **Single-turn proxy reward, not episodes.** Each sample is one game state. The reward is 1 if the chosen action starts a *shortest path to finishing the level*, computed by BFS over the true engine state with all hidden rules known. The model never plays an episode and never earns the official score (levels solved, optimal/actions).

@@ -1,0 +1,5 @@
+base: out/heldout/base4b (350 math items)
+candidate: out/heldout/rft3-4b (350 math items)
+HELD-OUT (doc 25-49, report this): n=175 base=0.623 cand=0.686 delta=+0.063 95% CI [-0.006, +0.131] | only cand right 25, only base right 14 | McNemar p=0.108 | permutation p=0.109
+selection half (doc 0-24): n=175 base=0.577 cand=0.651 delta=+0.074 95% CI [+0.006, +0.143] | only cand right 27, only base right 14 | McNemar p=0.060 | permutation p=0.059
+MATH_DONE
