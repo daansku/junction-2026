@@ -80,6 +80,7 @@ def main() -> None:
     ap.add_argument("--k", type=int, default=2, help="attempts per level (different sampling seeds)")
     ap.add_argument("--max-tokens", type=int, default=2048)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--episodes-file", help="jsonl of {game_id, level, k}: play exactly these (overrides selection)")
     ap.add_argument("--max-opt", type=int, help="curriculum: every level of every train game with optimal <= this")
     ap.add_argument("--cap-extra", type=int, default=8, help="episode move cap = 2 x optimal + this")
     ap.add_argument("--obs", default="rle", choices=["rle", "compact"])
@@ -92,7 +93,20 @@ def main() -> None:
     lo, hi = map(int, a.games.split("-"))
     metas = list_games(str(COLL))[lo:hi + 1]
     eps = []
-    if a.max_opt:  # curriculum over all train games, sliced by --games so two GPUs can split the work
+    if a.episodes_file:
+        wanted = [json.loads(l) for l in open(a.episodes_file) if l.strip()]
+        by_id = {m["game_id"]: m for m in list_games(str(COLL))}
+        for w in wanted:
+            for k in range(int(w.get("k", 1))):
+                g = load_game(str(COLL), w["game_id"])
+                g.goto_level(int(w["level"]))
+                opt = g.truth()["optimal_moves"]
+                eps.append({"g": g, "game_id": w["game_id"], "level": int(w["level"]), "attempt": k, "optimal": opt,
+                            "cap": 2 * opt + a.cap_extra, "notes": "", "hist": [], "turns": [], "actions": 0,
+                            "solved": False, "done": False, "frame": g.frame(),
+                            "seed": zlib.crc32(f"r2|{w['game_id']}|{w['level']}|{k}".encode()) % 10**6})
+        metas = []
+    if a.max_opt and not a.episodes_file:  # curriculum over all train games, sliced by --games so two GPUs can split the work
         metas = list_games(str(COLL))[lo:hi + 1]
     for m in metas:
         lvls = ([i + 1 for i, o in enumerate(m["optimal_moves"]) if o <= a.max_opt] if a.max_opt
@@ -153,7 +167,7 @@ def main() -> None:
                 "belief": {"type": "string", "enum": ["playing", "won", "lost"]},
                 "action": {"type": "string", "enum": live[i]["allowed"]}},
                 "required": ["notes", "hypothesis", "belief", "action"], "additionalProperties": False} for i in bad]
-            fixed = llm.generate(prompts, [SamplingParams(temperature=0.0, max_tokens=400,
+            fixed = llm.generate(prompts, [SamplingParams(temperature=0.0, max_tokens=800,
                                                           structured_outputs=StructuredOutputsParams(json=sc))
                                            for sc in schemas], use_tqdm=False)
             for i, h, f in zip(bad, heads, fixed):

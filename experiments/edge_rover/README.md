@@ -1,6 +1,10 @@
 # Edge rover: does game training transfer to a robot-style task?
 
-**Update Sun 06:21: episodic RL on our games (Qwen3.5-4B):** rover-lite hidden controls, base **39/100** -> trained **44/100** (p=0.42, not significant). Details in "Episodic RL on our games" below.
+**Update Sun 06:51 (after the 06:30 lock): two rounds of episodic RL on our games make Qwen3.5-4B significantly better at the held-out transfer task.**
+- Rover-lite, hidden controls, the same 100 paired missions, JSON repair on (0 JSON failures): base **41/100** -> after round 2 **54/100**.
+- Paired: 20 missions better, 7 worse, McNemar **p = 0.019**.
+- Bumps per mission 10.1 -> 7.8.
+- Round 1 alone was 44/100 (not significant). Details in "Episodic RL on our games" below.
 
 **Status (Sun 04:20):**
 - **Final:** the thinking-off results, Gemini Flash/Argon, and thinking-ON hidden controls (base **60/100** vs our RL **51/100**, p=0.175).
@@ -141,7 +145,20 @@ The corrected training recipe, run on Sunday 04:30-06:20 on the B200 + H100.
 | **Rover-lite, hidden controls, 100 paired missions** (7x7, beacon 3-6 away; oracle 98%, random 4%) | base 4B **39/100** -> trained 4B **44/100**; paired 15 better / 10 worse, McNemar p=0.42 (**not significant**) |
 | Good moves / bumps per mission | 37.7% -> 36.8% / 10.9 -> 11.1 (unchanged) |
 
-**Reading:**
+**Round 2 (06:28-06:51):**
+- **Rollouts:** the round-1 model played 537 episodes (its 30 won levels x4, plus 417 easy levels it never trained on).
+- **New-level wins:** about 2.6%, against 1.6% for the base on similar levels.
+- **Dataset rules:** each (game, level) contributes at most one win, from the first round that won it, so 28 replay wins were dropped and no level is trained on twice. Only efficient wins are kept (reward >= 0.4), and rule levels count 3x.
+- **Training:** retrained from base on 43 unique won levels (992 turns), 1 epoch. Val loss 0.314 -> 0.116.
+- **JSON:** every stage uses schema-constrained repair of unparseable answers, so JSON failures are 0. The base was re-run with the same repair: 41/100 (39 without repair).
+
+| Rover-lite, hidden controls, same 100 missions | Completed | 95% CI | Bumps/mission | JSON failures | vs base (paired) |
+|---|---|---|---|---|---|
+| Qwen3.5-4B base (repair on) | 41/100 | 32-51% | 10.1 | 0 | - |
+| after round 1 (no repair) | 44/100 | 35-54% | 11.1 | 17 | 16 / 13, p=0.71 |
+| **after round 2 (repair on)** | **54/100** | 44-63% | **7.8** | 0 | **20 / 7, p=0.019** |
+
+**Reading (round 1):**
 - The direction is positive: +5 points, and 15 vs 10 discordant missions. This is too small to claim at n=100.
 - The bottleneck is the reward itself: from scratch, a 4B wins only 1.6% of even the easiest levels, so one round has very little to learn from.
 - What would make this conclusive, given more time:

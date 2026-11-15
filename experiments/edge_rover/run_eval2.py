@@ -47,6 +47,7 @@ def main() -> None:
     ap.add_argument("--outdir", default="results")
     ap.add_argument("--max-tokens", type=int, default=400)
     ap.add_argument("--gpu-mem", type=float, default=0.85)
+    ap.add_argument("--repair", action="store_true", help="schema-constrained re-answer of unparseable replies")
     ap.add_argument("--think", action="store_true",
                     help="thinking ON, Qwen3.5 model-card sampling (T=0.6, top_p=0.95, top_k=20), seeded per mission/turn")
     a = ap.parse_args()
@@ -93,6 +94,24 @@ def main() -> None:
                     for i, f in zip(cut, fin):
                         texts[i] = texts[i] + "\n</think>\n\n" + f.outputs[0].text
                         st[live[i]]["forced"] = st[live[i]].get("forced", 0) + 1
+            if a.think and a.repair:  # zero JSON failures: re-answer unparseable replies from the same thinking,
+                # with decoding constrained to the reply schema (action in ACTION1-4, notes capped)
+                from vllm.sampling_params import StructuredOutputsParams
+                bad = [i for i, t in enumerate(texts) if parse(t.split("</think>")[-1])[0] is None]
+                if bad:
+                    tok = llm.get_tokenizer()
+                    heads = [texts[i].split("</think>")[0] for i in bad]
+                    prompts = [tok.apply_chat_template(msgs[i], tokenize=False, add_generation_prompt=True,
+                                                       enable_thinking=True) + h + "\n</think>\n\n" for i, h in zip(bad, heads)]
+                    schema = {"type": "object", "properties": {
+                        "notes": {"type": "string", "maxLength": 300},
+                        "action": {"type": "string", "enum": list(ACTIONS)}},
+                        "required": ["notes", "action"], "additionalProperties": False}
+                    fixed = llm.generate(prompts, SamplingParams(temperature=0.0, max_tokens=800,
+                                         structured_outputs=StructuredOutputsParams(json=schema)), use_tqdm=False)
+                    for i, h, f in zip(bad, heads, fixed):
+                        texts[i] = h + "\n</think>\n\n" + f.outputs[0].text
+                        st[live[i]]["repaired"] = st[live[i]].get("repaired", 0) + 1
             good = moves = bumps = 0
             for s, r, text in zip(live, res, texts):
                 if a.think:
@@ -131,7 +150,7 @@ def main() -> None:
             rows.append({"model": a.name, "controls": controls, "seed": s, "success": e.success, "found": e.found,
                          "steps": e.steps, "bumps": e.bumps, "energy_left": e.energy, "energy_max": e.energy_max,
                          "one_way": e.path_len, "invalid": x["invalid"], "turns": x["turns"],
-                         "think_tokens": x.get("think_tokens", 0), "forced_answers": x.get("forced", 0), "mapping": e.mapping, "history": e.history, "first_replies": x["replies"]})
+                         "think_tokens": x.get("think_tokens", 0), "forced_answers": x.get("forced", 0), "repaired": x.get("repaired", 0), "mapping": e.mapping, "history": e.history, "first_replies": x["replies"]})
         p = out / f"{a.name}-{controls}.jsonl"
         p.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
         n = len(rows)
