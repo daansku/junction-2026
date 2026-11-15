@@ -48,7 +48,7 @@
     {"key": "S6S7", "file": "s6_s7_close", "scene": "S6S7Close", "lines": [
       "Beyond this hackathon: endless training environments for labs, and private evaluations that can't leak.",
       "Every broken agent shows where AI still has to learn.",
-      "Game Factory. Try to beat the AI yourself."
+      "Game Factory."
     ]}
   ]
 }

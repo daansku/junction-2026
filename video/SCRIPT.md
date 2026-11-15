@@ -127,13 +127,13 @@ A3's edge rover experiment as a separate scene (`scenes/s5r_rover.py`). Everythi
 | Time | On screen | Voice-over |
 |---|---|---|
 | 2:48 | Callback to S0: the grid of agents again; this time a few of them reach the goal and light up in green. | "Every broken agent shows where AI still has to learn." |
-| 2:54 | Pixel wordmark **Game Factory**, the public URL, and a QR code to `/challenge`. | "Try to beat the AI yourself." |
+| 2:54 | Pixel wordmark **Game Factory**, centred. No URL, no QR code. | "Game Factory." |
 
 ## Answered (Sat 14.11)
 
 - Name on the end card: **Game Factory**.
 - S3: several failure modes (2–4), scroll between them, then pan out.
-- Ending: "Try to beat the AI yourself" + QR code to `/challenge`.
+- Ending: wordmark only (QR code, URL and "Try to beat the AI yourself" removed on request).
 - Structure and timings approved.
 
 ## Dependencies
