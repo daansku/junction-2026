@@ -12,7 +12,7 @@ The deck follows the video: one failed run becomes a pattern across many fresh g
 
 | Slide | Story & Business Beat | AfterQuery Requirement Fulfilled | Timing |
 |---:|---|---|---:|
-| **01** | **Break One, Break Many:** One model walks into the same wall 11 times. Across thousands of fresh games, failures form patterns that show what AI still cannot do. | Introduces the factory's purpose | `0:50` |
+| **01** | **Can Games Teach AI to Drive a Rover?:** One model walks into the same wall 11 times. Across thousands of fresh games, failures form patterns that show what AI still cannot do. A simulated rover tests whether learning transfers. | Introduces the factory's purpose and rover test | `0:50` |
 | **02** | **Business Case — Who Pays & Why Now:** 3 markets need this: field robots, private business AI, and AI test teams. Game Factory generates and checks each new puzzle in under 2 seconds; custom tests take design and engineering work. | Contamination-resistant procedural scaling (`0%` leak) | `0:50` |
 | **03** | **New Games by Seed:** Every seed creates a new `64×64` game with 16 colours and six actions. Each level hides a rule. Search confirms levels can be solved. | **Craft & Environment (`15 / 15 pts`):** `1,000/1,000` BFS solvable, `100%` `gridforce` forced discovery, `4.0` `gridbranch` loops, `<2%` random walk | `0:55` |
 | **04** | **Live Experience (`/challenge`):** Scan the code to play a puzzle with no instructions, then compare your run with recorded AI play on the same board. | Live demonstration | `1:30` |
