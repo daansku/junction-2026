@@ -11,7 +11,8 @@
     ]},
     {"key": "S1", "file": "s1_environment", "scene": "S1Environment", "lines": [
       "The factory writes games from code. Every new seed is a new game, so the supply never runs out.",
-      "Each game shows the agent only this: sixty-four by sixty-four pixels, sixteen colours. No text, no score, no rule names.",
+      "And difficulty is a dial: easy enough for a small model to learn, hard enough for the best.",
+      "The agent sees only pixels: no text, no score, no rule names.",
       "It has six buttons. That's all.",
       "Each new level hides one new rule, which the agent must discover by experimenting.",
       "And a search proves every level solvable, so we always know the best possible run."
@@ -25,7 +26,7 @@
       "We log every move, and what the model believed. This one is sure that moving right reaches the goal. The screen never changes.",
       "This one stays stuck for a long time before it tries a reset.",
       "This one acts on a belief the screen has already disproved.",
-      "Each failure gets a label. And everything they needed was on the screen."
+      "Everything they needed was on the screen."
     ]},
     {"key": "S4", "file": "s4_reward", "scene": "S4Reward", "lines": [
       "The score rewards solving levels efficiently, and nothing else.",

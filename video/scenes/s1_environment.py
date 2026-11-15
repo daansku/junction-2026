@@ -58,9 +58,33 @@ class S1Environment(Scene):
         more = Text("new seed, new game · as many as we need", font=MONO, font_size=20, color=TEXT_2)
         more.next_to(seed_grp, DOWN, buff=0.4).align_to(gen_head, LEFT)
         self.play(FadeIn(more, shift=UP * 0.1), run_time=0.4)
-        self.wait(1.0)
-        set_frame(img, lv1["frames"][0])
+        self.wait(0.6)
+
+        # ---- difficulty is a dial: the same seed generated at difficulty 1-4 ----
+        ladder = eng["ladder"]
+        vo.cue(1, delay=0.2)
         self.play(FadeOut(VGroup(gen_head, seed_lab, seed_num, more)), run_time=0.4)
+        dial_head = Text("difficulty is a dial", font=SANS, font_size=26, color=TEXT_1)
+        dial_head.next_to(img, RIGHT, buff=0.5).shift(UP * 1.2)
+        pips = VGroup(*[Rectangle(width=1.0, height=0.32, stroke_color=ACCENT, stroke_width=2, fill_color=ACCENT,
+                                  fill_opacity=0) for _ in ladder]).arrange(RIGHT, buff=0.12)
+        pips.next_to(dial_head, DOWN, buff=0.45).align_to(dial_head, LEFT)
+        ends = VGroup(Text("small model", font=MONO, font_size=14, color=TEXT_3).next_to(pips, DOWN, buff=0.12).align_to(pips, LEFT),
+                      Text("frontier model", font=MONO, font_size=14, color=TEXT_3).next_to(pips, DOWN, buff=0.12).align_to(pips, RIGHT))
+        info = Text(" ", font=MONO, font_size=16, color=TEXT_2)
+        self.play(FadeIn(dial_head, shift=UP * 0.1), FadeIn(pips), FadeIn(ends), run_time=0.5)
+        per = max(0.5, (vo.dur(1) - 1.4) / len(ladder))
+        for k, lv in enumerate(ladder):
+            set_frame(img, lv["frame"])
+            pips[k].set_fill(opacity=1)
+            new_info = Text(f"difficulty {lv['difficulty']} · {len(lv['rules'])} rules · best run {lv['optimal_moves']} moves",
+                            font=MONO, font_size=16, color=TEXT_2).next_to(ends, DOWN, buff=0.35).align_to(pips, LEFT)
+            self.remove(info)
+            info = new_info
+            self.add(info)
+            self.wait(per)
+        set_frame(img, lv1["frames"][0])
+        self.play(FadeOut(VGroup(dial_head, pips, ends, info)), run_time=0.4)
 
         # ---- what the agent sees: three bands ----
         notes = [
@@ -68,7 +92,7 @@ class S1Environment(Scene):
             (3, 4, "level · inventory"),
             (6, 63, "playfield"),
         ]
-        vo.cue(1, delay=0.1)
+        vo.cue(2, delay=0.1)
         side = VGroup()
         prev = None
         for r0, r1, text in notes:
@@ -96,7 +120,7 @@ class S1Environment(Scene):
             box = Rectangle(width=t.width + 0.3, height=0.48, stroke_color=LINE_STRONG, stroke_width=2, fill_opacity=0)
             keys.add(VGroup(box, t.move_to(box)))
         keys.arrange(RIGHT, buff=0.12).next_to(img, RIGHT, buff=0.5).shift(DOWN * 0.1)
-        vo.cue(2, delay=0.1)
+        vo.cue(3, delay=0.1)
         self.play(FadeOut(facts), LaggedStart(*[FadeIn(k, shift=UP * 0.1) for k in keys], lag_ratio=0.08), run_time=0.8)
         key_of = {f"ACTION{i}": keys[i] for i in range(1, 6)}
         key_of["RESET"] = keys[0]
@@ -118,7 +142,7 @@ class S1Environment(Scene):
             cap.next_to(t, DOWN, buff=0.1)
             strip.add(Group(t, framed(t), cap))
         strip.arrange(RIGHT, buff=0.25).move_to([0, 0.2, 0])
-        vo.cue(3, delay=0.2)
+        vo.cue(4, delay=0.2)
         self.play(FadeOut(keys), FadeOut(Group(img, border)), run_time=0.4)
         self.play(LaggedStart(*[FadeIn(s, shift=UP * 0.2) for s in strip], lag_ratio=0.15), run_time=1.2)
         rule_note = Text("each level hides one new rule; the agent has to find it by experimenting",
@@ -128,7 +152,7 @@ class S1Environment(Scene):
 
         # ---- proven solvable: draw the optimal path ----
         lv2 = eng["levels"][1]
-        vo.cue(4, delay=0.2)
+        vo.cue(5, delay=0.2)
         big = frame_image(lv2["frames"][0], height=FRAME_H)
         bborder = framed(big)
         self.play(FadeOut(rule_note), FadeOut(Group(*[s for i, s in enumerate(strip) if i != 1])),
