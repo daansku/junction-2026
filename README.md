@@ -52,6 +52,22 @@ harbor run -p "$TASK" -a opencode -m gemini/gemini-4-argon -k 3 -n 3 \
   --ae 'GOOGLE_GENERATIVE_AI_API_KEY=${GEMINI_API_KEY}'              # Gemini: OpenCode reads this name, not GEMINI_API_KEY
 ```
 
+#### API keys for `harbor run -a opencode` by hand
+
+OpenCode runs inside the agent container, so the model's API key has to reach that container. A plain
+`harbor run -p "$TASK" -a opencode -m <provider/model>` works only where Harbor forwards the key itself. Otherwise
+OpenCode stops at once with `ProviderAuthError ... API key is missing`, plays no move, and the task scores 0.
+
+| Model selector | What to pass (Harbor 0.26.0) |
+|---|---|
+| `anthropic/<model>` | Nothing extra: set `ANTHROPIC_API_KEY` in your shell and Harbor forwards it. |
+| `gemini/<model>` | `--ae 'GOOGLE_GENERATIVE_AI_API_KEY=${GEMINI_API_KEY}'`. OpenCode's Google provider reads `GOOGLE_GENERATIVE_AI_API_KEY`, and Harbor does not forward it, even when it is exported in your shell. |
+| `openai/<model>` | Not tested. If you get `ProviderAuthError`, add `--ae 'OPENAI_API_KEY=${OPENAI_API_KEY}'`. |
+| models in [arena/opencode-models.json](arena/opencode-models.json) (Verda, Featherless) | `--ak "opencode_config=..."` plus the key with `--ae`: see [arena/HARBOR.md](arena/HARBOR.md), "Other models through OpenCode". |
+
+Keep the single quotes around `--ae` values: Harbor fills `${...}` from your shell, and stores only the template in
+its job files, never the key. `make judge` passes all of these for you.
+
 ### Harbor Results Recorded in the Evaluation Snapshot (Docker 29.8.1 + Harbor 0.26.0)
 
 These are recorded results from the evaluation snapshot described below, not a fresh run of the current workspace. The live run store and rebuilt `data/derived/` leaderboard are not included in this clone.
