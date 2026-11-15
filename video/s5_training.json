@@ -1,5 +1,5 @@
 {
- "note": "What S5 shows for Anssi's training. Source: A2 message Sun ~04:10 (B200 /root/b200bench/out/, not in data/derived yet). A fresh test on MATH items 51-250/subject (1,400 items) lands ~04:35 and supersedes these: replace the values, then render S5.",
+ "note": "What S5 shows for Anssi's training. Source: A2 message Sun ~04:10 (B200 /root/b200bench/out/, not in data/derived yet). The 1,400-item fresh test will not run (Anssi), so these are the numbers.",
  "title": "MATH, held-out problems",
  "sub": "175 problems not used to pick the checkpoint · same problems for both",
  "rows": [
@@ -15,7 +15,7 @@
   }
  ],
  "footnote": "step 30 = best MATH on the selection items; the strict PROTOCOL v5 finalist is step 40 (+0.011)",
- "final": false,
+ "final": true,
  "method": [
   "how: reinforcement learning (GRPO) from base Qwen3.5-9B, thinking on, LoRA adapter",
   "trained on single moves from freshly generated games (train-v3b) · 30 steps on one B200 GPU"
