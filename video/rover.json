@@ -8,7 +8,7 @@
   "who": "Qwen3.5-4B after two rounds of training on our games"
  },
  "chart_title": "rover missions completed, scrambled controls",
- "chart_sub": "same 100 missions for every model · round 2 vs base: p = 0.019 · simulator, not hardware",
+ "chart_sub": "same 100 missions for every model · trained vs untrained: p = 0.019 · simulator, not hardware",
  "bars": [
   {
    "label": "Qwen3.5-4B",
@@ -17,13 +17,7 @@
    "kind": "small"
   },
   {
-   "label": "after 1 round of training on our games",
-   "k": 50,
-   "n": 100,
-   "kind": "small"
-  },
-  {
-   "label": "after 2 rounds",
+   "label": "after 2 rounds of training on our games",
    "k": 54,
    "n": 100,
    "kind": "ours"
