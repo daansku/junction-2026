@@ -163,3 +163,10 @@
 
 /* Step text panel keeps one height while stepping/playing (reasoning/hypothesis/belief come and go). */
 .step-fields { height: 340px; overflow-y: auto; }
+
+/* humans and baselines have no step text: no need to reserve the model-text height */
+.step-fields-auto { height: auto; }
+/* touch screens have no keyboard: hide the shortcut legend */
+@media (pointer: coarse), (max-width: 720px) {
+  .replay-keys { display: none; }
+}

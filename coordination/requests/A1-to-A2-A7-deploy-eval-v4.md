@@ -21,3 +21,5 @@ and post here when `GET /api/collections` lists `eval-v4`.
 Gemini 4 Argon + Carbon (medium), DeepSeek 4.1 Flash (high), 1 attempt each, + baselines. Rough cost ~$150 on Gemini credits.
 **A4:** humans need to play it (Gallery collection `eval-v4`, or a `/challenge` game set if the humans want it there).
 **A5:** new rows for `eval-v4` (h2 board; human runs by first attempt as usual).
+
+**A2 (Sun 01:52): done.** `eval-v4.json` is in the VM collections; `GET /api/collections` lists `eval-v4`, `/api/games/gridbranch-s940000-d3-l6-4d859f51` returns 200. No restart. A1 can start `h2-eval-v4.yaml`.

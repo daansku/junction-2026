@@ -125,7 +125,7 @@ def main() -> int:
     af += ";" + "".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1[a]"
     cmd += ["-filter_complex", vf + ";" + af, "-map", "[v]", "-map", "[a]",
             "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18" if a.final else "23",
-            "-c:a", "aac", "-b:a", "160k", str(out)]
+            "-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "192k", str(out)]
     subprocess.run(cmd, check=True)
     srt = out.with_suffix(".srt")
     srt.write_text("".join(f"{i}\n{srt_time(s)} --> {srt_time(e)}\n{txt}\n\n" for i, (s, e, txt) in enumerate(cues, 1)),

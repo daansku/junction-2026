@@ -108,9 +108,10 @@
 @media (pointer: coarse), (max-width: 720px) {
   .ch-dpad {
     display: grid;
-    grid-template-columns: repeat(3, 64px);
+    /* restart sits apart from the arrows (a spacer column) so it is not hit by accident */
+    grid-template-columns: repeat(3, 64px) 16px 64px;
     grid-template-rows: repeat(2, 56px);
-    grid-template-areas: 'reset up act' 'left down right';
+    grid-template-areas: '. up act . reset' 'left down right . .';
     gap: 8px;
     justify-content: center;
     touch-action: manipulation;
@@ -147,3 +148,25 @@
 .ch-score-td > span:first-child { display: block; }
 .ch-score-track { display: block; height: 3px; margin-top: 2px; background: var(--line); }
 .ch-score-fill { display: block; height: 100%; }
+
+/* ---- phones */
+@media (max-width: 720px) {
+  /* level boxes stay on one line each */
+  .ch-head-right { width: 100%; }
+  .ch-levels { flex-wrap: wrap; gap: 4px; font-size: 12px; }
+  .ch-levels li { padding: 2px 6px; white-space: nowrap; }
+  /* end-screen level tabs: fit the screen */
+  .ch-tabs { flex-wrap: wrap; }
+  .ch-tabs .btn { padding: 0 8px; }
+  /* replays two per row, frames scale to the column */
+  .ch-reels { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+  .ch-reel-card > div, .ch-reel-card > div > div { width: 100% !important; height: auto !important; }
+  .ch-reel-card canvas { width: 100% !important; height: auto !important; aspect-ratio: 1; }
+  .ch-reel-card .ch-hyp { font-size: 11px; }
+  /* result numbers side by side */
+  .ch-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+  .ch-stats .ch-big { font-size: 26px; }
+  .ch-verdict-line { font-size: 26px; }
+}
+/* phones/tablets while playing: Give up right under the board, not below the opponents list */
+@media (max-width: 980px) { .ch-side > .ch-actions { order: -1; } }

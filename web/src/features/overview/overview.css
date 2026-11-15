@@ -75,3 +75,15 @@
 .ov-score-cell { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 72px; }
 .ov-score-track { width: 100%; height: 3px; background: var(--line); }
 .ov-score-fill { height: 100%; }
+
+/* phones: keep the ranking readable without sideways scrolling (levels won and cost are on the leaderboard) */
+@media (max-width: 600px) {
+  .ov-bottom .ov-col-opt, .ov-bottom .ov-effort { display: none; }
+  .ov-bottom .table th, .ov-bottom .table td { padding-left: 6px; padding-right: 6px; }
+}
+
+.ov-plot-legend { display: none; }
+@media (max-width: 600px) {
+  .ov-plot-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: var(--s2) 0 0; padding: 0; list-style: none; font-size: 11px; color: var(--text-2); }
+  .ov-plot-legend li { display: inline-flex; align-items: center; gap: 6px; }
+}

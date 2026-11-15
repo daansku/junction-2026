@@ -107,39 +107,9 @@ class S3Failures(Scene):
         if hyp is not None:
             self.play(FadeOut(hyp), run_time=0.2)
 
-        # ---- pan out: the replays shrink into a wall of failing agents ----
-        srcs = [load_json(f"wall/{p.name}") for p in sorted((CACHE / "wall").glob("*.json"))]
-        cols, rows = 12, 7
-        th, gap = 0.9, 0.12
-        tiles = Group()
-        for r in range(rows):
-            for c in range(cols):
-                src = srcs[(r * cols + c + 5) % len(srcs)]
-                t = frame_image(src["frames"][random.randrange(len(src["frames"]))]["frame"], height=th)
-                t.move_to([(c - (cols - 1) / 2) * (th + gap), ((rows - 1) / 2 - r) * (th + gap), 0])
-                t.frames = [f["frame"] for f in src["frames"]]
-                t.phase = random.random() * 20
-                tiles.add(t)
-        clock = {"t": 0.0}
-
-        def tick(m, dt):
-            clock["t"] += dt
-            for t in m:
-                set_frame(t, t.frames[int(t.phase + clock["t"] * 6) % len(t.frames)])
-
-        tiles.add_updater(tick)
-        tiles.scale(3.0, about_point=ORIGIN)
+        # ---- pull back: the three replays side by side, each with its failure label ----
         vo.cue(3, delay=0.3)
-        self.play(FadeOut(world), FadeIn(tiles), run_time=0.6)
-        self.play(tiles.animate.scale(1 / 3.0, about_point=ORIGIN), run_time=2.0, rate_func=rate_functions.ease_in_out_cubic)
-        # coloured tags appear on tiles: each failure is a labelled, measurable decision
-        modes = [m for m, _, _ in FAILURE_MODES]
-        marks = VGroup()
-        for t in tiles:
-            m = random.choices(modes, weights=[6, 3, 3, 1, 1, 1])[0]
-            marks.add(Rectangle(width=t.width, height=t.height, stroke_color=MODE_COLOR[m], stroke_width=4, fill_opacity=0).move_to(t))
-        self.play(FadeIn(marks, lag_ratio=0.02), run_time=1.6)
+        self.play(world.animate.scale(0.45).move_to(ORIGIN), run_time=1.4, rate_func=rate_functions.ease_in_out_cubic)
         self.wait(1.0)
-        tiles.clear_updaters()
         vo.finish(tail=0.5)
-        self.play(FadeOut(Group(tiles, marks)), run_time=0.5)
+        self.play(FadeOut(world), run_time=0.5)

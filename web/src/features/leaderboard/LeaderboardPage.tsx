@@ -14,6 +14,7 @@ import {
   cx,
 } from '@/design/primitives'
 import { api } from '@/lib/api'
+import { logTicks } from '@/lib/logTicks'
 import { PlotFigure, cssVar } from '@/lib/PlotFigure'
 import { playerColor } from '@/lib/modelColors'
 import type { RunMeta } from '@/lib/types'
@@ -686,6 +687,7 @@ export function LeaderboardPage() {
                         x: {
                           type: 'log',
                           domain: [xMin, xMax],
+                          ticks: logTicks(xMin, xMax, Math.floor(width / 110)),
                           label: effectiveAxis === 'usd' ? 'Cost per game (USD, log)' : 'Tokens per game (log)',
                           tickFormat: (d: number) =>
                             effectiveAxis === 'usd'

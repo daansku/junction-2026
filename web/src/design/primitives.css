@@ -7,12 +7,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--s2);
-  height: 32px;
-  padding: 0 var(--s3);
+  flex-wrap: wrap; /* on narrow screens the actions drop to a second line instead of spilling over */
+  gap: 2px var(--s2);
+  min-height: 32px;
+  padding: 2px var(--s3);
   border-bottom: 1px solid var(--line);
 }
-.panel-actions { display: flex; gap: var(--s2); align-items: center; }
+.panel-actions { display: flex; gap: var(--s2); align-items: center; margin-left: auto; }
 .panel-pad { padding: var(--s3); }
 
 .btn {

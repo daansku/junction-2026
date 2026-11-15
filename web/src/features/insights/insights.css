@@ -435,3 +435,11 @@
   height: 100%;
   background: var(--accent);
 }
+
+/* phones: the by-model table fits without sideways scrolling (mode moves next to the name) */
+.ins-mode-inline { display: none; }
+@media (max-width: 600px) {
+  .ins-forensic-table .ins-col-mode { display: none; }
+  .ins-forensic-table .ins-mode-inline { display: inline; font-size: 11px; }
+  .ins-forensic-table td { white-space: normal; }
+}
