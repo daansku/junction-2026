@@ -41,8 +41,8 @@
       "We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home."
     ]},
     {"key": "S5C", "file": "s5r_rover", "scene": "S5RChart", "lines": [
-      "A scripted explorer almost always succeeds. A small four-billion-parameter model completes thirty-nine in a hundred.",
-      "After one round of training on our games, it completes forty-four."
+      "A small four-billion-parameter model completes forty-one missions in a hundred. After one round of training on our games, fifty.",
+      "After two rounds, fifty-four. That gain is statistically significant."
     ]},
     {"key": "S6S7", "file": "s6_s7_close", "scene": "S6S7Close", "lines": [
       "Beyond this hackathon: endless training environments for labs, and private evaluations that can't leak.",

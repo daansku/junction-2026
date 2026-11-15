@@ -1,34 +1,30 @@
 {
- "note": "Everything the rover scene (scenes/s5r_rover.py) shows. Edit here, then: video/.venv/python.exe video/tools/fetch_rover.py && render. Source: A3's edge rover experiment (experiments/edge_rover/README.md, 'Episodic RL on our games (expert iteration), Qwen3.5-4B: final 06:21'). Best result we have (Anssi): rover-lite hidden controls, base 4B 39/100 -> trained 4B 44/100, paired 15 better / 10 worse, McNemar p = 0.42 (not significant).",
+ "note": "Everything the rover scenes show. Edit here, then: video/.venv/python.exe video/tools/fetch_rover.py && render. Source: A3 experiments/edge_rover/README.md, update Sun 06:51 (origin/agent/a3 17cb7c5): rover-lite hidden controls, same 100 missions, JSON repair on: Qwen3.5-4B base 41/100, after round 1 of episodic RL on our games 50/100 (p=0.14), after round 2 54/100 (paired 20 better / 7 worse, McNemar p=0.019).",
  "git_ref": "origin/agent/a3",
  "mission": {
-  "file": "results-rl4b/rft4b-lite-hidden.jsonl",
-  "seed": 5019,
+  "file": "results-rl4b/rft4b-r2-lite-hidden.jsonl",
+  "seed": 5007,
   "lite": true,
-  "who": "Qwen3.5-4B trained on our games (thinking on)"
+  "who": "Qwen3.5-4B after two rounds of training on our games"
  },
  "chart_title": "rover missions completed, scrambled controls",
- "chart_sub": "same 100 missions for every model · simulator, not hardware",
+ "chart_sub": "same 100 missions for every model · round 2 vs base: p = 0.019 · simulator, not hardware",
  "bars": [
   {
-   "label": "scripted explorer",
-   "pct": 0.98,
-   "kind": "reference"
-  },
-  {
-   "label": "random driving",
-   "pct": 0.04,
-   "kind": "reference"
-  },
-  {
    "label": "Qwen3.5-4B",
-   "k": 39,
+   "k": 41,
    "n": 100,
    "kind": "small"
   },
   {
-   "label": "Qwen3.5-4B trained on our games",
-   "k": 44,
+   "label": "after 1 round of training on our games",
+   "k": 50,
+   "n": 100,
+   "kind": "small"
+  },
+  {
+   "label": "after 2 rounds",
+   "k": 54,
    "n": 100,
    "kind": "ours"
   }
