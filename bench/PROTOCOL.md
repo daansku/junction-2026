@@ -1,6 +1,6 @@
 # Bench protocol (pre-registration)
 
-**Status: v4 amendment below (BBH removed, Sat 23:45). Base text: v3 (A2, Sat 14.11 20:20). A3 signed off on v2 (18:05); v3 only cuts item counts.** Needs review by A3 (training) and A5 (analysis), then **human approval by 19:00** (PLAN.md §6).
+**Status: amendments v5 (MATH finalist + held-out, Sun 03:10) and v4 (BBH removed, Sat 23:45) below. Base text: v3 (A2, Sat 14.11 20:20). A3 signed off on v2 (18:05); v3 only cuts item counts.** Needs review by A3 (training) and A5 (analysis), then **human approval by 19:00** (PLAN.md §6).
 After approval, nobody changes the benchmark list, the generation settings, the comparisons or the checkpoint rule.
 Any change after that is a new protocol version, and every row is rerun under it.
 
@@ -10,6 +10,14 @@ Any change after that is a new protocol version, and every row is rerun under it
 decoding is the Qwen3.5 model-card sampling, not greedy (greedy makes thinking models loop; see §4).
 
 This file is written **before any trained model is scored**.
+
+## Amendment v5 (Sun 15.11 03:10, human decision, made AFTER seeing RL checkpoint results)
+
+**Finalist rule (replaces §7's "best dev-slice headline"):** the RL checkpoint with the **best dev-slice MATH score** (175 items: the first 25 per MATH subject) whose MMLU-Pro history control is not more than 2 points below base. Ties: the earlier checkpoint. Reason (human): the training targets logical/mathematical reasoning, and MATH is the only dev-slice row large enough to show a trend (the other rows have 25 items).
+
+**Held-out evaluation (guards against the winner's curse):** choosing the maximum of noisy dev-slice scores overstates the gain, so the finalist's reported MATH number comes from items **not used for the choice**: MATH items 26-50 per subject (175 items), scored for the finalist and for base (base already has them from its full v3 run), paired bootstrap 95% CI. The dev-slice MATH values (items 1-25) are reported next to it, labelled "used for selection".
+
+**Disclosure:** like v4, this was decided after observing checkpoint results (dev-slice MATH so far: base 0.589, h2 steps 10-50: 0.606, 0.617, 0.640, 0.611, 0.606). It is reported as a post-hoc change. Training continues past the original 04:00 cutoff (human decision); every checkpoint is benched the same way, and the rule is applied to all of them.
 
 ## Amendment v4 (Sat 14.11 23:45, human decision, made AFTER seeing RL checkpoint results)
 
