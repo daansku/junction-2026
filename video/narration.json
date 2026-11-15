@@ -37,10 +37,9 @@
       "Because the supply never runs out, the games are also training data. So can a small model learn from them?",
       "We trained a nine-billion-parameter model on single moves from our games, with reinforcement learning and thinking switched on. After thirty steps, it solves five points more maths problems."
     ]},
-    {"key": "S5R", "file": "s5r_rover", "scene": "S5RRover", "lines": [
+    {"key": "S5R", "file": "s5r3d", "scene": "S5RRover3D", "lines": [
       "We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home."
     ]},
-    {"key": "S5M", "file": "s5m_mars", "scene": "S5MMars", "lines": []},
     {"key": "S5C", "file": "s5r_rover", "scene": "S5RChart", "lines": [
       "A scripted explorer almost always succeeds. A small four-billion-parameter model completes thirty-nine in a hundred.",
       "After one round of training on our games, it completes forty-four."

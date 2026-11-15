@@ -112,9 +112,9 @@ A3's edge rover experiment as a separate scene (`scenes/s5r_rover.py`). Everythi
 - Beat 2: chart of missions completed with 95% CIs: Gemini 4 Argon, Gemini Flash, 9B thinking off.
 - Beat 3: our model's row. The "9B thinking on, no training" row is a placeholder until A3's run finishes; the line for beat 3 must change with that result (if it matches 51/100, the honest line is that thinking, not our training, makes the difference).
 
-### S5M Mars-style 3D interlude (Sun 15.11, ~5 s, no narration, no numbers)
+### S5R in 3D (Sun 15.11): the whole rover replay on low-poly Mars terrain
 
-`scenes/s5m_mars.py` (ThreeDScene). Starts on the exact last frame of the rover replay, tilts the camera, the map becomes a stylised low-poly terrain (walls as rocks, floor as uneven sand, beacon as a yellow mast), and a low-poly 3D rover drives the last 4 real moves of the replayed mission. Labelled "illustration". The rover segment is now three scenes: S5R (replay, line 1), S5M (3D), S5C (chart, lines 2-3). Drop the interlude by removing the "S5M" entry from `narration.json`.
+`scenes/s5r3d.py` (ThreeDScene) replaces the 2D replay and the separate 3D interlude. Same real data (map, scrambled controls, every recorded move); the terrain and the 3D rover are the illustration. Unseen cells are dark fog until the sensor reaches them; the button panel stays fixed on screen. Narration key S5R; the chart (S5C) follows in `s5r_rover.py`. `s5m_mars.py` and the 2D `S5RRover` are kept but no longer in `narration.json`.
 
 ### S6 Business value (2:35–2:48, 13 s)
 
