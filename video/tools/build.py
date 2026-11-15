@@ -121,7 +121,7 @@ def main() -> int:
             cmd += ["-f", "lavfi", "-t", f"{d}", "-i", "anullsrc=r=22050:cl=mono"]
     n = len(parts)
     vf = "".join(f"[{i}:v]" for i in range(n)) + f"concat=n={n}:v=1:a=0[v]"
-    af = ";".join(f"[{n + i}:a]apad,atrim=0:{parts[i][2]:.3f},asetpts=PTS-STARTPTS[a{i}]" for i in range(n))
+    af = ";".join(f"[{n + i}:a]aresample=48000,apad,atrim=0:{parts[i][2]:.3f},asetpts=PTS-STARTPTS[a{i}]" for i in range(n))
     af += ";" + "".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1[a]"
     cmd += ["-filter_complex", vf + ";" + af, "-map", "[v]", "-map", "[a]",
             "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18" if a.final else "23",
