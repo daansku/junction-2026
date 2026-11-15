@@ -138,7 +138,7 @@ class S0Hook(Scene):
         quota = [round(n_tiles * l / sum(logs)) for l in logs]
         quota[0] += n_tiles - sum(quota)
         modes = [i for i, q in enumerate(quota) for _ in range(q)]
-        modes[0], modes[quota[0]] = 0, 1      # first two slots are the close-ups (red, orange)
+        modes[1], modes[quota[0]] = 1, 0      # first two slots are the close-ups (red, orange); swap keeps the quotas
         rest = modes[2:]
         random.shuffle(rest)
         modes = modes[:2] + rest
