@@ -72,7 +72,8 @@ class S5PostTrain(Scene):
             y -= 0.95
         axis = Line([x0, 0.85, 0], [x0, y + 0.45, 0], stroke_color=LINE_STRONG, stroke_width=1)
         axis_note = Text(f"axis starts at {lo:.2f}", font=MONO, font_size=12, color=TEXT_3).next_to(axis, DOWN, buff=0.08)
-        delta = Text(res["delta_line"], font=MONO, font_size=18, color=ACCENT).move_to([0, y - 0.15, 0])
+        delta = VGroup(*[Text(t, font=MONO, font_size=16, color=TEXT_2) for t in res["method"]])
+        delta.arrange(DOWN, buff=0.12).move_to([0, y - 0.2, 0])
         foot = Text(res["footnote"], font=MONO, font_size=13, color=TEXT_3).next_to(delta, DOWN, buff=0.2)
         self.play(FadeIn(title), FadeIn(sub), FadeIn(labels), FadeIn(axis), FadeIn(axis_note), run_time=0.5)
         self.play(LaggedStart(*[GrowFromEdge(b, LEFT) for b in bars], lag_ratio=0.3, run_time=1.2))
