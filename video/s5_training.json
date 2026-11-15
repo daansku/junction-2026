@@ -1,26 +1,26 @@
 {
- "note": "What S5 shows for Anssi's training. Source: A2 message Sun ~04:10 (B200 /root/b200bench/out/, not in data/derived yet). The 1,400-item fresh test will not run (Anssi), so these are the numbers.",
- "title": "MATH, held-out problems",
- "sub": "175 problems not used to pick the checkpoint · same problems for both · step 30: 95% CI (Wilson)",
+ "note": "What S5 shows for Anssi's training. Source: A2 message Sun ~04:10 (B200 /root/b200bench/out/). Anssi chose the dev-slice MATH items used for checkpoint selection (items 1-25/subject); held-out items 26-50 gave base 0.634 vs step 30 0.674.",
+ "title": "MATH, 175 problems",
+ "sub": "the problems used to pick the checkpoint · same problems for both · step 30: 95% CI (Wilson)",
  "rows": [
   {
    "label": "Qwen3.5-9B base",
-   "score": 0.634,
+   "score": 0.589,
    "kind": "base",
-   "k": 111,
+   "k": 103,
    "n": 175
   },
   {
    "label": "RL on our games, step 30",
-   "score": 0.674,
+   "score": 0.64,
    "kind": "ours",
-   "k": 118,
+   "k": 112,
    "n": 175,
-   "lo": 0.602,
-   "hi": 0.739
+   "lo": 0.567,
+   "hi": 0.707
   }
  ],
- "footnote": "step 30 = best MATH on the selection items; the strict PROTOCOL v5 finalist is step 40 (+0.011)",
+ "footnote": "step 30 = best of checkpoints 10-70 on these problems; the strict PROTOCOL v5 finalist is step 40 (0.611)",
  "final": true,
  "method": [
   "how: reinforcement learning (GRPO) from base Qwen3.5-9B, thinking on, LoRA adapter",
