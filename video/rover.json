@@ -1,6 +1,6 @@
 {
  "note": "Everything the rover scenes show. Edit here, then: video/.venv/python.exe video/tools/fetch_rover.py && render. Source: A3 experiments/edge_rover/README.md, update Sun 06:51 (origin/agent/a3 17cb7c5): rover-lite hidden controls, same 100 missions, JSON repair on: Qwen3.5-4B base 41/100, after round 1 of episodic RL on our games 50/100 (p=0.14), after round 2 54/100 (paired 20 better / 7 worse, McNemar p=0.019).",
- "git_ref": "origin/agent/a3",
+ "git_ref": "origin/main",
  "mission": {
   "file": "results-rl4b/rft4b-r2-lite-hidden.jsonl",
   "seed": 5007,

@@ -63,7 +63,7 @@ class S5PostTrain(Scene):
         for row in res["rows"]:
             lab = Text(row["label"], font=SANS, font_size=20, color=TEXT_1 if row["kind"] == "ours" else TEXT_2)
             lab.move_to([x0 - 0.3 - lab.width / 2, y, 0])
-            bar = Rectangle(width=x(row["score"]) - x0, height=0.5, fill_color="#199e70" if row["kind"] == "ours" else "#3987e5",
+            bar = Rectangle(width=x(row["score"]) - x0, height=0.5, fill_color={"ours": "#199e70", "reference": "#4a4a50"}.get(row["kind"], "#3987e5"),
                             fill_opacity=1, stroke_width=0)
             bar.move_to([x0 + bar.width / 2, y, 0])
             cis = VGroup()

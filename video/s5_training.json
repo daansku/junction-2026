@@ -1,27 +1,28 @@
 {
- "note": "What S5 shows for Anssi's training. Source: A2 message Sun ~04:10 (B200 /root/b200bench/out/). Anssi chose the dev-slice MATH items used for checkpoint selection (items 1-25/subject); held-out items 26-50 gave base 0.634 vs step 30 0.674.",
- "title": "MATH, 175 problems",
- "sub": "same problems for both",
+ "note": "What S5 shows. Source: A3 experiments/edge_rover/README.md 'Held-out MATH (A2's benchmark)', Sun 07:33, files results-math/. Qwen3.5-4B after 2 rounds of episodic RL on our games (round 2 = the checkpoint the selection half picks, and the best rover checkpoint). Held-out half (doc 25-49, 175 items): 4B base 0.623 -> round 2 0.680, +0.057, 95% CI [-0.011, +0.126], McNemar p = 0.154. Reference: untrained Qwen3.5-9B 0.634 on the same items (A2's stored run).",
+ "title": "MATH, held-out problems",
+ "sub": "175 problems never used for training or for picking the checkpoint · same problems for all",
  "rows": [
   {
-   "label": "Qwen3.5-9B base",
-   "score": 0.589,
-   "kind": "base",
-   "k": 103,
-   "n": 175
+   "label": "Qwen3.5-4B",
+   "score": 0.623,
+   "kind": "base"
   },
   {
-   "label": "RL on our games, step 30",
-   "score": 0.64,
-   "kind": "ours",
-   "k": 112,
-   "n": 175
+   "label": "Qwen3.5-4B, 2 rounds on our games",
+   "score": 0.68,
+   "kind": "ours"
+  },
+  {
+   "label": "Qwen3.5-9B, untrained (reference)",
+   "score": 0.634,
+   "kind": "reference"
   }
  ],
- "footnote": "step 30 = best of checkpoints 10-70 on these problems; the strict PROTOCOL v5 finalist is step 40 (0.611)",
- "final": true,
  "method": [
-  "how: reinforcement learning (GRPO) from base Qwen3.5-9B, thinking on, LoRA adapter",
-  "trained on single moves from freshly generated games (train-v3b) · 30 steps on one B200 GPU"
- ]
+  "how: the model plays full levels of our games, keeps its own winning episodes (thinking included)",
+  "and is fine-tuned on them (LoRA); repeated twice · the reward never involves maths"
+ ],
+ "footnote": "round 2 picked on the other 175 MATH problems, as our protocol requires",
+ "final": true
 }

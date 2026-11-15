@@ -36,7 +36,7 @@
     ]},
     {"key": "S5", "file": "s5_posttrain", "scene": "S5PostTrain", "lines": [
       "Because the supply never runs out, the games are also training data. So can a small model learn from them?",
-      "We trained a nine-billion-parameter model on single moves from our games, with reinforcement learning and thinking switched on. After thirty steps, it solves five points more maths problems."
+      "We let a four-billion-parameter model play our games and learn from its own wins. After two rounds, it solves six points more maths problems it never trained on, overtaking an untrained model twice its size."
     ]},
     {"key": "S5R", "file": "s5r3d", "scene": "S5RRover3D", "lines": [
       "We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home."
