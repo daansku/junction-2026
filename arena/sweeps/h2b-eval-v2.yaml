@@ -1,0 +1,18 @@
+# PLAN phase 3 A3-35, re-launched as h2b (human decision Sat 22:40: same sweeps, much less wall time, no runs cut).
+# h2b = h2 with up to 5 actions per model call (every action counted and scored as in h2) + smaller context
+# (last 2 frames, last 3 reasoning blocks). Separate board from h2. Frozen 4-game eval-v2 subset (= h2-subset-v2).
+# Every run starts at once. Highest supported effort, no cost cap (Gemini credits unlimited), no wall cut.
+name: h2b-eval-v2
+harness: h2b
+collection: eval-v2
+games: [gridworld-s910000-d4-l8-f71ee29e, gridworld-s910001-d4-l8-eb750fbb, gridworld-s910002-d4-l8-654b6dd3, gridworld-s910003-d4-l8-6ea22e03]
+attempts: 3
+concurrency: 60
+est_steps_per_game: 300
+models:
+  - {id: verda-kimi-k3-1-pro, effort: max, max_concurrency: 12}
+  - {id: gemini-pro, effort: high, max_concurrency: 12}
+  - {id: gemini-flash, effort: high, max_concurrency: 12}
+  - {id: gemini-4-argon, effort: high, max_concurrency: 12}
+  - {id: gemini-4-carbon, effort: high, max_concurrency: 12}
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 500.0, max_wall_s: 14400}

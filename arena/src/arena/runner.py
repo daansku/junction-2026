@@ -206,9 +206,10 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
         if j.kind == "model":
             m = models[j.model_id]
             with sems[j.model_id]:
-                if sw.get("harness", HARNESS_VERSION) == "h2":
+                if sw.get("harness", HARNESS_VERSION) in ("h2", "h2b"):
                     from .agent_h2 import play_model_h2
-                    res = play_model_h2(client, j.game_id, m, effort=j.effort, run_key=j.key, budgets=budgets)
+                    res = play_model_h2(client, j.game_id, m, effort=j.effort, run_key=j.key, budgets=budgets,
+                                        harness=sw["harness"])
                 else:
                     res = play_model(client, j.game_id, get_provider(m), m, effort=j.effort, run_key=j.key,
                                      budgets=budgets, input_modes=None)

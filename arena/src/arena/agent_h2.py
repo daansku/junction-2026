@@ -36,21 +36,38 @@ HARNESS_VERSION = "h2"
 SYSTEM = (Path(__file__).parent / "prompts" / "system_h2.md").read_text(encoding="utf-8")
 IMAGE_TURNS = 5          # observations that keep their frame
 THINKING_TURNS = 10      # Anthropic: assistant turns that keep their thinking blocks
+
+# h2b (Sat 22:40 human decision: same sweeps, much less wall time). Identical to h2 except:
+#   - act takes a list of 1..MAX_MOVES actions run in order (each one counted and scored exactly as in h2); the
+#     list stops early on a level change, game end, or an action that changes no cell; fewer model calls per run.
+#   - smaller context: last H2B_IMAGE_TURNS frames, last H2B_THINKING_TURNS reasoning blocks.
+# Separate board from h2 (different run keys); never mixed with h2 rows.
+SYSTEM_H2B = (Path(__file__).parent / "prompts" / "system_h2b.md").read_text(encoding="utf-8")
+MAX_MOVES = 5
+H2B_IMAGE_TURNS = 2
+H2B_THINKING_TURNS = 3
 ACTIONS = ["ACTION1", "ACTION2", "ACTION3", "ACTION4", "ACTION5", "RESET"]
 
 ACT_DESCRIPTION = ("Take exactly one action in the game. Call this once per turn. You get the new screen back.")
 
 
-def act_schema() -> dict:
+ACT_DESCRIPTION_H2B = (f"Take 1 to {MAX_MOVES} actions in order. Call this once per turn. The list stops early when "
+                      "a level ends, the game ends, or an action changes nothing. You get the new screen back.")
+
+
+def act_schema(multi: bool = False) -> dict:
+    first = ({"actions": {"type": "array", "items": {"type": "string", "enum": ACTIONS},
+                          "description": f"1 to {MAX_MOVES} actions, carried out in order."}} if multi else
+             {"action": {"type": "string", "enum": ACTIONS, "description": "The action to take."}})
     return {
         "type": "object",
         "properties": {
-            "action": {"type": "string", "enum": ACTIONS, "description": "The action to take."},
+            **first,
             "hypothesis": {"type": "string", "description": "Your current best guess about the rule that matters now."},
             "belief": {"type": "string", "enum": ["playing", "won", "lost"],
                        "description": "Whether you think the game is still being played, won or lost."},
         },
-        "required": ["action", "hypothesis", "belief"],
+        "required": [next(iter(first)), "hypothesis", "belief"],
         "additionalProperties": False,
     }
 
@@ -67,7 +84,8 @@ class Turn:
     """What one model call produced."""
 
     def __init__(self, action=None, hypothesis="", belief="playing", reasoning="", invalid=None, refused=False,
-                 tokens_in=0, tokens_out=0, cost=0.0, latency_ms=0, stop=None):
+                 tokens_in=0, tokens_out=0, cost=0.0, latency_ms=0, stop=None, actions=None):
+        self.actions = actions or ([action] if action else [])
         self.action, self.hypothesis, self.belief, self.reasoning = action, hypothesis, belief, reasoning
         self.invalid, self.refused, self.stop = invalid, refused, stop
         self.tokens_in, self.tokens_out, self.cost, self.latency_ms = tokens_in, tokens_out, cost, latency_ms
@@ -81,25 +99,40 @@ def _parse_args(args, allowed: list[str]) -> tuple[dict | None, str | None]:
             return None, f"invalid tool arguments: {e.msg}"
     if not isinstance(args, dict):
         return None, "tool arguments are not an object"
-    act = str(args.get("action", "")).strip().upper()
-    if act not in allowed:
-        return None, f"action {args.get('action')!r} not in {allowed}"
+    if "actions" in args:  # h2b: the first must be available now; later ones are checked when they run
+        raw = args.get("actions")
+        if isinstance(raw, str):
+            raw = [raw]
+        if not isinstance(raw, list) or not raw:
+            return None, "actions must be a non-empty list"
+        acts = [str(a).strip().upper() for a in raw][:MAX_MOVES]
+        if acts[0] not in allowed or any(a not in ACTIONS for a in acts):
+            return None, f"actions {raw!r}: each must be one of {allowed}"
+    else:
+        acts = [str(args.get("action", "")).strip().upper()]
+        if acts[0] not in allowed:
+            return None, f"action {args.get('action')!r} not in {allowed}"
+    act = acts[0]
     belief = args.get("belief") if args.get("belief") in ("playing", "won", "lost") else "playing"
-    return {"action": act, "hypothesis": str(args.get("hypothesis", ""))[:500], "belief": belief}, None
+    return {"action": act, "actions": acts, "hypothesis": str(args.get("hypothesis", ""))[:500], "belief": belief}, None
 
 
 # ---------------------------------------------------------------- Anthropic (official SDK)
 class AnthropicH2:
     reasoning_mode = "anthropic-thinking-blocks-preserved"
 
-    def __init__(self, model: dict, effort: str):
+    def __init__(self, model: dict, effort: str, multi: bool = False):
         import anthropic
-        self.model, self.effort = model, effort
+        self.model, self.effort, self.multi = model, effort, multi
+        self.system = SYSTEM_H2B if multi else SYSTEM
+        self.image_turns = H2B_IMAGE_TURNS if multi else IMAGE_TURNS
+        self.thinking_turns = H2B_THINKING_TURNS if multi else THINKING_TURNS
         self.client = anthropic.Anthropic(timeout=float(os.environ.get("ARENA_H2_TIMEOUT_S", "900")), max_retries=3)
         self.max_tokens = int(model.get("h2_max_tokens") or 64000)
         self.messages: list[dict] = []
         self.pending_tool_id: str | None = None
-        self.tools = [{"name": "act", "description": ACT_DESCRIPTION, "input_schema": act_schema(), "strict": True}]
+        self.tools = [{"name": "act", "description": ACT_DESCRIPTION_H2B if multi else ACT_DESCRIPTION,
+                       "input_schema": act_schema(multi), "strict": True}]
 
     def observe(self, text: str, png: bytes, note: str | None = None):
         content = [{"type": "image", "source": {"type": "base64", "media_type": "image/png",
@@ -117,7 +150,7 @@ class AnthropicH2:
         with self.client.beta.messages.stream(
             model=self.model["api_model"],
             max_tokens=self.max_tokens,
-            system=[{"type": "text", "text": SYSTEM}],
+            system=[{"type": "text", "text": self.system}],
             tools=self.tools,
             messages=self.messages,
             thinking={"type": "adaptive", "display": "summarized"},
@@ -125,9 +158,9 @@ class AnthropicH2:
             cache_control={"type": "ephemeral"},
             betas=["context-management-2025-06-27"],
             context_management={"edits": [
-                {"type": "clear_thinking_20251015", "keep": {"type": "thinking_turns", "value": THINKING_TURNS}},
-                {"type": "clear_tool_uses_20250919", "trigger": {"type": "tool_uses", "value": IMAGE_TURNS + 1},
-                 "keep": {"type": "tool_uses", "value": IMAGE_TURNS}},
+                {"type": "clear_thinking_20251015", "keep": {"type": "thinking_turns", "value": self.thinking_turns}},
+                {"type": "clear_tool_uses_20250919", "trigger": {"type": "tool_uses", "value": self.image_turns + 1},
+                 "keep": {"type": "tool_uses", "value": self.image_turns}},
             ]},
         ) as stream:
             msg = stream.get_final_message()
@@ -159,7 +192,8 @@ class AnthropicH2:
                 {"type": "tool_result", "tool_use_id": first.id, "is_error": True, "content": err}] + self._extra})
             return Turn(invalid=err, **base)
         self.pending_tool_id = first.id
-        return Turn(action=parsed["action"], hypothesis=parsed["hypothesis"], belief=parsed["belief"], **base)
+        return Turn(action=parsed["action"], actions=parsed["actions"], hypothesis=parsed["hypothesis"],
+                    belief=parsed["belief"], **base)
 
     def observe_after_act(self, text: str, png: bytes):
         extra, self._extra = getattr(self, "_extra", []), []
@@ -188,19 +222,23 @@ def anthropic_cost(model: dict, u) -> float:
 class OpenAICompatH2:
     reasoning_mode = "assistant-message-returned-verbatim"
 
-    def __init__(self, model: dict, effort: str):
+    def __init__(self, model: dict, effort: str, multi: bool = False):
         from openai import OpenAI
         from .providers.openai_compat import make_client
         base = make_client(model["provider"], model.get("base_url"), model.get("api_key_env"))
+        # 8 retries with the SDK's exponential backoff: rate limits (429) no longer kill a run
         self.client: OpenAI = base.with_options(timeout=float(os.environ.get("ARENA_H2_TIMEOUT_S", "900")),
-                                                max_retries=2)
-        self.model, self.effort = model, effort
+                                                max_retries=int(os.environ.get("ARENA_H2_RETRIES", "8")))
+        self.model, self.effort, self.multi = model, effort, multi
+        self.image_turns = H2B_IMAGE_TURNS if multi else IMAGE_TURNS
+        self.thinking_turns = H2B_THINKING_TURNS if multi else THINKING_TURNS
         self.max_tokens = int(model.get("h2_max_tokens") or 32768)
         self.images = "image" in (model.get("input_modes") or [])
-        self.messages: list[dict] = [{"role": "system", "content": SYSTEM}]
+        self.messages: list[dict] = [{"role": "system", "content": SYSTEM_H2B if multi else SYSTEM}]
         self.pending_call_ids: list[str] = []
-        self.tools = [{"type": "function", "function": {"name": "act", "description": ACT_DESCRIPTION,
-                                                        "parameters": act_schema()}}]
+        self.tools = [{"type": "function", "function": {
+            "name": "act", "description": ACT_DESCRIPTION_H2B if multi else ACT_DESCRIPTION,
+            "parameters": act_schema(multi)}}]
 
     def _drop_old_reasoning(self):
         """Same window as Anthropic's server-side thinking clearing: only the last THINKING_TURNS assistant turns
@@ -210,7 +248,7 @@ class OpenAICompatH2:
             if m.get("role") != "assistant":
                 continue
             seen += 1
-            if seen > THINKING_TURNS:
+            if seen > self.thinking_turns:
                 for k in ("reasoning_content", "reasoning"):
                     m.pop(k, None)
 
@@ -221,7 +259,7 @@ class OpenAICompatH2:
                 continue
             if any(p.get("type") == "image_url" for p in m["content"]):
                 seen += 1
-                if seen > IMAGE_TURNS:
+                if seen > self.image_turns:
                     m["content"] = [p for p in m["content"] if p.get("type") != "image_url"]
                     for p in m["content"]:
                         if p.get("type") == "text" and "Current screen" in p.get("text", ""):
@@ -298,7 +336,8 @@ class OpenAICompatH2:
                                       "content": f"Error: {err}" if i == 0 else "Ignored: only one action per turn."})
             self.pending_call_ids = []
             return Turn(invalid=err, **base)
-        return Turn(action=parsed["action"], hypothesis=parsed["hypothesis"], belief=parsed["belief"], **base)
+        return Turn(action=parsed["action"], actions=parsed["actions"], hypothesis=parsed["hypothesis"],
+                    belief=parsed["belief"], **base)
 
     def observe_after_act(self, text: str, png: bytes):
         self.observe(text, png)
@@ -307,18 +346,21 @@ class OpenAICompatH2:
         self.messages.append({"role": "user", "content": text})
 
 
-def make_adapter(model: dict, effort: str):
-    return AnthropicH2(model, effort) if model["provider"] == "anthropic" else OpenAICompatH2(model, effort)
+def make_adapter(model: dict, effort: str, multi: bool = False):
+    cls = AnthropicH2 if model["provider"] == "anthropic" else OpenAICompatH2
+    return cls(model, effort, multi)
 
 
 # ---------------------------------------------------------------- game loop (identical for every model)
 def play_model_h2(client: GameClient, game_id: str, model: dict, *, effort: str | None, run_key: str | None,
-                  budgets: Budgets, log=print) -> GameResult:
+                  budgets: Budgets, log=print, harness: str = HARNESS_VERSION) -> GameResult:
     eff = effort or model.get("h2_effort") or "high"
-    ad = make_adapter(model, eff)
+    multi = harness == "h2b"
+    ad = make_adapter(model, eff, multi)
     player = {"kind": "model", "name": model["display_name"], "model_id": model["id"], "provider": model["provider"],
-              "effort": eff, "harness_version": HARNESS_VERSION, "input_modes": model.get("input_modes"),
-              "reasoning_mode": ad.reasoning_mode, "image_turns": IMAGE_TURNS, "max_tokens": ad.max_tokens}
+              "effort": eff, "harness_version": harness, "input_modes": model.get("input_modes"),
+              "reasoning_mode": ad.reasoning_mode, "image_turns": ad.image_turns, "max_tokens": ad.max_tokens,
+              **({"max_moves_per_turn": MAX_MOVES} if multi else {})}
     session, start = client.start(game_id, player, run_key=run_key)
     frame = start["frame"]
     allowed = start.get("available_actions") or ["RESET", "ACTION1", "ACTION2", "ACTION3", "ACTION4"]
@@ -352,14 +394,38 @@ def play_model_h2(client: GameClient, game_id: str, model: dict, *, effort: str 
             ad.nudge(f"(Invalid turn: {tr.invalid}. Call the act tool with exactly one of: {', '.join(allowed)}.)")
             continue
         usage = {"in": tr.tokens_in, "out": tr.tokens_out, "cost_usd": round(tr.cost, 6)}
-        out = session.act(tr.action, reasoning=tr.reasoning, hypothesis=tr.hypothesis, belief=tr.belief,
-                          usage=usage, latency_ms=tr.latency_ms)
-        actions += 1
-        prev, frame = frame, out["frame"]
-        allowed = out.get("available_actions") or allowed
-        ad.observe_after_act(observation_text(turns + 1, allowed, (tr.action, diff_count(prev, frame)), frame),
-                             to_png(frame))
-        truth = session.truth()
+        start_frame, ran, stopped = frame, [], None
+        lvl0 = truth.get("level")
+        for i, a in enumerate(tr.actions):
+            if actions >= budgets.max_actions:
+                stopped = "the action budget was reached"; break
+            if a not in allowed:
+                stopped = f"{a} was not available"; break
+            first = i == 0  # model usage / reasoning are attached to the first action of the call only
+            out = session.act(a, reasoning=tr.reasoning if first else "", hypothesis=tr.hypothesis,
+                              belief=tr.belief, usage=usage if first else {"in": 0, "out": 0, "cost_usd": 0.0},
+                              latency_ms=tr.latency_ms if first else 0)
+            actions += 1
+            prev, frame = frame, out["frame"]
+            allowed = out.get("available_actions") or allowed
+            truth = session.truth()
+            ran.append((a, diff_count(prev, frame)))
+            if truth.get("state") in END_STATES or truth.get("state") == "GAME_OVER":
+                stopped = "the game ended"; break
+            if truth.get("level") != lvl0:
+                stopped = "the level changed"; break
+            if ran[-1][1] == 0:
+                stopped = "the action changed nothing"; break
+        if not multi:
+            ad.observe_after_act(observation_text(turns + 1, allowed, ran[0], frame), to_png(frame))
+            continue
+        text = observation_text(turns + 1, allowed, None, frame)
+        steps = ", ".join(f"{a} ({n} cells changed)" for a, n in ran)
+        head, rest = text.split("\n", 1)
+        note = f" You asked for {len(tr.actions)} action(s); {len(ran)} ran: {steps or 'none'}."
+        if stopped and len(ran) < len(tr.actions):
+            note += f" Stopped because {stopped}."
+        ad.observe_after_act(head + note + "\n" + rest, to_png(frame))
 
     t = truth
     outcome = _outcome(t, reason)
@@ -369,5 +435,5 @@ def play_model_h2(client: GameClient, game_id: str, model: dict, *, effort: str 
                       levels_total=t.get("levels_total", 0), actions=actions, turns=turns, invalid_replies=invalid,
                       tokens_in=tin, tokens_out=tout, cost_usd=round(cost, 6),
                       cost_known=bool(model.get("price_in") is not None), wall_s=round(time.time() - t0, 1),
-                      reason=reason, extra={"harness_version": HARNESS_VERSION, "effort": eff,
+                      reason=reason, extra={"harness_version": harness, "effort": eff,
                                             "reasoning_mode": ad.reasoning_mode})

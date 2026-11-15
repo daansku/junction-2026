@@ -57,3 +57,70 @@ s900002 (time cap).
 **Fine-tune in-domain (h1, eval-v1):** untuned Qwen3.5-9B **1/96 levels (1%)** on 16 games; SFT v1 fine-tuned 4/180
 (2%). The first fine-tune did not help on our games either: confirms the negative result.
 Still draining: ~16 eval-v2 Gemini Flash games, ~9 eval-v2 Kimi games (3 Kimi runs lost to Verda's rate limit, 429).
+
+## Update Sat 23:10: h2b on eval-v2: frontier models WIN these games (early, read the caveats)
+Harness **h2b** (= h2 + up to 5 actions per model call, list stops early when a level ends / the game ends / an action
+changes nothing; smaller context: last 2 frames, last 3 reasoning blocks; every action counted and scored as in h2).
+Built at 22:30 only to make complete runs faster (human: "same sweeps, much less time"). Sweep `h2b-eval-v2.yaml`:
+frozen 4 eval-v2 games (s910000-s910003) x 3 attempts, effort high, no cost cap, all 60 runs at once from 22:32.
+
+**Finished at 23:10: 20 of 20 are full WINS (8/8 levels).**
+| model | wins so far | games won | actions |
+|---|---|---|---|
+| Gemini 4 Argon | 8 | s910001 x3, s910002 x3, s910003 x2 | 143-224 |
+| Gemini Flash | 7 | s910000 x1, s910002 x3, s910003 x3 | 165-298 |
+| Gemini 4 Carbon | 5 | s910002 x3, s910003 x2 | 146-204 |
+| Gemini Pro | 0 finished (live: up to 7/8 levels) | | |
+Under h1 and h2 **no model won any of these 4 games** (h2 Kimi best 7/8 in 400 actions; h1 Gemini Flash 0-4/8).
+
+Caveats:
+- **Biased early sample:** wins end early; non-wins still play to 400 actions. Full board ~23:45-00:30.
+- **The gap depends on the harness.** Same games, models, effort; only the action interface and context changed.
+  Likely drivers: multi-step moves (fewer chances to lose the plan between calls), the "action changed nothing"
+  stop (free bump signal), shorter context. Not separated (no time for ablations).
+- **Kimi: all 12 h2b runs died with Verda `403 project is suspended`** (account issue, human checking). No Kimi h2b row.
+- 4 Gemini runs crashed (3 empty provider replies, 1 rate limit, 429). Not rerun.
+
+**What this means for the claims (A1/A5/A6 decide the framing):** "frontier models fail" holds under the
+one-action-per-call harnesses (h1, h2) but **not** under h2b on these 4 games. Either report it as a harness
+sensitivity finding (the gap is about the interaction protocol, not the rules alone) or test on harder games.
+Do not quote h2b and h2 numbers as one board.
+
+### Kimi K3.1 on h2b (23:15): incomplete, Verda account suspended, no more Verda (human decision)
+All 12 runs died at 130-267 of 400 actions (`403 project is suspended`). Levels at cutoff, 3 attempts per game:
+s910000 2/1/1, s910001 6/4/2, s910002 5/5/1, s910003 4/4/2.
+- **Measured (quote only this): >= 37/96 levels (39%), 0 wins at cutoff.** Lower bound.
+- Projection, NOT measured (each run's own pace extended to 400 actions, capped at 8): ~60-70% of levels,
+  ~3-4/12 wins. Consistent with Kimi h2 on the same games (7, 7, 5, 1 of 8 = 62%, 0 wins). Label it as an estimate.
+- Kimi trails Gemini under h2b: at ~220 actions Kimi had 2-6 levels; Gemini Flash/Argon had 6-7 or had already won.
+
+### h2b eval-v2 update 23:30: Argon, Carbon, Flash final (Pro still running, ETA ~00:15-00:45)
+| model (effort high) | completed runs | wins | levels (completed runs) | crashed (not rerun) |
+|---|---|---|---|---|
+| Gemini 4 Carbon | 12/12 | **12** | 96/96 (100%) | 0 |
+| Gemini 4 Argon | 8/12 | **8** | 64/64 (100%) | 4 (empty provider reply) |
+| Gemini Flash | 9/12 | **7** | 69/72 (96%); losses 7/8 on s910001, 6/8 on s910000 | 3 (rate limit 429 / empty reply) |
+| Kimi K3.1 | 0/12 | - | >= 37/96 at cutoff (Verda suspended); see row above | 12 |
+Every game was won by at least one model; Carbon won all 4 games in all 3 attempts. Crashed runs are not losses.
+Same caveat as 23:10: h1/h2 on these games had 0 wins; the interaction protocol, not the rules alone, drives the gap.
+
+## FINAL h2b on all 30 eval-v2 games (Sun 00:57). A3-35 done.
+Board score = mean over games of (mean over levels of min(1, optimal/actions) on solved levels); same formula as the
+site (reproduces its h2 rows: Gemini Pro 0.439, Kimi 0.398). Games s910000-03: 3 attempts, effort high (22:32 sweep);
+s910004-29: 1 attempt (00:14 sweep), Flash high, Argon/Carbon/Pro **medium**; hard stop ~00:55.
+| player | games | score | completed runs | wins | wall-capped | crashed (not rerun) |
+|---|---|---|---|---|---|---|
+| **Gemini 4 Carbon** | 30 | **0.891** | 38 | **38 (100%)** | 0 | 0 |
+| **Gemini 4 Argon** | 30 | **0.853** | 34 | **34 (100%)** | 0 | 4 |
+| **Gemini Flash** | 30 | **0.731** | 35 | 20 | 13 | 3 |
+| Humans | 15 | 0.682 | 23 | 17 | - | - |
+| Gemini Pro | 30 | 0.226 (lower bound) | 22 | 0 | 16 | 16 |
+| Kimi K3.1 | 4 | 0.339 (lower bound, partial) | 0 | 0 | - | 12 (Verda suspended) |
+- Carbon and Argon won **every** run they completed, on every one of the 30 games, mostly at medium effort.
+- **Gemini Pro row is not a real score:** at high its 12 runs (4 games) all died to 429 when the 104-run sweep
+  started; at medium most runs were cut by the 01:00 deadline (median 3/8 levels). Show it as "incomplete".
+- Humans: completed human runs on the 15 eval-v2 games humans played.
+- Contrast (same games, one action per call): h2 Gemini Pro 0.439 / Kimi 0.398 with 0 wins; h1 Gemini Flash 22% of
+  levels, 0 wins. **The win/fail outcome is decided by the interaction protocol** (h2b = up to 5 actions per call).
+- The website's h2 board does not read h2b runs (filter `harness == "h2"`, and h2b runs have no collection tag).
+  Owner of `analysis/aggregate.py`: add an h2b board; collection = eval-v2 for game ids gridworld-s9100xx.

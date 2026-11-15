@@ -1,0 +1,18 @@
+# PLAN phase 3 A3-35 completion (human Sun 00:15): h2b on the 26 eval-v2 games not in h2b-eval-v2.yaml (those 4 games
+# x 3 attempts are kept, not rerun). 1 attempt, all 104 runs at once, hard end before 01:00 (human deadline).
+# Effort: Flash high (same as its 4 done games, fastest model); Argon, Carbon, Pro medium (human OK: "you can put
+# models on medium"; Pro high = ~14k thinking tokens / 87 s per call, cannot finish). Runs still going at the wall
+# cap end as budget_wall and are labelled wall-capped (lower bound) on the board.
+name: h2b-eval-v2-rest
+harness: h2b
+collection: eval-v2
+games: [gridworld-s910004-d4-l8-35604680, gridworld-s910005-d4-l8-3ae7d141, gridworld-s910006-d4-l8-d0fd746b, gridworld-s910007-d4-l8-dae00827, gridworld-s910008-d4-l8-0f92b4b6, gridworld-s910009-d4-l8-0ba90b67, gridworld-s910010-d4-l8-c058199f, gridworld-s910011-d4-l8-514b14df, gridworld-s910012-d4-l8-6edec0bc, gridworld-s910013-d4-l8-8c8e45ef, gridworld-s910014-d4-l8-33922ae5, gridworld-s910015-d4-l8-7c2e3467, gridworld-s910016-d4-l8-5800b3bb, gridworld-s910017-d4-l8-0b106b3b, gridworld-s910018-d4-l8-41c953d2, gridworld-s910019-d4-l8-50cff9f4, gridworld-s910020-d4-l8-175965bf, gridworld-s910021-d4-l8-404033da, gridworld-s910022-d4-l8-3fb0eb10, gridworld-s910023-d4-l8-62ccfe81, gridworld-s910024-d4-l8-bf2de6d6, gridworld-s910025-d4-l8-1574b97a, gridworld-s910026-d4-l8-988c7895, gridworld-s910027-d4-l8-93c50d87, gridworld-s910028-d4-l8-d526a7ab, gridworld-s910029-d4-l8-325e8eaf]
+attempts: 1
+concurrency: 104
+est_steps_per_game: 300
+models:
+  - {id: gemini-flash, effort: high, max_concurrency: 26}
+  - {id: gemini-4-argon, effort: medium, max_concurrency: 26}
+  - {id: gemini-4-carbon, effort: medium, max_concurrency: 26}
+  - {id: gemini-pro, effort: medium, max_concurrency: 26}
+budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 500.0, max_wall_s: 2385}

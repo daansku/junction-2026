@@ -59,3 +59,28 @@
   front page alike (`web/src/features/leaderboard/ranking.ts`).
 - **The Harbor / RL reward is unchanged** (same formula as the efficiency column), so the judging results in
   `coordination/JUDGING.md` (reference 1.000, do-nothing 0, stop-early, red team) stay valid.
+
+## Sat 22:25 A3-35: h2 on the frozen 4-game eval-v2 subset (A3; Daniel 22:05, ignacio approved 22:15)
+Games s910000-s910003 (same as `h2-subset-v2.yaml`). Sweeps `h2-eval-v2-{kimi,gemini,pro}.yaml`, launched once from
+ignacio's laptop at 22:25, wall cap 4 h per run (all end by ~02:30), cost cap $500/run (effectively none).
+- Kimi K3.1 (effort max): 3 attempts (attempt 0 = the 17:20 h2-subset-v2 run).
+- Gemini Pro high: attempt 1 is uncapped; attempt 0 (h2-subset-v2) was cut at $18 on all 4 games -> labelled lower bound.
+- Gemini Flash / Gemini 4 Argon / Gemini 4 Carbon, effort high (highest in the registry): 1 attempt each -> labelled single-attempt.
+- Claude: not run (key not topped up).
+No reruns after this; results go into A3-to-all-RESULTS.md when the runs finish.
+
+## Sat 22:32 A3-35 re-launched as harness h2b (A3; ignacio 22:40 "same sweeps, much less time, don't cut runs")
+The 22:25 h2 launch (and its 22:24 wall-capped relaunch) were stopped before any result; files removed.
+A complete h2 run is ~400 sequential model calls (Kimi 8-12 s/action, Gemini Pro 12-60 s/action = 1-3 h), so
+parallelism cannot shorten a run. h2b = h2 with: `act` takes 1-5 actions run in order (each counted and scored as
+in h2; the list stops early on level change, game end, or an action that changes nothing) + smaller context (last 2
+frames, last 3 reasoning blocks). Test: 15 actions in 3-4 calls, no invalid turns, Kimi 4.8 s/action.
+Sweep `h2b-eval-v2.yaml`: frozen 4 eval-v2 games x 3 attempts x {Kimi K3.1 max, Gemini Pro/Flash/4 Argon/4 Carbon high}
+= 60 runs, all at once, no cost cap, no wall cut (4 h safety only). h2b is its own board, never mixed with h2 rows.
+
+## Sun 00:14 A3-35 completion: h2b on the other 26 eval-v2 games (A3; ignacio 00:12)
+`h2b-eval-v2-rest.yaml`: the 26 eval-v2 games not in h2b-eval-v2 (those 4 x 3 attempts kept, not rerun), 1 attempt,
+104 runs at once, hard end before 01:00 (wall cap ~40 min; runs still going then are labelled wall-capped).
+Effort: Gemini Flash high (= its 4 done games); Gemini 4 Argon, Gemini 4 Carbon, Gemini Pro **medium** (human OK;
+Pro at high = ~14k thinking tokens / 87 s per call). No Kimi (Verda account suspended). Harness fixes in the same
+commit: empty provider reply = invalid turn (was a crash, 4 runs lost); 8 API retries with backoff (429 killed 3 runs).
