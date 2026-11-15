@@ -1,4 +1,4 @@
-"""S5 Post-training: base vs control vs ours on the outside-benchmark suite, with 95% CIs.
+"""S5 Post-training: base vs trained on our games (no control run: no time, Anssi Sat night) on the outside-benchmark suite, with 95% CIs.
 See SCRIPT.md S5 and bench/PROTOCOL.md.
 
 PLACEHOLDER until the 07:00 lock: values below are invented layout values, drawn in the
@@ -24,7 +24,6 @@ random.seed(5)
 # (row, label, mean, ci_low, ci_high): PLACEHOLDER layout values, NOT results
 ROWS = [
     ("base", "Qwen3.5-9B base", 0.60, 0.58, 0.62),
-    ("ctrl", "control: same amount of non-game data", 0.61, 0.59, 0.63),
     ("ours", "trained on our games", 0.63, 0.61, 0.65),
 ]
 PLACEHOLDER_DATA = True
@@ -88,10 +87,6 @@ class S5PostTrain(Scene):
             tag = Text("PLACEHOLDER: post-training result not in yet", font=MONO, font_size=18, color=PLACEHOLDER)
             tag.to_edge(DOWN, buff=0.5)
             self.add(tag)
-        # the control is the honest comparison
-        ctrl_box = Rectangle(width=width + 4.4, height=0.7, stroke_color=TEXT_2, stroke_width=2, fill_opacity=0)
-        ctrl_box.move_to([x0 + width / 2 - 1.6, 0.0, 0])
-        self.play(FadeIn(ctrl_box), run_time=0.4)
         self.wait(2.2)
         vo.finish(tail=0.5)
         self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)

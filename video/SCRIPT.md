@@ -98,8 +98,8 @@ Anssi: show 2–4 failure modes. Start with one replay, scroll to the next, then
 | Time | On screen | Voice-over |
 |---|---|---|
 | 2:10 | The failure-mode colours from S0 flow into one small agent: Qwen3.5-9B. | "Then we asked: can a small model learn from this experience?" |
-| 2:16 | Three bars with 95% confidence intervals on the outside-benchmark suite: base, control (same amount of non-game training), ours `[N7]`. | *(depends on the result, see below)* |
-| 2:28 | The control bar is marked as the honest comparison. | "We compare against a control trained on the same amount of non-game data, so the gain is from our games, not just from more training." |
+| 2:16 | Two bars with 95% confidence intervals on the outside-benchmark suite: base and trained on our games `[N7]`. No control run (no time; Anssi, Sun night). | *(depends on the result, see below)* |
+| 2:28 | (control row removed) | Line now: "We are training a nine-billion-parameter model on them, and scoring it on reasoning benchmarks outside our games." |
 
 **Open: the result line depends on the 07:00 lock.**
 - **Gain with a CI that excludes zero:** "Trained on our games, it reasons better on outside benchmarks than the control."
