@@ -54,7 +54,7 @@ export async function fetchLeaderboardH2(): Promise<LeaderboardH2Document> {
   }
 }
 
-/** h2b board (A3, Sat 22:32): h2 with up to 5 moves per model call, each move counted and scored as in h2. */
+/** h2b board: h2 with up to 5 moves per model call, each move counted and scored as in h2. */
 export async function fetchLeaderboardH2b(): Promise<LeaderboardH2Document> {
   const H2B_NOTE = 'Up to 5 moves per model call (each move counted and scored exactly as in h2); smaller context.'
   try {

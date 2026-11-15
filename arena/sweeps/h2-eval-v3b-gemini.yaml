@@ -1,9 +1,8 @@
-# Gemini models on all 30 eval-v3b games, harness h2 (human request: Daniel, Sun ~00:20; run from A1's machine).
-# Gemini 3.1 Pro (medium, as requested) and Gemini 3.8 Flash (high, the h2 rule-4 default). Gemini credits are
-# unlimited (DECISIONS Sat 19:25), so the $ cap is set high enough never to cut a run short. Baselines for eval-v3b
-# come from h2-eval-v3b-deepseek. eval-v3b is A7's unfrozen gridbranch draft.
-# Gemma 4 31B was in the first launch (00:17) and is dropped: the Gemini API caps it at 16,000 input tokens per
-# minute on our key, and one h2 turn resends ~20-45k tokens, so every Gemma request is refused (429).
+# Gemini models on all 30 eval-v3b games, harness h2.
+# Gemini 3.1 Pro (medium) and Gemini 3.8 Flash (high, the h2 rule-4 default). The $ cap is set high enough never to
+# cut a run short. Baselines for eval-v3b come from h2-eval-v3b-deepseek. eval-v3b is the unfrozen gridbranch draft.
+# Gemma 4 31B was in the first launch and is dropped: the Gemini API caps it at 16,000 input tokens per minute on our
+# key, and one h2 turn resends ~20-45k tokens, so every Gemma request is refused (429).
 # The first launch also lost runs to 429 bursts (no backoff in h2); those runs end as idle_timeout (dropped by analysis).
 name: h2-eval-v3b-gemini
 harness: h2

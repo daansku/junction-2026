@@ -1,6 +1,6 @@
 # Held-out MATH test (PROTOCOL amendment v5)
 
-The test behind the S5 result: base Qwen3.5-9B **0.634** vs `think-games-h2` step 30 **0.674** on 175 held-out MATH
+The test behind the post-training result: base Qwen3.5-9B **0.634** vs `think-games-h2` step 30 **0.674** on 175 held-out MATH
 items, delta **+0.040**, paired-bootstrap 95% CI **[-0.029, +0.103]**, McNemar **p = 0.311**: not significant.
 
 ## What it measures
@@ -23,34 +23,30 @@ items, delta **+0.040**, paired-bootstrap 95% CI **[-0.029, +0.103]**, McNemar *
 | `run.sh` | merge (if LoRA) -> bench 350 MATH items -> rescore -> compare with base |
 | `compare.py` | paired comparison of any run with base; works without a GPU |
 | `base_math_items.jsonl` | base Qwen3.5-9B scores per item (the reference) |
-| `step30_math_items.jsonl` | `think-games-h2` step 30 scores per item (the S5 result) |
+| `step30_math_items.jsonl` | `think-games-h2` step 30 scores per item (the reported result) |
 
-## Run it on the B200 (exact steps)
+## Run it (exact steps)
 
-The B200 (`95.133.252.154`) already has the Python env (`/root/rl-venv`: vLLM 0.33.0, lm-eval 0.4.13, torch 2.14)
-and Qwen3.5-9B in `/dev/shm/hf`.
+Needs one 80 GB GPU (tested on a B200), a Python env with `bench[gpu]` (vLLM 0.33.0, lm-eval 0.4.13, torch 2.14)
+and Qwen3.5-9B available locally or from Hugging Face.
 
 ```bash
-ssh -i a3_b200 root@95.133.252.154
+# 1. from the repo root, with the env active
+pip install -e ./engine -e "./bench[gpu]"
 
-# 1. the repo is already on the box (a copy of main, commit e6e7493; the GitHub repo is private,
-#    so the box cannot clone it without your GitHub login)
-cd /root/junction-2026
-
-# 2. copy your model to the box (from your machine), e.g. a LoRA adapter dir:
-#    scp -i a3_b200 -r ./my-adapter root@95.133.252.154:/root/models/my-adapter
+# 2. put your model on the box, e.g. a LoRA adapter dir at /path/to/my-adapter
 
 # 3a. LoRA adapter on top of Qwen3.5-9B (merged first, the way step 30 was tested):
-bash bench/heldout_math/run.sh my-model --lora /root/models/my-adapter
+bash bench/heldout_math/run.sh my-model --lora /path/to/my-adapter
 
 # 3b. or a full / already-merged model dir (or an HF id):
-bash bench/heldout_math/run.sh my-model /root/models/my-merged-model
+bash bench/heldout_math/run.sh my-model /path/to/my-merged-model
 
 # 4. check the base reference reproduces (optional, ~4 min): rerun base and compare it with the stored base
 bash bench/heldout_math/run.sh base-check Qwen/Qwen3.5-9B
 ```
 
-Each run takes about 4 minutes on the B200 (plus about 20 s to merge a LoRA adapter). Results land in `out/heldout/<name>/`.
+Each run takes about 4 minutes on a B200 (plus about 20 s to merge a LoRA adapter). Results land in `out/heldout/<name>/`.
 The last lines print, for example:
 
 ```

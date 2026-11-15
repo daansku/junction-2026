@@ -1,4 +1,4 @@
-"""Beacon goal (proposal a5-decoy-and-camouflage): two or three goal rings in different
+"""Beacon goal (proposal decoy-and-camouflage): two or three goal rings in different
 colours. A beacon pip in the HUD shows the colour of the real one. Stepping on a decoy ring
 sends you back to the start (the move still counts).
 

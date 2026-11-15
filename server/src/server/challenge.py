@@ -1,4 +1,4 @@
-"""Visitor scoreboard for the "Can you beat the AI?" demo (`/challenge`, PLAN.md section 3.4, A2-22).
+"""Visitor scoreboard for the "Can you beat the AI?" demo (`/challenge`).
 
 Stored apart from research runs: `DATA_DIR/challenge/board.jsonl`, never under `runs/`, so the board can
 never leak into the human baseline. Allowed in published mode (no paid calls, no admin power).

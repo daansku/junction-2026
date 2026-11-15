@@ -1,7 +1,7 @@
-# Web app screenshots + screen recordings (A4-22)
+# Web app screenshots + screen recordings
 
 1920×1080, dark theme, headless Chromium (Playwright) against the shared server's data (`?api=shared`), served from the
-production build. Taken **Sat 14.11 ~18:30** (eval-v1 sweep in progress; eval-v2 runs in progress).
+production build. Taken on 2026-11-14, while the eval-v1 and eval-v2 sweeps were still running.
 The challenge shots are real plays under the name `test`, a practice name the analysis drops.
 Challenge stats come from `python web/scripts/challenge_stats.py --api <server> --game <game_id>`.
 
@@ -13,9 +13,9 @@ Challenge stats come from `python web/scripts/challenge_stats.py --api <server> 
 | `02-gallery-eval-v1.png` / `02b-gallery-eval-v2.png` | gallery of the frozen eval collections |
 | `03-game-detail.png` | `/gallery/gridworld-s900002-d3-l6-f09d6348`: rules per level, optimal path |
 | `04-replay-argon.png` | Gemini 4 Argon winning eval-v1 game 1, step 42: reasoning, hypothesis, hidden truth, timeline |
-| `05-compare-l2.png` | eval-v1 game 3 level 2 (hazards): daniel 11 moves vs Kimi K3.1 (h2, max) 32 vs Gemini 3.8 Flash 50 |
-| `06-leaderboard.png` | leaderboard (A5) |
-| `07-insights.png` | insights (A5) |
+| `05-compare-l2.png` | eval-v1 game 3 level 2 (hazards): a human player 11 moves vs Kimi K3.1 (h2, max) 32 vs Gemini 3.8 Flash 50 |
+| `06-leaderboard.png` | leaderboard |
+| `07-insights.png` | insights |
 | `08-live.png` | live wall (runs in progress) |
 | `09-kiosk.png` | `/kiosk`: the booth screen |
 | `10-challenge-lobby.png` | `/challenge` lobby: game pick, recorded results, name, QR, visitor board |

@@ -1,4 +1,4 @@
-# A3-06 smoke sweep: cheap models x 3 dev games on the shared server (+ baselines already in baselines-dev).
+# Smoke sweep: cheap models x 3 dev games on the shared server (+ baselines already in baselines-dev).
 #   python -m arena run arena/sweeps/smoke.yaml --api shared --dry-run
 name: smoke
 collection: dev

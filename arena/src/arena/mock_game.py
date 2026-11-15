@@ -1,6 +1,6 @@
-"""Tiny stand-in game so the harness can be built before A1's engine lands.
+"""Tiny stand-in game so the harness can be built before the engine lands.
 
-Speaks the same shapes as PLAN.md §4: 64x64 hex frames, RESET + ACTION1..4,
+Speaks the same shapes as the real engine: 64x64 hex frames, RESET + ACTION1..4,
 Truth dict, describe() with an optimal path per level. Walls + goal + budget bar.
 Delete once engine.make_game is available (the HTTP client never uses this).
 """

@@ -1,4 +1,4 @@
-// Mirrors PLAN.md §4 (contracts/ wins once A2 writes it). Fields we do not
+// Mirrors contracts/ (contracts/ wins on any difference). Fields we do not
 // rely on are typed loosely so additive contract changes never break the build.
 
 /** 64 strings of 64 hex chars, row 0 at top. */
@@ -73,7 +73,6 @@ export interface LevelDescribe {
   w?: number
   h?: number
   layout?: string
-  /** requested from A1 */
   start?: [number, number]
   goal?: [number, number]
   optimal_positions?: Array<[number, number]>

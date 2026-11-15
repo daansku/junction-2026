@@ -1,11 +1,11 @@
-"""A1-20 auxiliary verifiable tasks (single turn, auto-graded by the engine).
+"""Auxiliary verifiable tasks (single turn, auto-graded by the engine).
 
   next_frame   predict the next frame after an action (given one earlier transition as context)
   rule_effect  which plain-language effect explains a before/after pair (multiple choice)
   min_moves    minimum number of moves to finish a level shown as a text grid with a legend
   full_plan    write the whole action plan for a level from a text grid; replayed in the engine
 
-Perception tasks use A3's RLE frame text (pixels only, no rule names). Planning tasks describe
+Perception tasks use the arena's RLE frame text (pixels only, no rule names). Planning tasks describe
 the mechanics in plain words: they train planning, not discovery. Sources: train-v1 only.
 """
 from __future__ import annotations
@@ -364,7 +364,7 @@ def parse_plan(ans: str) -> list[Action] | None:
 
 
 def score_plan(lv: Level, actions: list[Action]) -> float:
-    """PLAN-v1 §4.6 on one level: min(1, optimal / actions used) if the plan finishes the level
+    """Efficiency on one level: min(1, optimal / actions used) if the plan finishes the level
     within the move budget, else 0. Actions after the winning move are counted (no padding)."""
     if not actions or len(actions) > lv.move_budget:
         return 0.0
@@ -387,7 +387,7 @@ def grade_full_plan(s: dict, ans: str) -> float:
     return score_plan(Level.from_dict(s["meta"]["level_data"]), acts)
 
 
-# ---- perception grounding (A3: SFT v1 bumps walls ~65% of moves, misreads the level) ----------
+# ---- perception grounding (SFT v1 bumps walls ~65% of moves, misreads the level) ----------
 def _context(rng):
     """Mid-level state plus the transition that led to it (so 'you' = what moved)."""
     st = sample_state(rng, min_prefix=1, max_prefix=20)

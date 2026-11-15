@@ -1,5 +1,5 @@
-# A3-11: fine-tuned Qwen3.5-9B (LoRA on train-v1, ours) vs the untuned base through the same harness h1, all 30
-# frozen eval-v1 games, 1 attempt each. The base runs on Featherless (shares the account with main-deepseek).
+# Fine-tuned Qwen3.5-9B (LoRA on train-v1, ours) vs the untuned base through the same harness h1, all 30
+# frozen eval-v1 games, 1 attempt each.
 name: finetune-eval
 collection: eval-v1
 games: all

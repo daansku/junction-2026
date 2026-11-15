@@ -1,7 +1,7 @@
 # Rule Proposal: Irreversible Deadlock Corridor (`deadlock_reset` / corner-trap push block)
 
-- **Origin:** A5 Research Digest
-- **Target:** A1 (`engine/src/engine/components/` + generator constraint)
+- **Origin:** research digest
+- **Target:** `engine/src/engine/components/` + generator constraint
 - **Tier:** Tier 2
 
 ## Visual Appearance (`64×64` frame)

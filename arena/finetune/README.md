@@ -1,4 +1,4 @@
-# Fine-tune pipeline (A3-09 / A3-11)
+# Fine-tune pipeline
 
 1. **Data** (CPU, ~2 s/game):
    `python -m arena dataset --collection train-v1 --recover 2 --out ~/junction-data/sft/train-v1.jsonl`

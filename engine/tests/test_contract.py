@@ -1,4 +1,4 @@
-"""Engine output must match contracts/engine_api.py (A2 owns it)."""
+"""Engine output must match contracts/engine_api.py."""
 import importlib.util
 import json
 import sys

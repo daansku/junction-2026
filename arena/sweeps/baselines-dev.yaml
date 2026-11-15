@@ -1,4 +1,4 @@
-# A3-06 (free part): reference baselines on all of dev through the shared server.
+# Reference baselines on all of dev through the shared server (no model calls).
 #   python -m arena run arena/sweeps/baselines-dev.yaml --api shared
 name: baselines-dev
 collection: dev

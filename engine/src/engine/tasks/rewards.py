@@ -1,10 +1,10 @@
-"""A1-22 reward functions: pure, deterministic `(sample, model_output) -> float in [0, 1]`.
+"""Reward functions: pure, deterministic `(sample, model_output) -> float in [0, 1]`.
 
 `sample` is the dict written by `python -m engine tasks` (Sample.to_dict()). The reply may
 contain reasoning of any length; only the text after its LAST 'ANSWER:' is graded (single-line
 answers: first line only, so trailing prose is ignored). No 'ANSWER:' or an answer over 6,000
 characters -> 0.
-Partial credit exists only where PLAN-v1 §4.6 defines it (plan efficiency); everything else is
+Partial credit exists only for plan efficiency; everything else is
 exact match, so a policy cannot farm reward with empty, repeated or hedged answers.
 """
 from __future__ import annotations
@@ -40,7 +40,7 @@ def reward(sample: dict, output: str) -> float:
 
 
 def episode_score(level: Level | dict, actions: list[str | Action]) -> float:
-    """Single-level multi-turn episode, PLAN-v1 §4.6: min(1, optimal / actions) if the level is
+    """Single-level multi-turn episode: min(1, optimal / actions) if the level is
     finished, else 0. RESET restarts the level and counts as an action; after a loss only RESET
     helps. Actions beyond the move budget on one attempt end that attempt (lost)."""
     lv = Level.from_dict(level) if isinstance(level, dict) else level

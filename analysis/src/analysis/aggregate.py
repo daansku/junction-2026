@@ -1,4 +1,4 @@
-"""Aggregate finished run traces into leaderboard.json (h1) and leaderboard_h2.json (h2) (PLAN.md §3.1)."""
+"""Aggregate finished run traces into leaderboard.json (h1) and leaderboard_h2.json (h2)."""
 from __future__ import annotations
 
 import random
@@ -59,7 +59,7 @@ def _group_key(meta: dict[str, Any]) -> tuple[str, str, str | None, str, str | N
 
 
 def _is_gemini_underreported(pid: str, provider: str | None, meta: dict[str, Any]) -> bool:
-    """Detect Gemini h1 traces recorded before A3's 2026-11-14T15:15Z billed_tokens thinking fix."""
+    """Detect Gemini h1 traces recorded before the billed_tokens thinking fix (2026-11-14T15:15Z)."""
     is_gem = "gemini" in pid.lower() or (provider or "").lower() == "google"
     if not is_gem:
         return False
@@ -78,7 +78,7 @@ def aggregate_runs(
 ) -> dict[str, Any]:
     """Compute leaderboard.json structure strictly from run traces.
 
-    By default (`harness_filter='h1'`), excludes `h2` runs so h1 and h2 boards are never mixed (PLAN.md §1.1 & §3.1).
+    By default (`harness_filter='h1'`), excludes `h2` runs so h1 and h2 boards are never mixed.
     """
     models_registry = models_registry if models_registry is not None else load_models()
     game_descs = game_descs if game_descs is not None else load_collections()
@@ -267,8 +267,8 @@ def aggregate_runs(
             notes.append("single-attempt (k=1)")
         cost_note: str | None = None
         if any_gemini_underreported:
-            cost_note = "Cost ~3.6x underreported (thinking tokens excluded in Gemini compat pre-17:15)"
-            notes.append("cost underreported (~3.6x: thinking tokens excluded pre-17:15)")
+            cost_note = "Cost ~3.6x underreported (thinking tokens excluded in Gemini compat before the metering fix)"
+            notes.append("cost underreported (~3.6x: thinking tokens excluded before the metering fix)")
 
         subset_note = " · ".join(notes) if notes else None
 
@@ -333,7 +333,7 @@ def aggregate_runs(
         if len(cols_per_player[(row["player_id"], row["effort"])]) > 1:
             row["display_name"] = f"{row['display_name']} [{row['collection']}]"
 
-    # Completion first (human decision Sat ~23:45, DECISIONS.md): games won, levels solved, then efficiency (score).
+    # Completion first: games won, levels solved, then efficiency (score).
     pre_rows.sort(
         key=lambda r: (
             -(r.get("game_win_rate") or 0),
@@ -359,7 +359,7 @@ def aggregate_h2_runs(
     harness: str = "h2",
 ) -> dict[str, Any]:
     """Build a dedicated lab-style leaderboard for one harness (`h2` -> leaderboard_h2.json, `h2b` ->
-    leaderboard_h2b.json). Originally: the dedicated h2 Lab-Standard Leaderboard (`leaderboard_h2.json`, PLAN.md §3.1).
+    leaderboard_h2b.json). Originally: the dedicated h2 Lab-Standard Leaderboard (`leaderboard_h2.json`).
 
     Never mixes h1 model runs into h2. Includes Optimal and Human reference rows matched to the
     exact game subset evaluated under h2 per collection (falling back to collection-wide Human/Optimal

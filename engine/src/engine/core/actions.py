@@ -1,4 +1,4 @@
-"""ARC-AGI-3 compatible action set (PLAN.md §4.2)."""
+"""ARC-AGI-3 compatible action set."""
 from __future__ import annotations
 
 from enum import Enum

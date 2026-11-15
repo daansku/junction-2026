@@ -1,5 +1,5 @@
-# A3-11 base row, games 9-30: same model, harness and budgets as finetune-eval-base.yaml (same run_keys: the sweep
-# name is not part of the key). Split off at 17:35 to run 16 more games in parallel on GPU 1; the first runner drains
+# Base row, games 9-30: same model, harness and budgets as finetune-eval-base.yaml (same run_keys: the sweep
+# name is not part of the key). Split off to run 16 more games in parallel on a second GPU; the first runner drains
 # (STOP-finetune-eval-base) after its 8 in-flight games (s900000-s900007).
 name: finetune-eval-base-b
 collection: eval-v1

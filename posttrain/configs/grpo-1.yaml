@@ -1,4 +1,4 @@
-# grpo-1 (A3-25): GRPO from the best SFT v2 LoRA on A1's verifiable tasks. Keys = posttrain.grpo DEFAULTS;
+# grpo-1: GRPO from the best SFT v2 LoRA on the engine's verifiable tasks. Keys = posttrain.grpo DEFAULTS;
 # CLI flags override. Batch on 2x A100: 8 completions/GPU x 4 accum x 2 GPUs = 64 completions = 8 prompts x G=8.
 base: Qwen/Qwen3.5-9B
 steps: 200                  # ~3-4 h on 2x A100 80 GB (see README); bench every save

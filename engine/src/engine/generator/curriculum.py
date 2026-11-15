@@ -1,4 +1,4 @@
-"""Curriculum: which rules each level uses (PLAN.md §5).
+"""Curriculum: which rules each level uses.
 
 Level 1 is movement + goal only. Each later level introduces exactly one new rule, alone or
 with up to two already-seen rules. When the rule pool runs out, levels recombine seen rules

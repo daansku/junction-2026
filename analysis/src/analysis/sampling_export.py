@@ -1,14 +1,14 @@
-"""Export structured failure decision points & oversampling weights for A1/A3 training data v2 (PLAN.md §3.3, A5-21).
+"""Export structured failure decision points & oversampling weights for training data v2.
 
 Produces `decision_points.json` containing:
 1. Per-failure decision-point records (`decision_type`, `game_id`, `collection`, `level`, `step`, `rule`, `active_rules`)
-   across the four PLAN.md §3.3 archetypes:
+   across the four failure archetypes:
    - `premature_hypothesis`
    - `zero_change_wall_bump`
    - `late_reset`
    - `missed_new_rule`
 2. `oversample_weights`: normalized `train-v1`-safe sampling weights over `by_decision_type`, `by_train_safe_rule`,
-   and A1's `engine.tasks` / A3's `posttrain` trajectory types (strictly excluding Tier-3 eval-only mechanics).
+   and the `engine.tasks` / `posttrain` trajectory types (strictly excluding Tier-3 eval-only mechanics).
 """
 from __future__ import annotations
 
@@ -221,7 +221,7 @@ def build_decision_points_export(
         raw_rule_scores[r] = fail_rate * (1.0 + 0.25 * fails)
     by_rule = _normalize_weights(raw_rule_scores, floor=0.025)
 
-    # Map decision-point weights directly onto A1's 4 auxiliary tasks and A3's 3 trajectory modes
+    # Map decision-point weights directly onto the 4 auxiliary tasks and the 3 trajectory modes
     aux_task_weights = _normalize_weights({
         "next_frame": by_type["zero_change_wall_bump"] + 0.5 * by_type["premature_hypothesis"],
         "rule_effect": by_type["missed_new_rule"] + by_type["premature_hypothesis"],

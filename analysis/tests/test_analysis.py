@@ -374,7 +374,7 @@ class AnalysisPipelineTests(unittest.TestCase):
         self.assertEqual(exp_llm["explanations"][0]["judge_model"], "mock-judge-v1")
         self.assertEqual(exp_llm["explanations"][0]["evidence_quote"], "Stepped on the second ring and HUD pips cleared.")
 
-        # A3 arena.judge.complete wrapper (`make_arena_judge`) parses fenced JSON replies cleanly
+        # arena.judge.complete wrapper (`make_arena_judge`) parses fenced JSON replies cleanly
         from analysis.explain import make_arena_judge
 
         def _fake_arena_complete(prompt: str, system: str = "", max_tokens: int = 350) -> dict:
@@ -436,7 +436,7 @@ class AnalysisPipelineTests(unittest.TestCase):
         self.assertEqual([r["meta"]["run_id"] for r in cleaned], ["r-h2-ok", "r-gem-h1"])
         self.assertEqual(r_h2_ok["meta"]["harness_version"], "h2")
 
-        # 2) Strict h1 vs h2 board separation + Gemini pre-17:15 cost underreport flag
+        # 2) Strict h1 vs h2 board separation + Gemini pre-fix cost underreport flag
         models_reg = load_models(REPO_ROOT)
         lb_h1 = aggregate_runs(cleaned, models_registry=models_reg, game_descs={})
         lb_h2 = aggregate_h2_runs(cleaned, models_registry=models_reg, game_descs={})
@@ -610,7 +610,7 @@ class AnalysisPipelineTests(unittest.TestCase):
         from analysis.cli import main as cli_main
         import test_finished_only
 
-        # 0) Ensure A1's finished-only tests also run under `unittest discover`
+        # 0) Ensure the finished-only tests also run under `unittest discover`
         test_finished_only.test_is_finished_rules()
         test_finished_only.test_filter_drops_abandoned_attempts()
 

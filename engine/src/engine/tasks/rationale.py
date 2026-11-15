@@ -1,6 +1,6 @@
-"""A1-21 templated discovery rationales from engine truth.
+"""Templated discovery rationales from engine truth.
 
-A Narrator follows one playthrough and writes the NOTES / HYPOTHESIS fields of A3's harness
+A Narrator follows one playthrough and writes the NOTES / HYPOTHESIS fields of the arena harness
 reply, phrased as discovery. It only ever refers to things the player can see (colour index
 as shown in the frame, plus a shape word) and states an effect only after the player has seen
 it happen. It never uses rule names.
@@ -9,8 +9,8 @@ it happen. It never uses rule names.
     notes, hyp = nar.before(plan)           # before choosing the action at the current state
     game.step(action); nar.after(action, game)
 
-A3's arena/dataset.py calls these in place of its own `_notes`, so the prompt format
-(build_parts) stays A3's and train == inference.
+arena/dataset.py calls these in place of its own `_notes`, so the prompt format
+(build_parts) stays the arena's and train == inference.
 """
 from __future__ import annotations
 

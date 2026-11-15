@@ -57,7 +57,7 @@ after slow model turns (Haiku 9, Nemotron 11, DeepSeek 4 of 4 calls in 3-min run
 localhost: 0 resets (Nemotron 24 acts, DeepSeek 10). Do not add `expose` or `networks` to `game`: Docker refuses
 `expose` in a shared namespace, and an own network puts the proxy back in the path.
 
-Red team from the agent's seat with the allowlist on (`arena/redteam/attack.py`, `ATTACK=recon`, Sat 21:00,
+Red team from the agent's seat with the allowlist on (`arena/redteam/attack.py`, `ATTACK=recon`,
 committed `eval-v1` game 1): GitHub raw, PyPI, our web server (by name and by IP) unreachable; `api.anthropic.com`
 reachable; on localhost only `:8000` answers (`/healthz`, `/mcp`), no game files visible. Committed tasks: oracle
 1.000 (eval-v1 game 1, 6/6, 86 actions; eval-v2 game 1, 8/8, 187), stop-early 0.125 (eval-v2, 1/8).
@@ -79,7 +79,7 @@ harbor run -p harbor/eval-v2 -a opencode -m <selector> --ak "opencode_config=$CF
 - Smoke test of every model (3-min cap, checks the model connects and plays): `bash arena/harbor_models_smoke.sh <out>`,
   summary table from `python3 arena/harbor_smoke_report.py <out>`. Capped-run rewards are not results.
 
-Smoke results (A4, Sat 14.11 20:30-21:10, eval-v2 game 1, 3-min agent cap, Docker 29.8.1 + Harbor 0.26.0). "Works" =
+Smoke results (eval-v2 game 1, 3-min agent cap, Docker 29.8.1 + Harbor 0.26.0). "Works" =
 the model connects and its game actions count. Every model below plays through Harbor + OpenCode:
 
 | Selector | Actions in 3 min | Notes |
@@ -93,11 +93,10 @@ the model connects and its game actions count. Every model below plays through H
 | `featherless/deepseek-ai/DeepSeek-V3.2` | 10 | text only; allowlist + localhost: 0 resets |
 | `featherless/zai-org/GLM-5.3` | 1 | very long turns; with `output` 8192 it stopped at the output limit (`length`), now 32768 |
 
-Not tested: `anthropic/claude-sonnet-5-5` and `claude-opus-5-5` (Anthropic key nearly empty); same provider path as Haiku.
+Not tested: `anthropic/claude-sonnet-5-5` and `claude-opus-5-5` (not run); same provider path as Haiku.
 
 ### Full-length runs (judges' protocol): `harbor/run-logs/`
-`make judge MODEL=<selector> K=3` on eval-v2 game 1, 60-min cap per attempt, attempts in parallel (Sun 15.11
-03:18-04:55, Docker 29.8.1, Harbor 0.26.0, OpenCode 1.19.5). Per-attempt tables, logs and trajectories:
+`make judge MODEL=<selector> K=3` on eval-v2 game 1, 60-min cap per attempt, attempts in parallel (Docker 29.8.1, Harbor 0.26.0, OpenCode 1.19.5). Per-attempt tables, logs and trajectories:
 [harbor/run-logs/README.md](../harbor/run-logs/README.md).
 
 **Known agent-harness bug: OpenCode + Gemini 4 Argon.** Gemini 4 sometimes answers with thinking only (no text, no
@@ -111,14 +110,13 @@ did not hit it in 60-min runs. Not an environment bug: the game, MCP tools and g
 the task can avoid it. No OpenCode release fixes it as of 1.19.5 (PR anomalyco/opencode#40142, closed unmerged,
 covered only the `length` case).
 
-## Verified (2026-11-14, on A1's `dev` collection)
+## Verified (on the `dev` collection)
 - Unit tests: optimal = 1.0, nothing = 0, stop one move short = 0, one wasted RESET = exact partial credit,
   invalid input and post-win actions not counted, only two MCP tools, no `/score` route, evidence file tracks score.
 - `harbor lint` (Harbor 0.26.0): clean. Harbor's `TaskConfig` parses the exported `task.toml`.
 - Native run of an exported sidecar over real MCP streamable HTTP (token-endpoint version): the oracle client from
   `solve.sh` replayed 119 actions -> reward 1.0, 6/6 levels.
-- **Not yet run:** the Docker build and a full `harbor run` (Docker Desktop was not running on this machine;
-  Harbor CLI now installed on this machine).
+- Docker build and full `harbor run` (oracle, nop, stop-early, OpenCode agents): see `docs/JUDGING.md`.
 
 ## Oracle needs no downloads
 `solution/solve.sh` embeds a ~60-line standard-library MCP client (`arena/harbor/mcp_mini.py`), so the reference
@@ -127,7 +125,7 @@ run works offline and behind TLS-inspecting proxies.
 ## Local machines with antivirus TLS scanning
 Norton "Web/Mail Shield" (and similar) re-signs HTTPS with its own root, so downloads inside task containers fail
 (`CERTIFICATE_VERIFY_FAILED`). `--extra-ca <pem>` bakes that root into the task containers for **local runs only**;
-never hand such an export to judges. On ignacio's machine Norton also corrupts chunked downloads even when the
+never hand such an export to judges. On one test machine Norton also corrupts chunked downloads even when the
 certificate is trusted (`InvalidChunkLength` from pip, on the host too). Workaround that needs no settings change:
 build the sidecar's Linux dependencies on the host with uv (which copes) and pass them in:
 

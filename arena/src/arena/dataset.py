@@ -1,4 +1,4 @@
-"""A3-09 fine-tune dataset: chat-format SFT examples in exactly the harness h1 prompt format.
+"""Fine-tune dataset: chat-format SFT examples in exactly the harness h1 prompt format.
 
 Each example = one harness turn: (system, user prompt built by agent_loop.build_parts, assistant JSON).
 Trajectories:
@@ -9,7 +9,7 @@ Trajectories:
              then the target is the BFS replan from wherever that left us; GAME_OVER -> RESET.
 So the model learns to act well from imperfect states, not just to replay perfect runs.
 
-Only train-split games may go in here (A1's train-v1, seeds disjoint from eval). The script refuses
+Only train-split games may go in here (train-v1, seeds disjoint from eval). The script refuses
 collections whose name contains "eval".
 
     python -m arena dataset --collection train-v1 --out ~/junction-data/sft/train-v1.jsonl
@@ -108,7 +108,7 @@ def game_examples(game, rng: random.Random, kind: str, p_detour: float = 0.15, g
         desc = None
     notes, history, out = "", [], []
     nar = None
-    if hasattr(game, "skin"):  # real engine game (MockGame has no skin/rules): A1-21 discovery rationales
+    if hasattr(game, "skin"):  # real engine game (MockGame has no skin/rules): discovery rationales
         from engine.tasks.rationale import Narrator  # visible colour/shape, effects only after seen, no rule names
         nar = Narrator(game)
     plan: list[str] = []

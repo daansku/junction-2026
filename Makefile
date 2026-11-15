@@ -51,7 +51,7 @@ test:
 smoke:
 	bash scripts/smoke.sh
 
-# Reasoning-benchmark run (PLAN.md 3.2). GPU box only: needs `pip install -e ./bench[gpu]`. See bench/PROTOCOL.md.
+# Reasoning-benchmark run. GPU box only: needs `pip install -e ./bench[gpu]`. See bench/PROTOCOL.md.
 #   make bench MODEL=Qwen/Qwen3.5-9B OUT=data/derived/bench/base [LORA=<adapter dir>] [ARGS=--dev-slice]
 #   make bench API=http://127.0.0.1:8001/v1 SERVED=arena-base TOKENIZER=Qwen/Qwen3.5-9B OUT=data/derived/bench/base
 bench:

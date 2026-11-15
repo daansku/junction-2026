@@ -1,7 +1,7 @@
 [project]
 name = "posttrain"
 version = "0.1.0"
-description = "Junction 2026 post-training (A3): SFT v2 ctrl/games/mix and GRPO on engine-verified tasks"
+description = "Junction 2026 post-training: SFT v2 ctrl/games/mix and GRPO on engine-verified tasks"
 requires-python = ">=3.11"
 dependencies = []
 

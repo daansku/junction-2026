@@ -8,7 +8,7 @@ Writes web/public/challenge/<game_id>.json, which /challenge loads for the end s
 
 Per level, per run: solved (did the level counter advance), actions spent on that level
 (every action counts, RESET included, same as the arena score). Score per level is
-min(1, optimal / actions) when solved, else 0 (PLAN-v1 §4.6). A run's challenge score is the
+min(1, optimal / actions) when solved, else 0. A run's challenge score is the
 mean over the first N levels. Runs still in progress that have not finished the N levels yet
 are skipped, so an unfinished attempt never counts as a failure. Challenge-mode visitor plays
 (player.mode == "challenge") are skipped so the demo never feeds on itself.

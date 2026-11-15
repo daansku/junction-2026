@@ -24,7 +24,7 @@ The arena loads `.env` automatically (`python -m arena …`).
 | `VERDA_INFERENCE_KEY` | Verda managed inference API, `https://inference.verda.com/v1` (URL fixed in `arena/models.yaml`) | `verda-kimi-k3-1-pro` (Kimi K3.1 Pro) |
 | `VERDA_BASE_URL` | our own Verda deployment, if we make one (URL must end in `/v1`); uses `VERDA_INFERENCE_KEY` | `verda-small` (not set up) |
 | `NVIDIA_API_KEY` | build.nvidia.com API | none at the moment |
-| `MODAL_BASE_URL` | Modal endpoint serving a model, **with `/v1`**, e.g. `https://gnudgnaoh-work--ep-junction26-server.eu-west.modal.direct/v1` | `modal-gemma-4-e4b` (Gemma 4 E4B, served as `junction26`) |
+| `MODAL_BASE_URL` | Modal endpoint serving a model, **with `/v1`**, e.g. `https://<workspace>--<app>.modal.run/v1` | `modal-gemma-4-e4b` (Gemma 4 E4B, served as `junction26`) |
 | `MODAL_API_KEY` | Modal **proxy auth token**, written as `wk-<id>.ws-<secret>` (both parts joined by a dot). Create it in the Modal dashboard → Settings → Proxy Auth Tokens. The endpoint answers `401 proxy auth required` without it. | `modal-gemma-4-e4b` |
 | `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET` | Modal **CLI/API** token, used to deploy and fine-tune (`modal deploy`, `modal run`). Not the endpoint key. | fine-tune scripts |
 | `OPENAI_BASE_URL`, `OPENAI_API_KEY` | any OpenAI-compatible endpoint (optional) | none at the moment |

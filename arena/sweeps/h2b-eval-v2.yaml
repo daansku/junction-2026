@@ -1,7 +1,7 @@
-# PLAN phase 3 A3-35, re-launched as h2b (human decision Sat 22:40: same sweeps, much less wall time, no runs cut).
+# h2b on the frozen 4-game eval-v2 subset (= h2-subset-v2).
 # h2b = h2 with up to 5 actions per model call (every action counted and scored as in h2) + smaller context
-# (last 2 frames, last 3 reasoning blocks). Separate board from h2. Frozen 4-game eval-v2 subset (= h2-subset-v2).
-# Every run starts at once. Highest supported effort, no cost cap (Gemini credits unlimited), no wall cut.
+# (last 2 frames, last 3 reasoning blocks). Separate board from h2.
+# Every run starts at once. Highest supported effort, no cost cap, no wall cut.
 name: h2b-eval-v2
 harness: h2b
 collection: eval-v2

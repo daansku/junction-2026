@@ -1,6 +1,6 @@
 // Data for the /challenge demo: precomputed per-level stats (web/scripts/challenge_stats.py) and the
-// visitor board. The board uses A2's endpoints when the server has them (PLAN.md A2-22:
-// POST /challenge/score, GET /challenge/board) and otherwise falls back to this browser only,
+// visitor board. The board uses the server's endpoints when it has them
+// (POST /challenge/score, GET /challenge/board) and otherwise falls back to this browser only,
 // labelled as such. Visitor plays never go to the research board: sessions carry player.mode
 // "challenge".
 import { API } from '@/lib/config'
@@ -75,7 +75,7 @@ export function cleanName(raw: string): string {
     .slice(0, NAME_MAX)
 }
 
-/** One board row. Server rows (A2-22) are computed from the recorded run, not sent by the client. */
+/** One board row. Server rows are computed from the recorded run, not sent by the client. */
 export interface BoardEntry {
   name: string
   levels_completed: number

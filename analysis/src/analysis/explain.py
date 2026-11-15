@@ -1,6 +1,6 @@
 """Truth-Diffed Reasoning Forensics & Failure Explanation Builder (`data/derived/explanations.json`).
 
-Implements COORDINATION.md §2 & A5-24 (Truth-Diffed Reasoning Forensics):
+Implements Truth-Diffed Reasoning Forensics:
 - Slices ±2-step inflection windows per failed level (initial path divergence, first rule event,
   `no_effect` streak onset, hypothesis shifts, adverse truth events, and RESET/terminal steps),
   pairing BOTH `step.reasoning` (`<think>` CoT / scratchpad notes) AND `step.hypothesis` with engine `truth`.

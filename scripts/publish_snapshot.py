@@ -1,8 +1,8 @@
-"""Build the `data/published/` snapshot for the public read-only demo (A2-23; snapshots at H2 23:30 and 07:00).
+"""Build the `data/published/` snapshot for the public read-only demo.
 
     python scripts/publish_snapshot.py --runs <DATA_DIR>/runs --derived <derived dir> [--out data/published] [--dry-run]
 
-- Runs: only the runs that count, chosen by A5's own filter (`analysis.loader.load_runs(clean=True)`):
+- Runs: only the runs that count, chosen by the analysis filter (`analysis.loader.load_runs(clean=True)`):
   no practice/test humans, no smoke runs, no infra aborts, no take-over or mid-game starts, no superseded ids.
   Copied as `runs/<run_id>/{meta.json,steps.jsonl}`.
 - Derived: every `*.json` in the derived dir (leaderboard, rules, insights, explanations, bench summaries...),
@@ -31,7 +31,7 @@ def main(argv=None) -> int:
     a = p.parse_args(argv)
 
     sys.path.insert(0, str(ROOT / "analysis" / "src"))
-    from analysis.loader import load_runs  # A5's filter is the single definition of "runs that count"
+    from analysis.loader import load_runs  # the analysis filter is the single definition of "runs that count"
 
     runs = load_runs(a.runs, include_in_progress=False, clean=True, repo_root=ROOT)
     ids = sorted({r["meta"]["run_id"] for r in runs})

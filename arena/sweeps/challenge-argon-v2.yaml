@@ -1,7 +1,7 @@
 # Gemini 4 Argon on the /challenge eval-v2 games that had no model run: game B (s910019) and game C (s910021),
-# both finished by a person. Human approved Sat ~19:10 ("Yes, run Argon"), $8 max. Gives the challenge end screen
-# AI replays on levels 1-3. Game A (s910000) is already in main-subset-argon-v2. Same h1 harness, medium, budgets
-# as main-subset-argon-v2 ($4 hard cap per run; measured ~$0.01-0.017/action with the fixed Gemini meter).
+# both finished by a person. Gives the challenge end screen AI replays on levels 1-3. Game A (s910000) is already in
+# main-subset-argon-v2. Same h1 harness, medium effort and budgets as main-subset-argon-v2 ($4 hard cap per run;
+# measured ~$0.01-0.017/action).
 name: challenge-argon-v2
 collection: eval-v2
 games: [gridworld-s910019-d4-l8-50cff9f4, gridworld-s910021-d4-l8-404033da]

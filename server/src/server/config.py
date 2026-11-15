@@ -27,7 +27,7 @@ FIXTURES_DIR = REPO_ROOT / "data" / "fixtures"
 COLLECTIONS_DIR = REPO_ROOT / "data" / "collections"
 WEB_DIST = Path(os.environ.get("WEB_DIST", str(REPO_ROOT / "web" / "dist")))
 
-# auto: use A1's `engine` package if importable, else the fake engine. fake | engine force one.
+# auto: use the `engine` package if importable, else the fake engine. fake | engine force one.
 ENGINE = os.environ.get("SERVER_ENGINE", "auto")
 PUBLISHED_MODE = _bool("PUBLISHED_MODE")
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")

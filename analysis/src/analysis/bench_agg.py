@@ -1,12 +1,12 @@
-"""Post-training & reasoning-benchmark aggregation (`data/derived/bench_summary.json`, PLAN.md §3.2 & §3.3, A5-20).
+"""Post-training & reasoning-benchmark aggregation (`data/derived/bench_summary.json`).
 
-Implements `bench/PROTOCOL.md` v3 + `FT_BENCHMARKS.md` + `DECISIONS.md` (Sat 20:50 & 21:15):
+Implements `bench/PROTOCOL.md` v3 + `FT_BENCHMARKS.md`:
 - Reads `<bench_dir>/<run>/{summary.json,items.jsonl}` and automatically prefers canonical PROTOCOL v3
   rescored files (`items_v3.jsonl`, `summary_v3.json` from `python -m posttrain.rescore_answer`, which
   accepts `"ANSWER: X"` on `[invalid]` lm-eval extractions while changing 0 items on `base`), keeping
   official lm-eval means alongside v3 means (`official_mean`, `rescored_count`) for full transparency.
 - Supports both Line 1 (no-thinking SFT v2 `ctrl`/`games`/`mix` + `rl-grpo-*`, documented negative result
-  showing CoT suppression drops Qwen3.5-9B from ~0.76 to ~0.44) and Line 2 (`DECISIONS.md` Sat 21:15
+  showing CoT suppression drops Qwen3.5-9B from ~0.76 to ~0.44) and Line 2 (
   Thinking-On GRPO from base: `think-games` vs `think-ctrl` on shared dev-slice items).
 - Computes paired item-level bootstrap 95% CIs (`10,000` resamples, seed `20261114`) over exact shared item IDs,
   merges in-domain Qwen3.5-9B game evaluation rows, and evaluates the pre-registered Honesty Claim Rule.
@@ -518,7 +518,7 @@ def _evaluate_honesty_rule(
     comparisons_vs_base: list[dict[str, Any]],
     in_domain_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Evaluate PLAN.md §3.3 + bench/PROTOCOL.md §6 + FT_BENCHMARKS.md + DECISIONS.md Sat 21:15 honesty rule."""
+    """Evaluate the bench/PROTOCOL.md §6 + FT_BENCHMARKS.md honesty rule."""
     non_control_ctrl_comps = [
         c for c in comparisons_vs_ctrl
         if c["cand"] not in ("base", "sft-v1", "ctrl", "think-ctrl")
@@ -611,7 +611,7 @@ def _evaluate_honesty_rule(
                 f"{best_winner['mean_delta']:+.3f} across `{best_winner['target_tier']}` "
                 f"({best_winner['sig_positive']} benchmarks with 95% CI > 0; negative control & guard passed)."
             ),
-            "detail": "Satisfies the pre-registered PLAN.md §3.3 / bench/PROTOCOL.md v3 §6 claim rule.",
+            "detail": "Satisfies the pre-registered bench/PROTOCOL.md v3 §6 claim rule.",
         }
 
     return {
@@ -620,7 +620,7 @@ def _evaluate_honesty_rule(
         "winning_candidate": None,
         "headline": "Honesty rule: outside-benchmark gain over matched control did not clear the 95% CI threshold.",
         "detail": (
-            "Per PLAN.md §3.3 & bench/PROTOCOL.md v3, no trained candidate beat its matched control (`think-ctrl` / `ctrl`) "
+            "Per bench/PROTOCOL.md v3, no trained candidate beat its matched control (`think-ctrl` / `ctrl`) "
             "on >=2 primary reasoning benchmarks with 95% CIs excluding zero. Reporting exact PROTOCOL v3 & official deltas plainly."
         ),
     }

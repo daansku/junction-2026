@@ -1,4 +1,4 @@
-// "Can you beat the AI?" kiosk demo (PLAN.md §3.4, A4-20/A4-21). No paid model calls: the AI side is
+// "Can you beat the AI?" kiosk demo. No paid model calls: the AI side is
 // recorded runs (ghost slices from /games/{id}/ghosts) and precomputed per-level stats.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useQueries, useQuery } from '@tanstack/react-query'
@@ -50,7 +50,7 @@ const KEYMAP: Record<string, ActionName> = {
 
 /** Same input guard as Play: presses during a pending move are dropped, not queued. */
 const MOVE_COOLDOWN_MS = 120
-/** No input for this long: end any run and go back to the attract loop (PLAN.md §3.4). */
+/** No input for this long: end any run and go back to the attract loop. */
 const IDLE_MS = 60_000
 const LOOP_FPS = 6
 
@@ -262,7 +262,7 @@ export function ChallengePage({ kiosk = false }: { kiosk?: boolean }) {
     setError(null)
     endSession('switched_game')
     try {
-      // both tags: A2 suggested `purpose`, A5 was asked for `mode`; analysis drops either
+      // both tags (`purpose` and `mode`); analysis drops either
       const player = { kind: 'human', name: name || 'visitor', mode: 'challenge', purpose: 'challenge' } as Player
       const s = await startSessionWithTakeover({ gameId, player, startLevel: from > 1 ? from : undefined })
       sessionRef.current = { id: s.session_id, runId: s.run_id }

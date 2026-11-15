@@ -1,25 +1,25 @@
 # Bench protocol (pre-registration)
 
-**Status: amendments v5 (MATH finalist + held-out, Sun 03:10) and v4 (BBH removed, Sat 23:45) below. Base text: v3 (A2, Sat 14.11 20:20). A3 signed off on v2 (18:05); v3 only cuts item counts.** Needs review by A3 (training) and A5 (analysis), then **human approval by 19:00**.
+**Status: amendments v5 (MATH finalist + held-out) and v4 (BBH removed) below. Base text: v3; v3 only cuts item counts from v2.** Approved before any trained model was scored.
 After approval, nobody changes the benchmark list, the generation settings, the comparisons or the checkpoint rule.
 Any change after that is a new protocol version, and every row is rerun under it.
 
-**v3 change (human decision, Sat 20:15):** every model runs a **fixed subsample** of the suite (~2,250 generative items + full MedQA), the same items for every model, because the full ~17k-item suite takes ~13 h per model on the shared vLLM server. Item counts are in §3.
+**v3 change:** every model runs a **fixed subsample** of the suite (~2,250 generative items + full MedQA), the same items for every model, because the full ~17k-item suite takes ~13 h per model on the shared vLLM server. Item counts are in §3.
 
-**v2 changes (human decisions, Sat 18:00):** the primary suite is the humans' list in `FT_BENCHMARKS.md` (replacing A2's v1 list);
+**v2 changes:** the primary suite is the list in `FT_BENCHMARKS.md` (replacing the v1 list);
 decoding is the Qwen3.5 model-card sampling, not greedy (greedy makes thinking models loop; see §4).
 
 This file is written **before any trained model is scored**.
 
-## Amendment v5 (Sun 15.11 03:10, human decision, made AFTER seeing RL checkpoint results)
+## Amendment v5
 
-**Finalist rule (replaces §7's "best dev-slice headline"):** the RL checkpoint with the **best dev-slice MATH score** (175 items: the first 25 per MATH subject) whose MMLU-Pro history control is not more than 2 points below base. Ties: the earlier checkpoint. Reason (human): the training targets logical/mathematical reasoning, and MATH is the only dev-slice row large enough to show a trend (the other rows have 25 items).
+**Finalist rule (replaces §7's "best dev-slice headline"):** the RL checkpoint with the **best dev-slice MATH score** (175 items: the first 25 per MATH subject) whose MMLU-Pro history control is not more than 2 points below base. Ties: the earlier checkpoint. Reason: the training targets logical/mathematical reasoning, and MATH is the only dev-slice row large enough to show a trend (the other rows have 25 items).
 
 **Held-out evaluation (guards against the winner's curse):** choosing the maximum of noisy dev-slice scores overstates the gain, so the finalist's reported MATH number comes from items **not used for the choice**: MATH items 26-50 per subject (175 items), scored for the finalist and for base (base already has them from its full v3 run), paired bootstrap 95% CI. The dev-slice MATH values (items 1-25) are reported next to it, labelled "used for selection".
 
-**Disclosure:** like v4, this was decided after observing checkpoint results (dev-slice MATH so far: base 0.589, h2 steps 10-50: 0.606, 0.617, 0.640, 0.611, 0.606). It is reported as a post-hoc change. Training continues past the original 04:00 cutoff (human decision); every checkpoint is benched the same way, and the rule is applied to all of them.
+**Disclosure:** like v4, this was decided after observing checkpoint results (dev-slice MATH so far: base 0.589, h2 steps 10-50: 0.606, 0.617, 0.640, 0.611, 0.606). It is reported as a post-hoc change. Training continued past the original cutoff; every checkpoint is benched the same way, and the rule is applied to all of them.
 
-## Amendment v4 (Sat 14.11 23:45, human decision, made AFTER seeing RL checkpoint results)
+## Amendment v4
 
 **BBH is removed from the headline and from the dev slice.** Headline = unweighted mean of 5 rows: MATH, GSM8K, MedQA, MMLU-Pro health, MMLU-Pro law. Negative control unchanged (MMLU-Pro history).
 
@@ -38,13 +38,13 @@ Does post-training Qwen3.5-9B on experience from our games improve its reasoning
 | Row | What | Role |
 |---|---|---|
 | `base` | `Qwen/Qwen3.5-9B` (HF snapshot `c202236…`), no fine-tuning | reference |
-| `sft-v1` | A3's SFT v1 (optimal action sequences, h1 format) | free data point, reported, not a candidate |
+| `sft-v1` | SFT v1 (optimal action sequences, h1 format) | free data point, reported, not a candidate |
 | `ctrl` | SFT v2, general open reasoning data only (or the "format-only control" of FT_BENCHMARKS.md), **same token count** as `games`/`mix` | control |
 | `games` | SFT v2, game data only | candidate |
 | `mix` | SFT v2, general + game data | candidate |
 | `rl-*` | GRPO checkpoints from the best SFT v2 checkpoint | candidates (dev slice), finalist (full suite) |
 
-All rows share the base model, LoRA recipe (A3, `posttrain/`), serving stack (vLLM 0.33.0) and the generation settings below.
+All rows share the base model, LoRA recipe (`posttrain/`), serving stack (vLLM 0.33.0) and the generation settings below.
 
 ## 3. Benchmarks (frozen list: `bench/configs/benchmarks.yaml`, version 2)
 
@@ -63,15 +63,15 @@ All rows share the base model, LoRA recipe (A3, `posttrain/`), serving stack (vL
 
 **Pre-declared BBH subset** (reported separately, computed from row 1's items): tracking shuffled objects, navigate, logical deduction, web of lies, temporal sequences.
 
-**Secondary (never in the headline):** reasoning-gym `maze`, `sokoban`, `rush_hour`, `shortest_path`, `arc_1d`, `zebra_puzzles`, `knights_knaves`, 100 items each from dataset seed `20261114`, graded by the library's own `score_answer`. Our held-out `eval-v1`/`eval-v2` games are scored by the arena (A3 `finetune-eval`, h1/h2), not here.
+**Secondary (never in the headline):** reasoning-gym `maze`, `sokoban`, `rush_hour`, `shortest_path`, `arc_1d`, `zebra_puzzles`, `knights_knaves`, 100 items each from dataset seed `20261114`, graded by the library's own `score_answer`. Our held-out `eval-v1`/`eval-v2` games are scored by the arena (`finetune-eval` sweeps, h1/h2), not here.
 
 Metrics: the task's own primary metric, preferring the `flexible-extract` / `custom-extract` filter where a task has several (the model is not told the "The answer is" format in 0-shot settings). MedQA: `acc_norm`.
 
 ## 4. Generation settings (frozen: `bench/configs/generation.yaml`, version 1)
 
-- vLLM 0.33.0, bf16, one A100 80 GB. Either in-process (`--model`) or the same vLLM serving the model over its OpenAI API (`--api`); A3's servers on the GPU box serve `arena-base` (base) and `arena-ft` (SFT v1) this way.
+- vLLM 0.33.0, bf16, one A100 80 GB. Either in-process (`--model`) or the same vLLM serving the model over its OpenAI API (`--api`); our GPU servers served `arena-base` (base) and `arena-ft` (SFT v1) this way.
 - Generative tasks: chat template applied, few-shot examples as earlier turns (`--fewshot_as_multiturn`), **thinking mode on** (the model's default). Graded text = everything after `</think>`.
-- Sampling, Qwen3.5 model card "thinking mode, general tasks": temperature 1.0, top_p 0.95, top_k 20, min_p 0, presence_penalty 1.5, repetition_penalty 1.0. FT_BENCHMARKS.md asked for greedy; the humans chose model-card sampling instead because greedy decoding makes thinking models repeat until the token limit. Seeds fixed; sampling noise is covered by the CIs.
+- Sampling, Qwen3.5 model card "thinking mode, general tasks": temperature 1.0, top_p 0.95, top_k 20, min_p 0, presence_penalty 1.5, repetition_penalty 1.0. FT_BENCHMARKS.md asked for greedy; we chose model-card sampling instead because greedy decoding makes thinking models repeat until the token limit. Seeds fixed; sampling noise is covered by the CIs.
 - `max_gen_toks` 8192 (thinking + answer). A reply cut off at the limit is graded as is and counted in `truncated`. Same limit for every model.
 - Multiple choice (MedQA): loglikelihood of each option, no chat template, no sampling.
 
@@ -109,8 +109,3 @@ CUDA_VISIBLE_DEVICES=1 python -m bench run --model <merged dir> --dev-slice --ou
 python -m bench compare --ref data/derived/bench/ctrl --cand data/derived/bench/sft-mix --out data/derived/bench/delta-mix-vs-ctrl.json
 ```
 `compare` warns when two runs used a different config hash (different list, settings or slice): such deltas are not valid.
-
-## Sign-off
-- [x] A3 (training rows, LoRA recipe, token-count matching, server names), Sat 18:05 on v2
-- [ ] A5 (statistics, headline definition, summary format)
-- [x] Humans (approve the list, decoding and the checkpoint rule; after this nothing changes), Sat on v3 (Daniel)

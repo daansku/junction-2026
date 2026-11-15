@@ -1,4 +1,4 @@
-// Game palette, 16 colours, index 0–15. Source of truth: contracts/palette.json (A2).
+// Game palette, 16 colours, index 0–15. Source of truth: contracts/palette.json.
 // Fallback is a copy of contracts/palette.json v1, used only if the file is missing.
 
 const FALLBACK: string[] = [

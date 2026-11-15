@@ -1,4 +1,4 @@
-"""Game clients. HttpClient talks to A2's server (PLAN.md §4.4); MockClient runs MockGame in-process.
+"""Game clients. HttpClient talks to the server; MockClient runs MockGame in-process.
 
 The harness only ever shows the model `frame` + `available_actions`. `truth()` is used by
 the runner to know when a game ended; it is never put in a prompt.

@@ -203,7 +203,7 @@ INFRA_REASONS = ("idle_timeout", "server_shutdown", "server_restart", "error", "
 
 
 def is_finished(outcome: str, kind: str, end_reason: str) -> bool:
-    """Only finished attempts count on the boards (human decision, Sat ~20:30): the game was won, a level
+    """Only finished attempts count on the boards: the game was won, a level
     ran out of moves (GAME_OVER), or a run budget ended it (BUDGET). Abandoned attempts (left the page,
     switched game, gave up, restarts) and runs still in progress are not results. Baselines (do-nothing,
     stop-early) end on purpose and are recorded as ABORTED, so an ABORTED baseline counts unless an
@@ -241,7 +241,7 @@ def filter_benchmark_runs(
             continue
         if bool(player.get("assisted")) or bool(meta.get("assisted")):
             continue
-        # Drop /challenge kiosk visitor plays so they never pollute human baselines or leaderboards (PLAN.md §3.4)
+        # Drop /challenge kiosk visitor plays so they never pollute human baselines or leaderboards
         p_mode = str(player.get("mode") or meta.get("mode") or "").strip().lower()
         p_purpose = str(player.get("purpose") or meta.get("purpose") or "").strip().lower()
         if p_mode == "challenge" or p_purpose == "challenge":
@@ -259,7 +259,7 @@ def filter_benchmark_runs(
         raw_harness = str(meta.get("harness_version") or player.get("harness_version") or "").strip()
         if raw_harness and not meta.get("harness_version"):
             meta["harness_version"] = raw_harness
-        # Drop early h2 runs cut off by the 3M cached-context token bug before A3's 17:35 (15:35Z) fix
+        # Drop early h2 runs cut off by the 3M cached-context token bug before its fix (2026-11-14T15:35Z)
         started_at = str(meta.get("started_at") or "")
         if raw_harness == "h2" and end_reason == "budget_tokens" and (not started_at or started_at < "2026-11-14T15:35:00Z"):
             continue
@@ -294,7 +294,7 @@ def filter_benchmark_runs(
             continue
         stage2.append(run)
 
-    # Third pass (DECISIONS.md Sat 19:25 & 19:28): when an uncapped model rerun finishes on a game,
+    # Third pass: when an uncapped model rerun finishes on a game,
     # supersede earlier cost-capped (`end_reason == "budget_cost"`) runs for that same (model, effort, harness, game).
     uncapped_model_keys: set[tuple[str, str, str, str]] = set()
     for run in stage2:

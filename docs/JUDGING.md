@@ -10,7 +10,7 @@ Then they spend 15 minutes hunting reward exploits.
 - `python -m server mcp` is for the demo and local development only. It is not the judging path.
 
 ## Results
-Sat 14.11 03:2x, A4's machine: Docker 29.8.1, Harbor 0.26.0 (`uv tool install harbor==0.26.0`).
+Docker 29.8.1, Harbor 0.26.0 (`uv tool install harbor==0.26.0`).
 Task: `dev` game `gridworld-s1000-d1-l6-9b1065f8` (engine 0.5.0, 6 levels, optimal 92 actions).
 Exported with `python -m arena harbor-export --collection dev --out <dir> --first 2`; `harbor lint <task dir>` is clean.
 Full Docker builds; agent and game run as separate containers; the verifier runs in its own container.
@@ -24,7 +24,7 @@ Full Docker builds; agent and game run as separate containers; the verifier runs
 
 Each oracle run takes about 70 s, most of it Docker build and uv install.
 
-**Independent reproduction (A3, 03:30, ignacio's machine, Docker 29.9.2, Harbor 0.26.0), same game:** oracle 1.000
+**Independent reproduction (second machine, Docker 29.9.2, Harbor 0.26.0), same game:** oracle 1.000
 (6/6, 92 actions), nop 0.000. That machine runs Norton TLS scanning, which breaks pip inside containers, so it used a
 local-only export (`--extra-ca`, `--vendor`; task logic identical). Since then `solve.sh` uses a standard-library MCP
 client, so the oracle/stop-early runs no longer download uv or mcp inside the agent container.
@@ -36,7 +36,7 @@ set -a; . ./.env; set +a      # host env must hold NVIDIA_VERDA_INFERENCE_KEY
 harbor run -p <task> -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
   --ak "opencode_config=$(python3 -c 'import json;print(json.dumps(json.load(open("arena/opencode-nemotron.json"))))')" \
   --ae 'NVIDIA_VERDA_INFERENCE_KEY=${NVIDIA_VERDA_INFERENCE_KEY}' \
-  --agent-timeout-multiplier 0.25        # 15 min cap for testing; judges use the task default (2 h since Sun 05:00; was 60 min)
+  --agent-timeout-multiplier 0.25        # 15 min cap for testing; judges use the task default (2 h)
 ```
 - The `${...}` template is required: without `--ae`, the key never reaches the agent container, and Verda answers 404. Harbor stores only the template in the job's `config.json`, not the key.
 - `--ak config=<file>` is rejected by Harbor 0.26 for opencode ("does not support config"). Use `opencode_config`.
@@ -44,16 +44,16 @@ harbor run -p <task> -a opencode -m verda-nemotron/nemotron-3.5-super-vl \
 | Run | Actions | Invalid | Levels | Reward | Note |
 |---|---|---|---|---|---|
 | OpenCode + Nemotron, attempt 1 | 94 | 2 | 2/6 | **0.113** | hit the 15-min test cap (AgentTimeoutError); level 1 at 2× optimal, level 2 at 5.7× |
-| OpenCode + Nemotron, k=3 run (08:02), attempt A | 155 | 3 | 1/6 | **0.020** | 30-min cap (`--agent-timeout-multiplier 0.5`), AgentTimeoutError |
-| OpenCode + Nemotron, k=3 run (08:02), attempt B | 135 | 2 | 1/6 | **0.094** | 30-min cap, AgentTimeoutError |
-| OpenCode + Nemotron, k=3 run, attempt C (rerun 08:38) | 227 | 3 | 1/6 | **0.087** | first try hit AgentSetupTimeoutError (OpenCode install > 360 s with 3 setups in parallel); rerun with `-k 1 --agent-setup-timeout-multiplier 2`, 30-min cap, AgentTimeoutError |
+| OpenCode + Nemotron, k=3 run, attempt A | 155 | 3 | 1/6 | **0.020** | 30-min cap (`--agent-timeout-multiplier 0.5`), AgentTimeoutError |
+| OpenCode + Nemotron, k=3 run, attempt B | 135 | 2 | 1/6 | **0.094** | 30-min cap, AgentTimeoutError |
+| OpenCode + Nemotron, k=3 run, attempt C (rerun) | 227 | 3 | 1/6 | **0.087** | first try hit AgentSetupTimeoutError (OpenCode install > 360 s with 3 setups in parallel); rerun with `-k 1 --agent-setup-timeout-multiplier 2`, 30-min cap, AgentTimeoutError |
 
 `-k 3 -n 3` = 3 attempts in parallel. With `-n 3`, give setup more time (`--agent-setup-timeout-multiplier 2`), or use `-n 1`.
 Rubric set (3 agent runs, 30-min cap): 0.020, 0.094, 0.087, **mean 0.067**. With the earlier 15-min attempt (0.113), 4 runs average 0.079. Reference: 1.000, do-nothing: 0.000.
 
 The reference run scores 1.000 on the same task. The gap shows on the judges' own harness.
 
-**Frozen `eval-v1` (A3, 13:25, ignacio's machine, Docker 29.9.2, Harbor 0.26.0).** The judges' package is committed at
+**Frozen `eval-v1` (second machine).** The judges' package is committed at
 `harbor/eval-v1/` (30 tasks, one per game, engine 0.6.0, `harbor lint` clean, no local-only CA/vendor). Game 1
 (`gridworld-s900000-d1-l6-33a57ce4`), run from a local copy that only adds the antivirus CA:
 
@@ -65,7 +65,7 @@ The reference run scores 1.000 on the same task. The gap shows on the judges' ow
 
 On Windows, `harbor run` exits 1 after writing results (`OPENSSL_Uplink: no OPENSSL_Applink`, a teardown crash); results and `n_errors: 0` are unaffected. Regenerate with `python -m arena harbor-export --collection eval-v1 --out harbor/eval-v1` (on Windows export to a short path such as `C:/hb` first: the repo path can exceed 260 characters).
 
-**`eval-v2` (A3, 14:00, same machine).** Judges' package at `harbor/eval-v2/` (30 tasks x 8 levels, difficulty 4, 3 unseen rules per game; `harbor lint` clean, no local-only parts). Game 1 (`gridworld-s910000-d4-l8-f71ee29e`):
+**`eval-v2`.** Judges' package at `harbor/eval-v2/` (30 tasks x 8 levels, difficulty 4, 3 unseen rules per game; `harbor lint` clean, no local-only parts). Game 1 (`gridworld-s910000-d4-l8-f71ee29e`):
 
 | Run | Reward | Levels | Actions | Errors |
 |---|---|---|---|---|
@@ -73,14 +73,14 @@ On Windows, `harbor run` exits 1 after writing results (`OPENSSL_Uplink: no OPEN
 | do-nothing | **0.000** | 0/8 | 0 | 0 |
 | stop-early (`ORACLE_STOP_AFTER_LEVELS=1`) | **0.125** | 1/8 | 31 | 0 |
 
-### Full-length frontier runs through Harbor + OpenCode (A4, Sun 15.11 03:18-04:55)
+### Full-length frontier runs through Harbor + OpenCode
 eval-v2 game 1, `make judge MODEL=<selector> K=3` (attempts in parallel, 60-min cap), OpenCode 1.19.5. Logs + per-attempt
 tables: `harbor/run-logs/README.md`. Reference 1.000, do-nothing 0.000, stop-early 0.125; Gemini 4 Carbon 0.777 / 0.767 /
 0.743 (mean 0.762, 7/8 each, full 60 min); Gemini 3.8 Flash 0.583 / 0.143 / 0.240 (two quit early); Gemini 4 Argon 0.240 /
 0.250 / 0.250 (OpenCode exits on Gemini 400 "Requests ending with a model turn are not supported" after a thinking-only
 reply; same on the OpenAI-compatible route: 0.095 / 0.105 / 0.102). Agent-harness bug, see `arena/HARBOR.md`.
 
-### Red team: trying to beat the reward from the agent's seat (A4, Sat 14:40-14:55)
+### Red team: trying to beat the reward from the agent's seat
 Task `harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4` (solution folder removed from the copy), Docker + Harbor 0.26.0.
 A custom Harbor agent (`arena/redteam/redteam_agent.py`) runs `arena/redteam/attack.py` **inside the agent
 container**, the exact seat of a real agent: same filesystem, same network, same MCP endpoint.
@@ -96,7 +96,7 @@ container**, the exact seat of a real agent: same filesystem, same network, same
 | 7 | **Race:** 32 parallel `act` calls from 32 sessions | all counted exactly (33 valid actions recorded = 33 sent), nothing lost to the race | 0.0 |
 | 8 | **RESET spam:** 2,000 RESETs | every RESET counts as an action on the level; no level solved | **0.0** |
 | 9 | **Wall spam:** 3,100 moves in a cycle | the move budget ends the level (GAME_OVER) after 33 actions; afterwards only RESET is accepted | **0.0** |
-| 10 | **Fetch the answer from the internet** (A4, Sat ~20:40): our public web server serves every eval game's `optimal_path` (`GET /api/games/<id>`) and recorded winning runs; the repo holds `solution/solve.sh` | **was open** (agent container had internet). Fixed: every task now sets an agent-phase egress allowlist (`[agent] network_mode = "allowlist"`): only `game` + model APIs. The game now sits on `localhost:8000` (shared network namespace; via Harbor's proxy it reset idle MCP connections, see `arena/HARBOR.md` "Network"). Probe from the agent seat: GitHub raw, PyPI, our server by name and by IP -> no connection; `api.anthropic.com` reachable; only `localhost:8000` answers locally; oracle 1.000 (eval-v1 + eval-v2 game 1), stop-early 0.125 (eval-v2); OpenCode plays with 0 connection resets | blocked |
+| 10 | **Fetch the answer from the internet**: our public web server serves every eval game's `optimal_path` (`GET /api/games/<id>`) and recorded winning runs; the repo holds `solution/solve.sh` | **was open** (agent container had internet). Fixed: every task now sets an agent-phase egress allowlist (`[agent] network_mode = "allowlist"`): only `game` + model APIs. The game now sits on `localhost:8000` (shared network namespace; via Harbor's proxy it reset idle MCP connections, see `arena/HARBOR.md` "Network"). Probe from the agent seat: GitHub raw, PyPI, our server by name and by IP -> no connection; `api.anthropic.com` reachable; only `localhost:8000` answers locally; oracle 1.000 (eval-v1 + eval-v2 game 1), stop-early 0.125 (eval-v2); OpenCode plays with 0 connection resets | blocked |
 
 Reference points on the same task (judge simulation, fresh clone): **oracle 1.000** (6/6 levels, 86 actions), **do-nothing 0.000**;
 stop-early earns exactly the levels it solves (0.167 per level at optimal play, table above).
@@ -104,7 +104,7 @@ Doing the task well is the only way to score: per level `min(1, optimal / action
 
 Residual risks (not exploitable today):
 - ~~The agent container has internet~~ Closed by row 10: the agent phase only reaches `game` and model APIs, so a public repo or our public server can no longer leak `solve.sh` / optimal paths to the agent. A judge who adds `--allow-agent-host <their API>` opens only that host. Outside Harbor the public server still serves eval optimal paths (gallery, challenge); fine for the demo, not reachable from a task.
-- `invalid_actions` in `score.json` lags: the sidecar rewrites the file only after a valid action (request to A3). Not part of the reward.
+- `invalid_actions` in `score.json` lags: the sidecar rewrites the file only after a valid action. Not part of the reward.
 
 Reproduce:
 ```bash

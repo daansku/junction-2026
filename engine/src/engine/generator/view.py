@@ -1,4 +1,4 @@
-"""View constraints (A1, eval-v6): change what the player SEES, never what the game does.
+"""View constraints (eval-v6): change what the player SEES, never what the game does.
 
 Opt-in per game through `GameSpec.view`, a comma list:
   * `fog<r>`   only cells within Chebyshev distance r of the player are drawn; every other grid cell

@@ -1,4 +1,4 @@
-# Kimi K3.1 Pro on all 30 eval-v2 games, harness h2 (human request: Daniel, Sat ~22:35; run from A1's machine).
+# Kimi K3.1 Pro on all 30 eval-v2 games, harness h2.
 # Extends the 4-game h2-subset-v2 to the full collection; run keys already finished there are skipped.
 # One attempt per game (labelled single-attempt). eval-v2 baselines already exist on the server.
 name: h2-eval-v2-kimi

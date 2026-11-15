@@ -1,4 +1,4 @@
-# RL v2 (thinking ON), human-approved Sat 20:20: think-games and think-ctrl. One 80 GB GPU (Modal H100).
+# RL v2 (thinking ON): think-games and think-ctrl. One 80 GB GPU (Modal H100).
 # Start = BASE Qwen3.5-9B + fresh LoRA (r16, alpha 32, language-model linears); no SFT adapter (the no-think SFT is
 # the documented negative result). Reward = verifier on the text after </think> only; no </think> = 0 (grpo.py).
 base: Qwen/Qwen3.5-9B

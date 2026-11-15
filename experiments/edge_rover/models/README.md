@@ -5,14 +5,14 @@ Each round: the current model plays levels of our train games (train-v1, never e
 rewarded only for solving a level. A fresh LoRA on the base is then trained on the unique winning episodes so far
 (its own reasoning + moves). Full method and numbers: `../README.md`.
 
-| Adapter | Trained on | Rover-lite, hidden controls (100 paired missions) | Held-out MATH (A2's test, 175 items) |
+| Adapter | Trained on | Rover-lite, hidden controls (100 paired missions) | Held-out MATH (`bench/heldout_math`, 175 items) |
 |---|---|---|---|
 | (base `Qwen/Qwen3.5-4B`) | - | 41/100 | 0.623 |
 | `qwen3.5-4b-ourgames-round1-lora` | 32 wins (30 levels), 498 turns | 50/100 (p=0.14) | - |
 | **`qwen3.5-4b-ourgames-round2-lora`** (recommended) | 43 unique levels, 992 turns | **54/100 (p=0.019)** | **0.680** (selection half 0.680, p=0.004) |
 | `qwen3.5-4b-ourgames-round3-lora` | 56 unique levels, 1,372 turns | 51/100 (p=0.099) | 0.686 (selection half 0.651) |
 
-- **Checkpoint choice:** round 2 is the reported checkpoint. It is chosen on MATH's selection half (A2's protocol) and is also the best rover checkpoint.
+- **Checkpoint choice:** round 2 is the reported checkpoint. It is chosen on MATH's selection half (`bench/heldout_math` protocol) and is also the best rover checkpoint.
 - **p-values:** exact McNemar, paired vs base.
 - **JSON repair:** every rover number above uses it (0 JSON failures).
 

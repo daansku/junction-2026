@@ -1,4 +1,4 @@
-"""A1-20..23: training-data tasks, reward functions, rationales, transfer probe."""
+"""Training-data tasks, reward functions, rationales, transfer probe."""
 import json
 from pathlib import Path
 

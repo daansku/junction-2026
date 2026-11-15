@@ -1,4 +1,4 @@
-"""Trace recorder (PLAN.md 4.5). The only writer of $DATA_DIR/runs/<run_id>/{meta.json,steps.jsonl}.
+"""Trace recorder. The only writer of $DATA_DIR/runs/<run_id>/{meta.json,steps.jsonl}.
 
 meta.json is rewritten atomically (tmp + os.replace); steps.jsonl is append-only, one line per step.
 Thread-safe: a per-run lock guards writes, a global lock guards the in-memory index.

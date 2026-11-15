@@ -1,4 +1,4 @@
-# Fine-tune benchmarks (for A3)
+# Fine-tune benchmarks
 
 Evaluate the base model, the format-only control and the fine-tuned model on every item below, with the same server, prompts and greedy decoding. Run all of them with `lm-evaluation-harness`, and look up the exact task names in the installed version.
 

@@ -1,4 +1,4 @@
-"""End-to-end smoke test against a running server (PLAN.md A2 'done means').
+"""End-to-end smoke test against a running server.
 
     python scripts/smoke.py [--api http://localhost:8000]   (default: $API_URL, else localhost:8000)
 

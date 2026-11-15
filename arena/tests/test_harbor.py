@@ -9,7 +9,7 @@ from arena.engine_adapter import load_engine
 from arena.harbor.sidecar import Episode, build
 
 eng, ENGINE = load_engine()
-needs_engine = pytest.mark.skipif(ENGINE != "engine", reason="needs A1's engine")
+needs_engine = pytest.mark.skipif(ENGINE != "engine", reason="needs the engine")
 ROOT = Path(__file__).resolve().parents[2]
 DEV = ROOT / "data" / "collections" / "dev.json"
 

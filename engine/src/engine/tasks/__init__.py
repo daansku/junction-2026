@@ -1,4 +1,4 @@
-"""Training data for post-training (PLAN.md phase 2, §3.3; A1-20..A1-23).
+"""Training data for post-training.
 
     from engine.tasks import generate, reward
     for s in generate("rule_effect", n=100, seed=0): ...
@@ -17,7 +17,7 @@ from .auxtasks import TASKS
 from .common import SYSTEM, Sample
 from .rewards import RAW_TASKS, episode_score, reward
 
-# `--task all`: the single-turn tasks that need only the engine. game_turn needs arena (A3's
+# `--task all`: the single-turn tasks that need only the engine. game_turn needs arena (the
 # harness prompt) at generation time, so it is requested by name.
 DEFAULT_ALL = [t for t in TASKS if t not in RAW_TASKS]
 

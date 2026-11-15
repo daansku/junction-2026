@@ -25,7 +25,7 @@ def build_comparisons(leaderboard: dict[str, Any]) -> dict[str, Any]:
     human_score = _mean_score("human")
 
     model_rows = [r for r in rows if r.get("kind") == "model"]
-    # Completion first (human decision Sat ~23:45, DECISIONS.md): games won, levels solved, then efficiency.
+    # Completion first: games won, levels solved, then efficiency.
     best_model = (max(model_rows, key=lambda r: (r.get("game_win_rate") or 0, r["level_solve_rate"], r["score"]))
                   if model_rows else None)
     finetuned_rows = [r for r in model_rows if r.get("tier") == "finetuned"]

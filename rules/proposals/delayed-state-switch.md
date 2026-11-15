@@ -1,7 +1,7 @@
 # Rule Proposal: Delayed / Toggling State Switch (`toggle_walls` / delayed gate)
 
-- **Origin:** A5 Research Digest
-- **Target:** A1 (`engine/src/engine/components/`)
+- **Origin:** research digest
+- **Target:** `engine/src/engine/components/`
 - **Tier:** Tier 2
 
 ## Visual Appearance (`64×64` frame)

@@ -83,7 +83,7 @@ def render(level: Level, state: State, skin: dict[str, tuple[int, str]], level_i
     for c in comps.active(level):
         c.draw(level, state, cv)
     cv.cell(state.pos, "player")
-    view = level.data.get("view") or {}  # A1, eval-v6 (generator/view.py): what the player sees, never the rules
+    view = level.data.get("view") or {}  # eval-v6 (generator/view.py): what the player sees, never the rules
     if view.get("recolor"):
         _recolor(cv, view["recolor"], HUD_ROWS, SIZE)
     if view.get("radius") is not None and not (view.get("glimpse") and state.moves == 0):

@@ -3,7 +3,7 @@
 Every candidate is derived from (seed, family, difficulty, level, rules, attempt) so
 generation is fully deterministic; a rejected candidate moves on to the next attempt sub-seed.
 
-Validity (PLAN.md §5), checked on every level:
+Validity, checked on every level:
   * solvable (BFS over full state)
   * every active rule matters: removing it changes the optimal length (or makes it unsolvable)
   * budget = ceil(optimal x slack) (+ allowance on levels that introduce a rule)
@@ -49,7 +49,7 @@ def _min_optimal(difficulty: int, level_idx: int, teaching: bool) -> int:
 def try_level(seed: int, family: str, difficulty: int, level_idx: int, rules: tuple[str, ...],
               new_rule: str | None, attempt: int) -> Level | None:
     """One candidate; None if rejected."""
-    if branching.enabled(family):  # A7, gridbranch only
+    if branching.enabled(family):  # gridbranch only
         return branching.try_level(seed, family, difficulty, level_idx, rules, new_rule, attempt)
     teaching = new_rule is not None
     rng = rng_for(family, seed, difficulty, "level", level_idx, ",".join(rules), attempt)
@@ -86,7 +86,7 @@ def try_level(seed: int, family: str, difficulty: int, level_idx: int, rules: tu
                                     INTRO_ALLOWANCE if teaching else 0)
     if random_walk_win_rate(lv, tries=200, seed=(seed, level_idx, attempt)) >= RANDOM_WALK_MAX:
         return None
-    if interaction.forcing(family) and not interaction.level_ok(lv, attempt):  # A7, gridforce only
+    if interaction.forcing(family) and not interaction.level_ok(lv, attempt):  # gridforce only
         return None
     lv.data["attempt"] = attempt
     return lv
@@ -94,7 +94,7 @@ def try_level(seed: int, family: str, difficulty: int, level_idx: int, rules: tu
 
 def rule_matters(lv: Level, rule: str, optimal: int) -> bool:
     """A rule matters if the optimal plan of a player who ignores it is longer, impossible, or
-    fails on the real level (PLAN.md §5, strengthened so remap/rotation rules count)."""
+    fails on the real level."""
     alt = solve(replace(lv, rules=tuple(r for r in lv.rules if r != rule)), max_states=SOLVER_CAP)
     if alt is None or len(alt) != optimal:
         return True
@@ -120,7 +120,7 @@ def generate_levels(seed: int, family: str, difficulty: int, n_levels: int,
     levels: list[Level] = []
     used: set[frozenset] = set()
     planner = (interaction.plan if interaction.forcing(family) or branching.enabled(family)
-               else curriculum.plan)  # A7, gridforce / gridbranch only
+               else curriculum.plan)  # gridforce / gridbranch only
     for i, (primary, new, fallbacks) in enumerate(planner(seed, family, difficulty, n_levels, rules)):
         lv = None
         for cand in [primary, *fallbacks]:

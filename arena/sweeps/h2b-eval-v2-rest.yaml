@@ -1,8 +1,7 @@
-# PLAN phase 3 A3-35 completion (human Sun 00:15): h2b on the 26 eval-v2 games not in h2b-eval-v2.yaml (those 4 games
-# x 3 attempts are kept, not rerun). 1 attempt, all 104 runs at once, hard end before 01:00 (human deadline).
-# Effort: Flash high (same as its 4 done games, fastest model); Argon, Carbon, Pro medium (human OK: "you can put
-# models on medium"; Pro high = ~14k thinking tokens / 87 s per call, cannot finish). Runs still going at the wall
-# cap end as budget_wall and are labelled wall-capped (lower bound) on the board.
+# h2b on the 26 eval-v2 games not in h2b-eval-v2.yaml (those 4 games x 3 attempts are kept, not rerun).
+# 1 attempt, all 104 runs at once. Effort: Flash high (same as its 4 done games); Argon, Carbon, Pro medium
+# (Pro high = ~14k thinking tokens / 87 s per call, cannot finish). Runs still going at the wall cap end as
+# budget_wall and are labelled wall-capped (lower bound) on the board.
 name: h2b-eval-v2-rest
 harness: h2b
 collection: eval-v2

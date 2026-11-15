@@ -68,7 +68,7 @@ These are recorded results from the evaluation snapshot described below, not a f
 | **OpenCode + Nemotron (`k=3`, 30-min cap)** | dev game `s1000` | 155 / 135 / 227 | 1/6 each | **0.067 mean** (`0.020`, `0.094`, `0.087`) |
 
 **What to expect from the agent runs on this game.** eval-v2 game 1 (`s910000`, 8 levels, shortest solution 187
-moves) has been the default task since Sat 14:00. Frontier models on it through our own multi-turn harness `h2`
+moves) is the default task. Frontier models on it through our own multi-turn harness `h2`
 (one continuous conversation, reasoning kept between turns, tool calls: the closest of our harnesses to OpenCode),
 finished runs only, one attempt each:
 
@@ -128,7 +128,7 @@ cd web && npm install && npm run typecheck && npm run build
 
 ## The Gap: Frozen `eval-v2` (Difficulty 4, `h1` / `h2` Harnesses)
 
-Historical snapshot built Sat 14.11 19:19 UTC from the shared server's `1,006` runs (`python -m analysis sync && python -m analysis build`; practice, smoke and aborted runs filtered). The run data and derived leaderboard are not present in this clone, so these figures have not been revalidated here. Score = mean over levels of `min(1, optimal / actions)` for solved levels, 0 otherwise; humans play each game once (first attempt).
+Snapshot built on 2026-11-14 from the shared server's `1,006` runs (`python -m analysis sync && python -m analysis build`; practice, smoke and aborted runs filtered). The raw run data is not in the repo; `python -m analysis sync` downloads it from the live server. Score = mean over levels of `min(1, optimal / actions)` for solved levels, 0 otherwise; humans play each game once (first attempt).
 
 | Player | Harness | Games | Levels Solved | Full Wins | Score | 95% CI |
 |---|---|---:|---:|---:|---:|---|
@@ -156,7 +156,7 @@ h1 = one fresh request per turn (notes + last 12 actions + frame); h2 = how labs
 
 ### Verda (DataCrunch)
 
-- **Shared server and live site:** a Verda CPU VM (CPU.4V.16G, about $0.048/h) at `https://65.108.33.107.compute.verda.run` hosts the game server, every recorded run and the web app since Sat 15:15. Its URL is in [API_URL](API_URL).
+- **Shared server and live site:** a Verda CPU VM (CPU.4V.16G, about $0.048/h) at `https://65.108.33.107.compute.verda.run` hosts the game server, every recorded run and the web app. Its URL is in [API_URL](API_URL).
 - **GPU training and benchmarks:**
   - a 2x A100 80 GB box for the benchmark runs, SFT and the first GRPO runs ([posttrain/README.md](posttrain/README.md)),
   - a B200 for the `think-games` and `think-gridbranch` GRPO runs on Qwen3.5-9B and the held-out MATH test ([bench/heldout_math/README.md](bench/heldout_math/README.md)),

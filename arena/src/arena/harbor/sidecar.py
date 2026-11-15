@@ -10,7 +10,7 @@ The score is written to EVIDENCE (default /evidence/score.json) inside this cont
 action. Harbor collects it as an artifact after the agent phase (agent container already stopped)
 and hands it to a separate verifier container. The agent has no route to that file.
 
-Score (PLAN.md 4.6, ARC-AGI-3 style): mean over levels of min(1, optimal_moves / actions_on_level)
+Score: mean over levels of min(1, optimal_moves / actions_on_level)
 for solved levels, 0 otherwise. Every counted action (moves and RESETs) on a level counts against it.
 
     GAME_COLLECTION=/game/collection.json GAME_ID=... python -m arena.harbor.sidecar
@@ -80,7 +80,7 @@ class Episode:
                 return self.frame, self.allowed, "action limit reached"
             if a not in self.allowed:
                 self.invalid += 1
-                self._write()  # keep invalid_actions in score.json current (A4 red team); reward unchanged
+                self._write()  # keep invalid_actions in score.json current (red team); reward unchanged
                 return self.frame, self.allowed, f"invalid action; available: {', '.join(self.allowed)}"
             lvl = t["level"] - 1
             self.actions_on[lvl] += 1

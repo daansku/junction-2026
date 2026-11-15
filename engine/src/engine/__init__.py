@@ -1,4 +1,4 @@
-"""Grid-game factory engine (PLAN.md §4.3).
+"""Grid-game factory engine.
 
     from engine import GameSpec, make_game, load_game, Action
     game = make_game(GameSpec(seed=1234, n_levels=6, difficulty=2))

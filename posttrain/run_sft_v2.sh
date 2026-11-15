@@ -1,5 +1,5 @@
 #!/bin/bash
-# SFT v2 on the Verda box (A3-23). Usage: GPU=0 bash run_sft_v2.sh games   (one row per call; run rows in parallel
+# SFT v2 on the Verda box. Usage: GPU=0 bash run_sft_v2.sh games   (one row per call; run rows in parallel
 # with separate calls). Same LoRA recipe as SFT v1 (r16, all language-model linear layers), batch 1 x grad-accum 16
 # (effective 16) so two runs fit next to the arena-ft server on GPU 0. Output: /root/ckpt/<row>/lora (adapter).
 set -euo pipefail

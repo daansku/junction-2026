@@ -1,4 +1,4 @@
-"""Agent loop h2: models run the way labs benchmark them (PLAN.md phase 2, section 3.1).
+"""Agent loop h2: models run the way labs benchmark them.
 
 Differences from h1 (h1 stays as is; h2 is a separate board, never mixed):
   1. One continuous multi-turn conversation: the model sees its own previous turns.
@@ -37,7 +37,7 @@ SYSTEM = (Path(__file__).parent / "prompts" / "system_h2.md").read_text(encoding
 IMAGE_TURNS = 5          # observations that keep their frame
 THINKING_TURNS = 10      # Anthropic: assistant turns that keep their thinking blocks
 
-# h2b (Sat 22:40 human decision: same sweeps, much less wall time). Identical to h2 except:
+# h2b. Identical to h2 except:
 #   - act takes a list of 1..MAX_MOVES actions run in order (each one counted and scored exactly as in h2); the
 #     list stops early on a level change, game end, or an action that changes no cell; fewer model calls per run.
 #   - smaller context: last H2B_IMAGE_TURNS frames, last H2B_THINKING_TURNS reasoning blocks.
@@ -283,7 +283,7 @@ class OpenAICompatH2:
     def _create(self, kw: dict):
         """One completion, retried with backoff on rate limits (429), overload (5xx) and dropped connections.
         Per-minute quotas (Gemini TPM) reset within a minute, so the SDK's own short retries (max_retries=2,
-        seconds apart) are not enough: one burst used to kill the whole run (A1, Sun 00:40). Retries cost no
+        seconds apart) are not enough: one burst used to kill the whole run. Retries cost no
         action and no turn; only wall time, which max_wall_s still caps."""
         import random
         import openai
@@ -306,7 +306,7 @@ class OpenAICompatH2:
         lat = int((time.time() - t0) * 1000)
         if not resp.choices or resp.choices[0].message is None:
             # Gemini sometimes answers with no message at all: an invalid turn (costs a turn, not an action),
-            # nothing appended to the history. Used to crash the run with AttributeError (A1, Sun 02:50).
+            # nothing appended to the history. Used to crash the run with AttributeError.
             from .providers.openai_compat import billed_tokens
             tin, tout = billed_tokens(resp.usage) if resp.usage else (0, 0)
             return Turn(invalid="empty reply (no message)", tokens_in=tin, tokens_out=tout,

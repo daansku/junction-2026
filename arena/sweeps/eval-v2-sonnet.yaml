@@ -1,7 +1,6 @@
-# Claude Sonnet 5.5 on eval-v2 (human request Sat ~19:45: "run sonnet on eval-v2 then"). The Anthropic key has ~$7 left
-# (DECISIONS 14:10 / 17:40), so ONE game fits: s910000 (finished by a person in 615 actions; Argon 2/8 at its $4 cap;
-# also in the h2 subset). Sonnet ~$0.016/action (half Opus's measured $0.031), $6.50 hard cap so the run stops before
-# the key is empty. Same h1 harness and budgets as eval-v2-frontier / eval-v2-gemini4. Single-attempt row, labelled.
+# Claude Sonnet 5.5 on one eval-v2 game: s910000 (finished by a person in 615 actions; also in the h2 subset).
+# Sonnet ~$0.016/action, $6.50 hard cap. Same h1 harness and budgets as eval-v2-frontier / eval-v2-gemini4.
+# Single-attempt row, labelled.
 name: eval-v2-sonnet
 collection: eval-v2
 games: [gridworld-s910000-d4-l8-f71ee29e]

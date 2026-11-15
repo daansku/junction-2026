@@ -3,7 +3,7 @@ info:
   title: junction-2026 game server
   version: "1.0.0"
   description: |
-    REST contract (PLAN.md 4.4). Base path /api. Frozen at G0; additive changes only, via a request to A2.
+    REST contract. Base path /api. Frozen at G0; additive changes only.
     Frames are 64 strings of 64 lowercase hex chars (row 0 at top), palette in contracts/palette.json.
     Model-facing responses (POST /sessions, POST /sessions/{id}/act) are pixels only: no state, score or rule names.
     Trace and derived shapes: contracts/trace.schema.json, contracts/derived.schema.json.
@@ -49,7 +49,7 @@ paths:
                 items: {$ref: "#/components/schemas/GameMeta"}
   /challenge/score:
     post:
-      summary: Put a finished human run on the "Can you beat the AI?" visitor board (A2-22). Allowed in published mode.
+      summary: Put a finished human run on the "Can you beat the AI?" visitor board. Allowed in published mode.
       description: |
         The score is read from the recorded run, never from the client: levels_completed, levels_total, actions, outcome.
         Only human runs that have ended (not IN_PROGRESS). One board row per run (409 on repeat).

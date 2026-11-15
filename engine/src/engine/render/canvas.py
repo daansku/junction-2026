@@ -1,6 +1,6 @@
 """64x64 index canvas plus the cell -> pixel mapping for the play area.
 
-Layout (PLAN.md §4.1):
+Layout:
   rows 0-1   move-budget bar (remaining moves, full width = full budget)
   rows 3-4   level pips (left) and component HUD items (right of the pips)
   rows 6-63  play area: logical grid scaled by an integer cell size, centred

@@ -1,9 +1,9 @@
-"""Forced interaction (A7): opt-in stricter level checks and curriculum for the `gridforce` family.
+"""Forced interaction: opt-in stricter level checks and curriculum for the `gridforce` family.
 
 Only games whose family ends in "force" (e.g. `gridforce`) use anything here; `gridworld` games
 (dev, train-v1, eval-v1, eval-v2, probe-v1) are untouched and regenerate byte-identically.
 
-Rule kinds (agreed with A1):
+Rule kinds:
   use       the player must use it. Forced = no plan that never triggers it wins in fewer than
             K x optimal moves (or avoiding it makes the level unsolvable). "Triggers" = the rule's
             truth events, or entering one of its cells (one_way, phase_walls).

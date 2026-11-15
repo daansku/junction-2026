@@ -8,7 +8,7 @@ from pathlib import Path
 
 SIZE = 64
 
-# Fallback palette until contracts/palette.json exists (A2 owns that file).
+# Fallback palette if contracts/palette.json is missing.
 _DEFAULT_PALETTE = [
     "#000000", "#0074D9", "#FF4136", "#2ECC40", "#FFDC00", "#AAAAAA", "#F012BE", "#FF851B",
     "#7FDBFF", "#870C25", "#FFFFFF", "#3D9970", "#B10DC9", "#01FF70", "#85144B", "#39CCCC",

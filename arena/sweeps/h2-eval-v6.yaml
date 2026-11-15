@@ -1,4 +1,4 @@
-# eval-v6 test set, harness h2 (human request: Daniel, Sun ~02:40: limited view + "something else cool").
+# eval-v6 test set, harness h2.
 # eval-v6 = eval-v5's 12 games (same levels, skins, rules, budgets) with a view: fog2 (only the 5x5 cells around the
 # player are drawn), glimpse (the full level is visible until the first move of each level, and again after RESET),
 # recolor (from level 2 each level swaps object colours one-to-one; shapes stay). Rules are untouched, so the

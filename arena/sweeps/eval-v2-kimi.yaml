@@ -1,7 +1,6 @@
-# eval-v2 Kimi at 12 parallel (19:58, original runner drained). eval-v2 frontier runs (human approved Sat 18:20, ignacio: "start up the eval-v2 frontier runs"). eval-v2 = 30 games
-# x 8 levels, difficulty 4, 3 rules per game never seen in training; humans finished several (A4 /challenge).
-# Same harness and budgets as the eval-v1 main sweep (h1, 400 actions, 3 h wall) so the two boards compare.
-# Kimi K3.1 on Verda credits; Gemini Flash medium ~$0.007/turn real -> ~$45 for 30 games ($2/run cap, metered right).
+# eval-v2 Kimi K3.1 at 12 parallel (split off from eval-v2-frontier). eval-v2 = 30 games x 8 levels, difficulty 4,
+# 3 rules per game never seen in training. Same harness and budgets as the eval-v1 main sweep (h1, 400 actions,
+# 3 h wall) so the two boards compare.
 name: eval-v2-kimi
 collection: eval-v2
 games: all

@@ -1,4 +1,4 @@
-// Mock backend: reads committed fixtures from data/fixtures/ (A2, A5) and
+// Mock backend: reads committed fixtures from data/fixtures/ and
 // fills gaps with a tiny in-browser fake engine (walls + goal + budget), so
 // every page works with no server. Never used for results.
 import type { Api, GenerateBody } from './api'

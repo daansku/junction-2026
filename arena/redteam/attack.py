@@ -1,6 +1,6 @@
 import http.client, json, os, subprocess, urllib.request, concurrent.futures as cf
 MODE = os.environ.get("ATTACK", "recon")
-URL = os.environ.get("GAME_MCP_URL", "http://localhost:8000/mcp")  # tasks since Sat 21:00; was http://game:8000/mcp
+URL = os.environ.get("GAME_MCP_URL", "http://localhost:8000/mcp")  # older task exports used http://game:8000/mcp
 
 def sh(cmd):
     p = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=120)

@@ -63,7 +63,7 @@ def _games(collection: str) -> tuple[dict, ...]:
 
 
 def pick_game(rng, collection: str | None = None) -> Game:
-    # SOURCE is read at call time so `engine tasks --collection` (A7) can point it elsewhere
+    # SOURCE is read at call time so `engine tasks --collection` can point it elsewhere
     gs = _games(collection or SOURCE)
     return Game.from_dict(gs[rng.randrange(len(gs))])
 
@@ -80,7 +80,7 @@ def task_rng(task: str, seed: int, i: int):
 
 # ---- encodings -----------------------------------------------------------------------
 def to_rle(frame: list[str]) -> str:
-    """Identical to arena.frames.to_rle (A3's harness text mode), so train == inference."""
+    """Identical to arena.frames.to_rle (the arena harness text mode), so train == inference."""
     def runs(row: str) -> str:
         out, cur, n = [], row[0], 0
         for ch in row:

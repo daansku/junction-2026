@@ -1,4 +1,4 @@
-"""MCP server (PLAN.md 4.4): tools list_games, start_game, act, reset. Pixels only.
+"""MCP server: tools list_games, start_game, act, reset. Pixels only.
 
 Every tool that shows the game returns the frame as a PNG image AND as a text grid
 (64 lines of 64 hex chars, palette index per cell). No state, score, budget numbers or rule names.

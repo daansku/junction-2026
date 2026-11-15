@@ -586,7 +586,7 @@ export function PostTrainingBenchView(props: {
   return (
     <div className="lb-stack">
       <Panel
-        label="Pre-Registered Honesty Claim Rule (PLAN §3.3 · bench/PROTOCOL.md §6)"
+        label="Pre-Registered Honesty Claim Rule"
         actions={
           <span className="mono muted">
             {bench?.bootstrap_resamples?.toLocaleString() ?? '10,000'} paired bootstrap resamples · seed{' '}
@@ -660,7 +660,7 @@ export function PostTrainingBenchView(props: {
           </div>
         )}
         <div className="lb-subset-note mono">
-          Diagnostic finding (PLAN §3.3 Step 0): SFT v1 trained on optimal action sequences without discovery rationales learns JSON syntax (0 parse errors) but scores 0.012 on held-out eval-v1 (56.8% wall-bump loops) — motivating SFT v2 causal rationales + auxiliary world-modelling tasks + GRPO.
+          Diagnostic finding: SFT v1 trained on optimal action sequences without discovery rationales learns JSON syntax (0 parse errors) but scores 0.012 on held-out eval-v1 (56.8% wall-bump loops) — motivating SFT v2 causal rationales + auxiliary world-modelling tasks + GRPO.
         </div>
       </Panel>
 
@@ -833,14 +833,14 @@ export function PostTrainingBenchView(props: {
           </table>
         </div>
         <div className="lb-subset-note mono">
-          PROTOCOL v3 (bench/PROTOCOL.md · DECISIONS.md Sat 21:15): canonical rescorer accepts &quot;ANSWER: X&quot; on [invalid] lm-eval extractions (0 base items changed; raw lm-eval scores shown inline where rescored). Line 1 answer-only SFT v2 suppressed &lt;think&gt; chains and dropped Qwen3.5-9B primary headline (~75.8% → ~44.1% negative result); Line 2 runs Thinking-On GRPO directly from base (think-games vs matched think-ctrl on shared items).
+          PROTOCOL v3: canonical rescorer accepts &quot;ANSWER: X&quot; on [invalid] lm-eval extractions (0 base items changed; raw lm-eval scores shown inline where rescored). Line 1 answer-only SFT v2 suppressed &lt;think&gt; chains and dropped Qwen3.5-9B primary headline (~75.8% → ~44.1% negative result); Line 2 runs Thinking-On GRPO directly from base (think-games vs matched think-ctrl on shared items).
         </div>
       </Panel>
 
       {(modeWeights.length > 0 || ruleWeights.length > 0) && (
         <div className="lb-two-col">
           <Panel
-            label="Failure-Mode Oversampling Weights (A5-21 → A1/A3)"
+            label="Failure-Mode Oversampling Weights"
             actions={
               <span className="mono muted">
                 {decisionPoints?.train_safe_decision_points ?? decisionPoints?.total_decision_points ?? 0} dev-safe points
