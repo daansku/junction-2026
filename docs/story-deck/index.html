@@ -9,21 +9,33 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
-  --bg: #0b0d10;
-  --panel: #13161b;
-  --panel-2: #191d24;
-  --line: #262c36;
-  --line-strong: #384150;
-  --fg: #eef0f4;
-  --muted: #98a1ae;
+  --bg: #0e0e0f;
+  --panel: #161617;
+  --panel-2: #1f1f21;
+  --line: #2c2c2f;
+  --line-strong: #3d3d42;
+  --fg: #efefec;
+  --muted: #a9a8a2;
+  --muted-2: #76756f;
   --accent: #ffdc00;
   --accent-dim: rgba(255, 220, 0, 0.12);
-  --human: #2fb54a;
-  --human-dim: rgba(47, 181, 74, 0.14);
-  --model: #f2832b;
-  --model-dim: rgba(242, 131, 43, 0.14);
-  --cyan: #3987e5;
-  --cyan-dim: rgba(57, 135, 229, 0.14);
+  --good: #0ca30c;
+  --warn: #fab219;
+  --bad: #d03b3b;
+  --human: var(--good);
+  --cyan: var(--muted);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --series-9: #3fb7c9;
+  --series-10: #a3b83a;
+  --series-11: #b07c5b;
+  --series-12: #c46bd1;
   --display: "Bricolage Grotesque", system-ui, sans-serif;
   --body: "IBM Plex Sans", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -65,7 +77,7 @@ body {
   cursor: pointer;
 }
 .bar button.primary {
-  color: #0b0d10;
+  color: var(--bg);
   background: var(--accent);
   border-color: var(--accent);
   font-weight: 600;
@@ -100,30 +112,22 @@ body {
   line-height: 1.35;
 }
 
-/* Header dual badges */
+/* Header labels: keep context, lose the repeated badge chrome. */
 .top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1.0cqw;
-  font-family: var(--mono);
-  font-size: 0.92cqw;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  gap: 1.2cqw;
+  font-family: var(--body);
+  font-size: 1.02cqw;
+  letter-spacing: 0;
+  text-transform: none;
 }
-.tags { display: flex; gap: 0.7cqw; align-items: center; flex-wrap: wrap; }
-.pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.24cqw 0.65cqw;
-  border-radius: 2px;
-  border: 1px solid var(--line-strong);
-  font-weight: 500;
-}
-.pill.story { color: #f8b84e; border-color: rgba(248,184,78,0.45); background: rgba(248,184,78,0.12); }
-.pill.biz { color: var(--cyan); border-color: rgba(57,135,229,0.45); background: var(--cyan-dim); }
-.pill.rubric { color: var(--accent); border-color: rgba(255,220,0,0.45); background: var(--accent-dim); }
-.pill.demo { color: var(--human); border-color: rgba(47,181,74,0.45); background: var(--human-dim); }
+.tags { display: flex; gap: 1.15cqw; align-items: center; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; padding: 0; border: 0; font-weight: 600; }
+.pill.story, .pill.biz { color: var(--muted); }
+.pill.rubric { color: var(--accent); }
+.pill.demo { color: var(--human); }
 .pg { color: var(--muted); white-space: nowrap; }
 .pg b { color: var(--accent); font-weight: 600; }
 
@@ -137,38 +141,38 @@ h1 { font-size: 4.1cqw; font-weight: 800; line-height: 1.02; }
 h2 { font-size: 2.55cqw; font-weight: 800; line-height: 1.06; max-width: 34ch; }
 h3 { font-size: 1.55cqw; font-weight: 600; line-height: 1.15; }
 p { margin: 0; }
-.lead { font-size: 1.52cqw; color: #d5dae2; max-width: 52ch; line-height: 1.36; }
+.lead { font-size: 1.52cqw; color: var(--muted); max-width: 52ch; line-height: 1.36; }
 .muted { color: var(--muted); }
 .fig { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+/* Models use fixed website series colors; humans and baselines stay neutral. */
 .h { color: var(--human); }
-.m { color: var(--model); }
-.c { color: var(--cyan); }
+.m, .c { color: var(--muted); }
+.who.h, .val.h { color: var(--fg); }
+.model-carbon { color: var(--series-2) !important; }
+.model-argon { color: var(--series-3) !important; }
+.model-flash { color: var(--series-5) !important; }
+.model-deepseek { color: var(--series-1) !important; }
+.model-qwen { color: var(--series-10) !important; }
+.failure { color: var(--bad) !important; }
 
 .body { display: grid; gap: 0.95cqw; align-content: start; min-height: 0; }
 .cols { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 2.4cqw; align-items: start; min-height: 0; }
 .cols-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 2.0cqw; align-items: start; min-height: 0; }
 .cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4cqw; align-items: stretch; min-height: 0; }
 
+/* Cards & callouts: use spacing and hairlines for hierarchy. */
 .card {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  padding: 0.88cqw 1.15cqw;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0.8cqw 0.35cqw;
   display: grid;
-  gap: 0.42cqw;
+  gap: 0.48cqw;
   align-content: start;
 }
-.card.accent { border-left: 3px solid var(--accent); }
-.card.biz-box { border-left: 3px solid var(--cyan); }
-.card.human-box { border-left: 3px solid var(--human); }
-.card.model-box { border-left: 3px solid var(--model); }
-.kicker {
-  font-family: var(--mono);
-  font-size: 0.88cqw;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
+.card.accent, .card.biz-box, .card.human-box, .card.model-box { border-top-color: var(--line-strong); }
+.kicker { font-family: var(--body); font-size: 1.0cqw; letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--muted); }
 
 .list { display: grid; gap: 0.48cqw; margin: 0; padding: 0; list-style: none; }
 .list li { position: relative; padding-left: 1.35cqw; display: block; }
@@ -181,13 +185,11 @@ p { margin: 0; }
   height: 0.56cqw;
   background: var(--accent);
 }
-.list.c li::before { background: var(--cyan); }
-.list.h li::before { background: var(--human); }
-.list.m li::before { background: var(--model); }
+.list.c li::before, .list.h li::before, .list.m li::before { background: var(--muted-2); }
 code {
   font-family: var(--mono);
   font-size: 0.88em;
-  background: rgba(255,255,255,0.06);
+  background: var(--panel-2);
   padding: 0.06em 0.28em;
   border-radius: 2px;
 }
@@ -212,7 +214,7 @@ code {
 .stat .l { font-size: 1.05cqw; color: var(--muted); line-height: 1.22; }
 
 .hero-wrap {
-  background: #08090b;
+  background: #080809;
   border: 1px solid var(--line-strong);
   padding: 0.95cqw;
   border-radius: 3px;
@@ -247,10 +249,13 @@ code {
   border-left: 1px solid var(--line-strong);
 }
 .fill { position: absolute; left: 0; top: 0.24cqw; bottom: 0.24cqw; width: calc(var(--v) * 100%); }
-.fill.o { background: var(--fg); }
-.fill.h { background: var(--human); }
-.fill.m { background: var(--model); }
-.fill.c { background: var(--cyan); }
+.fill.o { background: var(--muted); }
+.fill.h { background: var(--fg); }
+.fill.m, .fill.c { background: var(--bad); }
+.fill.model-carbon { background: var(--series-2); }
+.fill.model-argon { background: var(--series-3); }
+.fill.model-flash { background: var(--series-5); }
+.fill.model-deepseek { background: var(--series-1); }
 .fill.y { background: var(--accent); }
 .fill.z { background: var(--muted); width: 3px; }
 .row .val { font-family: var(--mono); font-size: 1.18cqw; font-variant-numeric: tabular-nums; text-align: right; }
@@ -258,22 +263,22 @@ code {
 
 /* Mock UI Forensic Card */
 .fcard {
-  background: #0d1015;
+  background: var(--panel);
   border: 1px solid var(--line-strong);
-  border-left: 3px solid var(--model);
+  border-left: 3px solid var(--bad);
   border-radius: 3px;
   padding: 0.95cqw 1.15cqw;
   display: grid;
   gap: 0.5cqw;
 }
 .fcard-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6cqw; font-family: var(--mono); font-size: 0.88cqw; }
-.fbadge { padding: 0.16cqw 0.48cqw; border-radius: 2px; font-size: 0.8cqw; background: var(--model-dim); color: var(--model); border: 1px solid rgba(242,131,43,0.4); }
+.fbadge { padding: 0.16cqw 0.48cqw; border-radius: 2px; font-size: 0.8cqw; background: var(--panel-2); color: var(--bad); border: 1px solid var(--line-strong); }
 .fbadge.knew { background: var(--accent-dim); color: var(--accent); border-color: rgba(255,220,0,0.4); }
 .fquote {
   font-family: var(--mono);
   font-size: 1.02cqw;
-  color: #c8d0dc;
-  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+  background: var(--panel-2);
   border-left: 2px solid var(--accent);
   padding: 0.45cqw 0.7cqw;
 }
@@ -286,7 +291,7 @@ td.r, th.r { text-align: right; padding-right: 0; }
   font-family: var(--mono);
   font-size: 1.05cqw;
   display: block;
-  background: #08090b;
+  background: #080809;
   border: 1px solid var(--line-strong);
   border-radius: 3px;
   padding: 0.8cqw 1.0cqw;
@@ -309,7 +314,7 @@ td.r, th.r { text-align: right; padding-right: 0; }
   position: relative;
   z-index: 2;
 }
-.foot .bridge { color: #c5ccd8; }
+.foot .bridge { color: var(--muted); }
 
 #qr { background: var(--fg); padding: 0.55cqw; width: 10.5cqw; aspect-ratio: 1; border-radius: 3px; flex-shrink: 0; }
 #qr img, #qr canvas { width: 100% !important; height: auto !important; display: block; image-rendering: pixelated; }
@@ -324,10 +329,10 @@ td.r, th.r { text-align: right; padding-right: 0; }
   border-radius: 4px;
   font-size: 14px;
   line-height: 1.5;
-  color: #d5dae2;
+  color: var(--muted);
 }
 body.show-notes .notes { display: block; }
-.notes b { font-family: var(--mono); font-size: 11.5px; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px; }
+ .notes b { font-family: var(--mono); font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px; }
 
 body.present { padding: 0; overflow: hidden; }
 body.present .bar, body.present .slide:not(.current), body.present .notes { display: none !important; }
@@ -378,6 +383,8 @@ body.present .slide.current .frame {
 
 <main class="deck" id="deck">
 
+<!-- Part of unslop by Damir Sokolovsky (@heydamir), CC BY 4.0 -->
+
 <!-- SLIDE 1: THE COAL MINE STORY HOOK -->
 <section class="slide current" id="s1" tabindex="-1">
   <div class="frame"><div class="in">
@@ -393,11 +400,11 @@ body.present .slide.current .frame {
         <h1>600m underground, cloud AI doesn't exist.</h1>
         <p class="lead">Meet <b>Unit-7</b>: an autonomous inspection robot deep inside a collapsed coal mine. Solid rock blocks all Wi-Fi/5G. Its onboard Jetson GPU can only run a <b>compact 9B local model</b> on a 40-minute battery budget.</p>
         <div class="card model-box">
-          <span class="kicker" style="color:var(--model)">The Unexpected Crisis</span>
+          <span class="kicker" style="color:var(--bad)">The Unexpected Crisis</span>
           <p>Classical LiDAR handles steering — until Unit-7 hits a <b>corroded ventilation airlock whose pressure-plate &amp; gate wiring shifted</b> after a rockfall. No manual. Today's local AI rams the locked gate 50 times until the battery dies — <b>losing a €120k robot</b>.</p>
         </div>
         <div class="card biz-box">
-          <span class="kicker" style="color:var(--cyan)">What VERITAS Builds</span>
+          <span class="kicker">What VERITAS Builds</span>
           <p>An automated <b>World Factory, Failure Forensics Platform (<code>/insights</code>), and Post-Training Gym</b> that diagnoses <i>why</i> agents fail on unseen mechanics and trains compact models to adapt on the fly.</p>
         </div>
       </div>
@@ -428,12 +435,12 @@ body.present .slide.current .frame {
       <h2>Every team deploying offline or autonomous AI hits this wall.</h2>
       <div class="cols-3">
         <div class="card model-box">
-          <span class="kicker" style="color:var(--model)">1 · Field &amp; Edge Robotics</span>
+          <span class="kicker">1 · Field &amp; Edge Robotics</span>
           <h3>Mines, Subsea Pipes &amp; Jammed Drones</h3>
           <p class="muted">Zero connectivity + <code>4B–9B</code> onboard compute ceiling. When a valve seizes or a passage collapses, the agent must probe safely, infer the new constraint, or backtrack before battery depletion.</p>
         </div>
         <div class="card biz-box">
-          <span class="kicker" style="color:var(--cyan)">2 · Air-Gapped Enterprise Agents</span>
+          <span class="kicker">2 · Air-Gapped Enterprise Agents</span>
           <h3>Factories, Hospitals &amp; Banks</h3>
           <p class="muted">Strict privacy forbids cloud APIs. When legacy software changes a modal or disables a button without docs, local RPA agents click the dead button in infinite loops.</p>
         </div>
@@ -517,7 +524,7 @@ body.present .slide.current .frame {
         <div class="card human-box" style="display:flex; gap:1.4cqw; align-items:center">
           <div id="qr" role="img" aria-label="QR code to live /challenge"></div>
           <div style="display:grid; gap:0.4cqw">
-            <span class="kicker" style="color:var(--human)">Live Customer &amp; Judge Demo</span>
+            <span class="kicker" style="color:var(--accent)">Live Customer &amp; Judge Demo</span>
             <span class="fig" style="font-size:1.25cqw; overflow-wrap:anywhere">65.108.33.107.compute.verda.run/challenge</span>
             <span class="muted">Zero cloud API calls · instant phone/laptop play · isolated from benchmark baselines.</span>
           </div>
@@ -551,10 +558,10 @@ body.present .slide.current .frame {
         <div class="chart" role="img" aria-label="eval-v2 games won">
           <div class="row"><div class="who">BFS Optimal<small>reference ceiling</small></div><div class="track"><div class="fill o" style="--v:1"></div></div><div class="val">100%<small>20/20 · eff 1.00</small></div></div>
           <div class="row"><div class="who h">Humans (1st try)<small>unseen eval-v2</small></div><div class="track"><div class="fill h" style="--v:0.739"></div></div><div class="val h">74%<small>17/23 · 92% lvls</small></div></div>
-          <div class="row"><div class="who m">Gemini 4 Carbon<small>cloud h1 · medium</small></div><div class="track"><div class="fill m" style="--v:0.444"></div></div><div class="val">44%<small>8/18 · 83% lvls</small></div></div>
-          <div class="row"><div class="who m">Gemini 4 Argon<small>cloud h1 · medium</small></div><div class="track"><div class="fill m" style="--v:0.10"></div></div><div class="val">10%<small>3/30 · 65% lvls</small></div></div>
+          <div class="row"><div class="who model-carbon">Gemini 4 Carbon<small>cloud h1 · medium</small></div><div class="track"><div class="fill model-carbon" style="--v:0.444"></div></div><div class="val">44%<small>8/18 · 83% lvls</small></div></div>
+          <div class="row"><div class="who model-argon">Gemini 4 Argon<small>cloud h1 · medium</small></div><div class="track"><div class="fill model-argon" style="--v:0.10"></div></div><div class="val">10%<small>3/30 · 65% lvls</small></div></div>
           <div class="row"><div class="who m">Kimi K3.1 · Flash · Sonnet<small>cloud h1</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>0/24 · 13–33% lvls</small></div></div>
-          <div class="row"><div class="who c">Qwen3.5-9B / Gemma 4B<small>Unit-7 onboard edge class</small></div><div class="track"><div class="fill z"></div></div><div class="val c">0%<small>&lt;3% lvls solved</small></div></div>
+          <div class="row"><div class="who">Qwen3.5-9B / Gemma 4B<small>Unit-7 onboard edge class</small></div><div class="track"><div class="fill z"></div></div><div class="val">0%<small>&lt;3% lvls solved</small></div></div>
         </div>
       </div>
       <div class="body">
@@ -588,7 +595,7 @@ body.present .slide.current .frame {
         <h2>Step 3: <code>/insights</code> automatically explains <i>how</i> and <i>why</i> the agent failed.</h2>
         <p class="muted">A raw score of <code>0.03</code> doesn't help an engineer fix Unit-7. Our <b>Truth-Diffed Reasoning Auditor</b> slices the ±2-step inflection window around every failed level and diffs the model's <b>verbatim <code>&lt;think&gt;</code> CoT &amp; notes</b> against <b>engine ground truth</b>:</p>
         <div class="card biz-box">
-          <span class="kicker" style="color:var(--cyan)">Commercial Value · Automated Failure Triage</span>
+          <span class="kicker">Commercial Value · Automated Failure Triage</span>
           <ul class="list c">
             <li>Replaces days of manual trace reading with instant root-cause classification across <b>319 failed levels</b>.</li>
             <li>Separates <b>harness/sensor bugs</b> (<code>h1</code> board misreads drop <span class="fig">40% → 0%</span> in <code>h2</code>) from <b>true planning bottlenecks</b>.</li>
@@ -599,10 +606,10 @@ body.present .slide.current .frame {
       <div class="body">
         <span class="kicker">5-Stage Cognitive Bottleneck Funnel (<code>/insights</code>)</span>
         <div class="chart">
-          <div class="row"><div class="who">1. Misread the board<small>h1: 40% → h2: 0%</small></div><div class="track"><div class="fill c" style="--v:0.361"></div></div><div class="val">36%<small>115 lvls</small></div></div>
+          <div class="row"><div class="who">1. Misread the board<small>h1: 40% → h2: 0%</small></div><div class="track"><div class="fill failure" style="--v:0.361"></div></div><div class="val">36%<small>115 lvls</small></div></div>
           <div class="row"><div class="who">2. Missed new rule<small>false hypothesis</small></div><div class="track"><div class="fill y" style="--v:0.116"></div></div><div class="val">12%<small>37 lvls</small></div></div>
-          <div class="row"><div class="who">3. Stuck repeating moves<small>ramming jammed gate</small></div><div class="track"><div class="fill m" style="--v:0.172"></div></div><div class="val">17%<small>55 lvls</small></div></div>
-          <div class="row"><div class="who m">4. Knew rule, bad plan<small>61% of all h2 failures!</small></div><div class="track"><div class="fill m" style="--v:0.320"></div></div><div class="val m">32%<small>102 lvls</small></div></div>
+          <div class="row"><div class="who">3. Stuck repeating moves<small>ramming jammed gate</small></div><div class="track"><div class="fill failure" style="--v:0.172"></div></div><div class="val">17%<small>55 lvls</small></div></div>
+          <div class="row"><div class="who failure">4. Knew rule, bad plan<small>61% of all h2 failures!</small></div><div class="track"><div class="fill failure" style="--v:0.320"></div></div><div class="val failure">32%<small>102 lvls</small></div></div>
           <div class="row"><div class="who">5. Reset too late<small>battery sunk-cost</small></div><div class="track"><div class="fill y" style="--v:0.031"></div></div><div class="val">3%<small>10 lvls</small></div></div>
         </div>
         <div class="card accent">
@@ -679,7 +686,7 @@ body.present .slide.current .frame {
       </div>
       <div class="body">
         <div class="card human-box">
-          <span class="kicker" style="color:var(--human)">What Worked · Thinking-On GRPO (<code>RL v2</code> on B200)</span>
+          <span class="kicker model-qwen">What Worked · Thinking-On GRPO (<code>RL v2</code> on B200)</span>
           <p>Training from base <code>Qwen3.5-9B</code> on <code>gridbranch</code> / <code>v3b</code> worlds, rewarding BFS-optimal moves <b>only after closed <code>&lt;/think&gt;</code></b> (<span class="fig">95–100%</span> think closure):</p>
           <table>
             <thead><tr><th>Qwen3.5-9B (PROTOCOL v3)</th><th class="r">MATH</th><th class="r">GSM8K</th><th class="r">MedQA</th><th class="r">MMLU-Health</th></tr></thead>
@@ -763,13 +770,13 @@ body.present .slide.current .frame {
       <h2>How VERITAS monetizes: Diagnose → Train → Certify.</h2>
       <div class="cols-3">
         <div class="card biz-box">
-          <span class="kicker" style="color:var(--cyan)">Tier 1 · Diagnostic SaaS</span>
+          <span class="kicker">Tier 1 · Diagnostic SaaS</span>
           <h3><code>/insights</code> Readiness Gate</h3>
           <p><b class="fig">€2,000 / mo</b> per engineering team</p>
           <p class="muted">Robotics, drone &amp; enterprise RPA teams connect their agent via MCP. Automatically flags zero-effect battery loops (<code>50%</code>) and Knowing–Doing failures (<code>54%</code>) before field deployment.</p>
         </div>
         <div class="card human-box">
-          <span class="kicker" style="color:var(--human)">Tier 2 · Edge RL &amp; Lab Gym</span>
+          <span class="kicker">Tier 2 · Edge RL &amp; Lab Gym</span>
           <h3>Custom Post-Training Curricula</h3>
           <p><b class="fig">€15k – €50k</b> / engagement</p>
           <p class="muted">AI labs (AfterQuery's market) &amp; offline robotics OEMs license failure-targeted CPU environments + Thinking-On GRPO recipes to distill reasoning into <code>4B–9B</code> local models.</p>
@@ -926,7 +933,7 @@ harbor run -p harbor/eval-v2 -a &lt;agent&gt;  # 30 unseen-rule worlds</code>
   try {
     if (window.QRCode) new QRCode(document.getElementById("qr"), {
       text: "https://65.108.33.107.compute.verda.run/challenge", width: 256, height: 256,
-      colorDark: "#0b0d10", colorLight: "#eef0f4", correctLevel: QRCode.CorrectLevel.M
+      colorDark: "#0e0e0f", colorLight: "#efefec", correctLevel: QRCode.CorrectLevel.M
     });
   } catch (e) {}
 
