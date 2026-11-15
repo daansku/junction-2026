@@ -19,13 +19,16 @@ from collections import deque
 from dataclasses import dataclass, field
 import random
 
-SIZE = 9
+import os
+
+LITE = os.environ.get("ROVER_LITE") == "1"   # rover-lite: 7x7, beacon 3-6 steps away, fewer walls (hidden controls kept)
+SIZE = 7 if LITE else 9
 BASE = (SIZE // 2, SIZE // 2)
 ACTIONS = ("ACTION1", "ACTION2", "ACTION3", "ACTION4")
 DIRS = {"north": (-1, 0), "south": (1, 0), "west": (0, -1), "east": (0, 1)}
 FIXED = {"ACTION1": "north", "ACTION2": "south", "ACTION3": "west", "ACTION4": "east"}
-WALL_P = 0.19
-GOAL_MIN, GOAL_MAX = 5, 10      # shortest one-way path from base to beacon (frozen after dev calibration)
+WALL_P = 0.12 if LITE else 0.19
+GOAL_MIN, GOAL_MAX = (3, 6) if LITE else (5, 10)     # shortest one-way path from base to beacon (frozen after dev calibration)
 SLACK = 30                      # energy = 2 * one-way + SLACK
 
 
@@ -150,7 +153,7 @@ class Rover:
             "Goal: find the beacon G, then drive back to B before the energy runs out.\n"
             f"Recent actions (oldest first):\n{hist}\n"
             f"Your notes from last step: {notes or '(none)'}\n"
-            f"Map (9 rows x 9 columns):\n{self.render()}\n"
+            f"Map ({SIZE} rows x {SIZE} columns):\n{self.render()}\n"
             'Reply with only JSON: {"notes": "short memory: what each action does, plan", "action": "ACTION1|ACTION2|ACTION3|ACTION4"}'
         )
 
