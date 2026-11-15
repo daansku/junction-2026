@@ -8,7 +8,7 @@
 #
 # Version 2 (Sat 14.11 18:00): the PRIMARY suite is the humans' list in FT_BENCHMARKS.md (Daniel, 17:24),
 # adopted by human decision over A2's v1 list. reasoning-gym tiers are kept as a labelled SECONDARY tier
-# (PLAN.md §3.2 near transfer / logic); they never enter the headline number.
+# (near transfer / logic); they never enter the headline number.
 # Task names, shot counts and output types were checked against lm-evaluation-harness 0.4.13 on the Verda box.
 #
 # kind: lm_eval        -> lm-evaluation-harness; `fewshot` overrides the task default (null = task default)
@@ -36,7 +36,7 @@ tiers:
   # pre-declared BBH subset: removed with BBH in v4
 
   secondary_reasoning_gym:
-    description: PLAN §3.2 near-transfer and logic tasks closest to our games (procedural, fresh items from a seed)
+    description: near-transfer and logic tasks closest to our games (procedural, fresh items from a seed)
     benchmarks:
       - {id: rg_maze, kind: reasoning_gym, dataset: maze, n: 100}
       - {id: rg_sokoban, kind: reasoning_gym, dataset: sokoban, n: 100}

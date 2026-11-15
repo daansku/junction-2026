@@ -63,7 +63,7 @@ All rows share the base model, LoRA recipe (A3, `posttrain/`), serving stack (vL
 
 **Pre-declared BBH subset** (reported separately, computed from row 1's items): tracking shuffled objects, navigate, logical deduction, web of lies, temporal sequences.
 
-**Secondary (PLAN §3.2, never in the headline):** reasoning-gym `maze`, `sokoban`, `rush_hour`, `shortest_path`, `arc_1d`, `zebra_puzzles`, `knights_knaves`, 100 items each from dataset seed `20261114`, graded by the library's own `score_answer`. Our held-out `eval-v1`/`eval-v2` games are scored by the arena (A3 `finetune-eval`, h1/h2), not here.
+**Secondary (never in the headline):** reasoning-gym `maze`, `sokoban`, `rush_hour`, `shortest_path`, `arc_1d`, `zebra_puzzles`, `knights_knaves`, 100 items each from dataset seed `20261114`, graded by the library's own `score_answer`. Our held-out `eval-v1`/`eval-v2` games are scored by the arena (A3 `finetune-eval`, h1/h2), not here.
 
 Metrics: the task's own primary metric, preferring the `flexible-extract` / `custom-extract` filter where a task has several (the model is not told the "The answer is" format in 0-shot settings). MedQA: `acc_norm`.
 
@@ -89,9 +89,9 @@ Metrics: the task's own primary metric, preferring the `flexible-extract` / `cus
 2. Secondary: each candidate vs `base` on every row; BBH subset; `sft-v1` vs `base`; reasoning-gym tier.
 3. Negative control: MMLU-Pro history delta for every candidate.
 
-**Claim rule (honesty, PLAN §3.3):** we say "training on our games improved reasoning" only if a candidate beats `ctrl` on the headline **and** on at least two primary benchmarks with CIs excluding zero, **and** its MMLU-Pro history delta vs `ctrl` is not as large as its headline delta (otherwise: formatting, not reasoning). Otherwise the pitch says plainly that no transfer was shown and reports the in-domain (game) gain.
+**Claim rule (honesty):** we say "training on our games improved reasoning" only if a candidate beats `ctrl` on the headline **and** on at least two primary benchmarks with CIs excluding zero, **and** its MMLU-Pro history delta vs `ctrl` is not as large as its headline delta (otherwise: formatting, not reasoning). Otherwise the pitch says plainly that no transfer was shown and reports the in-domain (game) gain.
 
-## 7. Intermediate checkpoints and the finalist (fixed before results; PLAN §3.3)
+## 7. Intermediate checkpoints and the finalist (fixed before results)
 
 - RL / intermediate checkpoints run the **dev slice**: the first 25 items of every (sub)task of the primary suite and the negative control (~975 items; `python -m bench run --dev-slice`). Same items for every checkpoint. FT_BENCHMARKS.md asked for a random 1,000-item subsample; lm-eval's `--limit` takes the first N, which is fixed and identical across models.
 - **Finalist** = the checkpoint with the best dev-slice headline whose MMLU-Pro history drop vs `base` is ≤ 2 points. Ties: the earlier checkpoint.
