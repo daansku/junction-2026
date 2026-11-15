@@ -261,6 +261,7 @@ code {
 }
 .rover-model { display: block; width: 100%; height: 100%; min-height: 0; border: 1px solid var(--line); background: #171312; }
 .cap { font-family: var(--mono); font-size: 0.88cqw; color: var(--muted); text-align: center; }
+.difficulty { margin-top: 1.2cqw; display: grid; gap: 0.6cqw; }
 .shot { width: 100%; max-height: 27cqw; object-fit: cover; object-position: top; border: 1px solid var(--line-strong); border-radius: 3px; display: block; }
 
 .gifs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85cqw; }
@@ -784,9 +785,13 @@ body.present .slide.current .frame {
           <figure><img src="../deck/assets/teleporters.gif" alt="Teleporters"><figcaption>tunnel warps</figcaption></figure>
         </div>
       </div>
+      <div class="card accent difficulty">
+        <span class="kicker" style="color:var(--accent)">Four difficulty levels, chosen per game</span>
+        <p>Setting every game to level 4 would break most agents. A model learns nothing from games it never wins, so we keep the easier levels for training.</p>
+      </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 3 (0:55)</b>The factory generates games from code, and each new seed makes a new board. The AI sees a 64 by 64 grid, 16 colours, and six actions, with no text, score, or rule names. Colours and shapes change between games, and each level hides a new mechanic. A search confirms every level can be solved.</div>
+  <div class="notes"><b>Speaker Notes: Slide 3 (0:55)</b>The factory generates games from code, and each new seed makes a new board. The AI sees a 64 by 64 grid, 16 colours, and six actions, with no text, score, or rule names. Colours and shapes change between games, and each level hides a new mechanic. A search confirms every level can be solved. Difficulty goes from 1 to 4. Levels 1 to 3 have smaller maps and fewer rules, so a model wins often enough to learn from them. Level 4 adds bigger maps and three rules we leave out of training, and that is where AI wins 0% to 44% of games. We could run everything at level 4 to break agents, but a model learns nothing from games it never wins.</div>
 </section>
 
 <!-- SLIDE 4: LIVE DEMO (/CHALLENGE) -->
@@ -977,32 +982,32 @@ body.present .slide.current .frame {
         <div class="body">
           <div class="card">
             <span class="kicker">From failure reports to training tasks</span>
-            <p class="muted">We turn mistakes from <code>/insights</code>, such as missed rules and bad routes, into practice for <b><code>Qwen3.5-9B</code></b>, a small model that can run on a robot.</p>
+            <p class="muted">We turn mistakes from <code>/insights</code>, such as missed rules and bad routes, into practice for <b><code>Qwen3.5-4B</code></b> and <b><code>Qwen3.5-9B</code></b>, small models that can run on a robot.</p>
           </div>
           <div class="card model-box">
             <span class="kicker">Two approaches that failed</span>
             <ul class="list m">
-              <li>Trained to copy winning moves, the model solved only <span class="fig">4 of 180</span> levels. Memorized moves fail on a new map.</li>
+              <li>Trained to copy winning moves, the 9B model solved only <span class="fig">4 of 180</span> levels. Memorized moves fail on a new map.</li>
               <li>Trained with reasoning switched off, it dropped from <span class="fig">0.76 to 0.44</span> (on a 0 to 1 scale) on separate tests.</li>
             </ul>
           </div>
         </div>
         <div class="card human-box">
-            <span class="kicker model-qwen">Training with reasoning switched on</span>
-          <p>We trained <code>Qwen3.5-9B</code> on single moves from our games, using reinforcement learning and keeping its reasoning enabled:</p>
+            <span class="kicker model-qwen">Math scores after training on our games</span>
+          <p>The 4B model learned from its own winning games over two rounds. The 9B model trained on single moves with reasoning on. Neither saw a math problem during training:</p>
           <table>
-            <thead><tr><th>Qwen3.5-9B math test</th><th class="r">Score</th><th class="r">Change</th></tr></thead>
+            <thead><tr><th>Held-out math test</th><th class="r">Before</th><th class="r">After</th><th class="r">Change</th></tr></thead>
             <tbody>
-              <tr><td>Untrained 9B base model</td><td class="r">58.9%</td><td class="r muted">baseline</td></tr>
-              <tr><td><b>After 30 training steps</b></td><td class="r fig">64.0%</td><td class="r fig">+5.1 points</td></tr>
+              <tr><td><b>Qwen3.5-4B</b>, 2 rounds</td><td class="r">62.3%</td><td class="r fig">68.0%</td><td class="r fig">+5.7 points</td></tr>
+              <tr><td>Qwen3.5-9B, 30 steps</td><td class="r">63.4%</td><td class="r">67.4%</td><td class="r">+4.0 points</td></tr>
             </tbody>
           </table>
-          <p class="muted" style="font-size:1.06cqw">Measured on 175 math questions.</p>
+          <p class="muted" style="font-size:1.06cqw">175 held-out MATH questions, same settings for every model. The trained 4B beats the untrained 9B, but neither gain is significant yet (p = 0.15 and p = 0.31).</p>
         </div>
       </div>
     </div>
   </div></div>
-  <div class="notes"><b>Speaker Notes: Slide 9 (1:05)</b>We also use the games as training data. We trained a nine-billion-parameter model on single moves from our games, using reinforcement learning with reasoning switched on. After 30 steps, its score on 175 math questions rose from 58.9% to 64.0%.</div>
+  <div class="notes"><b>Speaker Notes: Slide 9 (1:05)</b>We also use the games as training data. The four-billion-parameter model learned from its own winning games over two rounds, and its score on 175 held-out math questions rose from 62.3% to 68.0%. That is higher than the untrained nine-billion-parameter model at 63.4%. The 9B model, trained on single moves with reasoning on, went from 63.4% to 67.4%. The training never included math, and neither gain is statistically significant yet.</div>
 </section>
 
 <!-- SLIDE 10: ROVER TRANSFER TEST -->
