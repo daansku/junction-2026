@@ -38,6 +38,11 @@
       "Because the supply never runs out, the games are also training data. So can a small model learn from them?",
       "We are training a nine-billion-parameter model on them, and scoring it on reasoning benchmarks outside our games."
     ]},
+    {"key": "S5R", "file": "s5r_rover", "scene": "S5RRover", "lines": [
+      "We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home.",
+      "Frontier models solve it almost every time. A nine-billion-parameter model without thinking completes five percent.",
+      "Trained on our games, with thinking on, it completes about half. The same model with thinking but without our training is still being measured."
+    ]},
     {"key": "S6S7", "file": "s6_s7_close", "scene": "S6S7Close", "lines": [
       "That makes the factory useful beyond this hackathon: private evaluations that can't leak, and endless training environments for labs.",
       "Every broken agent shows where AI still has to learn.",

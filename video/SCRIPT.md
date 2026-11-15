@@ -105,6 +105,13 @@ Anssi: show 2–4 failure modes. Start with one replay, scroll to the next, then
 - **Gain with a CI that excludes zero:** "Trained on our games, it reasons better on outside benchmarks than the control."
 - **No gain:** "On outside reasoning it did not beat the control. In our own games it improved by [N]. That is the honest result." (PLAN §3.3 honesty rule.)
 
+### S5R Rover transfer test (new, Sun 15.11; built to be swapped)
+
+A3's edge rover experiment as a separate scene (`scenes/s5r_rover.py`). Everything it shows comes from `video/rover.json` (bars, labels, git ref, which mission to replay) and the "S5R" lines in `narration.json`. To change it: edit those, run `tools/fetch_rover.py`, `tools/tts.py`, then `tools/build.py`.
+- Beat 1: a recorded mission (seed 5000, `think-h2-s60`, scrambled controls) replays on a 9x9 grid with fog; the four buttons show "?" until the rover has tried them, then their direction.
+- Beat 2: chart of missions completed with 95% CIs: Gemini 4 Argon, Gemini Flash, 9B thinking off.
+- Beat 3: our model's row. The "9B thinking on, no training" row is a placeholder until A3's run finishes; the line for beat 3 must change with that result (if it matches 51/100, the honest line is that thinking, not our training, makes the difference).
+
 ### S6 Business value (2:35–2:48, 13 s)
 
 | Time | On screen | Voice-over |
