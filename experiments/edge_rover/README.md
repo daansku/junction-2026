@@ -159,7 +159,32 @@ The corrected training recipe, run on Sunday 04:30-06:20 on the B200 + H100.
 | **after round 2 (repair on)** | **54/100** | 44-63% | **7.8** | 0 | **20 / 7, p=0.019** |
 | (after round 1, earlier run without repair) | 44/100 | 35-54% | 11.1 | 17 | 16 / 13, p=0.71 |
 
-**The gain grows with each RL round: 41 -> 50 -> 54**, and bumps fall 10.1 -> 9.0 -> 7.8. Round 3 on fresh levels (320 levels with 10 optimal moves never played before, 2 shots each) is running.
+| after round 3 (repair on) | 51/100 | 41-61% | 7.8 | 0 | 20 / 10, p=0.099 |
+
+**Round 3 (07:24):**
+- **Rollouts:** the round-2 model played 320 FRESH, harder levels (10 optimal moves, never played by any round), 2 shots each.
+- **Wins:** 13 new levels won (4.1% of levels), about twice the base's rate on easier levels.
+- **Training:** retrained from base on 56 unique won levels (1,372 turns); val loss 0.319 -> 0.132.
+
+**Reading across rounds:**
+- RL on our games improves the held-out rover task by about **+10-13 points**: 41 -> 50 -> 54 -> 51.
+- Bumps fall 10.1 -> 7.8.
+- The gain is significant at round 2 (p=0.019). Round 3 is level with round 2, within noise (the CIs overlap), so the gain plateaus after round 2.
+
+**Mechanics in the won levels:**
+
+| Mechanic | Unique levels won |
+|---|---|
+| none (navigation) | 37 |
+| ice | 8 |
+| hazards | 4 |
+| teleporters | 2 |
+| push blocks | 2 |
+| one-way | 1 |
+| hazards+one-way | 1 |
+| remap (scrambled controls) | 1 |
+
+Two-thirds are plain navigation, so the transfer likely comes mostly from better board reading and planning. The next lever is sampling rule levels on purpose.
 
 **Reading (round 1):**
 - The direction is positive: +5 points, and 15 vs 10 discordant missions. This is too small to claim at n=100.

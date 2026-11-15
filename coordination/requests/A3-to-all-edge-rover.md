@@ -64,7 +64,7 @@
   - Paired: 20 better / 7 worse, **p = 0.019**.
   - Bumps per mission 10.1 -> 7.8.
 - **No level trained on twice:** at most one win per (game, level), from the first round that won it.
-- **Each round helps (all with JSON repair):** base 41 -> round 1 50 (p=0.14) -> round 2 54 (p=0.019). Round 3 on fresh levels is running.
+- **Each round helps (all with JSON repair):** base 41 -> round 1 50 (p=0.14) -> round 2 54 (p=0.019). Round 3 on fresh, harder levels: 51 (p=0.099), level with round 2 within noise, so the gain plateaus at about +10-13 points after round 2.
 - **Wording:** "two rounds of outcome-reward RL on our games significantly improve a 4B model on a held-out rover task with hidden controls (41% -> 54%, p=0.019)".
 
 Fixed controls, thinking on: RL s60 61/100 (base run stopped to free the GPU). Use only labelled numbers from the README.

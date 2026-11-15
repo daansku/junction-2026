@@ -1,0 +1,18 @@
+{
+  "episodes": 3183,
+  "solved": 56,
+  "solve_rate": 0.018,
+  "mean_reward_solved": 0.605,
+  "examples": 1401,
+  "weighted_episodes": 117,
+  "dropped_replays": 28,
+  "unique_levels_won": 56,
+  "games": 56,
+  "levels": {
+    "1": 37,
+    "4": 5,
+    "2": 7,
+    "3": 4,
+    "5": 3
+  }
+}
