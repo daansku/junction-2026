@@ -1,0 +1,46 @@
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+  3/3 Actions: 175.000 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1:03:15 0:00:00
+adhoc • opencode • gemini-3.8-flash
+┏━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Excepti… ┃ Actions ┃ Invalid… ┃ Levels_… ┃ Levels… ┃ Reward ┃   Won ┃
+┡━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│      3 │        1 │ 175.000 │    1.333 │    3.333 │   8.000 │  0.322 │ 0.000 │
+└────────┴──────────┴─────────┴──────────┴──────────┴─────────┴────────┴───────┘
+
+┏━━━━━━━━━━┳━━━━━━━┓
+┃ Reward   ┃ Count ┃
+┡━━━━━━━━━━╇━━━━━━━┩
+│ 0.582838 │     1 │
+│ 0.239583 │     1 │
+│ 0.143456 │     1 │
+│ 6        │     1 │
+│ 2        │     2 │
+│ 8        │     3 │
+│ 250      │     1 │
+│ 84       │     1 │
+│ 191      │     1 │
+│ 0        │     1 │
+│ 2        │     2 │
+│ 0        │     3 │
+└──────────┴───────┘
+
+┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ Exception         ┃ Count ┃
+┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ AgentTimeoutError │     1 │
+└───────────────────┴───────┘
+
+Job Info
+Total runtime: 1h 3m 15s
+Results written to 
+harbor/run-logs/eval-v2-s910000-gemini-3.8-flash-k3/agent-gemini_gemini-3.8-flas
+h/2026-11-15__03-18-12/result.json
+Inspect results by running `harbor view 
+harbor/run-logs/eval-v2-s910000-gemini-3.8-flash-k3/agent-gemini_gemini-3.8-flas
+h`
+Share results by running `harbor upload 
+harbor/run-logs/eval-v2-s910000-gemini-3.8-flash-k3/agent-gemini_gemini-3.8-flas
+h/2026-11-15__03-18-12`
+

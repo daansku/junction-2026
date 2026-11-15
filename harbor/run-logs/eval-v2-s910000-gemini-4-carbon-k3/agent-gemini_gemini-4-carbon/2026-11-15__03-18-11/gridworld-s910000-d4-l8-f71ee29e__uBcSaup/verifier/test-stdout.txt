@@ -1,0 +1,1 @@
+{"reward": 0.742717, "levels_solved": 7, "levels_total": 8, "actions": 200, "invalid_actions": 0, "per_level": [1.0, 1.0, 0.6429, 0.7941, 1.0, 0.9333, 0.5714, 0.0], "won": false}

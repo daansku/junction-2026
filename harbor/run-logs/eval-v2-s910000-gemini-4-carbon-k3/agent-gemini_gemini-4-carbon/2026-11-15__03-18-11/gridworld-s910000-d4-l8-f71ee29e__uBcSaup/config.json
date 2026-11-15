@@ -1,0 +1,162 @@
+{
+    "schema_version": 1,
+    "task": {
+        "path": "harbor/eval-v2/gridworld-s910000-d4-l8-f71ee29e",
+        "git_url": null,
+        "git_commit_id": null,
+        "name": null,
+        "ref": null,
+        "overwrite": false,
+        "download_dir": null,
+        "source": null
+    },
+    "trial_name": "gridworld-s910000-d4-l8-f71ee29e__uBcSaup",
+    "trials_dir": "harbor/run-logs/eval-v2-s910000-gemini-4-carbon-k3/agent-gemini_gemini-4-carbon/2026-11-15__03-18-11",
+    "install_only": false,
+    "timeout_multiplier": 1.0,
+    "agent_timeout_multiplier": null,
+    "verifier_timeout_multiplier": null,
+    "agent_setup_timeout_multiplier": 4.0,
+    "environment_build_timeout_multiplier": null,
+    "agent": {
+        "name": "opencode",
+        "import_path": null,
+        "model_name": "gemini/gemini-4-carbon",
+        "base_url": null,
+        "model_api_key_name": null,
+        "model_api_format": null,
+        "skip_model_parsing": false,
+        "n_concurrent": null,
+        "concurrency_group": null,
+        "skills": [],
+        "override_timeout_sec": null,
+        "override_setup_timeout_sec": null,
+        "max_timeout_sec": null,
+        "resume_trajectory": false,
+        "load_trajectory": null,
+        "extra_allowed_hosts": [],
+        "kwargs": {
+            "opencode_config": {
+                "$schema": "https://opencode.ai/config.json",
+                "provider": {
+                    "verda-nemotron": {
+                        "npm": "@ai-sdk/openai-compatible",
+                        "name": "Verda Nemotron 3.5 Super VL",
+                        "options": {
+                            "baseURL": "https://containers.datacrunch.io/nemotron-3-5-super-vl-b300/v1",
+                            "apiKey": "{env:NVIDIA_VERDA_INFERENCE_KEY}"
+                        },
+                        "models": {
+                            "nemotron-3.5-super-vl": {
+                                "name": "Nemotron 3.5 Super VL",
+                                "limit": {
+                                    "context": 1048576,
+                                    "output": 32768
+                                }
+                            }
+                        }
+                    },
+                    "verda-kimi": {
+                        "npm": "@ai-sdk/openai-compatible",
+                        "name": "Verda Kimi K3.1 Pro",
+                        "options": {
+                            "baseURL": "https://inference.verda.com/v1",
+                            "apiKey": "{env:VERDA_INFERENCE_KEY}"
+                        },
+                        "models": {
+                            "kimi-k3-1-pro": {
+                                "name": "Kimi K3.1 Pro",
+                                "limit": {
+                                    "context": 262144,
+                                    "output": 32768
+                                }
+                            }
+                        }
+                    },
+                    "featherless": {
+                        "npm": "@ai-sdk/openai-compatible",
+                        "name": "Featherless",
+                        "options": {
+                            "baseURL": "https://api.featherless.ai/v1",
+                            "apiKey": "{env:FEATHERLESS_API_KEY}"
+                        },
+                        "models": {
+                            "deepseek-ai/DeepSeek-V3.2": {
+                                "name": "DeepSeek V3.2",
+                                "limit": {
+                                    "context": 32768,
+                                    "output": 8192
+                                }
+                            },
+                            "zai-org/GLM-5.3": {
+                                "name": "GLM 5.3",
+                                "limit": {
+                                    "context": 262144,
+                                    "output": 32768
+                                }
+                            },
+                            "Qwen/Qwen3.5-397B-A17B": {
+                                "name": "Qwen3.5 397B",
+                                "limit": {
+                                    "context": 32768,
+                                    "output": 8192
+                                }
+                            },
+                            "moonshotai/Kimi-K2.6": {
+                                "name": "Kimi K2.6",
+                                "limit": {
+                                    "context": 32768,
+                                    "output": 8192
+                                }
+                            },
+                            "openai/gpt-oss-120b": {
+                                "name": "gpt-oss-120b",
+                                "limit": {
+                                    "context": 131072,
+                                    "output": 32768
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "env": {
+            "NVIDIA_VERDA_INFERENCE_KEY": "${NVIDIA_VERDA_INFERENCE_KEY}",
+            "VERDA_INFERENCE_KEY": "${VERDA_INFERENCE_KEY}",
+            "FEATHERLESS_API_KEY": "${FEATHERLESS_API_KEY}",
+            "GOOGLE_GENERATIVE_AI_API_KEY": "${GEMINI_API_KEY}"
+        },
+        "mcp_servers": []
+    },
+    "user_agent": null,
+    "environment": {
+        "type": "docker",
+        "import_path": null,
+        "force_build": false,
+        "delete": true,
+        "stream": false,
+        "cpu_enforcement_policy": "auto",
+        "memory_enforcement_policy": "auto",
+        "override_cpus": null,
+        "override_memory_mb": null,
+        "override_storage_mb": null,
+        "override_gpus": null,
+        "override_tpu": null,
+        "mounts": null,
+        "extra_docker_compose": [],
+        "kwargs": {},
+        "extra_allowed_hosts": []
+    },
+    "verifier": {
+        "override_timeout_sec": null,
+        "max_timeout_sec": null,
+        "disable": false
+    },
+    "override_error_policy": {},
+    "artifacts": [],
+    "extra_instruction_paths": [],
+    "extra_instructions": [],
+    "job_id": "4ad172d2-44be-4d94-b8f3-2273437a9f8b",
+    "source_trial": null
+}

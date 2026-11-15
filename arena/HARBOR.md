@@ -95,6 +95,22 @@ the model connects and its game actions count. Every model below plays through H
 
 Not tested: `anthropic/claude-sonnet-5-5` and `claude-opus-5-5` (Anthropic key nearly empty); same provider path as Haiku.
 
+### Full-length runs (judges' protocol): `harbor/run-logs/`
+`make judge MODEL=<selector> K=3` on eval-v2 game 1, 60-min cap per attempt, attempts in parallel (Sun 15.11
+03:18-04:55, Docker 29.8.1, Harbor 0.26.0, OpenCode 1.19.5). Per-attempt tables, logs and trajectories:
+[harbor/run-logs/README.md](../harbor/run-logs/README.md).
+
+**Known agent-harness bug: OpenCode + Gemini 4 Argon.** Gemini 4 sometimes answers with thinking only (no text, no
+tool call; OpenCode logs finish reason `unknown`). Since v1.18.21 OpenCode then continues the turn by resending the
+conversation, which now ends with a model turn, and Gemini rejects that with HTTP 400 `Requests ending with a model
+turn are not supported.` OpenCode exits (`NonZeroAgentExitCodeError`) and the attempt ends early; the reward still
+counts what was played (graded from the game container as usual). All three Argon attempts on the native `gemini/`
+route ended this way after 9-13 min; the OpenAI-compatible route (`google-openai/gemini-4-argon`, registered in
+`arena/opencode-models.json` with `reasoningEffort: high`) hits the same 400. Gemini 4 Carbon and Gemini 3.8 Flash
+did not hit it in 60-min runs. Not an environment bug: the game, MCP tools and grading behave normally; nothing in
+the task can avoid it. No OpenCode release fixes it as of 1.19.5 (PR anomalyco/opencode#40142, closed unmerged,
+covered only the `length` case).
+
 ## Verified (2026-11-14, on A1's `dev` collection)
 - Unit tests: optimal = 1.0, nothing = 0, stop one move short = 0, one wasted RESET = exact partial credit,
   invalid input and post-win actions not counted, only two MCP tools, no `/score` route, evidence file tracks score.

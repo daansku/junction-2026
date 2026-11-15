@@ -1,0 +1,31 @@
+Agent 'oracle' exposes no native web search or fetch tools for Harbor to disable; continuing. Sandbox network policy still applies.
+  1/1 Actions: 187.000 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0:00:44 0:00:00
+adhoc • oracle
+┏━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Excepti… ┃ Actions ┃ Invalid… ┃ Levels_… ┃ Levels… ┃ Reward ┃   Won ┃
+┡━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│      1 │        0 │ 187.000 │    0.000 │    8.000 │   8.000 │  1.000 │ 1.000 │
+└────────┴──────────┴─────────┴──────────┴──────────┴─────────┴────────┴───────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 1.0    │     1 │
+│ 8      │     1 │
+│ 8      │     1 │
+│ 187    │     1 │
+│ 0      │     1 │
+│ 1      │     1 │
+└────────┴───────┘
+
+Job Info
+Total runtime: 44s
+Results written to 
+harbor/run-logs/eval-v2-s910000-gemini-4-argon-k3/reference/2026-11-15__03-17-51
+/result.json
+Inspect results by running `harbor view 
+harbor/run-logs/eval-v2-s910000-gemini-4-argon-k3/reference`
+Share results by running `harbor upload 
+harbor/run-logs/eval-v2-s910000-gemini-4-argon-k3/reference/2026-11-15__03-17-51
+`
+

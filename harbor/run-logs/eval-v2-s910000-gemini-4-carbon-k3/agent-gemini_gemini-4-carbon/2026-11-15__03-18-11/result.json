@@ -1,0 +1,96 @@
+{
+    "schema_version": 1,
+    "id": "4ad172d2-44be-4d94-b8f3-2273437a9f8b",
+    "started_at": "2026-11-15T03:18:16.130547",
+    "updated_at": "2026-11-15T04:22:31.591134",
+    "finished_at": "2026-11-15T04:22:31.591134",
+    "n_total_trials": 3,
+    "stats": {
+        "n_completed_trials": 3,
+        "n_errored_trials": 3,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+        "n_retries": 0,
+        "evals": {
+            "opencode__gemini-4-carbon__adhoc": {
+                "n_trials": 3,
+                "n_errors": 3,
+                "metrics": [
+                    {
+                        "actions": 212.33333333333334,
+                        "invalid_actions": 0.0,
+                        "levels_solved": 7.0,
+                        "levels_total": 8.0,
+                        "reward": 0.7621586666666667,
+                        "won": 0.0
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "0.77715": [
+                            "gridworld-s910000-d4-l8-f71ee29e__VyAvCN8"
+                        ],
+                        "0.766609": [
+                            "gridworld-s910000-d4-l8-f71ee29e__Wd2TKEz"
+                        ],
+                        "0.742717": [
+                            "gridworld-s910000-d4-l8-f71ee29e__uBcSaup"
+                        ]
+                    },
+                    "levels_solved": {
+                        "7": [
+                            "gridworld-s910000-d4-l8-f71ee29e__VyAvCN8",
+                            "gridworld-s910000-d4-l8-f71ee29e__Wd2TKEz",
+                            "gridworld-s910000-d4-l8-f71ee29e__uBcSaup"
+                        ]
+                    },
+                    "levels_total": {
+                        "8": [
+                            "gridworld-s910000-d4-l8-f71ee29e__VyAvCN8",
+                            "gridworld-s910000-d4-l8-f71ee29e__Wd2TKEz",
+                            "gridworld-s910000-d4-l8-f71ee29e__uBcSaup"
+                        ]
+                    },
+                    "actions": {
+                        "212": [
+                            "gridworld-s910000-d4-l8-f71ee29e__VyAvCN8"
+                        ],
+                        "225": [
+                            "gridworld-s910000-d4-l8-f71ee29e__Wd2TKEz"
+                        ],
+                        "200": [
+                            "gridworld-s910000-d4-l8-f71ee29e__uBcSaup"
+                        ]
+                    },
+                    "invalid_actions": {
+                        "0": [
+                            "gridworld-s910000-d4-l8-f71ee29e__VyAvCN8",
+                            "gridworld-s910000-d4-l8-f71ee29e__Wd2TKEz",
+                            "gridworld-s910000-d4-l8-f71ee29e__uBcSaup"
+                        ]
+                    },
+                    "won": {
+                        "0": [
+                            "gridworld-s910000-d4-l8-f71ee29e__VyAvCN8",
+                            "gridworld-s910000-d4-l8-f71ee29e__Wd2TKEz",
+                            "gridworld-s910000-d4-l8-f71ee29e__uBcSaup"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "AgentTimeoutError": [
+                        "gridworld-s910000-d4-l8-f71ee29e__VyAvCN8",
+                        "gridworld-s910000-d4-l8-f71ee29e__Wd2TKEz",
+                        "gridworld-s910000-d4-l8-f71ee29e__uBcSaup"
+                    ]
+                }
+            }
+        },
+        "n_input_tokens": 306737131,
+        "n_cache_tokens": 303171823,
+        "n_output_tokens": 77545,
+        "cost_usd": null
+    }
+}

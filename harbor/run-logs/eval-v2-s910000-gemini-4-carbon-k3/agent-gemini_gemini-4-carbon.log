@@ -1,0 +1,43 @@
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+  3/3 Actions: 212.333 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1:04:15 0:00:00
+adhoc • opencode • gemini-4-carbon
+┏━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Excepti… ┃ Actions ┃ Invalid… ┃ Levels_… ┃ Levels… ┃ Reward ┃   Won ┃
+┡━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│      3 │        3 │ 212.333 │    0.000 │    7.000 │   8.000 │  0.762 │ 0.000 │
+└────────┴──────────┴─────────┴──────────┴──────────┴─────────┴────────┴───────┘
+
+┏━━━━━━━━━━┳━━━━━━━┓
+┃ Reward   ┃ Count ┃
+┡━━━━━━━━━━╇━━━━━━━┩
+│ 0.77715  │     1 │
+│ 0.766609 │     1 │
+│ 0.742717 │     1 │
+│ 7        │     3 │
+│ 8        │     3 │
+│ 212      │     1 │
+│ 225      │     1 │
+│ 200      │     1 │
+│ 0        │     3 │
+│ 0        │     3 │
+└──────────┴───────┘
+
+┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ Exception         ┃ Count ┃
+┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ AgentTimeoutError │     3 │
+└───────────────────┴───────┘
+
+Job Info
+Total runtime: 1h 4m 15s
+Results written to 
+harbor/run-logs/eval-v2-s910000-gemini-4-carbon-k3/agent-gemini_gemini-4-carbon/
+2026-11-15__03-18-11/result.json
+Inspect results by running `harbor view 
+harbor/run-logs/eval-v2-s910000-gemini-4-carbon-k3/agent-gemini_gemini-4-carbon`
+Share results by running `harbor upload 
+harbor/run-logs/eval-v2-s910000-gemini-4-carbon-k3/agent-gemini_gemini-4-carbon/
+2026-11-15__03-18-11`
+

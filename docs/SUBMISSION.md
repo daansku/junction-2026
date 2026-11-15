@@ -36,8 +36,10 @@ We built a procedurally seeded 64×64 pixel RL game factory (`engine 0.5.0`, 15 
 - **Paired, same games:** humans ahead on every shared game: Argon 6/6, Flash 7/7, Gemini Pro h2 4/4, Kimi h2 4/4.
 - **Honest caveats:** Gemini 4 Carbon's first finished eval-v2 game scored 0.789 (above the humans on that game;
   sweep still running). eval-v1 is the easy set (Gemini 4 models 0.82-0.93 on its game 1).
-- **On the judges' harness (Harbor + OpenCode):** reference 1.000 on eval-v2 game 1; OpenCode + Nemotron k=3 mean
-  0.067 (dev game). Frontier OpenCode runs: `make judge MODEL=<selector> K=3`.
+- **On the judges' harness (Harbor + OpenCode), eval-v2 game 1, k=3, 60-min cap** ([harbor/run-logs/](../harbor/run-logs/README.md)):
+  reference 1.000; **Gemini 4 Carbon 0.743 / 0.767 / 0.777 (mean 0.762, 7/8 levels each)**; Gemini 3.8 Flash mean 0.322
+  (quit early twice); Gemini 4 Argon 0.247 (OpenCode crashed on a Gemini 4 API error, agent-harness bug); stop-early
+  0.125; do-nothing 0.000. Rerun: `make judge MODEL=<selector> K=3`.
 
 ### 2. Meaningful Difficulty (30 pts)
 - **Full Pixel Observability, Zero Prose Leakage:** 15 live composable rules across Tiers 0–2 (`keys_doors`, `plates_gates`, `teleporters`, `hazards`, `push_blocks`, `ice`, `one_way`, `collect_all`, `phase_walls`, `rotation`, `remap`, `twin`, `stamina`, `cracked_floor`, `beacon_goal`) plus 3 opt-in Tier-3 mechanics (`conveyors`, `enemies`, `gravity`), rendered in `rules/img/all_rules.png` with HUD budget bar (`rows 0–1`) and level/inventory/health pips (`rows 3–4`).

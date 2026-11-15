@@ -94,6 +94,13 @@ On Windows, `harbor run` exits 1 after writing results (`OPENSSL_Uplink: no OPEN
 | do-nothing | **0.000** | 0/8 | 0 | 0 |
 | stop-early (`ORACLE_STOP_AFTER_LEVELS=1`) | **0.125** | 1/8 | 31 | 0 |
 
+### Full-length frontier runs through Harbor + OpenCode (A4, Sun 15.11 03:18-04:55)
+eval-v2 game 1, `make judge MODEL=<selector> K=3` (attempts in parallel, 60-min cap), OpenCode 1.19.5. Logs + per-attempt
+tables: `harbor/run-logs/README.md`. Reference 1.000, do-nothing 0.000, stop-early 0.125; Gemini 4 Carbon 0.777 / 0.767 /
+0.743 (mean 0.762, 7/8 each, full 60 min); Gemini 3.8 Flash 0.583 / 0.143 / 0.240 (two quit early); Gemini 4 Argon 0.240 /
+0.250 / 0.250 (OpenCode exits on Gemini 400 "Requests ending with a model turn are not supported" after a thinking-only
+reply; same on the OpenAI-compatible route: 0.095 / 0.105 / 0.102). Agent-harness bug, see `arena/HARBOR.md`.
+
 ### Red team: trying to beat the reward from the agent's seat (A4, Sat 14:40-14:55)
 Task `harbor/eval-v1/gridworld-s900000-d1-l6-33a57ce4` (solution folder removed from the copy), Docker + Harbor 0.26.0.
 A custom Harbor agent (`coordination/redteam/redteam_agent.py`) runs `coordination/redteam/attack.py` **inside the agent

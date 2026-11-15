@@ -60,6 +60,9 @@ harbor run -p "$TASK" -a opencode -m gemini/gemini-4-argon -k 3 -n 3 \
 | **Stop-early (L1)** | eval-v2 game 1 | 31 | 1 / 8 | **0.125** |
 | **Do-nothing (`nop`)** | eval-v2 game 1 | 0 | 0 / 8 | **0.000** |
 | **Reference (`oracle`)** | eval-v1 game 1 (`s900000`) | 86 | 6 / 6 | **1.000** |
+| **OpenCode + Gemini 4 Carbon (`k=3`, 60-min cap)** | eval-v2 game 1 | 212 / 225 / 200 | 7/8 each | **0.762 mean** (`0.777`, `0.767`, `0.743`) |
+| **OpenCode + Gemini 3.8 Flash (`k=3`, 60-min cap)** | eval-v2 game 1 | 250 / 191 / 84 | 6/8, 2/8, 2/8 | **0.322 mean** (two attempts quit early) |
+| **OpenCode + Gemini 4 Argon (`k=3`, 60-min cap)** | eval-v2 game 1 | 60 / 63 / 63 | 2/8 each | 0.247 mean: OpenCode crashed on a Gemini 4 API error (agent-harness bug, see run logs) |
 | **OpenCode + Nemotron (`k=3`, 30-min cap)** | dev game `s1000` | 155 / 135 / 227 | 1/6 each | **0.067 mean** (`0.020`, `0.094`, `0.087`) |
 
 **What to expect from the agent runs on this game.** eval-v2 game 1 (`s910000`, 8 levels, shortest solution 187
@@ -77,9 +80,9 @@ finished runs only, one attempt each:
 
 No model has won this game. Gemini 4 Argon (2/8 after 67 moves) and Kimi K3.1 (1/8 after 146 moves) runs ended on
 provider stalls and are not counted. Because these runs take up to ~90 min, every Harbor task gives the agent
-**2 h** (`[agent] timeout_sec = 7200`), and `make judge` runs the K agent attempts in parallel (`N=1` for one at a time).
+**2 h** (`[agent] timeout_sec = 7200`), and `make judge` runs the K agent attempts in parallel (`N=1` for one at a time). The committed OpenCode runs above ([harbor/run-logs/](harbor/run-logs/README.md)) used the earlier 60-min cap: Gemini 4 Carbon reached 7/8 in all three and was still playing when the cap hit.
 
-Every model in [arena/HARBOR.md](arena/HARBOR.md) ("Other models through OpenCode") plays through Harbor + OpenCode (smoke runs: Claude Haiku 5.5, Kimi K3.1, Gemini 4 Argon / Carbon, Gemini 3.8 Flash, Nemotron, DeepSeek V3.2, GLM 5.3). Reward-exploit red team (10 attacks from the agent's seat, all 0.0 or blocked): [coordination/JUDGING.md](coordination/JUDGING.md).
+Full run logs (every attempt's reward, OpenCode event stream and trajectory): [harbor/run-logs/README.md](harbor/run-logs/README.md). Every model in [arena/HARBOR.md](arena/HARBOR.md) ("Other models through OpenCode") plays through Harbor + OpenCode (smoke runs: Claude Haiku 5.5, Kimi K3.1, Gemini 4 Argon / Carbon, Gemini 3.8 Flash, Nemotron, DeepSeek V3.2, GLM 5.3). Reward-exploit red team (10 attacks from the agent's seat, all 0.0 or blocked): [coordination/JUDGING.md](coordination/JUDGING.md).
 
 > *Note:* `python -m server mcp` is retained strictly for interactive local dev/demo inspection; official evaluation runs exclusively through `arena harbor-export` + `harbor run` ([arena/HARBOR.md](arena/HARBOR.md), [coordination/JUDGING.md](coordination/JUDGING.md)).
 

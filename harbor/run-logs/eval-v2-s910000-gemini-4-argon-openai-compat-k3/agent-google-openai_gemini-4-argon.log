@@ -1,0 +1,48 @@
+LiteLLM could not resolve model 'google-openai/gemini-4-argon'; passing it unchanged to the agent. For an OpenAI-compatible endpoint, use openai/<model-id> with OPENAI_API_KEY and OPENAI_BASE_URL. Use --api-format if supported, or --api-key-name and --base-url to override the connection.
+LiteLLM could not resolve model 'google-openai/gemini-4-argon'; passing it unchanged to the agent. For an OpenAI-compatible endpoint, use openai/<model-id> with OPENAI_API_KEY and OPENAI_BASE_URL. Use --api-format if supported, or --api-key-name and --base-url to override the connection.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+Harbor could not determine or estimate the inference endpoint for agent 'opencode'; no inference hosts were automatically added for this agent. Inference requests may be blocked. Use --allow-agent-host <hostname> to allow the required destination.
+  3/3 Actions: 169.667 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1:02:33 0:00:00
+adhoc • opencode • google-openai/gemini-4-argon
+┏━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Excepti… ┃ Actions ┃ Invalid… ┃ Levels_… ┃ Levels… ┃ Reward ┃   Won ┃
+┡━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│      3 │        3 │ 169.667 │    0.333 │    1.000 │   8.000 │  0.100 │ 0.000 │
+└────────┴──────────┴─────────┴──────────┴──────────┴─────────┴────────┴───────┘
+
+┏━━━━━━━━━━┳━━━━━━━┓
+┃ Reward   ┃ Count ┃
+┡━━━━━━━━━━╇━━━━━━━┩
+│ 0.094512 │     1 │
+│ 0.101974 │     1 │
+│ 0.10473  │     1 │
+│ 1        │     3 │
+│ 8        │     3 │
+│ 150      │     1 │
+│ 218      │     1 │
+│ 141      │     1 │
+│ 0        │     2 │
+│ 1        │     1 │
+│ 0        │     3 │
+└──────────┴───────┘
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ Exception                 ┃ Count ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ NonZeroAgentExitCodeError │     2 │
+│ AgentTimeoutError         │     1 │
+└───────────────────────────┴───────┘
+
+Job Info
+Total runtime: 1h 2m 33s
+Results written to 
+harbor/run-logs/eval-v2-s910000-gemini-4-argon-openai-compat-k3/agent-google-ope
+nai_gemini-4-argon/2026-11-15__03-50-13/result.json
+Inspect results by running `harbor view 
+harbor/run-logs/eval-v2-s910000-gemini-4-argon-openai-compat-k3/agent-google-ope
+nai_gemini-4-argon`
+Share results by running `harbor upload 
+harbor/run-logs/eval-v2-s910000-gemini-4-argon-openai-compat-k3/agent-google-ope
+nai_gemini-4-argon/2026-11-15__03-50-13`
+

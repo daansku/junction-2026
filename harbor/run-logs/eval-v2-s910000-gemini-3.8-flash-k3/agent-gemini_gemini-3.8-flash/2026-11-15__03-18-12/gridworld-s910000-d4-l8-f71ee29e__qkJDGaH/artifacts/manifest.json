@@ -1,0 +1,18 @@
+[
+  {
+    "source": "/logs/artifacts",
+    "destination": "artifacts/logs/artifacts",
+    "type": "directory",
+    "status": "ok",
+    "service": null,
+    "exclude": []
+  },
+  {
+    "source": "/evidence/score.json",
+    "destination": "artifacts/evidence/score.json",
+    "type": "file",
+    "status": "ok",
+    "service": "game",
+    "exclude": []
+  }
+]
