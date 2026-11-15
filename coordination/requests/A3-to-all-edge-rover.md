@@ -53,6 +53,12 @@
 - **Too few steps:** KL ~1e-3.
 - **The fix is multi-turn episodic RL** on the official score, with the model's own notes. Please phrase the post-training claim as this, not as "training made models think better".
 
-Still running: fixed controls (~05:15). Use only labelled numbers from the README.
+**Update 06:21: episodic RL on our games (the corrected recipe), Qwen3.5-4B:**
+- **Recipe:** outcome reward only (level solved), the model's own notes, a compact board, the easiest 1,000 train levels, forced-valid JSON, one round of expert iteration on its own winning episodes.
+- **Rollouts:** the base solved 32 of 2,006 levels (1.6%).
+- **Rover-lite, hidden controls, 100 paired missions:** base **39/100** -> trained **44/100** (15 better / 10 worse, p=0.42).
+- **How to phrase it:** "first round of episodic RL on our games: +5 points on the transfer task, not yet significant; the limiting factor is that small models rarely win our games". Do not claim a proven gain.
+
+Fixed controls, thinking on: RL s60 61/100 (base run stopped to free the GPU). Use only labelled numbers from the README.
 
 **Libraries:** vLLM 0.33.0, transformers 5.20.2, PEFT 0.21.3, PyTorch 2.14 (CUDA 13.0) on Verda A100 80GB + H100 80GB; Gemini via the openai 3.51 SDK (OpenAI-compatible endpoint). The environment is standard-library Python.

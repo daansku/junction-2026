@@ -1,5 +1,7 @@
 # Edge rover: does game training transfer to a robot-style task?
 
+**Update Sun 06:21: episodic RL on our games (Qwen3.5-4B):** rover-lite hidden controls, base **39/100** -> trained **44/100** (p=0.42, not significant). Details in "Episodic RL on our games" below.
+
 **Status (Sun 04:20):**
 - **Final:** the thinking-off results, Gemini Flash/Argon, and thinking-ON hidden controls (base **60/100** vs our RL **51/100**, p=0.175).
 - **Still running:** thinking-ON fixed controls (RL ~04:30, base ~05:15). This file will be updated.
@@ -122,7 +124,33 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
 
   The hidden-rule condition is where thinking matters.
 
-### Why our RL did not help: the training targeted the wrong skill
+### Episodic RL on our games (expert iteration), Qwen3.5-4B: final 06:21
+The corrected training recipe, run on Sunday 04:30-06:20 on the B200 + H100.
+- **Policy:** Qwen3.5-4B, thinking on (<=512 tokens per turn, with budget forcing).
+- **Training games:** our real h1 harness on train-v1, never eval games.
+  - The board is shown compactly: each cell as a colour+shape code, never rule names. Same information as the screen.
+  - Curriculum: the 1,000 easiest levels (optimal <= 9 moves).
+- **No oracle notes, no per-move reward:** an episode pays only if it solves its level.
+- **Forced-valid JSON:** an unparseable answer is re-answered from the same reasoning with schema-constrained decoding.
+- **Update:** LoRA SFT (r=16, 1 epoch) on the model's own winning episodes, thinking included. That is one round of rejection-sampling RL.
+
+| Step | Result |
+|---|---|
+| Rollouts | **32 of 2,006** easy levels solved (1.6%); 498 training turns from 30 games (22 level-1, 10 rule levels) |
+| Training | val loss 0.286 -> 0.153 (122 steps) |
+| **Rover-lite, hidden controls, 100 paired missions** (7x7, beacon 3-6 away; oracle 98%, random 4%) | base 4B **39/100** -> trained 4B **44/100**; paired 15 better / 10 worse, McNemar p=0.42 (**not significant**) |
+| Good moves / bumps per mission | 37.7% -> 36.8% / 10.9 -> 11.1 (unchanged) |
+
+**Reading:**
+- The direction is positive: +5 points, and 15 vs 10 discordant missions. This is too small to claim at n=100.
+- The bottleneck is the reward itself: from scratch, a 4B wins only 1.6% of even the easiest levels, so one round has very little to learn from.
+- What would make this conclusive, given more time:
+  - several rounds (each round's model collects more wins);
+  - more seeds;
+  - a second transfer task.
+- Files: `results-rl4b/` (rows, per-step metrics, training manifest); code in `game_rollouts.py`, `build_rft.py`.
+
+### Why our earlier RL did not help: the training targeted the wrong skill
 We checked the reward and task code: `engine/src/engine/tasks/gameturn.py`, `engine/src/engine/tasks/rationale.py`, `posttrain/src/posttrain/grpo.py`.
 - **Single-turn proxy reward, not episodes.** Each sample is one game state. The reward is 1 if the chosen action starts a *shortest path to finishing the level*, computed by BFS over the true engine state with all hidden rules known. The model never plays an episode and never earns the official score (levels solved, optimal/actions).
 - **Probing is punished.** Any informative experiment ("what does this tile do?", "which action is up?") scores 0, because it is not on the oracle's shortest path. Rule discovery needs exactly those actions; on the rover, it is how the scrambled controls are found.
