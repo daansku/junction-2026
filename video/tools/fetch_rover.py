@@ -30,6 +30,8 @@ def main() -> None:
     cfg = json.loads((VIDEO / "rover.json").read_text(encoding="utf-8"))
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "mission2.py").write_text(git_show(cfg["git_ref"], "mission2.py"), encoding="utf-8")
+    import os
+    os.environ["ROVER_LITE"] = "1" if cfg["mission"].get("lite") else "0"   # rover-lite: 7x7 variant
     spec = importlib.util.spec_from_file_location("mission2", OUT / "mission2.py")
     m2 = importlib.util.module_from_spec(spec)
     sys.modules["mission2"] = m2          # dataclasses look the module up by name

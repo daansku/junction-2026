@@ -39,8 +39,8 @@
     ]},
     {"key": "S5R", "file": "s5r_rover", "scene": "S5RRover", "lines": [
       "We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home.",
-      "Frontier models solve it almost every time. A nine-billion-parameter model without thinking completes five percent.",
-      "Trained on our games, with thinking on, it completes about half."
+      "A scripted explorer almost always succeeds, and random driving almost never. A small four-billion-parameter model completes thirty-nine missions in a hundred.",
+      "After one round of training on our games, it completes forty-four."
     ]},
     {"key": "S6S7", "file": "s6_s7_close", "scene": "S6S7Close", "lines": [
       "Beyond this hackathon: endless training environments for labs, and private evaluations that can't leak.",

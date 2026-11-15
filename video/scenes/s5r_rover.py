@@ -9,7 +9,8 @@ from __future__ import annotations
 import json
 
 from manim import (
-    DOWN, LEFT, RIGHT, UP, FadeIn, FadeOut, Group, GrowFromEdge, LaggedStart, Line, Rectangle, Scene,
+    DOWN, LEFT, PI, RIGHT, UP, Circle, FadeIn, FadeOut, Group, GrowFromEdge, LaggedStart, Line, Rectangle,
+    RoundedRectangle, Scene, rate_functions,
     Square, Text, VGroup,
 )
 
@@ -23,7 +24,31 @@ FOG = "#1b1b1e"
 FLOOR = "#000000"
 WALL = PALETTE[5]
 ARROW = {d: f"drives {d}" for d in ("north", "south", "west", "east")}
-KIND_COLOR = {"frontier": "#3987e5", "small": TEXT_3, "ours": "#199e70"}
+KIND_COLOR = {"frontier": "#3987e5", "small": "#3987e5", "ours": "#199e70", "reference": "#4a4a50"}
+
+
+HEADING = {"north": 0.0, "west": PI / 2, "south": PI, "east": -PI / 2}
+
+
+def rover_sprite(cell: float) -> VGroup:
+    """Top-down rover, facing north: six wheels, body, solar panel, camera mast at the front (original design)."""
+    u = cell * 0.82
+    g = VGroup()
+    for sx in (-1, 1):
+        for sy in (-0.32, 0, 0.32):
+            g.add(RoundedRectangle(corner_radius=u * 0.04, width=u * 0.16, height=u * 0.22, stroke_width=0,
+                                   fill_color="#2a2a2e", fill_opacity=1).move_to([sx * u * 0.36, sy * u, 0]))
+    body = RoundedRectangle(corner_radius=u * 0.06, width=u * 0.56, height=u * 0.8, stroke_width=0,
+                            fill_color=PALETTE[15], fill_opacity=1)
+    panel = Rectangle(width=u * 0.42, height=u * 0.3, stroke_color="#0e0e0f", stroke_width=1,
+                      fill_color="#2f5fb3", fill_opacity=1).move_to([0, -u * 0.14, 0])
+    cells_ = VGroup(*[Line([-u * 0.21, -u * 0.14 + dy, 0], [u * 0.21, -u * 0.14 + dy, 0], stroke_color="#0e0e0f",
+                           stroke_width=1) for dy in (-u * 0.05, u * 0.05)])
+    mast = Circle(radius=u * 0.09, stroke_width=0, fill_color="#e8e8e8", fill_opacity=1).move_to([0, u * 0.24, 0])
+    lens = Circle(radius=u * 0.04, stroke_width=0, fill_color="#0e0e0f", fill_opacity=1).move_to([0, u * 0.29, 0])
+    g.add(body, panel, cells_, mast, lens)
+    g.body = body
+    return g
 
 
 class S5RRover(Scene):
@@ -31,8 +56,9 @@ class S5RRover(Scene):
         cfg = json.loads((VIDEO / "rover.json").read_text(encoding="utf-8"))
         ms = load_json("rover/mission.json")
         vo = Narration(self, "S5R")
-        n, cell = ms["size"], 0.62
-        origin = [-6.3, 2.5, 0]
+        n = ms["size"]
+        cell = 5.6 / n
+        origin = [-6.0, 2.5, 0]
 
         def at(r, c):
             return [origin[0] + c * cell, origin[1] - r * cell, 0]
@@ -48,7 +74,8 @@ class S5RRover(Scene):
         base_mark = Square(side_length=cell * 0.8, stroke_color=TEXT_1, stroke_width=3, fill_opacity=0).move_to(at(*base))
         base_lab = Text("B", font=MONO, font_size=16, color=TEXT_1).move_to(at(*base))
         beacon = Square(side_length=cell * 0.5, stroke_width=0, fill_color=ACCENT, fill_opacity=1).move_to(at(*goal))
-        rover = agent_sprite(PALETTE[15], unit=cell * 0.14).move_to(at(*base))
+        rover = rover_sprite(cell).move_to(at(*base)).set_z_index(5)
+        heading = {"angle": 0.0}      # 0 = facing north (camera at the top)
         known = set()
 
         def reveal(pos):
@@ -87,8 +114,19 @@ class S5RRover(Scene):
         for i, a in enumerate(acts):
             k = keys[key_labels[a]]
             k[0].set_stroke(ACCENT, width=3)
-            pos = tuple(path[i + 1])
-            rover.move_to(at(*pos))
+            pos, prev = tuple(path[i + 1]), tuple(path[i])
+            d = ms["mapping"][a]
+            want = HEADING[d]
+            turn = (want - heading["angle"] + PI) % (2 * PI) - PI
+            heading["angle"] = want
+            if abs(turn) > 1e-3:
+                self.play(rover.animate.rotate(turn), run_time=step_time * 0.3)
+            if pos != prev:
+                self.play(rover.animate.move_to(at(*pos)), run_time=step_time * 0.55, rate_func=rate_functions.smooth)
+            else:  # bump: lurch towards the wall and back
+                dr, dc = {"north": (-1, 0), "south": (1, 0), "west": (0, -1), "east": (0, 1)}[d]
+                self.play(rover.animate.shift(RIGHT * dc * cell * 0.18 + UP * -dr * cell * 0.18), run_time=step_time * 0.45,
+                          rate_func=rate_functions.there_and_back)
             reveal(pos)
             if a not in learned and "moved" in events[i]:
                 learned.add(a)
@@ -103,10 +141,10 @@ class S5RRover(Scene):
             self.remove(steps_t)
             steps_t = new_steps
             self.add(steps_t)
-            self.wait(step_time)
+            self.wait(step_time * 0.15)
             k[0].set_stroke(LINE_STRONG, width=2)
         if ms["success"]:
-            self.play(rover.animate.set_fill(GOOD), run_time=0.3)
+            self.play(rover.body.animate.set_fill(GOOD), run_time=0.3)
         self.wait(0.4)
 
         # ---- the chart: frontier vs the small model ----
@@ -119,7 +157,14 @@ class S5RRover(Scene):
         for b in cfg["bars"]:
             lab = Text(b["label"], font=SANS, font_size=18, color=TEXT_1 if b["kind"] == "ours" else TEXT_2)
             lab.move_to([x0 - 0.3 - lab.width / 2, y, 0])
-            if b.get("k") is None:
+            if b.get("pct") is not None:
+                bar = Rectangle(width=max(0.03, width * b["pct"]), height=0.4, fill_color=KIND_COLOR[b["kind"]],
+                                fill_opacity=1, stroke_width=0)
+                bar.move_to([x0 + bar.width / 2, y, 0])
+                num = Text(f"{b['pct'] * 100:.0f}%", font=MONO, font_size=15, color=TEXT_3)
+                num.move_to([bar.get_right()[0] + 0.15 + num.width / 2, y, 0])
+                ci = VGroup()
+            elif b.get("k") is None:
                 bar = Rectangle(width=width, height=0.4, stroke_color=PLACEHOLDER, stroke_width=2, fill_opacity=0)
                 bar.move_to([x0 + width / 2, y, 0])
                 num = Text(b.get("placeholder", "pending"), font=MONO, font_size=15, color=PLACEHOLDER).move_to(bar)
@@ -129,12 +174,15 @@ class S5RRover(Scene):
                 bar = Rectangle(width=max(0.03, width * p), height=0.4, fill_color=KIND_COLOR[b["kind"]],
                                 fill_opacity=1, stroke_width=0)
                 bar.move_to([x0 + bar.width / 2, y, 0])
-                xa, xb = x0 + width * b["lo"], x0 + width * b["hi"]
-                ci = VGroup(Line([xa, y, 0], [xb, y, 0], stroke_color=TEXT_1, stroke_width=2),
-                            Line([xa, y - 0.1, 0], [xa, y + 0.1, 0], stroke_color=TEXT_1, stroke_width=2),
-                            Line([xb, y - 0.1, 0], [xb, y + 0.1, 0], stroke_color=TEXT_1, stroke_width=2))
+                ci = VGroup()
+                if b.get("lo") is not None:
+                    xa, xb = x0 + width * b["lo"], x0 + width * b["hi"]
+                    ci = VGroup(Line([xa, y, 0], [xb, y, 0], stroke_color=TEXT_1, stroke_width=2),
+                                Line([xa, y - 0.1, 0], [xa, y + 0.1, 0], stroke_color=TEXT_1, stroke_width=2),
+                                Line([xb, y - 0.1, 0], [xb, y + 0.1, 0], stroke_color=TEXT_1, stroke_width=2))
                 num = Text(f"{b['k']}/{b['n']}", font=MONO, font_size=15, color=TEXT_1)
-                num.move_to([max(xb, bar.get_right()[0]) + 0.15 + num.width / 2, y, 0])
+                right = max(ci.get_right()[0] if len(ci) else bar.get_right()[0], bar.get_right()[0])
+                num.move_to([right + 0.15 + num.width / 2, y, 0])
             rows.append((b, lab, bar, ci, num))
             y -= 0.85
         axis = Line([x0, 1.75, 0], [x0, y + 0.4, 0], stroke_color=LINE_STRONG, stroke_width=1)
@@ -144,7 +192,7 @@ class S5RRover(Scene):
         self.play(LaggedStart(*[FadeIn(r[1]) for r in first], lag_ratio=0.1), run_time=0.5)
         self.play(LaggedStart(*[GrowFromEdge(r[2], LEFT) for r in first], lag_ratio=0.15), run_time=1.2)
         self.play(LaggedStart(*[FadeIn(VGroup(r[3], r[4])) for r in first], lag_ratio=0.1), run_time=0.6)
-        if any(r[0].get("k") is None for r in rows):
+        if any(r[0].get("k") is None and r[0].get("pct") is None for r in rows):
             tag = Text("PLACEHOLDER: rover runs still in progress", font=MONO, font_size=16, color=PLACEHOLDER).to_edge(DOWN, buff=0.4)
             self.add(tag)
 
