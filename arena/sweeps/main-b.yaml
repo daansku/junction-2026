@@ -1,5 +1,5 @@
-# Second runner for the main sweep (19:58, Gemini credits unlimited): takes over the queue at 40 Gemini in parallel; first runner drained (STOP-main), --skip-running avoids the first runner's games. A3-10 main sweep on frozen eval-v1 (human approved Sat 13:55, up to $210; DECISIONS.md +
-# coordination/requests/A4-to-A3-main-sweep-approved.md). Harness h1 (frozen 13:30). Shared server only.
+# Second runner for the main sweep (19:58, Gemini credits unlimited): takes over the queue at 40 Gemini in parallel; first runner drained (STOP-main), --skip-running avoids the first runner's games. A3-10 main sweep on frozen eval-v1 (human approved Sat 13:55, up to $210).
+# Harness h1 (frozen 13:30). Shared server only.
 #   python -m arena run arena/sweeps/main.yaml --api shared --approve-cost 120
 # Claude rows: see main-opus.yaml (Anthropic key has ~EUR 20, human chose Opus on 2 games, Sat 14:10).
 # DeepSeek: see main-deepseek.yaml (Featherless concurrency makes 30x3 impossible before 07:00).

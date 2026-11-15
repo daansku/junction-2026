@@ -1,7 +1,7 @@
 # Project Submission Sheet (`docs/SUBMISSION.md`)
 
-> Pre-filled submission reference matching `PLAN.md §7`, `docs/CHALLENGE.md`, and `coordination/JUDGING.md`.
-> **Rule:** Every benchmark number below traces directly to `coordination/JUDGING.md`, `data/derived/*.json`, and `data/fixtures/derived/*.json` (verified by `python -m analysis check-claims`).
+> Submission reference for the AfterQuery challenge. Judging path and results: `docs/JUDGING.md`.
+> **Rule:** Every benchmark number below traces directly to `docs/JUDGING.md`, `data/derived/*.json`, and `data/fixtures/derived/*.json` (verified by `python -m analysis check-claims`).
 
 ---
 
@@ -9,7 +9,7 @@
 
 - **Challenge / Track:** AfterQuery — *Build an RL Environment That Exposes Frontier Agent Failure Modes & Preserves Reward Integrity*
 - **Repository:** `junction-2026` (`main`)
-- **Live Server URL (`coordination/API_URL`):** Shared FastAPI + React 19 web app (`Play`, `Gallery`, `Replays`, `Compare`, `Live`, `Leaderboard`, `Insights`)
+- **Live Server URL (`API_URL` at the repo root):** Shared FastAPI + React 19 web app (`Play`, `Gallery`, `Replays`, `Compare`, `Live`, `Leaderboard`, `Insights`)
 - **Official Harbor + OpenCode Judge One-Liner (`arena/HARBOR.md`, `arena/judge.sh`):**
   ```bash
   make judge                                     # eval-v2 game 1: reference 1.000, do-nothing 0.000, stop-early 0.125

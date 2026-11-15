@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One command for the judging protocol (docs/CHALLENGE.md): reference run, do-nothing, stop-early, and K agent runs
+# One command for the judging protocol (docs/JUDGING.md): reference run, do-nothing, stop-early, and K agent runs
 # through Harbor + OpenCode on one task, then a summary table.
 #
 #   make judge                                              # eval-v2 game 1; baselines only (no model, no cost)
@@ -10,7 +10,7 @@
 #
 # MODEL is an OpenCode selector: anthropic/<model>, gemini/<model>, openai/<model>, or one registered in
 # arena/opencode-models.json (verda-kimi/kimi-k3-1-pro, verda-nemotron/..., featherless/...). Keys come from .env
-# (coordination/KEYS.md). Model API not in the task's egress allowlist? EXTRA="--allow-agent-host <host>".
+# (docs/KEYS.md). Model API not in the task's egress allowlist? EXTRA="--allow-agent-host <host>".
 # Needs Docker and harbor==0.26.0.
 set -uo pipefail
 cd "$(dirname "$0")/.."

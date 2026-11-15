@@ -259,7 +259,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_sync = sub.add_parser("sync", help="Mirror finished runs from shared server /api/runs/export")
-    p_sync.add_argument("--api", help="Shared server base URL (defaults to API_URL or coordination/API_URL)")
+    p_sync.add_argument("--api", help="Shared server base URL (defaults to $API_URL, then the API_URL file at the repo root)")
     p_sync.add_argument("--data-dir", help="Local data directory (default: DATA_DIR or ~/junction-data)")
     p_sync.add_argument("--since", help="ISO-8601 timestamp to fetch incrementally")
 

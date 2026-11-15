@@ -8,7 +8,7 @@ An environment for the **AfterQuery @ Junction 2026** challenge. One command run
 
 **Why it is hard.** Playing well means running a small experiment loop: guess what a new object does, test the guess in as few moves as possible, remember what you learned, plan a route that uses it, and notice when the next level changes the rules again. Everything needed is on screen, and every level is checked solvable by exact search (and every mechanic in it matters for the solution), so a failure comes from the agent's own decisions, not from hidden information or trick wording. The typical frontier-model mistakes are repeating moves that change nothing (walking into walls), holding on to a wrong guess about a rule, and missing what a new level introduced. Games are generated from a seed, so there is an endless supply of fresh games no model has seen in training.
 
-**How it is scored.** The reward is **efficiency**. For each level: if solved, the shortest possible number of moves divided by the moves used (at most 1); if not solved, 0. A game's efficiency is the average over all its levels, and every action counts, RESET included. So the shortest-path reference run gets **1.000**, doing nothing **0.000**, and stopping after level 1 of 8 **0.125**. This is the number Harbor writes to `reward.txt` and the RL reward. It is computed inside the game container and graded in a separate verifier container the agent cannot reach; ten reward-exploit attempts from the agent's seat all scored 0 or were blocked ([coordination/JUDGING.md](coordination/JUDGING.md)). **Leaderboards rank by completion first:** share of games won (all levels finished), then levels solved, with efficiency as the tiebreak ([analysis/METRICS.md](analysis/METRICS.md)).
+**How it is scored.** The reward is **efficiency**. For each level: if solved, the shortest possible number of moves divided by the moves used (at most 1); if not solved, 0. A game's efficiency is the average over all its levels, and every action counts, RESET included. So the shortest-path reference run gets **1.000**, doing nothing **0.000**, and stopping after level 1 of 8 **0.125**. This is the number Harbor writes to `reward.txt` and the RL reward. It is computed inside the game container and graded in a separate verifier container the agent cannot reach; ten reward-exploit attempts from the agent's seat all scored 0 or were blocked ([docs/JUDGING.md](docs/JUDGING.md)). **Leaderboards rank by completion first:** share of games won (all levels finished), then levels solved, with efficiency as the tiebreak ([analysis/METRICS.md](analysis/METRICS.md)).
 
 **Why this setting, and what an agent can learn here.** It exercises four of the challenge's starting points at once: exploring an unfamiliar system, planning several steps ahead, managing a limited budget, and adapting when new information arrives (in the spirit of ARC-AGI-3). A separate training split (different seeds, some rule combinations held out for evaluation) makes it a training environment as well as a test; we post-trained a small open model (Qwen3.5-9B) on it, see [posttrain/](posttrain/) and [bench/](bench/).
 
@@ -38,7 +38,7 @@ make judge MODEL=gemini/gemini-4-argon K=3          # + 3 OpenCode agent runs in
 make judge TASK=harbor/eval-v2/<task> MODEL=anthropic/claude-sonnet-5-5 K=3
 ```
 
-`MODEL` is an OpenCode selector: `anthropic/<model>`, `gemini/<model>`, `openai/<model>`, or one registered in [arena/opencode-models.json](arena/opencode-models.json) (`verda-kimi/kimi-k3-1-pro`, `verda-nemotron/nemotron-3.5-super-vl`, `featherless/<org>/<model>`). Keys come from `.env` ([coordination/KEYS.md](coordination/KEYS.md)). The agent can reach only the game and the model APIs in each task's egress allowlist; for another API add `EXTRA="--allow-agent-host <host>"` ([arena/HARBOR.md](arena/HARBOR.md), "Network"). `make judge` ([arena/judge.sh](arena/judge.sh)) prints a summary table at the end.
+`MODEL` is an OpenCode selector: `anthropic/<model>`, `gemini/<model>`, `openai/<model>`, or one registered in [arena/opencode-models.json](arena/opencode-models.json) (`verda-kimi/kimi-k3-1-pro`, `verda-nemotron/nemotron-3.5-super-vl`, `featherless/<org>/<model>`). Keys come from `.env` ([docs/KEYS.md](docs/KEYS.md)). The agent can reach only the game and the model APIs in each task's egress allowlist; for another API add `EXTRA="--allow-agent-host <host>"` ([arena/HARBOR.md](arena/HARBOR.md), "Network"). `make judge` ([arena/judge.sh](arena/judge.sh)) prints a summary table at the end.
 
 The same runs by hand:
 
@@ -84,9 +84,9 @@ No model has won this game. Gemini 4 Argon (2/8 after 67 moves) and Kimi K3.1 (1
 provider stalls and are not counted. Because these runs take up to ~90 min, every Harbor task gives the agent
 **2 h** (`[agent] timeout_sec = 7200`), and `make judge` runs the K agent attempts in parallel (`N=1` for one at a time). The committed OpenCode runs above ([harbor/run-logs/](harbor/run-logs/README.md)) used the earlier 60-min cap: Gemini 4 Carbon reached 7/8 in all three and was still playing when the cap hit.
 
-Full run logs (every attempt's reward, OpenCode event stream and trajectory): [harbor/run-logs/README.md](harbor/run-logs/README.md). Same folder: 15-min partial runs of Kimi K3.1, DeepSeek 4.1 Flash, Claude Haiku 5.5, DeepSeek V3.2, Nemotron and GLM 5.3 through Harbor + OpenCode (proof that each plays and is graded; capped, so not results). Every model in [arena/HARBOR.md](arena/HARBOR.md) ("Other models through OpenCode") plays through Harbor + OpenCode (smoke runs: Claude Haiku 5.5, Kimi K3.1, Gemini 4 Argon / Carbon, Gemini 3.8 Flash, Nemotron, DeepSeek V3.2, GLM 5.3). Reward-exploit red team (10 attacks from the agent's seat, all 0.0 or blocked): [coordination/JUDGING.md](coordination/JUDGING.md).
+Full run logs (every attempt's reward, OpenCode event stream and trajectory): [harbor/run-logs/README.md](harbor/run-logs/README.md). Same folder: 15-min partial runs of Kimi K3.1, DeepSeek 4.1 Flash, Claude Haiku 5.5, DeepSeek V3.2, Nemotron and GLM 5.3 through Harbor + OpenCode (proof that each plays and is graded; capped, so not results). Every model in [arena/HARBOR.md](arena/HARBOR.md) ("Other models through OpenCode") plays through Harbor + OpenCode (smoke runs: Claude Haiku 5.5, Kimi K3.1, Gemini 4 Argon / Carbon, Gemini 3.8 Flash, Nemotron, DeepSeek V3.2, GLM 5.3). Reward-exploit red team (10 attacks from the agent's seat, all 0.0 or blocked): [docs/JUDGING.md](docs/JUDGING.md).
 
-> *Note:* `python -m server mcp` is retained strictly for interactive local dev/demo inspection; official evaluation runs exclusively through `arena harbor-export` + `harbor run` ([arena/HARBOR.md](arena/HARBOR.md), [coordination/JUDGING.md](coordination/JUDGING.md)).
+> *Note:* `python -m server mcp` is retained strictly for interactive local dev/demo inspection; official evaluation runs exclusively through `arena harbor-export` + `harbor run` ([arena/HARBOR.md](arena/HARBOR.md), [docs/JUDGING.md](docs/JUDGING.md)).
 
 ---
 
@@ -156,7 +156,7 @@ h1 = one fresh request per turn (notes + last 12 actions + frame); h2 = how labs
 
 ### Verda (DataCrunch)
 
-- **Shared server and live site:** a Verda CPU VM (CPU.4V.16G, about $0.048/h) at `https://65.108.33.107.compute.verda.run` hosts the game server, every recorded run and the web app since Sat 15:15. Deploys go through [scripts/deploy_vm.sh](scripts/deploy_vm.sh).
+- **Shared server and live site:** a Verda CPU VM (CPU.4V.16G, about $0.048/h) at `https://65.108.33.107.compute.verda.run` hosts the game server, every recorded run and the web app since Sat 15:15. Its URL is in [API_URL](API_URL).
 - **GPU training and benchmarks:**
   - a 2x A100 80 GB box for the benchmark runs, SFT and the first GRPO runs ([posttrain/README.md](posttrain/README.md)),
   - a B200 for the `think-games` and `think-gridbranch` GRPO runs on Qwen3.5-9B and the held-out MATH test ([bench/heldout_math/README.md](bench/heldout_math/README.md)),
@@ -165,12 +165,12 @@ h1 = one fresh request per turn (notes + last 12 actions + frame); h2 = how labs
   - Nemotron 3.5 Super VL from the hackathon deployment (see Nemotron below),
   - Kimi K3.1 Pro and DeepSeek 4.1 Flash through Verda's managed inference API (`https://inference.verda.com/v1`). Kimi ran in the overnight `dev` sweep (52% of levels solved) and in the `h2` runs until the account was suspended. Both have short Harbor + OpenCode runs in [harbor/run-logs/README.md](harbor/run-logs/README.md).
 
-  Endpoints and keys: [arena/models.yaml](arena/models.yaml), [coordination/KEYS.md](coordination/KEYS.md).
+  Endpoints and keys: [arena/models.yaml](arena/models.yaml), [docs/KEYS.md](docs/KEYS.md).
 
 ### NVIDIA Nemotron
 
 - Nemotron 3.5 Super VL (120B MoE, 12B active, NVFP4) on the organisers' Verda endpoint, with text and image input. Registered as `nemotron-3-5-super-vl` in [arena/models.yaml](arena/models.yaml).
-- **Harbor judge path:** OpenCode + Nemotron played the dev game `s1000` through Harbor with the organisers' OpenCode config ([arena/opencode-nemotron.json](arena/opencode-nemotron.json)). It scored 0.067 on average over three attempts ([coordination/JUDGING.md](coordination/JUDGING.md)).
+- **Harbor judge path:** OpenCode + Nemotron played the dev game `s1000` through Harbor with the organisers' OpenCode config ([arena/opencode-nemotron.json](arena/opencode-nemotron.json)). It scored 0.067 on average over three attempts ([docs/JUDGING.md](docs/JUDGING.md)).
 - **Arena runs:** the overnight `dev` sweep (12% of levels) and a 3-game `eval-v1` subset ([arena/sweeps/main-subset-nemotron.yaml](arena/sweeps/main-subset-nemotron.yaml)). The endpoint takes about 30 s per action, so a full sweep was not practical.
 
 ### Gemma
@@ -206,5 +206,5 @@ h1 = one fresh request per turn (notes + last 12 actions + frame); h2 = how labs
 | `arena/` | Harbor task exporter (`harbor-export`), `h1` LLM harness, baselines, sweeps | [arena/HARBOR.md](arena/HARBOR.md), [arena/models.yaml](arena/models.yaml), [arena/opencode-nemotron.json](arena/opencode-nemotron.json) |
 | `analysis/` | Run hygiene, attribution, rule-discovery matrix, sync, claim-check, auto-proposals | [analysis/METRICS.md](analysis/METRICS.md), [analysis/tests/test_analysis.py](analysis/tests/test_analysis.py) |
 | `web/` | React 19 + Observable Plot UI (`/`, `/play`, `/gallery`, `/replay`, `/compare`, `/live`, `/leaderboard`, `/insights`) | [web/DESIGN.md](web/DESIGN.md), [web/screenshots/README.md](web/screenshots/README.md) |
-| `docs/` | Pitch, demo script, submission sheet, Q&A prep, standalone HTML deck | [docs/SUBMISSION.md](docs/SUBMISSION.md), [docs/QA_PREP.md](docs/QA_PREP.md), [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md), [docs/PITCH.md](docs/PITCH.md), [docs/deck/index.html](docs/deck/index.html) |
+| `docs/` | Submission sheet, judging path and results, API keys, business case, story deck (HTML + PDF) | [docs/SUBMISSION.md](docs/SUBMISSION.md), [docs/JUDGING.md](docs/JUDGING.md), [docs/BUSINESS.md](docs/BUSINESS.md), [docs/story-deck/index.html](docs/story-deck/index.html), [docs/story-deck/Game-Factory-Pitch-Deck.pdf](docs/story-deck/Game-Factory-Pitch-Deck.pdf) |
 | `rules/proposals/` | Tier-2/3 specs + automated `eval-v2` failure-driven proposals | [rules/proposals/auto-04-eval-v2-tier3-drift-and-timing.md](rules/proposals/auto-04-eval-v2-tier3-drift-and-timing.md) |

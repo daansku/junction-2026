@@ -73,7 +73,7 @@ export interface LevelDescribe {
   w?: number
   h?: number
   layout?: string
-  /** requested from A1 (coordination/requests/A4-to-A1-describe-path-positions.md) */
+  /** requested from A1 */
   start?: [number, number]
   goal?: [number, number]
   optimal_positions?: Array<[number, number]>

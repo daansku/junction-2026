@@ -2,7 +2,7 @@
 
 The judges rerun everything with **Harbor + OpenCode over MCP**: a reference run, three agent runs,
 a do-nothing baseline and a stop-early baseline, then spend 15 minutes hunting reward exploits
-(docs/CHALLENGE.md). This folder turns each game into a Harbor task they can run as-is.
+(docs/JUDGING.md). This folder turns each game into a Harbor task they can run as-is.
 
 ```bash
 python -m arena harbor-export --collection eval-v1 --out harbor/eval-v1
@@ -24,7 +24,7 @@ harbor run -p harbor/eval-v1 -a opencode -m <provider/model>    # frontier agent
 | `solution/solve.sh` | oracle: replays the optimal path through the MCP tools |
 
 ## Reward
-Per PLAN.md §4.6 (ARC-AGI-3 style): mean over levels of `min(1, optimal_moves / actions_on_level)` for solved
+ARC-AGI-3 style: mean over levels of `min(1, optimal_moves / actions_on_level)` for solved
 levels, 0 for unsolved. Every move and RESET on a level counts. In [0, 1]; only optimal play reaches 1.
 
 ## Exploit surface (what judges can poke at)
@@ -57,7 +57,7 @@ after slow model turns (Haiku 9, Nemotron 11, DeepSeek 4 of 4 calls in 3-min run
 localhost: 0 resets (Nemotron 24 acts, DeepSeek 10). Do not add `expose` or `networks` to `game`: Docker refuses
 `expose` in a shared namespace, and an own network puts the proxy back in the path.
 
-Red team from the agent's seat with the allowlist on (`coordination/redteam/attack.py`, `ATTACK=recon`, Sat 21:00,
+Red team from the agent's seat with the allowlist on (`arena/redteam/attack.py`, `ATTACK=recon`, Sat 21:00,
 committed `eval-v1` game 1): GitHub raw, PyPI, our web server (by name and by IP) unreachable; `api.anthropic.com`
 reachable; on localhost only `:8000` answers (`/healthz`, `/mcp`), no game files visible. Committed tasks: oracle
 1.000 (eval-v1 game 1, 6/6, 86 actions; eval-v2 game 1, 8/8, 187), stop-early 0.125 (eval-v2, 1/8).

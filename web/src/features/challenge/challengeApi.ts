@@ -2,7 +2,7 @@
 // visitor board. The board uses A2's endpoints when the server has them (PLAN.md A2-22:
 // POST /challenge/score, GET /challenge/board) and otherwise falls back to this browser only,
 // labelled as such. Visitor plays never go to the research board: sessions carry player.mode
-// "challenge" (coordination/requests/A4-to-A5-challenge-runs-filter.md).
+// "challenge".
 import { API } from '@/lib/config'
 import { api } from '@/lib/api'
 import { fetchGhosts, type GhostSlice, type GhostsResponse } from '@/features/play/epistemicApi'

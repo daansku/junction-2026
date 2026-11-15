@@ -8,8 +8,8 @@ Output (one line per input id, appended; rerun resumes by skipping ids already a
     {"id", "model", "text", "tokens_in", "tokens_out", "cost_usd", "latency_ms", "error"}
 
 The judge may see the truth (rules, optimal path, truth events); playing models never do. This tool only sends what
-A5 put in the prompt. Spend: a cost estimate is printed first, and the run refuses to go over the DECISIONS.md
-per-sweep cap unless --approve-cost is given.
+A5 put in the prompt. Spend: a cost estimate is printed first, and the run refuses to go over the
+per-sweep cap ($20, `arena.runner.DEFAULT_CAP`) unless --approve-cost is given.
 """
 from __future__ import annotations
 

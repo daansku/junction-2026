@@ -164,7 +164,7 @@
 # Ids, context and prices from the live catalog GET https://api.featherless.ai/v1/models on 2026-11-14
 # (pricing.input / pricing.output, USD per 1M tokens). Featherless plans cap concurrency in units;
 # each model costs `concurrency_cost` units (4 for the big MoEs), so keep max_concurrency low.
-# `featherless-open` keeps its id because sweeps/pilot.yaml and sweeps/main.yaml reference it.
+# `featherless-open` keeps its id because sweeps/main.yaml references it.
 - id: featherless-open
   display_name: DeepSeek V3.2 (featherless)
   provider: featherless

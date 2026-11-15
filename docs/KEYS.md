@@ -2,7 +2,7 @@
 
 Keys live only in `.env` in the repo root. Git ignores `.env`, so never `git add -f` it.
 Share key values only over a private channel, never in git, chat logs or issues.
-Sweeps that count run from A3's machine, so that `.env` needs every key. Other machines only need the keys they test with.
+You only need the keys of the models you run.
 
 ## Setup
 
@@ -38,7 +38,6 @@ The arena loads `.env` automatically (`python -m arena …`).
 - **The Nemotron endpoint returns 404 without a valid key, on every path including `/v1/models`.** A 404 there usually means a missing or wrong key, not a wrong URL.
 - **Modal has two kinds of token, and the dashboard shows the proxy token as an id + secret pair that looks like a CLI token.** `wk-…` / `ws-…` = proxy token: join them as `MODAL_API_KEY=wk-….ws-…`. `ak-…` / `as-…` = CLI token: `modal token set … --profile=…` or `MODAL_TOKEN_ID/SECRET`. Empty `MODAL_TOKEN_ID=` lines exported into your shell break the `modal` CLI ("Token missing"), so delete them or don't export `.env` before running `modal`.
 - **Modal has two kinds of token.** The CLI token (`MODAL_TOKEN_ID/SECRET`) deploys apps. The proxy auth token (`MODAL_API_KEY` = `wk-….ws-…`) calls an endpoint. The arena sends it as `Authorization: Bearer wk-….ws-…`, which the Modal proxy accepts.
-- **Before 2026-11-14 ~03:30 the Nemotron key was read from `VERDA_INFERENCE_KEY`.** If you put it there, rename it to `NVIDIA_VERDA_INFERENCE_KEY`.
 
 ## Check a key works
 

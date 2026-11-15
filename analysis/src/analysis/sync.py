@@ -18,12 +18,12 @@ def resolve_api_url(api_url: str | None = None, repo_root: Path | None = None) -
     if env:
         return env.rstrip("/")
     root = repo_root or find_repo_root()
-    f = root / "coordination" / "API_URL"
+    f = root / "API_URL"
     if f.exists():
         txt = f.read_text(encoding="utf-8").strip()
         if txt:
             return txt.rstrip("/")
-    raise RuntimeError("No API URL specified and coordination/API_URL is empty")
+    raise RuntimeError("No API URL specified and API_URL (repo root) is missing or empty")
 
 
 def _safe_extract_tar_bytes(payload: bytes, runs_dir: Path) -> int:

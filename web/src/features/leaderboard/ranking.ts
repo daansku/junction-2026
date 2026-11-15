@@ -1,7 +1,7 @@
 import type { LeaderboardRow } from './types'
 
 /**
- * Board ranking (human decision, Sat 14.11 ~23:45, recorded in coordination/DECISIONS.md):
+ * Board ranking (human decision, Sat 14.11 ~23:45):
  * completion first. Rank by games won, then levels solved, then efficiency (the `score` field:
  * mean over levels of min(1, optimal / moves) if solved, else 0) as the tiebreak.
  * The Harbor / RL reward is unchanged; only the order on the boards changes.

@@ -78,7 +78,7 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
 **Reading:**
 - RL with thinking off made the model *significantly worse* than base at the transfer task.
 - Its notes collapse into a copy of the template ("short memory: what each action does, plan"). It stops planning and drives in small loops.
-- This matches the team's earlier negative result on benchmarks: games SFT with thinking off taught the model to skip reasoning (`coordination/requests/A3-to-all-RESULTS.md`).
+- This matches the team's earlier negative result on benchmarks: games SFT with thinking off taught the model to skip reasoning.
 - The 1.5B models cannot do the task at all:
   - The base never produced a valid action.
   - The tuned model only bumps into walls.
@@ -288,7 +288,7 @@ python progress.py
 | GPU eval | Python 3.12.16, **vLLM 0.33.0**, **transformers 5.20.2**, **PEFT 0.21.3**, **PyTorch 2.14.0+cu130** (CUDA 13.0) | NVIDIA **A100-SXM4-80GB** (GPU 0) and **H100 80GB HBM3**, driver 580.178.04, on Verda (ex-DataCrunch) |
 | API runs | Python 3.12.10, **openai 3.51.0** (Gemini's OpenAI-compatible endpoint, through `arena.providers.openai_compat.make_client`), PyYAML 6.0.3 | laptop |
 
-- **Training** of the checkpoints was done earlier with TRL GRPO, LoRA r=16, on Modal/Verda H100s and A2's B200 (see `coordination/`).
+- **Training** of the checkpoints was done earlier with TRL GRPO, LoRA r=16, on Modal/Verda H100s and A2's B200 (trainer: `posttrain/`).
 - **Environment code** (`mission2.py`, `summarize*.py`) is standard library only.
 
 ## Files

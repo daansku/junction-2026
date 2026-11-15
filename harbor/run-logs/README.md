@@ -1,12 +1,12 @@
 # Harbor + OpenCode run logs (judges' protocol, eval-v2 game 1)
 
-Real runs of the judging protocol (docs/CHALLENGE.md: reference, three agent runs, do-nothing, stop-early) through
+Real runs of the judging protocol (docs/JUDGING.md: reference, three agent runs, do-nothing, stop-early) through
 **Harbor + OpenCode over MCP** on the frozen judging set, committed so judges can see a model playing and its score.
 
 - **When / where:** Sun 15.11.2026, 03:18-04:55 EET, A4's machine. Docker 29.8.1, Harbor 0.26.0, OpenCode 1.19.5
   (Harbor installs the latest).
 - **Task:** `harbor/eval-v2/gridworld-s910000-d4-l8-f71ee29e` (8 levels, difficulty 4; optimal 187 actions).
-- **Command** (one per model; the attempts of a model run in parallel, 60-min cap each: the task default when these ran; tasks now give 2 h, `coordination/DECISIONS.md` / A1 `5a3f3b2`):
+- **Command** (one per model; the attempts of a model run in parallel, 60-min cap each: the task default when these ran; tasks now give 2 h, commit `5a3f3b2`):
   ```bash
   make judge MODEL=gemini/gemini-4-argon K=3 OUT=harbor/run-logs/eval-v2-s910000-gemini-4-argon-k3     # + baselines
   BASELINES=0 make judge MODEL=gemini/gemini-4-carbon K=3 OUT=harbor/run-logs/eval-v2-s910000-gemini-4-carbon-k3

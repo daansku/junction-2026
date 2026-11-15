@@ -1,6 +1,6 @@
 # Rule Proposal: Beacon-Linked Goal & Decoy Tile (`beacon_goal`)
 
-- **Origin:** A5 Research Digest (`docs/research/DIGEST.md`)
+- **Origin:** A5 Research Digest
 - **Target:** A1 (`engine/src/engine/components/`)
 - **Tier:** Tier 2 (or Tier 1 extension)
 

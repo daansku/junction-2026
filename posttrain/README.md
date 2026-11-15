@@ -1,16 +1,16 @@
 # posttrain (A3)
 
-PLAN.md phase 2 §3.3. Status and GPU log: `coordination/status/A3.md`.
+Post-training on our games: SFT and GRPO on Qwen3.5-9B, scored on `bench/` (protocol: `bench/PROTOCOL.md`).
 
 | Run | Data | Status |
 |---|---|---|
-| sft-v1 (`arena/finetune/`) | 4k h1 optimal-play turns, 69/31 optimal/recovery | done: val loss 1.60 -> 0.054; eval-v1 h1 result in A3 status |
+| sft-v1 (`arena/finetune/`) | 4k h1 optimal-play turns, 69/31 optimal/recovery | done: val loss 1.60 -> 0.054 |
 | sft-ctrl | general reasoning SFT only | waiting for data choice (PROTOCOL.md) |
 | sft-games | A1 data v2 + aux tasks | waiting for A1-20/21 |
 | sft-mix | general + games | waiting |
 | grpo-1 | 70% A1 `game_turn` (h1 map turns) + 30% aux (blocked_moves, full_plan, rule_effect), 4,290 prompts; start = SFT v2 `games` | running on a Modal H100 (`modal_grpo.py`, volume `junction-grpo`), 150 steps, step-<k> every 25 |
 
-Compute: one Verda 2x A100 80 GB box (`root@95.216.229.250`, ~$4.77/h), the only GPU instance available.
+Compute: one Verda 2x A100 80 GB box (~$4.77/h), the only GPU instance available.
 
 ## grpo-1: RL with verifiable rewards (A3-25)
 
