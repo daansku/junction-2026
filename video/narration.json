@@ -13,7 +13,6 @@
       "The factory writes games from code. Every new seed is a new game, so the supply never runs out.",
       "Each game shows the agent only this: sixty-four by sixty-four pixels, sixteen colours. No text, no score, no rule names.",
       "It has six buttons. That's all.",
-      "Colours and shapes are reshuffled in every game, so nothing can be memorised.",
       "Each new level hides one new rule, which the agent must discover by experimenting.",
       "And a search proves every level solvable, so we always know the best possible run."
     ]},
@@ -23,7 +22,7 @@
       "Run that way, the best model finishes every game, but still needs more moves than the optimal run. Most models finish none."
     ]},
     {"key": "S3", "file": "s3_failures", "scene": "S3Failures", "lines": [
-      "Where does the gap come from? We log every move, with what the model believed. This one is sure that moving right reaches the goal. The screen never changes.",
+      "We log every move, and what the model believed. This one is sure that moving right reaches the goal. The screen never changes.",
       "This one stays stuck for a long time before it tries a reset.",
       "This one acts on a belief the screen has already disproved.",
       "Each failure gets a label. And everything they needed was on the screen."
@@ -41,10 +40,10 @@
     {"key": "S5R", "file": "s5r_rover", "scene": "S5RRover", "lines": [
       "We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home.",
       "Frontier models solve it almost every time. A nine-billion-parameter model without thinking completes five percent.",
-      "Trained on our games, with thinking on, it completes about half. The same model with thinking but without our training is still being measured."
+      "Trained on our games, with thinking on, it completes about half."
     ]},
     {"key": "S6S7", "file": "s6_s7_close", "scene": "S6S7Close", "lines": [
-      "That makes the factory useful beyond this hackathon: private evaluations that can't leak, and endless training environments for labs.",
+      "Beyond this hackathon: endless training environments for labs, and private evaluations that can't leak.",
       "Every broken agent shows where AI still has to learn.",
       "Game Factory. Try to beat the AI yourself."
     ]}

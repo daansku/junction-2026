@@ -38,8 +38,8 @@ GLYPHS = {
 WORD_COLORS = [PALETTE[i] for i in (1, 2, 3, 4, 6, 7, 8, 13, 14, 12)]
 
 BUSINESS = [  # PLACEHOLDER until docs/BUSINESS.md (A5) picks the ideas
-    "private evals that can't leak: a fresh, verified game set for every evaluation",
     "training environments for labs: unlimited levels with a proven optimal run",
+    "private evals that can't leak: a fresh, verified game set for every evaluation",
 ]
 
 
@@ -126,4 +126,4 @@ class S6S7Close(Scene):
         self.play(FadeIn(line, shift=UP * 0.1), run_time=0.5)
         self.play(FadeIn(url), FadeIn(qr), run_time=0.6)
         self.wait(2.0)
-        vo.finish(extra=2.0)
+        vo.finish(extra=1.5)

@@ -108,45 +108,7 @@ class S1Environment(Scene):
             k.set_stroke(LINE_STRONG, width=2)
         self.wait(0.3)
 
-        # ---- colours reshuffled per game: same level, three skins side by side ----
-        skins = eng["skins"]
-        vo.cue(3, delay=0.2)
-        self.play(FadeOut(keys), Group(img, border).animate.scale_to_fit_height(3.6).move_to([-4.4, 0.3, 0]), run_time=0.7)
-        set_frame(img, skins[0])
-        trio = [img]
-        for k, sk in enumerate(skins[1:], start=1):
-            t = frame_image(sk, height=3.6).move_to([-4.4 + 4.4 * k, 0.3, 0])
-            trio.append(t)
-        borders = [border] + [framed(t) for t in trio[1:]]
-        # outline the cells whose colour or shape differs between the three games
-        import numpy as np
-        from common import frame_array
-        arrs = [frame_array(sk) for sk in skins]
-        diff = (arrs[0] != arrs[1]) | (arrs[0] != arrs[2])
-        marks = VGroup()
-        for t in trio:
-            cell = t.height / 64
-            ys, xs = np.nonzero(diff)
-            if len(xs):
-                x0, x1, y0, y1 = xs.min(), xs.max(), ys.min(), ys.max()
-            for (yy, xx) in zip(ys, xs):
-                pass
-            # one outline per changed object: group changed cells into 5x5-ish blocks
-            seen = set()
-            for (yy, xx) in zip(ys, xs):
-                key = (yy // 6, xx // 6)
-                if key in seen:
-                    continue
-                seen.add(key)
-                r = Rectangle(width=cell * 7, height=cell * 7, stroke_color=ACCENT, stroke_width=2, fill_opacity=0)
-                r.move_to(t.get_corner(UP + LEFT) + RIGHT * (xx + 2.5) * cell + DOWN * (yy + 2.5) * cell)
-                marks.add(r)
-        self.play(*[FadeIn(Group(t, b)) for t, b in zip(trio[1:], borders[1:])], run_time=0.6)
-        skin_note = Text("same level in three games: object colours and shapes reshuffled", font=MONO, font_size=20, color=TEXT_2)
-        skin_note.next_to(Group(*trio), DOWN, buff=0.5)
-        self.play(FadeIn(marks, lag_ratio=0.02), FadeIn(skin_note), run_time=0.8)
-        self.wait(1.6)
-        self.play(FadeOut(Group(*trio[1:], *borders[1:], marks)), run_time=0.4)
+        # (colour-reshuffle beat cut for length, Anssi Sun ~04:40)
 
         # ---- one new hidden rule per level ----
         strip = Group()
@@ -156,8 +118,8 @@ class S1Environment(Scene):
             cap.next_to(t, DOWN, buff=0.1)
             strip.add(Group(t, framed(t), cap))
         strip.arrange(RIGHT, buff=0.25).move_to([0, 0.2, 0])
-        vo.cue(4, delay=0.2)
-        self.play(FadeOut(skin_note), FadeOut(Group(img, border)), run_time=0.4)
+        vo.cue(3, delay=0.2)
+        self.play(FadeOut(keys), FadeOut(Group(img, border)), run_time=0.4)
         self.play(LaggedStart(*[FadeIn(s, shift=UP * 0.2) for s in strip], lag_ratio=0.15), run_time=1.2)
         rule_note = Text("each level hides one new rule; the agent has to find it by experimenting",
                          font=SANS, font_size=22, color=TEXT_2).next_to(strip, DOWN, buff=0.5)
@@ -166,7 +128,7 @@ class S1Environment(Scene):
 
         # ---- proven solvable: draw the optimal path ----
         lv2 = eng["levels"][1]
-        vo.cue(5, delay=0.2)
+        vo.cue(4, delay=0.2)
         big = frame_image(lv2["frames"][0], height=FRAME_H)
         bborder = framed(big)
         self.play(FadeOut(rule_note), FadeOut(Group(*[s for i, s in enumerate(strip) if i != 1])),
