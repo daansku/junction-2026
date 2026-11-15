@@ -95,11 +95,11 @@ body {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  padding: 3.1cqw 4.0cqw 2.3cqw;
-  gap: 1.5cqw;
-  font-size: 1.48cqw;
-  line-height: 1.42;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: 2.5cqw 3.8cqw 2.0cqw;
+  gap: 1.1cqw;
+  font-size: 1.36cqw;
+  line-height: 1.36;
 }
 
 /* Header dual-track pills: Business Story + Challenge Rubric */
@@ -135,30 +135,30 @@ h1, h2, h3 {
   letter-spacing: -0.015em;
   text-wrap: balance;
 }
-h1 { font-size: 4.8cqw; font-weight: 800; line-height: 1.02; }
-h2 { font-size: 3.15cqw; font-weight: 800; line-height: 1.06; max-width: 28ch; }
-h3 { font-size: 1.75cqw; font-weight: 600; line-height: 1.15; }
+h1 { font-size: 4.6cqw; font-weight: 800; line-height: 1.02; }
+h2 { font-size: 2.8cqw; font-weight: 800; line-height: 1.06; max-width: 30ch; }
+h3 { font-size: 1.65cqw; font-weight: 600; line-height: 1.15; }
 p { margin: 0; }
-.lead { font-size: 1.78cqw; color: #d5dae2; max-width: 46ch; line-height: 1.38; }
+.lead { font-size: 1.68cqw; color: #d5dae2; max-width: 48ch; line-height: 1.36; }
 .muted { color: var(--muted); }
 .fig { color: var(--accent); font-family: var(--mono); font-weight: 600; }
 .h { color: var(--human); }
 .m { color: var(--model); }
 .c { color: var(--cyan); }
 
-.body { display: grid; gap: 1.6cqw; align-content: start; min-height: 0; }
-.cols { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 3.0cqw; align-items: start; min-height: 0; }
-.cols-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 2.8cqw; align-items: start; min-height: 0; }
-.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8cqw; align-items: stretch; min-height: 0; }
+.body { display: grid; gap: 1.15cqw; align-content: start; min-height: 0; }
+.cols { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 2.6cqw; align-items: start; min-height: 0; }
+.cols-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4cqw; align-items: start; min-height: 0; }
+.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqw; align-items: stretch; min-height: 0; }
 
 /* Cards & Callouts */
 .card {
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 3px;
-  padding: 1.3cqw 1.5cqw;
+  padding: 1.0cqw 1.3cqw;
   display: grid;
-  gap: 0.65cqw;
+  gap: 0.48cqw;
   align-content: start;
 }
 .card.accent { border-left: 3px solid var(--accent); }
@@ -174,7 +174,7 @@ p { margin: 0; }
 }
 
 /* Bullets */
-.list { display: grid; gap: 0.72cqw; margin: 0; padding: 0; list-style: none; }
+.list { display: grid; gap: 0.55cqw; margin: 0; padding: 0; list-style: none; }
 .list li { position: relative; padding-left: 1.45cqw; display: block; }
 .list li::before {
   content: "";
@@ -411,21 +411,21 @@ body.present .slide.current .frame {
     </div>
     <div class="cols">
       <div class="body">
-        <h2>Static tests measure memory. Hand-built RL gyms don't scale.</h2>
+        <h2>Static tests measure memory. Hand-built gyms don't scale.</h2>
         <div class="card biz-box">
           <span class="kicker">Why AI Labs &amp; Agent Builders Pay</span>
           <ul class="list c">
-            <li><b>Public evals leak in months</b> — high scores reflect memorized templates, not on-the-fly adaptation.</li>
-            <li><b>Human-authored gyms cost $1k–$10k/task</b> and ship with accidental soft-locks or shortcuts.</li>
+            <li><b>Public evals leak in months</b> — high scores reflect memorized templates, not adaptation.</li>
+            <li><b>Hand-built gyms cost $1k–$10k/task</b> and often ship with soft-locks or shortcuts.</li>
           </ul>
         </div>
         <div class="card accent">
           <span class="kicker">Our 4-Gate Automated Verification (&lt; 2s / Seed on CPU)</span>
           <ul class="list">
-            <li><b>1. Solvability Proof:</b> Exact BFS finds shortest optimal path (<span class="fig">1,000 / 1,000</span> fuzzed seeds pass).</li>
-            <li><b>2. Forced Discovery (<code>gridforce</code>):</b> Ablation proves <span class="fig">100%</span> of teaching levels fail if the new rule is ignored.</li>
+            <li><b>1. Solvability Proof:</b> Exact BFS shortest path (<span class="fig">1,000 / 1,000</span> fuzzed seeds pass).</li>
+            <li><b>2. Forced Discovery (<code>gridforce</code>):</b> <span class="fig">100%</span> of teaching levels fail if the new rule is ignored.</li>
             <li><b>3. Real Branching (<code>gridbranch</code>):</b> <span class="fig">4.0</span> state-space loops/level; <span class="fig">0%</span> trivial corridors.</li>
-            <li><b>4. Anti-Guessing + Skin Shuffle:</b> Random walk wins <span class="fig">&lt; 2%</span>; colours &amp; glyphs reshuffle every seed.</li>
+            <li><b>4. Anti-Guessing + Skin Shuffle:</b> Random walk wins <span class="fig">&lt; 2%</span>; palettes reshuffle every seed.</li>
           </ul>
         </div>
       </div>
