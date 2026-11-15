@@ -105,8 +105,6 @@ class S2Gap(Scene):
         self.play(FadeIn(g1), FadeIn(VGroup(*ref1)), run_time=0.6)
         self.play(LaggedStart(*[GrowFromEdge(b, LEFT) for b, _ in bars1], lag_ratio=0.12, run_time=1.6))
         self.play(LaggedStart(*[FadeIn(n) for _, n in bars1], lag_ratio=0.06), run_time=0.6)
-        tag = Text("numbers not locked", font=MONO, font_size=14, color=PLACEHOLDER).to_corner(DOWN + RIGHT, buff=0.3)
-        self.add(tag)
         self.wait(2.0)
 
         # ---- board 2: run the lab way ----

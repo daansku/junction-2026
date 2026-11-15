@@ -1,0 +1,124 @@
+1
+00:00:00,400 --> 00:00:03,883
+Break one AI agent, and you learn one thing: it broke.
+
+2
+00:00:04,283 --> 00:00:11,156
+Look closer. This model walks into the same wall eleven times, sure it is one step from the goal.
+
+3
+00:00:11,733 --> 00:00:15,587
+This one wanders into a dead end, and resets far too late.
+
+4
+00:00:16,250 --> 00:00:20,894
+Now break thousands of them, on games none of them has ever seen.
+
+5
+00:00:21,250 --> 00:00:25,615
+The failures stop being noise. They line up into patterns.
+
+6
+00:00:27,450 --> 00:00:33,905
+Each pattern is something agents still can't do. To find them at scale, we built a game factory.
+
+7
+00:00:34,800 --> 00:00:41,023
+The factory writes games from code. Every new seed is a new game, so the supply never runs out.
+
+8
+00:00:41,373 --> 00:00:47,457
+And difficulty is a dial: easy enough for a small model to learn, hard enough for the best.
+
+9
+00:00:47,807 --> 00:00:52,869
+The agent sees only pixels: no text, no score, no rule names.
+
+10
+00:00:53,219 --> 00:00:55,309
+It has six buttons. That's all.
+
+11
+00:00:56,217 --> 00:01:01,279
+Each new level hides one new rule, which the agent must discover by experimenting.
+
+12
+00:01:01,629 --> 00:01:06,737
+And a search proves every level solvable, so we always know the best possible run.
+
+13
+00:01:07,633 --> 00:01:11,813
+We ran frontier models on fresh games, first with our own harness.
+
+14
+00:01:12,333 --> 00:01:17,999
+Then the way labs benchmark them: the full conversation, and maximum reasoning effort.
+
+15
+00:01:18,349 --> 00:01:26,058
+Run that way, the best model finishes every game, but still needs more moves than the optimal run. Most models finish none.
+
+16
+00:01:26,850 --> 00:01:34,373
+We log every move, and what the model believed. This one is sure that moving right reaches the goal. The screen never changes.
+
+17
+00:01:34,723 --> 00:01:38,531
+This one stays stuck for a long time before it tries a reset.
+
+18
+00:01:39,217 --> 00:01:42,700
+This one acts on a belief the screen has already disproved.
+
+19
+00:01:43,467 --> 00:01:45,371
+Everything they needed was on the screen.
+
+20
+00:01:46,267 --> 00:01:49,982
+The score rewards solving levels efficiently, and nothing else.
+
+21
+00:01:50,332 --> 00:01:57,530
+On the judges' own harness, doing nothing scores zero, and stopping after one level earns only that level.
+
+22
+00:01:57,880 --> 00:02:00,713
+Resetting never erases the moves already spent.
+
+23
+00:02:01,063 --> 00:02:05,057
+And the score is computed in a separate container that the agent cannot reach.
+
+24
+00:02:05,850 --> 00:02:12,584
+Because the supply never runs out, the games are also training data. So can a small model learn from them?
+
+25
+00:02:12,934 --> 00:02:25,055
+We let a four-billion-parameter model play our games and learn from its own wins. After two rounds, it solves six points more maths problems it never trained on, overtaking an untrained model twice its size.
+
+26
+00:02:25,950 --> 00:02:35,145
+We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home.
+
+27
+00:02:36,050 --> 00:02:40,508
+A small four-billion-parameter model completes forty-one missions in a hundred.
+
+28
+00:02:40,858 --> 00:02:47,174
+After two rounds of training on our games, it completes fifty-four. That gain is statistically significant.
+
+29
+00:02:47,967 --> 00:02:54,654
+Beyond this hackathon: endless training environments for labs, and private evaluations that can't leak.
+
+30
+00:02:55,004 --> 00:02:58,069
+Every broken agent shows where AI still has to learn.
+
+31
+00:02:58,419 --> 00:02:59,487
+Game Factory.
+

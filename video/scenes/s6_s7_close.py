@@ -1,4 +1,4 @@
-"""S6 Business value (placeholder until docs/BUSINESS.md exists) and S7 Close
+"""S6 Business value and S7 Close
 (broken agent reassembles, pixel wordmark "Game Factory"). See SCRIPT.md.
 """
 from __future__ import annotations
@@ -37,7 +37,7 @@ GLYPHS = {
 }
 WORD_COLORS = [PALETTE[i] for i in (1, 2, 3, 4, 6, 7, 8, 13, 14, 12)]
 
-BUSINESS = [  # PLACEHOLDER until docs/BUSINESS.md (A5) picks the ideas
+BUSINESS = [  # final wording (Anssi, Sun 15.11)
     "training environments for labs: unlimited levels with a proven optimal run",
     "private evals that can't leak: a fresh, verified game set for every evaluation",
 ]
@@ -90,15 +90,13 @@ class S6S7Close(Scene):
         items.arrange(DOWN, aligned_edge=LEFT, buff=0.6).move_to(ORIGIN)
         if items.width > 13:
             items.scale_to_fit_width(13)
-        tag = Text("PLACEHOLDER: waiting for docs/BUSINESS.md", font=MONO, font_size=16, color=PLACEHOLDER).to_edge(DOWN, buff=0.5)
         vo = Narration(self, "S6S7")
         vo.cue(0, delay=0.2)
         self.play(FadeIn(head), run_time=0.4)
-        self.add(tag)
         self.play(LaggedStart(*[FadeIn(i, shift=RIGHT * 0.2) for i in items], lag_ratio=0.4), run_time=1.4)
         self.wait(2.6)
         vo.cue(1, delay=0.6)
-        self.play(FadeOut(VGroup(head, items, tag)), run_time=0.5)
+        self.play(FadeOut(VGroup(head, items)), run_time=0.5)
 
         # ---------------- S7 callback to the opening: the broken agent puts itself back together ----
         agent = agent_sprite(FAILURE_MODES[0][2], unit=0.3)
