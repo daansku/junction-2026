@@ -6,7 +6,7 @@
       "Look closer. This model walks into the same wall eleven times, sure it is one step from the goal.",
       "This one wanders into a dead end, and resets far too late.",
       "Now break thousands of them, on games none of them has ever seen.",
-      "The pieces stop being noise. They line up into patterns.",
+      "The failures stop being noise. They line up into patterns.",
       "Each pattern is something agents still can't do. To find them at scale, we built a game factory."
     ]},
     {"key": "S1", "file": "s1_environment", "scene": "S1Environment", "lines": [
@@ -35,8 +35,8 @@
       "And the score is computed in a separate container that the agent cannot reach."
     ]},
     {"key": "S5", "file": "s5_posttrain", "scene": "S5PostTrain", "lines": [
-      "Because the supply never runs out, the games are also training data. Can a small model learn from them?",
-      "We compare it against a control trained on the same amount of non-game data, so any gain comes from the games, not just from more training."
+      "Because the supply never runs out, the games are also training data. So can a small model learn from them?",
+      "We are training a nine-billion-parameter model on them, and scoring it on reasoning benchmarks outside our games."
     ]},
     {"key": "S6S7", "file": "s6_s7_close", "scene": "S6S7Close", "lines": [
       "That makes the factory useful beyond this hackathon: private evaluations that can't leak, and endless training environments for labs.",
