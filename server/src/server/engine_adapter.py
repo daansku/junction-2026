@@ -1,4 +1,4 @@
-"""One place that knows which engine is in use (A1's `engine` package or the fake engine).
+"""One place that knows which engine is in use (the `engine` package or the fake engine).
 
 Game lookup order for (collection, game_id):
   1. real engine + data/collections/<collection>.json exists -> engine.load_game

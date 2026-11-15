@@ -1,6 +1,6 @@
 """Find a local engine implementing contracts/engine_api.py, for offline work (dataset building).
 
-Order: A1's `engine` package -> A2's `server.fake_engine` -> arena's MockGame-backed shim.
+Order: the `engine` package -> `server.fake_engine` -> arena's MockGame-backed shim.
 Sweeps never use this; they go through the server.
 """
 from __future__ import annotations

@@ -1,4 +1,4 @@
-# eval-v5 test set, harness h2 (human request: Daniel, Sun ~02:00: "way harder for AI"; run from A1's machine).
+# eval-v5 test set, harness h2.
 # eval-v5 = 12 gridbranch games (seeds 950000-950011, d3/d4 alternating, 6 levels). Rules chosen by where frontier
 # models get STUCK (not by intro efficiency, which picked eval-v4 and Argon played it near-optimally): control
 # changers rotation / twin / remap / gravity with route-commitment rules ice / push_blocks / one_way / hazards /

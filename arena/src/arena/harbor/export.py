@@ -216,7 +216,7 @@ def export(collection: str, out: Path, first: int | None = None, agent_timeout: 
     from ..engine_adapter import load_engine
     eng, name = load_engine()
     if name != "engine":
-        raise SystemExit("harbor export needs A1's engine package (pip install -e ./engine)")
+        raise SystemExit("harbor export needs the engine package (pip install -e ./engine)")
     root = _repo_root()
     coll_file = Path(collection) if Path(collection).exists() else root / "data" / "collections" / f"{collection}.json"
     coll = json.loads(coll_file.read_text())

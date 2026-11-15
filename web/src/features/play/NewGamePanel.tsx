@@ -1,5 +1,5 @@
 // "New game" on /play: asks the server to generate a fresh verified game from a seed
-// (POST /api/games/generate, A1's engine via A2), then Play starts a run on it.
+// (POST /api/games/generate, the engine via the server), then Play starts a run on it.
 // Generation is CPU only on the server: no model call, so it is safe in published mode.
 import { useState } from 'react'
 import { api, HttpError } from '@/lib/api'

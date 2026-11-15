@@ -1,32 +1,31 @@
-# posttrain (A3)
+# posttrain
 
-PLAN.md phase 2 §3.3. Status and GPU log: `coordination/status/A3.md`.
+Post-training on our games: SFT and GRPO on Qwen3.5-9B, scored on `bench/` (protocol: `bench/PROTOCOL.md`).
 
-| Run | Data | Status |
+| Run | Data | Outcome |
 |---|---|---|
-| sft-v1 (`arena/finetune/`) | 4k h1 optimal-play turns, 69/31 optimal/recovery | done: val loss 1.60 -> 0.054; eval-v1 h1 result in A3 status |
-| sft-ctrl | general reasoning SFT only | waiting for data choice (PROTOCOL.md) |
-| sft-games | A1 data v2 + aux tasks | waiting for A1-20/21 |
-| sft-mix | general + games | waiting |
-| grpo-1 | 70% A1 `game_turn` (h1 map turns) + 30% aux (blocked_moves, full_plan, rule_effect), 4,290 prompts; start = SFT v2 `games` | running on a Modal H100 (`modal_grpo.py`, volume `junction-grpo`), 150 steps, step-<k> every 25 |
+| sft-v1 (`arena/finetune/`) | 4k h1 optimal-play turns, 69/31 optimal/recovery | val loss 1.60 -> 0.054; solved 4/180 eval-v1 levels (action-only cloning does not teach discovery) |
+| sft-ctrl / sft-games / sft-mix | general reasoning SFT / engine tasks + h1 turns with rationales / both | thinking-off SFT v2 rows; `games` is the start of grpo-1; no rows in the published bench summary |
+| grpo-1, grpo-2 | 70% `game_turn` (h1 map turns) + 30% aux (blocked_moves, full_plan, rule_effect), 4,290 prompts; start = SFT v2 `games` | stopped early: thinking-off RL teaches answering without reasoning (see RL v2) |
+| think-games, think-ctrl, think-games-h2 | RL v2 below (thinking on, from base) | think-games-h2 step 30: held-out MATH 63.4% -> 67.4% (p = 0.31, not significant); see `bench/heldout_math/` |
 
-Compute: one Verda 2x A100 80 GB box (`root@95.216.229.250`, ~$4.77/h), the only GPU instance available.
+Compute: a Verda 2x A100 80 GB box (~$4.77/h), Verda H100/B200 boxes and Modal H100s.
 
-## grpo-1: RL with verifiable rewards (A3-25)
+## grpo-1: RL with verifiable rewards
 
-**Start checkpoint = SFT v2 `games`, an A3 decision taken Sat 19:35 before any bench result, to save ~3 h** (the
+**Start checkpoint = SFT v2 `games`, chosen before any bench result to save ~3 h** (the
 `games` and `mix` val losses are on different data and not comparable; `games` is trained on the h1 map-turn
 distribution that `game_turn` RL optimises). Recorded in the run's `grpo_args.json` (`note`).
 
 `src/posttrain/grpo.py` + `configs/grpo-1.yaml`. TRL 1.18 `GRPOTrainer` (pinned in the `gpu` extra): the SFT v2
 LoRA is loaded as a trainable `PeftModel`; TRL copies it to a frozen `ref` adapter, so `beta` is the KL to the
 SFT policy. G=8 completions per prompt, clipped ratio (0.2 / 0.28 clip-higher), DAPO token loss, truncated replies
-masked. Reward = `engine.tasks.reward` (A1-22, exact match / plan efficiency, no partial credit to farm).
+masked. Reward = `engine.tasks.reward`.
 Generation: vLLM colocate (one engine per GPU, LoRA merged and pushed every step), Qwen chat template,
 `enable_thinking: false` (SFT v2 format), max 1024 new tokens.
 
 ```bash
-# on the GPU box, repo at /root/junction-2026
+# on the GPU box
 uv pip install -e engine -e "posttrain[gpu]"
 python -m engine tasks --task all --n 1500 --seed 0 --out /root/tasks/rl-s0.jsonl   # seed 1 = bench dev slice
 accelerate launch --num_processes 2 -m posttrain.grpo --config posttrain/configs/grpo-1.yaml \
@@ -41,18 +40,17 @@ score the same; drop or rebalance that task with `--task-filter`); `kl` > 0.1 = 
 If OOM: `--per-device-batch 4 --grad-accum 8` (same batch) or `vllm_sleep: true`. Plan B if vLLM + Qwen3.5
 weight sync breaks: `--no-vllm` (HF generate, several times slower).
 
-**One GPU (H100, or any free 80 GB card): self-serve, no hand-offs.**
+**One GPU (H100, or any free 80 GB card):**
 ```bash
 SFT_LORA=/root/ckpt/games/lora GPU=0 bash posttrain/run_grpo.sh          # configs/grpo-1-h100.yaml, own /root/rl-venv
-GPU=1 RUN=/root/ckpt/grpo-1 EVERY=50 BASE_RUN=<base dev-slice run dir>   nohup bash posttrain/tools/bench_watch.sh > /root/bench-watch.log 2>&1 &   # benches step-50/100/150 + final itself
 ```
-`run_grpo.sh` refuses a GPU with < 70 GB free (stop the vLLM server on it first). `bench_watch.sh` needs a whole
-GPU (bench's vLLM takes 88%) and a python with `bench[gpu]` (`BENCH_PY`); newest unbenched checkpoint first.
+`run_grpo.sh` refuses a GPU with < 70 GB free (stop the vLLM server on it first). Bench each `step-<k>` with
+`python -m bench run ... --lora <dir>/step-<k> --dev-slice` on a whole free GPU (bench's vLLM takes 88%).
 Prompts over `max_prompt_tokens` (3072) are dropped: `rule_effect` has 12k-token outliers (~3% of all prompts).
 
-## RL v2: thinking ON (think-games, think-ctrl), human-approved Sat 20:20
+## RL v2: thinking ON (think-games, think-ctrl)
 
-grpo-1/grpo-2 (thinking off, from the no-think SFT) were stopped at 20:52: they teach answering without reasoning.
+grpo-1/grpo-2 (thinking off, from the no-think SFT) were stopped early: they teach answering without reasoning.
 v2 starts from **base Qwen3.5-9B + a fresh LoRA** (r16, alpha 32, language-model linears; no SFT adapter) with
 `enable_thinking: true` and up to 3,072 completion tokens (`configs/grpo-think.yaml`). **Reward = verifier on the text
 after the last `</think>` only; a reply that never closes `</think>` (or is truncated) scores 0** (`grpo.make_reward`
@@ -61,7 +59,7 @@ reward, per-task reward, `think_closed_rate`, `completions/mean_length`, `comple
 
 | Run | Data (1,200 prompts) | Reward |
 |---|---|---|
-| `think-games` | 70% A1 `game_turn` (seed 3, h1 JSON after the thinking block) + 30% aux (blocked_moves, full_plan, rule_effect; seed 3) | `engine.tasks.reward` |
+| `think-games` | 70% `game_turn` (seed 3, h1 JSON after the thinking block) + 30% aux (blocked_moves, full_plan, rule_effect; seed 3) | `engine.tasks.reward` |
 | `think-ctrl` | reasoning-gym knights_knaves, zebra_puzzles, shortest_path, maze, 300 each, seed 7 (`posttrain.rg_tasks`) | reasoning-gym `score_answer` |
 
 **think-ctrl touches the bench's SECONDARY reasoning-gym tier (near transfer: those datasets are in the bench, drawn

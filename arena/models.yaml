@@ -1,4 +1,4 @@
-# Model registry (PLAN.md §4.7). Owned by A3.
+# Model registry.
 # Rules: api_model and prices come from provider docs, never memory. `verified: false` entries are
 # skipped by the runner until `python -m arena models --check` confirms the id on the live /models
 # endpoint (or a human fills it in from the docs). Prices: USD per 1M tokens, null = unknown.
@@ -77,7 +77,7 @@
   max_concurrency: 2
   verified: true
 
-# Gemini 4 (A4, Sat 16:45, human request): ids from the live /models list on 2026-11-14; prices from
+# Gemini 4: ids from the live /models list on 2026-11-14; prices from
 # aistudio.google.com/docs/pricing 2026-11-14 (standard paid tier, output incl. thinking). Carbon/Argon prices
 # double on 2026-12-01. Text + image and reasoning_effort verified through this adapter.
 - id: gemini-4-carbon
@@ -119,9 +119,9 @@
   max_concurrency: 2
   verified: true
 
-# Gemma 4 31B served by the Gemini API (A1, Sun 00:20, human request): id from the live /models list on
+# Gemma 4 31B served by the Gemini API: id from the live /models list on
 # 2026-11-15. Checked through the OpenAI-compatible layer: native tool calls, image input (read a red square)
-# and `reasoning_effort` accepted. Thoughts come back inline in `content`. Gemini credits (DECISIONS Sat 19:25).
+# and `reasoning_effort` accepted. Thoughts come back inline in `content`. Gemini credits.
 # LIMIT: 16,000 input tokens per minute on our key (paid tier 3), so it cannot play h2 (~20-45k tokens per turn);
 # h1 (one short message per turn) would fit only at ~1 game at a time.
 - id: gemini-gemma-4-31b
@@ -157,14 +157,14 @@
   context: 1048576
   max_output: 32768
   link: https://build.nvidia.com/models
-  max_concurrency: 3            # Verda endpoint; 1 run ~ 29 s/action measured 03:50
+  max_concurrency: 3            # Verda endpoint; 1 run ~ 29 s/action measured
   verified: true                # id from the organisers' config; first real run confirms it
 
 # featherless.ai: OpenAI-compatible, https://api.featherless.ai/v1, key FEATHERLESS_API_KEY.
 # Ids, context and prices from the live catalog GET https://api.featherless.ai/v1/models on 2026-11-14
 # (pricing.input / pricing.output, USD per 1M tokens). Featherless plans cap concurrency in units;
 # each model costs `concurrency_cost` units (4 for the big MoEs), so keep max_concurrency low.
-# `featherless-open` keeps its id because sweeps/pilot.yaml and sweeps/main.yaml reference it.
+# `featherless-open` keeps its id because sweeps/main.yaml references it.
 - id: featherless-open
   display_name: DeepSeek V3.2 (featherless)
   provider: featherless
@@ -175,7 +175,7 @@
   price_out: 0.41
   params: "671B MoE"
   link: https://featherless.ai/models/deepseek-ai/DeepSeek-V3.2
-  max_concurrency: 2            # concurrency_cost 4; 7 units ran in parallel fine on 03:50 smoke
+  max_concurrency: 2            # concurrency_cost 4; 7 units ran in parallel fine in a smoke run
   verified: true
 
 - id: featherless-kimi-k2-6
@@ -271,12 +271,12 @@
   price_out: null
   params: null
   link: https://verda.com
-  max_concurrency: 3            # Verda inference API; ~24 s/action measured 03:50
+  max_concurrency: 3            # Verda inference API; ~24 s/action measured
   verified: true
 
-# DeepSeek 4.1 Flash on Verda's managed inference API (human request, Daniel, Sat ~22:35). Model id from live
+# DeepSeek 4.1 Flash on Verda's managed inference API. Model id from live
 # GET https://inference.verda.com/v1/models with VERDA_INFERENCE_KEY (2026-11-14): `deepseek-4-1-flash-1017`.
-# Checked by A1 the same evening: native tool calls work, image input read a red square correctly,
+# Checked: native tool calls work, image input read a red square correctly,
 # `reasoning_effort` is accepted.
 - id: verda-deepseek-4-1-flash
   display_name: DeepSeek 4.1 Flash (Verda)
@@ -295,10 +295,10 @@
   max_concurrency: 6
   verified: true
 
-# Small open model on our own Modal endpoint (A4's machine set it up 2026-11-14 ~04:05): SGLang serving
+# Small open model on our own Modal endpoint: SGLang serving
 # google/gemma-4-E4B-it as served-model-name `junction26`, multimodal, reasoning parser gemma4.
 # Auth: Modal proxy token in MODAL_API_KEY (wk-<id>.ws-<secret>); MODAL_BASE_URL ends in /v1.
-# Base for the fine-tune story (PLAN A3-11): same endpoint shape can serve the tuned weights.
+# Base for the fine-tune story: same endpoint shape can serve the tuned weights.
 - id: modal-gemma-4-e4b
   display_name: Gemma 4 E4B (Modal)
   provider: modal
@@ -310,7 +310,7 @@
   params: "E4B (~4B effective)"
   link: https://huggingface.co/google/gemma-4-E4B-it
   max_concurrency: 4
-  verified: true                # 04:10: text + image calls OK; plays through the harness (~3 s/action)
+  verified: true                # text + image calls OK; plays through the harness (~3 s/action)
 
 - id: verda-small
   display_name: Small open model on Verda (base for fine-tune)
@@ -324,13 +324,12 @@
   max_concurrency: 8
   verified: false
 
-# A3-11: Qwen3.5-9B + LoRA on 8k train-v1 examples (arena/finetune/remote_run.sh), served by vLLM on our
+# Qwen3.5-9B + LoRA on 8k train-v1 examples (arena/finetune/remote_run.sh), served by vLLM on our
 # Verda GPU at VERDA_BASE_URL. Untuned comparison row = featherless-qwen3-5-9b (same base, same harness).
 - id: verda-ft-qwen3-5-9b
   display_name: Qwen3.5 9B fine-tuned on train-v1 (ours)
   provider: verda
   api_model: arena-ft
-  base_url: http://95.216.229.250:8000/v1   # our Verda 2x A100 instance (vLLM), up from 2026-11-14 13:56
   api_key_env: VERDA_FT_KEY
   max_output_tokens: 1024       # vLLM max_model_len 16384 (eval-v1 prompts can exceed 4k); trained replies ~60 tokens
   tier: finetuned
@@ -340,15 +339,14 @@
   params: "9B + LoRA r16"
   link: https://huggingface.co/Qwen/Qwen3.5-9B
   max_concurrency: 8
-  verified: true                # 3-action harness check 2026-11-14 14:00
+  verified: true                # 3-action harness check
 
-# A3-11 comparison row: the same base model, served the same way as the fine-tune (vLLM on the Verda A100 box,
-# GPU 1), so base vs fine-tuned differ only in the weights. Featherless served it at ~1 action/min (too slow).
+# Comparison row: the same base model, served the same way as the fine-tune (vLLM at VERDA_BASE_URL),
+# so base vs fine-tuned differ only in the weights. Featherless served it at ~1 action/min (too slow).
 - id: verda-base-qwen3-5-9b
   display_name: Qwen3.5 9B (untuned base, ours on Verda)
   provider: verda
   api_model: arena-base
-  base_url: http://31.22.104.125:8001/v1     # H100 since 19:00 (A100 GPU 1 server is shared with A2 bench)
   api_key_env: VERDA_FT_KEY
   max_output_tokens: 8192       # untuned Qwen3.5 thinks before answering; vLLM max_model_len 32768
   tier: open
@@ -358,7 +356,7 @@
   params: "9B"
   link: https://huggingface.co/Qwen/Qwen3.5-9B
   max_concurrency: 8
-  verified: true                # same vLLM stack as verda-ft-qwen3-5-9b; harness-checked 2026-11-14 17:15
+  verified: true                # same vLLM stack as verda-ft-qwen3-5-9b; harness-checked
 
 # ---- offline harness test model ----
 - id: mock-random

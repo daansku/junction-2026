@@ -1,4 +1,4 @@
-"""Schema validation and cross-document claim consistency checks (PLAN.md §3.5, A5-20/A5-23)."""
+"""Schema validation and cross-document claim consistency checks."""
 from __future__ import annotations
 
 import json

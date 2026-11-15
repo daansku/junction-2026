@@ -1,6 +1,6 @@
-# eval-v4 test set, harness h2 (human request: Daniel, Sun ~01:30; run from A1's machine).
+# eval-v4 test set, harness h2.
 # eval-v4 = 12 gridbranch games (seeds 940000-940011, d3/d4 alternating, 6 levels), rules drawn only from the
-# mechanics where humans beat frontier models most on the intro-level score (rules.json, Sat 23:02):
+# mechanics where humans beat frontier models most on the intro-level score (rules.json):
 # rotation, plates_gates, no_reverse, phase_walls, ice, teleporters, cracked_floor, remap.
 # Question: do humans beat AI here by more than on eval-v3b? Same settings as the eval-v3b h2 sweeps.
 name: h2-eval-v4

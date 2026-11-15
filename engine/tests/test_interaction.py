@@ -1,4 +1,4 @@
-"""A7 forced-interaction generator (`gridforce` family). Frozen `gridworld` collections must
+"""Forced-interaction generator (`gridforce` family). Frozen `gridworld` collections must
 regenerate byte-identically; `gridforce` levels must force their new rule."""
 import json
 import math
@@ -83,7 +83,7 @@ def test_eval_v3_forces_every_new_rule():
                 assert I.rule_forced(lv, lv.new_rule), (g["game_id"], lv.new_rule)
 
 
-# ---- gridbranch (A7, branching.py): loopy, more complex levels; gridforce stays as it is ----
+# ---- gridbranch (branching.py): loopy, more complex levels; gridforce stays as it is ----
 
 def test_branch_flag_only_on_branch_family():
     from engine.generator import branching as B

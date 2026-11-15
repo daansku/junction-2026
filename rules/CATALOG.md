@@ -1,4 +1,4 @@
-# Rule catalog (A1)
+# Rule catalog
 
 ![every rule's teaching level, start and mid-solution](img/all_rules.png)
 
@@ -36,9 +36,9 @@ Colours below are defaults; skin shuffle permutes object colours per game, so ne
 
 Tier 3 is **not** in the d1-d3 pool, so dev, eval-v1 and train-v1 never contain it. **Difficulty 4** (eval-v2) draws from tiers 1-3 and each game introduces exactly 3 tier-3 rules, interleaved early (a rule that `requires` a partner gets the partner taught right before it). d4 also has tighter budgets (slack x1.5 vs x2.0 at d3), larger grids and more objects per rule.
 
-Proposals: `a5-decoy-and-camouflage` -> beacon_goal; `a5-delayed-state-switch` -> phase_walls; `auto-01` -> cracked_floor; `auto-02` -> collect_all; `auto-03` -> twin. `a5-sokoban-deadlock-box`: covered by push_blocks + the necessity check (the rule-ignorant plan must fail); no dedicated deadlock generator yet.
+Proposals: `decoy-and-camouflage` -> beacon_goal; `delayed-state-switch` -> phase_walls; `auto-01` -> cracked_floor; `auto-02` -> collect_all; `auto-03` -> twin. `sokoban-deadlock-box`: covered by push_blocks + the necessity check (the rule-ignorant plan must fail); no dedicated deadlock generator yet.
 
-## Skins (A1-12)
+## Skins
 Per game, by seed: object colours AND shapes are shuffled (distinct within a game). Fixed: floor, wall, budget bar, player = solid square, goal-like rings, arrows, HUD meters.
 
 Difficulty 1 games use tier 1 only; difficulty 2-3 draw from tiers 1-2; difficulty 4 draws from tiers 1-3 (3 unseen tier-3 rules per game).
@@ -59,7 +59,7 @@ Level 1 = movement + goal. Levels 2..n-1 each introduce one new rule (teaching l
 | File | Games | Seeds | Status |
 |---|---|---|---|
 | `dev.json` | 10 x 6 levels, d1/d2/d3 | 1000-1009 | playtesting; regenerated whenever the engine changes |
-| `eval-v1.json` | 30 x 6 levels, 10 per difficulty | 900000-900029 | **FROZEN** (Sat ~13:00, after human playtest: "levels work, some easy, some harder") |
+| `eval-v1.json` | 30 x 6 levels, 10 per difficulty | 900000-900029 | **FROZEN** |
 | `eval-v2.json` | 30 x 8 levels, all d4 | 910000+ | harder set + 3 never-trained rules per game (humans asked for harder levels and more rules) |
 | `train-v1.json` | >= 2,000 x 6 levels | 100000+ | fine-tune source; hold-outs removed |
 

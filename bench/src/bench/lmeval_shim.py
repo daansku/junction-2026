@@ -2,7 +2,7 @@
 
 Why: in lm-eval 0.4.13 the `local-chat-completions` model sends each task's stop sequences (e.g. GSM8K's "Q:") to the
 server. A thinking model writes those strings inside its <think> block, so generation stops mid-thought and the item
-scores 0 (seen in the A2 smoke run: 9 of 25 GSM8K items cut at "Q:"). lm-eval's in-process vLLM backend already
+scores 0 (seen in a smoke run: 9 of 25 GSM8K items cut at "Q:"). lm-eval's in-process vLLM backend already
 avoids this when `think_end_token` is set (it stops only at EOS and strips thinking first). This subclass does the
 same for the API path: no task stop sequences on the request; the chat turn ends at the model's own end-of-turn,
 and thinking is stripped by the parent's `think_end_token` handling.

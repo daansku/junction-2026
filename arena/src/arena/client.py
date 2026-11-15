@@ -1,4 +1,4 @@
-"""Game clients. HttpClient talks to A2's server (PLAN.md §4.4); MockClient runs MockGame in-process.
+"""Game clients. HttpClient talks to the server; MockClient runs MockGame in-process.
 
 The harness only ever shows the model `frame` + `available_actions`. `truth()` is used by
 the runner to know when a game ended; it is never put in a prompt.
@@ -227,8 +227,8 @@ def make_client(api: str, ledger=None) -> GameClient:
         return HttpClient(os.environ.get("ARENA_LOCAL_API", "http://localhost:8000"))
     if api == "shared":
         from .frames import _repo_root
-        p = _repo_root() / "coordination" / "API_URL"
+        p = _repo_root() / "API_URL"
         if not p.exists():
-            raise SystemExit("coordination/API_URL not committed yet (A2-08); use --api local or mock")
+            raise SystemExit("API_URL file not found at the repo root; use --api local, mock or a URL")
         return HttpClient(p.read_text().strip())
     return HttpClient(api)

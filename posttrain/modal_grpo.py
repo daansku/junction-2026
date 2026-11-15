@@ -1,14 +1,14 @@
-"""grpo-1 on one Modal H100 (A3-25). Same trainer as the Verda boxes (`posttrain.grpo`), nothing Modal-specific inside.
+"""grpo-1 on one Modal H100. Same trainer as the Verda boxes (`posttrain.grpo`), nothing Modal-specific inside.
 
 Volume `junction-grpo` layout:  /sft/<row>/ (adapter)   /tasks/<file>.jsonl   /runs/<run>/step-<k>/ + log.jsonl
 HF weights are cached in volume `junction-hf-cache` (first start downloads Qwen3.5-9B once, ~18 GB).
 
-From the A100 box (repo at /root/junction-2026, `. /root/modal-venv/bin/activate`):
+From a machine with the Modal CLI and this repo:
     modal volume create junction-grpo                                   # once
     modal volume put junction-grpo /root/ckpt/mix/lora /sft/mix
     modal volume put junction-grpo /root/tasks/rl-s0-mix.jsonl /tasks/rl-s0-mix.jsonl
     modal run --detach posttrain/modal_grpo.py --sft mix --tasks rl-s0-mix.jsonl --run grpo-1 --steps 150
-    bash posttrain/tools/modal_pull.sh grpo-1          # loop: copies new step-<k> to /root/ckpt/grpo-1/
+    modal volume get junction-grpo <run dir> <local dir>                # copy step-<k> checkpoints back
 `--detach` keeps the run alive if the local client disconnects. Function timeout 4 h (checkpoints every 25 steps
 are on the volume before that). Cost: H100 on Modal ~$4/h -> ~$12-16 for a 3-4 h run.
 """
@@ -104,7 +104,7 @@ def evaluate(adapters: str, tasks: str = "heldout-gameturn-s2.jsonl", out: str =
 bench_image = (
     modal.Image.debian_slim(python_version="3.12")
     .apt_install("git")
-    # same versions as A2's bench venv on the A100 box (/srv/bench/.venv), so Modal rows match its rows
+    # same versions as bench venv on the A100 box (/srv/bench/.venv), so Modal rows match its rows
     .uv_pip_install("vllm==0.33.0", "transformers==5.20.2", "lm-eval[api,ifeval,math]==0.4.13",
                     "reasoning-gym==0.1.25", "datasets==5.2.0", "huggingface_hub", "pyyaml", "math-verify==0.9.0",
                     "antlr4-python3-runtime==4.11.0", "peft==0.21.3", "accelerate")
@@ -129,8 +129,8 @@ print("[merge] done", type(m).__name__, flush=True)
 
 @app.function(image=bench_image, gpu="H100", timeout=3 * 3600, volumes={"/vol": vol, "/hf": hf_cache})
 def bench_dev(adapter: str, name: str):
-    """Dev-slice bench of one adapter on its own H100, A2's generation.yaml unchanged (vLLM at 0.88). The adapter is
-    MERGED into the base first: vLLM 0.33's LoRA path asserts on loglikelihood requests (MedQA), see A3 status.
+    """Dev-slice bench of one adapter on its own H100, bench/configs/generation.yaml unchanged (vLLM at 0.88). The adapter is
+    MERGED into the base first: vLLM 0.33's LoRA path asserts on loglikelihood requests (MedQA).
     `modal run posttrain/modal_grpo.py::bench_dev --adapter runs/grpo-1/step-25 --name rl-grpo-1-step-25`
     -> /vol/bench/<name>/ (pull with `modal volume get junction-grpo /bench/<name> /srv/bench/out/`)."""
     import subprocess

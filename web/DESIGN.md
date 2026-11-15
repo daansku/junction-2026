@@ -1,7 +1,6 @@
 # web/DESIGN.md — visual direction
 
-Owner: A4. A5 follows this for `features/leaderboard` and `features/insights`.
-Change requests: `coordination/requests/A5-to-A4-*.md`.
+`features/leaderboard` and `features/insights` follow this too.
 
 ## 1. Direction in one line
 
@@ -57,7 +56,7 @@ Status colours always ship with a text label ("WIN", "LOST") or icon — never
 colour alone.
 
 ### Game palette (16 colours)
-Source of truth: `contracts/palette.json` (A2). `src/lib/palette.ts` loads it
+Source of truth: `contracts/palette.json`. `src/lib/palette.ts` loads it
 and falls back to a built-in copy until it exists. The game palette is **only**
 used to draw frames and cell swatches — never as UI chrome.
 

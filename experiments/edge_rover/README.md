@@ -1,14 +1,14 @@
 # Edge rover: does game training transfer to a robot-style task?
 
-**Update Sun 06:51 (after the 06:30 lock): two rounds of episodic RL on our games make Qwen3.5-4B significantly better at the held-out transfer task.**
+**Headline: two rounds of episodic RL on our games make Qwen3.5-4B significantly better at the held-out transfer task.**
 - Rover-lite, hidden controls, the same 100 paired missions, JSON repair on (0 JSON failures): base **41/100** -> after round 2 **54/100**.
 - Paired: 20 missions better, 7 worse, McNemar **p = 0.019**.
 - Bumps per mission 10.1 -> 7.8.
 - Round 1 alone was 44/100 (not significant). Details in "Episodic RL on our games" below.
 
-**Status (Sun 04:20):**
+**Status:**
 - **Final:** the thinking-off results, Gemini Flash/Argon, and thinking-ON hidden controls (base **60/100** vs our RL **51/100**, p=0.175).
-- **Still running:** thinking-ON fixed controls (RL ~04:30, base ~05:15). This file will be updated.
+- **Not finished:** thinking-ON fixed controls. RL rows are in `results-think/think-h2-s60-fixed.jsonl`; the base run did not finish, so there is no paired result.
 
 ## The question
 Our games ask a model to discover unseen rules by acting. Does training on them make a model better at a separate task that
@@ -43,7 +43,7 @@ needs the same skill? The transfer target is a small rover mission an edge-sized
 - **Reply format:** the model must reply with JSON `{"notes": "...", "action": "ACTION1|..|ACTION4"}`. An unparseable reply is an invalid turn: no move, no energy spent, but it counts toward a turn cap of battery + 10.
 
 ### Why v1 was replaced
-The first version (`mission.py`, `run_eval.py`; Codex, Sat night) had every model at **0/30**:
+The first version (`mission.py`, `run_eval.py`; written with Codex) had every model at **0/30**:
 - The 1.5B base pressed ACTION1 (north) into a wall for the whole battery.
 - The tuned 1.5B model did the same with ACTION2.
 
@@ -57,7 +57,7 @@ All are Qwen3.5-9B variants, so every difference comes from training only.
 | `base` | Qwen/Qwen3.5-9B, untouched | - |
 | `grpo1` | games SFT v2 LoRA, then GRPO 25 steps on game turns + aux tasks (`/root/ckpt/grpo-1/step-25`) | **off** |
 | `grpo2` | games SFT v2 LoRA, then GRPO 20 steps on game turns only (`/root/ckpt/grpo-2/step-20`) | **off** |
-| `think-h2-s60` | A2's `think-games-h2`: GRPO from base, h2-format single decisions on train-v3b, step 60 (`/root/rl/think-games-h2/step-60`) | **on** |
+| `think-h2-s60` | `think-games-h2`: GRPO from base, h2-format single decisions on train-v3b, step 60 (`/root/rl/think-games-h2/step-60`) | **on** |
 | Gemini 4 Argon / Flash / Carbon | frontier reference via the Gemini API (`reasoning_effort` medium/high) | - |
 | `q15base` / `q15boot` | Codex's v1 pair: Qwen2.5-1.5B-Instruct and its game-bootcamp LoRA | off |
 
@@ -78,7 +78,7 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
 **Reading:**
 - RL with thinking off made the model *significantly worse* than base at the transfer task.
 - Its notes collapse into a copy of the template ("short memory: what each action does, plan"). It stops planning and drives in small loops.
-- This matches the team's earlier negative result on benchmarks: games SFT with thinking off taught the model to skip reasoning (`coordination/requests/A3-to-all-RESULTS.md`).
+- This matches the team's earlier negative result on benchmarks: games SFT with thinking off taught the model to skip reasoning.
 - The 1.5B models cannot do the task at all:
   - The base never produced a valid action.
   - The tuned model only bumps into walls.
@@ -90,20 +90,20 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
 |---|---|---|
 | Gemini 4 Argon (medium) | 30/30 | 30/30 |
 | Gemini Flash (high) | 29/30 | 28/30 |
-| Gemini 4 Carbon (medium) | (last mission still running; 29/29 and 30/30 so far) | |
+| Gemini 4 Carbon (medium) | incomplete run: 29/29 and 30/30 missions finished | |
 
 **Reading:**
 - Frontier models solve the task almost always, while base 9B solves 5-11%.
 - With hidden controls the 9B halves its success, while frontier models do not drop at all.
 - The gap is wide, and the hidden-rule condition is where small models break.
 
-### Thinking ON: RL hidden controls final; base still running
+### Thinking ON: hidden controls final; fixed controls not finished
 `base` vs `think-h2-s60`, 100 test seeds (5000-5099), both conditions.
 
 | Model (thinking on) | Hidden controls | Fixed controls |
 |---|---|---|
-| base Qwen3.5-9B | **60/100 (60%)**, 95% CI 50-69% | running (~05:15) |
-| think-h2-s60 (RL on our games) | **51/100 (51%)**, 95% CI 41-61%; paired vs base: 13 better / 22 worse, McNemar p=0.175 (not significant) | running (~04:30) |
+| base Qwen3.5-9B | **60/100 (60%)**, 95% CI 50-69% | not finished |
+| think-h2-s60 (RL on our games) | **51/100 (51%)**, 95% CI 41-61%; paired vs base: 13 better / 22 worse, McNemar p=0.175 (not significant) | rows in `results-think/`, no base to pair with |
 
 **Like-for-like check:** both models hit the 2,048-token thinking cap on **99.5%** of turns (base 3,472/3,488, RL 3,522/3,541; ~2,045 tokens per turn). Both had 1.4 bumps per mission and ~1.4 invalid turns per mission.
 
@@ -128,8 +128,8 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
 
   The hidden-rule condition is where thinking matters.
 
-### Episodic RL on our games (expert iteration), Qwen3.5-4B: final 06:21
-The corrected training recipe, run on Sunday 04:30-06:20 on the B200 + H100.
+### Episodic RL on our games (expert iteration), Qwen3.5-4B
+The corrected training recipe, run on a B200 + H100.
 - **Policy:** Qwen3.5-4B, thinking on (<=512 tokens per turn, with budget forcing).
 - **Training games:** our real h1 harness on train-v1, never eval games.
   - The board is shown compactly: each cell as a colour+shape code, never rule names. Same information as the screen.
@@ -145,7 +145,7 @@ The corrected training recipe, run on Sunday 04:30-06:20 on the B200 + H100.
 | **Rover-lite, hidden controls, 100 paired missions** (7x7, beacon 3-6 away; oracle 98%, random 4%) | base 4B **39/100** -> trained 4B **44/100**; paired 15 better / 10 worse, McNemar p=0.42 (**not significant**) |
 | Good moves / bumps per mission | 37.7% -> 36.8% / 10.9 -> 11.1 (unchanged) |
 
-**Round 2 (06:28-06:51):**
+**Round 2:**
 - **Rollouts:** the round-1 model played 537 episodes (its 30 won levels x4, plus 417 easy levels it never trained on).
 - **New-level wins:** about 2.6%, against 1.6% for the base on similar levels.
 - **Dataset rules:** each (game, level) contributes at most one win, from the first round that won it, so 28 replay wins were dropped and no level is trained on twice. Only efficient wins are kept (reward >= 0.4), and rule levels count 3x.
@@ -161,7 +161,7 @@ The corrected training recipe, run on Sunday 04:30-06:20 on the B200 + H100.
 
 | after round 3 (repair on) | 51/100 | 41-61% | 7.8 | 0 | 20 / 10, p=0.099 |
 
-**Round 3 (07:24):**
+**Round 3:**
 - **Rollouts:** the round-2 model played 320 FRESH, harder levels (10 optimal moves, never played by any round), 2 shots each.
 - **Wins:** 13 new levels won (4.1% of levels), about twice the base's rate on easier levels.
 - **Training:** retrained from base on 56 unique won levels (1,372 turns); val loss 0.319 -> 0.132.
@@ -195,8 +195,8 @@ Two-thirds are plain navigation, so the transfer likely comes mostly from better
   - a second transfer task.
 - Files: `results-rl4b/` (rows, per-step metrics, training manifest); code in `game_rollouts.py`, `build_rft.py`.
 
-### Held-out MATH (A2's benchmark, `bench/heldout_math`, frozen settings), Sun 07:33
-The round-3 model (3 rounds of episodic RL on our games) on A2's held-out MATH test:
+### Held-out MATH (benchmark, `bench/heldout_math`, frozen settings)
+The round-3 model (3 rounds of episodic RL on our games) on the held-out MATH test:
 - 350 MATH items; 0-shot chain of thought; 8,192 tokens; temperature 1.0; seed 1234.
 - Our models are 4B, so the 4B base got its own base run, as the README rules require.
 
@@ -205,18 +205,18 @@ The round-3 model (3 rounds of episodic RL on our games) on A2's held-out MATH t
 | Qwen3.5-4B base | 0.623 | 0.577 |
 | 4B after 2 RL rounds on our games | 0.680 | 0.680 |
 | 4B after 3 RL rounds on our games | 0.686 | 0.651 |
-| (ref) Qwen3.5-9B base, A2's stored run | 0.634 | 0.589 |
-| (ref) A2's 9B `think-games-h2` step 30 | 0.674 | 0.623 |
+| (ref) Qwen3.5-9B base, stored run | 0.634 | 0.589 |
+| (ref) 9B `think-games-h2` step 30 | 0.674 | 0.623 |
 
-**Trained 4B vs 4B base, paired (A2's `compare.py`):**
+**Trained 4B vs 4B base, paired (`bench/heldout_math` `compare.py`):**
 - **Held-out:** **+0.063**, 95% CI [-0.006, +0.131]; only-trained-right 25 vs only-base-right 14; McNemar p=0.108. Just short of significance.
-- **Other half:** +0.074, CI [+0.006, +0.143], p=0.060. We never used MATH to select anything, but by A2's rule the held-out half is the reported number.
+- **Other half:** +0.074, CI [+0.006, +0.143], p=0.060. We never used MATH to select anything, but by the protocol's rule the held-out half is the reported number.
 
 **Round 2 vs 4B base, paired:**
 - **Held-out:** +0.057, CI [-0.011, +0.126], McNemar p=0.154.
 - **Selection half:** +0.103, CI [+0.040, +0.171], p=0.004.
 
-**Checkpoint choice, by A2's protocol:** the selection half picks **round 2** (0.680 vs round 3's 0.651).
+**Checkpoint choice, by the protocol:** the selection half picks **round 2** (0.680 vs round 3's 0.651).
 - **Number to report:** round 2 held-out MATH **0.623 -> 0.680** (+5.7 points, p=0.15, not significant).
 - The selection-half gain of +10.3 (p=0.004) may be shown only with the label "used for selection".
 - Round 2 is also the best rover checkpoint (54/100, p=0.019).
@@ -232,8 +232,8 @@ We checked the reward and task code: `engine/src/engine/tasks/gameturn.py`, `eng
 - **Single-turn proxy reward, not episodes.** Each sample is one game state. The reward is 1 if the chosen action starts a *shortest path to finishing the level*, computed by BFS over the true engine state with all hidden rules known. The model never plays an episode and never earns the official score (levels solved, optimal/actions).
 - **Probing is punished.** Any informative experiment ("what does this tile do?", "which action is up?") scores 0, because it is not on the oracle's shortest path. Rule discovery needs exactly those actions; on the rover, it is how the scrambled controls are found.
 - **The discovery is supplied.** Prompts come from oracle playthroughs, with NOTES written by a Narrator from engine truth. The notes only state effects already seen, but they are the oracle's correct reading. The model is handed correct rule notes and asked for the next move, so it never has to form, test or revise hypotheses itself.
-- **Too little training to move the model.** About 60-70 GRPO steps x 64 completions, KL ~1e-3 (A2's log). A2's benchmark runs also found no measurable transfer.
-- **What training should look like to test "training makes models think better":** multi-turn episodic RL on full games (h2/h2b format), with the official per-level score as the reward and the model writing its own notes. Exploration is then paid only through outcomes. It did not fit before the 06:30 lock.
+- **Too little training to move the model.** About 60-70 GRPO steps x 64 completions, KL ~1e-3. Benchmark runs also found no measurable transfer.
+- **What training should look like to test "training makes models think better":** multi-turn episodic RL on full games (h2/h2b format), with the official per-level score as the reward and the model writing its own notes. Exploration is then paid only through outcomes. It did not fit in the hackathon.
 
 - **Decoding settings:**
   - Qwen3.5 model-card sampling: T=0.6, top_p=0.95, top_k=20, seeded per mission and turn.
@@ -276,10 +276,6 @@ python summarize2.py results-nothink/*.jsonl --ref base
 python mission2.py
 ```
 
-**Live progress bars + direction metrics** (ssh to both GPU boxes):
-```bash
-python progress.py
-```
 
 ## Libraries and hardware
 
@@ -288,7 +284,7 @@ python progress.py
 | GPU eval | Python 3.12.16, **vLLM 0.33.0**, **transformers 5.20.2**, **PEFT 0.21.3**, **PyTorch 2.14.0+cu130** (CUDA 13.0) | NVIDIA **A100-SXM4-80GB** (GPU 0) and **H100 80GB HBM3**, driver 580.178.04, on Verda (ex-DataCrunch) |
 | API runs | Python 3.12.10, **openai 3.51.0** (Gemini's OpenAI-compatible endpoint, through `arena.providers.openai_compat.make_client`), PyYAML 6.0.3 | laptop |
 
-- **Training** of the checkpoints was done earlier with TRL GRPO, LoRA r=16, on Modal/Verda H100s and A2's B200 (see `coordination/`).
+- **Training** of the checkpoints was done earlier with TRL GRPO, LoRA r=16, on Modal/Verda H100s and a B200 (trainer: `posttrain/`).
 - **Environment code** (`mission2.py`, `summarize*.py`) is standard library only.
 
 ## Files
@@ -299,7 +295,6 @@ python progress.py
 | `run_api.py` | same missions, same prompt and parser, for API models |
 | `merge_stack.py` | merges LoRA stacks into a vLLM-servable checkpoint |
 | `summarize2.py` | results table with CIs and paired tests |
-| `progress.py` | live CLI progress for the GPU runs |
 | `results-nothink/` | final thinking-off rows (one JSON line per mission, with full action history) |
 | `results-think/` | thinking-on rows + per-step direction metrics (`*.metrics.jsonl`) |
 | `test-api/` | Gemini rows |

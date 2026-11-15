@@ -1,5 +1,5 @@
 #!/bin/bash
-# A3-11 on one rented GPU box (Verda instance, Ubuntu + CUDA image, 1 or 2x A100 40/80 GB, all GPUs used).
+# On one rented GPU box (Verda instance, Ubuntu + CUDA image, 1 or 2x A100 40/80 GB, all GPUs used).
 # From the laptop (repo root):
 #   scp -i ~/.ssh/junction_verda arena/finetune/train_sft.py arena/finetune/remote_run.sh \
 #       ~/junction-data/sft/train-v1-h1-4k.jsonl root@<IP>:/root/

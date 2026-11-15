@@ -13,7 +13,7 @@ from arena.solver import solve_level
 
 
 def engines():
-    """Mock always; A2's fake engine / A1's engine when present in the repo."""
+    """Mock always; the fake engine / the real engine when present in the repo."""
     out = [("mock", lambda s: MockGame(s, 3))]
     eng, name = load_engine()
     if name != "arena.mock_game":

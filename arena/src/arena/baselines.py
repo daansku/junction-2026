@@ -1,4 +1,4 @@
-"""Baseline players. `random` and `optimal` are leaderboard reference rows (PLAN.md A3-02);
+"""Baseline players. `random` and `optimal` are leaderboard reference rows;
 `noop` and `stop_early` are the AfterQuery judging baselines (do-nothing, stop-early)."""
 from __future__ import annotations
 

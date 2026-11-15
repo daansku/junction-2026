@@ -1,5 +1,5 @@
 #!/bin/bash
-# A3-25 GRPO launcher for one GPU box (H100 or A100). Own venv (/root/rl-venv) so TRL/vLLM pins never touch the
+# GRPO launcher for one GPU box (H100 or A100). Own venv (/root/rl-venv) so TRL/vLLM pins never touch the
 # SFT or bench environments. Usage (on the box, repo checked out at $REPO):
 #   SFT_LORA=/root/ckpt/games/lora GPU=0 bash posttrain/run_grpo.sh
 #   tail -f /root/ckpt/grpo-1/train.log ; tail -f /root/ckpt/grpo-1/log.jsonl
@@ -45,4 +45,4 @@ ARGS=(--config "$CONFIG" --sft-lora "$SFT_LORA" --tasks "$TASKS" --out "$OUT")
 echo "== grpo start $(date -u +%H:%M) UTC: ${ARGS[*]}"
 CUDA_VISIBLE_DEVICES=$GPU PYTHONUNBUFFERED=1 nohup accelerate launch --num_processes 1 --mixed_precision bf16 \
   -m posttrain.grpo "${ARGS[@]}" > "$OUT/train.log" 2>&1 &
-echo "pid $! -> $OUT/train.log ; checkpoints $OUT/step-<k> ; bench: posttrain/tools/bench_watch.sh"
+echo "pid $! -> $OUT/train.log ; checkpoints $OUT/step-<k>"

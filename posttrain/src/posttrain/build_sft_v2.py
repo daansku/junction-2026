@@ -1,8 +1,8 @@
-"""Build the three SFT v2 training sets with the same token count (PLAN phase 2 §3.3 step 2, bench/PROTOCOL.md §2).
+"""Build the three SFT v2 training sets with the same token count.
 
     python -m posttrain.build_sft_v2 --aux aux-s0.jsonl --turns turns-v2.jsonl --out /root/sftv2 --tokens 2500000
 
-  games  A1's auxiliary verifiable tasks (`python -m engine tasks`) + h1 game turns with A1's Narrator rationales,
+  games  the engine's auxiliary verifiable tasks (`python -m engine tasks`) + h1 game turns with Narrator rationales,
          half and half by tokens.
   ctrl   general instruction/reasoning SFT data with no game content (allenai/tulu-3-sft-mixture, single-turn,
          short, sources that overlap the FT_BENCHMARKS suite removed), same token count.

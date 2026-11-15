@@ -1,5 +1,5 @@
-# A3-10 subset: DeepSeek V3.2 (featherless-open) on the first 10 eval-v1 games, 1 attempt. Featherless runs it at
-# ~14 s/action with 4 concurrency units per request, so 30 games x 3 attempts (~70 h) cannot finish before 07:00.
+# Subset: DeepSeek V3.2 (featherless-open) on the first 10 eval-v1 games, 1 attempt. Featherless runs it at
+# ~14 s/action with 4 concurrency units per request, so 30 games x 3 attempts would take ~70 h.
 # Concurrency 1 so the fine-tune comparison (featherless-qwen3-5-9b) shares the account without queueing.
 name: main-deepseek
 collection: eval-v1

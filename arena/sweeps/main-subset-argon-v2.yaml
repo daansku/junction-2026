@@ -1,7 +1,7 @@
 # Gemini 4 Argon on eval-v2 (difficulty 4, 8 levels, 3 rules unseen in training per game), h1 harness, 1 attempt.
 # Same 4 games as h2-subset-v2 (s910000-s910003) so the h1 row sits next to the h2 rows; same 400-action budget.
-# Human request Sat ~17:55 ("try on eval-v2") after Argon won eval-v1 game 1 (97 actions, optimal 86).
-# $4 hard cap per run: measured $0.0055-0.0072 per action, so 400 actions is ~$2.6; worst case 4 x $4 = $16 (under the $20 cap).
+# Follows Argon winning eval-v1 game 1 (97 actions, optimal 86).
+# $4 hard cap per run: measured $0.0055-0.0072 per action, so 400 actions is ~$2.6; worst case 4 x $4 = $16.
 name: main-subset-argon-v2
 collection: eval-v2
 games: [gridworld-s910000-d4-l8-f71ee29e, gridworld-s910001-d4-l8-eb750fbb, gridworld-s910002-d4-l8-654b6dd3, gridworld-s910003-d4-l8-6ea22e03]

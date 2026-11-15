@@ -1,8 +1,7 @@
-# A3-22 h2 subset, part 1 of 2 (FROZEN Sat 17:15; part 2 = h2-subset-v2.yaml). PLAN.md phase 2 section 3.1.
+# h2 subset, part 1 of 2 (frozen; part 2 = h2-subset-v2.yaml).
 # 6 eval-v1 games, 2 per difficulty band (d1: s900000 s900003, d2: s900001 s900004, d3: s900002 s900005).
 # Harness h2 (multi-turn, reasoning retained, native tool calls, effort per model row, generous output).
-# Models and efforts are the HUMAN's call (PLAN §6, cost table in coordination/status/A3.md); runs are 3 attempts
-# where affordable, else 1 (labelled). Do not change the games after the first run.
+# Runs are 3 attempts where affordable, else 1 (labelled). Do not change the games after the first run.
 name: h2-subset
 harness: h2
 collection: eval-v1
@@ -13,6 +12,6 @@ concurrency: 6
 est_steps_per_game: 250
 models:
   - {id: verda-kimi-k3-1-pro, effort: max}        # Kimi default = max (provider docs); Verda credits
-  - {id: gemini-pro, effort: high}                # human approved Sat 17:40, x1, ~$145 (cap $18/run) (~$12.5/game at high)
-  - {id: claude-opus-5-5, effort: high}           # pending human approval (~$20/game at high; Anthropic key ~$8 left)
+  - {id: gemini-pro, effort: high}                # x1, ~$145 (cap $18/run) (~$12.5/game at high)
+  - {id: claude-opus-5-5, effort: high}           # not run (~$20/game at high)
 budgets: {max_actions: 400, max_turns: 600, max_tokens_total: 500000000, max_cost_usd: 18.0, max_wall_s: 14400}

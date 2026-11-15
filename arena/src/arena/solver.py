@@ -1,7 +1,7 @@
 """Generic BFS over any Game implementing contracts/engine_api.py (clone, state_hash, step, truth).
 
 Used to finish a level from an arbitrary (e.g. off-optimal) state when building
-recover-from-mistake trajectories. A1 owns the real solver; this one only needs the protocol.
+recover-from-mistake trajectories. The engine has the real solver; this one only needs the protocol.
 """
 from __future__ import annotations
 

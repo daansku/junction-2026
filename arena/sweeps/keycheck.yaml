@@ -1,4 +1,4 @@
-# Key check: 3 actions per model on one dev game, against a LOCAL server (coordination/KEYS.md).
+# Key check: 3 actions per model on one dev game, against a LOCAL server (docs/KEYS.md).
 #   python -m arena run arena/sweeps/keycheck.yaml --api http://localhost:8765
 name: keycheck
 collection: dev

@@ -1,9 +1,7 @@
-# Gemini 3.1 Pro, 3.8 Flash, Gemini 4 Argon + Carbon on all 30 eval-v2 games, harness h2 (human request: Daniel,
-# Sun ~01:10, "as many models in v2 h2"; run from A1's machine). Same settings as the eval-v3b h2 sweeps:
-# Pro / Argon / Carbon effort medium, Flash high, 1 attempt, 400 actions, 4 h wall cap.
-# Earlier eval-v2 h2 attempts of these models (Sat ~22:00) died early to Gemini 429s (no backoff in h2 then) and
+# Gemini 3.1 Pro, 3.8 Flash, Gemini 4 Argon + Carbon on all 30 eval-v2 games, harness h2.
+# Same settings as the eval-v3b h2 sweeps: Pro / Argon / Carbon effort medium, Flash high, 1 attempt, 400 actions,
+# 4 h wall cap. Earlier eval-v2 h2 attempts of these models died early to Gemini 429s (no backoff in h2 then) and
 # ended as idle_timeout; analysis drops them. Gemini Pro (high) on the 4 h2-subset-v2 games stays its own row.
-# Gemini credits are unlimited (DECISIONS Sat 19:25).
 name: h2-eval-v2-gemini-all
 harness: h2
 collection: eval-v2

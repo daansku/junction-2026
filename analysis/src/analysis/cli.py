@@ -176,7 +176,7 @@ def build_all(
 
     leaderboard = aggregate_runs(runs, models_registry=models, game_descs=games, harness_filter="h1")
     leaderboard_h2 = aggregate_h2_runs(runs, models_registry=models, game_descs=games)
-    # h2b (A3, Sat 22:32): h2 with up to 5 actions per model call; its own board, never mixed with h1 or h2
+    # h2b: h2 with up to 5 actions per model call; its own board, never mixed with h1 or h2
     leaderboard_h2b = aggregate_h2_runs(runs, models_registry=models, game_descs=games, harness="h2b")
     rules_data = analyze_rules(runs, models_registry=models, game_descs=games)
     insights = synthesize_insights(leaderboard, rules_data, runs=runs)
@@ -186,7 +186,7 @@ def build_all(
     bench_summary = build_bench_summary(resolved_bench_dir, lb_h1=leaderboard, lb_h2=leaderboard_h2)
     decision_points = build_decision_points_export(runs, game_descs=games, repo_root=root)
 
-    # Preserve any prior LLM-judge entries on incremental rebuilds while backfilling new A5-24 forensic fields
+    # Preserve any prior LLM-judge entries on incremental rebuilds while backfilling new forensic fields
     existing_exp_path = out_dir / "explanations.json"
     if existing_exp_path.exists():
         try:
@@ -259,21 +259,21 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_sync = sub.add_parser("sync", help="Mirror finished runs from shared server /api/runs/export")
-    p_sync.add_argument("--api", help="Shared server base URL (defaults to API_URL or coordination/API_URL)")
+    p_sync.add_argument("--api", help="Shared server base URL (defaults to $API_URL, then the API_URL file at the repo root)")
     p_sync.add_argument("--data-dir", help="Local data directory (default: DATA_DIR or ~/junction-data)")
     p_sync.add_argument("--since", help="ISO-8601 timestamp to fetch incrementally")
 
     p_agg = sub.add_parser("aggregate", help="Build h1 leaderboard.json")
     _add_common_io_args(p_agg)
 
-    p_h2 = sub.add_parser("h2", help="Build separate h2 leaderboard_h2.json (PLAN.md §3.1)")
+    p_h2 = sub.add_parser("h2", help="Build separate h2 leaderboard_h2.json")
     _add_common_io_args(p_h2)
 
-    p_bench = sub.add_parser("bench", help="Build post-training bench_summary.json with paired 95%% CIs (PLAN.md §3.2)")
+    p_bench = sub.add_parser("bench", help="Build post-training bench_summary.json with paired 95%% CIs")
     _add_common_io_args(p_bench)
     p_bench.add_argument("--bench-dir", help="Directory containing <run>/{summary.json,items.jsonl} (default: <out>/bench)")
 
-    p_targets = sub.add_parser("export-targets", help="Export failure decision points & train-v1 oversampling weights (A5-21)")
+    p_targets = sub.add_parser("export-targets", help="Export failure decision points & train-v1 oversampling weights")
     _add_common_io_args(p_targets)
 
     p_rules = sub.add_parser("rules", help="Build rules.json")

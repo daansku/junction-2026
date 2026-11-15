@@ -13,7 +13,7 @@ import type {
   Truth,
 } from './types'
 
-/** Every page talks to the backend only through this interface (PLAN.md §4.4). */
+/** Every page talks to the backend only through this interface. */
 export interface ServerInfo {
   ok?: boolean
   engine_version?: string

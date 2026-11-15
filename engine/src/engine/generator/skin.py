@@ -1,6 +1,6 @@
 """Per-game skins: role -> (colour index, sprite).
 
-Skin shuffle (A1-12) permutes object colours AND object shapes by seed, so no player — human,
+Skin shuffle permutes object colours AND object shapes by seed, so no player — human,
 frontier model or fine-tuned model — can memorise "orange dot means key". Kept fixed:
 structural roles (floor, wall, budget bar), the player (solid square), goal-like rings (the
 ring means "a goal" in every game; which ring is real is part of the puzzle), and directional

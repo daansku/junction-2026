@@ -1,15 +1,15 @@
-"""Rejection-sampling driver (PLAN.md phase 2, A1 Q1; feeds A3-24 and SFT v2).
+"""Rejection-sampling driver.
 
-Two steps around A3's sweep:
+Two steps around an arena sweep:
 
 1. `pick_games(n)`: train-v1 game ids for the sampling sweep, balanced over difficulty and
-   covering every rule. A3 puts them in a sweep yaml and runs strong models (h1 harness).
+   covering every rule. Put them in a sweep yaml and runs strong models (h1 harness).
 2. `convert(runs, out)`: turns recorded runs into h1 SFT examples, keeping only the turns of
    levels the model **solved efficiently** (optimal / actions on that level >= min_eff).
    The target is the model's own reply (notes, hypothesis, belief, action), so it carries real
    reasoning, not a template.
 
-The prompt is rebuilt with A3's own `build_parts` + `parts_to_text` (arena), so train ==
+The prompt is rebuilt with the arena's own `build_parts` + `parts_to_text` (arena), so train ==
 inference byte for byte. Only games in train-v1 are accepted: a run on any other game id
 (eval-v1, eval-v2, probe-v1, generated) is skipped, whatever its metadata says.
 """
@@ -112,7 +112,7 @@ def level_segments(steps: list[dict]) -> dict[int, dict]:
 
 def run_examples(meta: dict, steps: list[dict], game: Game, min_eff: float = MIN_EFF,
                  drop_bumps: bool = True) -> tuple[list[dict], Counter]:
-    from arena.agent_loop import SYSTEM, build_parts       # A3's harness: train == inference
+    from arena.agent_loop import SYSTEM, build_parts       # the arena harness: train == inference
     from arena.dataset import MODES, parts_to_text
 
     stats: Counter = Counter()

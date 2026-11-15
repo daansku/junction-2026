@@ -32,7 +32,7 @@ class GameSpec:
     difficulty: int = 2
     rules: list[str] | None = None   # None -> curriculum picks
     skin_shuffle: bool = True
-    view: str | None = None          # A1, eval-v6: "fog2,glimpse,recolor" (generator/view.py); rendering only
+    view: str | None = None          # eval-v6: "fog2,glimpse,recolor" (generator/view.py); rendering only
 
 
 def _spec_dict(spec: GameSpec) -> dict[str, Any]:

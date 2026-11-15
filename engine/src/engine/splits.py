@@ -1,6 +1,6 @@
-"""Eval / train splits with documented hold-outs (PLAN.md A1-14).
+"""Eval / train splits with documented hold-outs.
 
-  eval-v1  : 30 games, difficulties 1/2/3 x 10, seeds 900000+. Frozen at 11:00 Sat.
+  eval-v1  : 30 games, difficulties 1/2/3 x 10, seeds 900000+. Frozen.
   train-v1 : >= 2,000 games, seeds 100000+ (disjoint from eval and dev), with hold-outs:
              * no level whose rule set contains a HOLDOUT_PAIRS pair
              * no game whose player colour is in HOLDOUT_PLAYER_COLOURS

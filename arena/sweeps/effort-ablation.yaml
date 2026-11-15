@@ -1,4 +1,4 @@
-# A3-12 effort ablation on 2 models, 10 eval-v1 games.
+# Effort ablation on 2 models, 10 eval-v1 games.
 name: effort-ablation
 collection: eval-v1
 games: {first: 10}

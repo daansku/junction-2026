@@ -1,5 +1,5 @@
-# DeepSeek 4.1 Flash on all 30 eval-v2 games, harness h2 (human request: Daniel, Sat ~22:35; run from A1's machine).
-# Highest effort the endpoint accepts (high). Verda credits. One attempt per game (labelled single-attempt).
+# DeepSeek 4.1 Flash on all 30 eval-v2 games, harness h2.
+# Highest effort the endpoint accepts (high). One attempt per game (labelled single-attempt).
 name: h2-eval-v2-deepseek
 harness: h2
 collection: eval-v2

@@ -9,7 +9,6 @@ from __future__ import annotations
 import concurrent.futures as cf
 import hashlib
 import json
-import re
 import threading
 import time
 from dataclasses import asdict, dataclass
@@ -21,11 +20,10 @@ from .agent_loop import HARNESS_VERSION, Budgets, play_model
 from .baselines import BASELINES
 from .client import AlreadyFinished, make_client
 from .cost import est_tokens_per_step, price
-from .frames import _repo_root
 from .providers import get_provider
 from .registry import has_key, key_env, load_models, usable
 
-DEFAULT_CAP = 5.0
+DEFAULT_CAP = 20.0
 
 
 def run_key(collection, game_id, model_id, effort, harness_version, attempt) -> str:
@@ -34,13 +32,8 @@ def run_key(collection, game_id, model_id, effort, harness_version, attempt) -> 
 
 
 def spend_cap() -> float:
-    """Per-sweep cap from coordination/DECISIONS.md (humans own it); default $5."""
-    p = _repo_root() / "coordination" / "DECISIONS.md"
-    try:
-        m = re.search(r"Spend cap per sweep:\s*\$?\s*([0-9.]+)", p.read_text())
-        return float(m.group(1)) if m else DEFAULT_CAP
-    except OSError:
-        return DEFAULT_CAP
+    """Per-sweep spend cap in USD."""
+    return DEFAULT_CAP
 
 
 class Drained(Exception):
@@ -180,7 +173,7 @@ def execute(sw: dict, *, api: str, dry_run: bool, approve_cost: float | None, ou
         log(f"  {k:<40} {len(js):>4} runs   est ${c:,.2f}" + ("  (price unknown)" if any(j.est_cost is None for j in js) else ""))
     cap = spend_cap()
     log(f"estimated cost: ${total:,.2f}" + (f" + {unknown} runs with unknown price" if unknown else "")
-        + f"   (cap ${cap:,.2f} per sweep from DECISIONS.md)")
+        + f"   (cap ${cap:,.2f} per sweep)")
     if dry_run:
         return []
     if total > cap and (approve_cost is None or approve_cost < total):

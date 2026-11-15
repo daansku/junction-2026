@@ -1,6 +1,6 @@
 """Fake engine: walls + goal + move budget, implementing contracts/engine_api.py.
 
-Used for fixtures and as the server's fallback until A1's `engine` package lands.
+Used for fixtures and as the server's fallback until the `engine` package lands.
 Deterministic: same spec -> byte-identical frames. No global random, no builtin hash().
 """
 from __future__ import annotations

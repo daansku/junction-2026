@@ -1,6 +1,6 @@
-"""Rescore bench rows with the "ANSWER: X" answer form accepted (human decision Sat 14.11 ~21:00, PROTOCOL v3 proposal).
+"""Rescore bench rows with the "ANSWER: X" answer form accepted.
 
-Why: SFT v2 / RL models answer in A1's task format ("ANSWER: (C)"). lm-eval's extraction regexes look for "the answer
+Why: SFT v2 / RL models answer in the engine's task format ("ANSWER: (C)"). lm-eval's extraction regexes look for "the answer
 is (C)", so those items become `[invalid]` and score 0 (games dev slice: 669/1000 generative items; base: 38/3773).
 
 Rule, identical for every model and row, applied to the saved raw lm-eval samples (no regeneration):

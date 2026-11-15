@@ -2,7 +2,7 @@
 // Otherwise development uses the shared server when available and production uses
 // the server serving the app. Mock mode is only an explicit fallback.
 
-const apiUrlFiles = import.meta.glob('../../../coordination/API_URL*', {
+const apiUrlFiles = import.meta.glob('../../../API_URL*', {
   eager: true,
   query: '?raw',
   import: 'default',

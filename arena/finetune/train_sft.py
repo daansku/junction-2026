@@ -1,4 +1,4 @@
-"""LoRA SFT of a small open chat model on arena dataset jsonl (A3-11).
+"""LoRA SFT of a small open chat model on arena dataset jsonl.
 
 Plain transformers + peft loop (no TRL) so trainer API drift can't bite at 3am. Loss only on the
 assistant reply tokens. Runs on any single GPU box: a Verda instance, or inside a Modal function.

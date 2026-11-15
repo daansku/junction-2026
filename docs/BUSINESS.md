@@ -1,12 +1,12 @@
-# Business & Real-World Value Exploration (`docs/BUSINESS.md`)
+# Business & Real-World Value
 
-> **Scope (`PLAN.md` §3.6, A5-22):** Rigorous evaluation of six commercial and real-world applications of our procedural inductive gridworld factory — who pays, what concrete pain it solves, why *this* architecture specifically, what empirical evidence we already hold today, and what validation remains. **Top 3 deck picks** are summarized at the end.
+> **Scope:** An evaluation of six commercial and real-world applications of our procedural inductive gridworld factory: who pays, what concrete pain it solves, why *this* architecture specifically, what empirical evidence we already hold today, and what validation remains.
 
 ---
 
 ## 1. Candidate Evaluation Matrix (6 Directions Assessed)
 
-### Candidate 1 — Verifiable RL Curricula & Causal-Discovery Training Environments *(Selected for Deck #1)*
+### Candidate 1 — Verifiable RL Curricula & Causal-Discovery Training Environments
 - **Who pays:** Frontier AI labs, open-weights post-training teams, and RL environment/data vendors (**AfterQuery's core customer base**).
 - **Pain solved:** Static reasoning datasets saturate within months and reward memorized solution templates rather than interactive hypothesis testing (`observe → probe → falsify → revise → reset`). Building human-authored interactive environments is slow, unscalable, and riddled with reward-hacking loopholes.
 - **Why our factory specifically:**
@@ -20,7 +20,7 @@
 
 ---
 
-### Candidate 2 — Contamination-Proof Private Evals ("Fresh Seed Set Per Contract") *(Selected for Deck #2)*
+### Candidate 2 — Contamination-Proof Private Evals ("Fresh Seed Set Per Contract")
 - **Who pays:** Model evaluators, enterprise AI procurement teams, safety institutes (aisi/METR-style), and benchmark operators (ARC Prize / Harbor ecosystems).
 - **Pain solved:** Public benchmarks leak into pre-training or prompt tuning almost immediately; even held-out static test sets suffer score inflation as labs hill-climb known visual conventions and task formats.
 - **Why our factory specifically:**
@@ -33,7 +33,7 @@
 
 ---
 
-### Candidate 3 — Pre-Deployment Agent Readiness & Resource-Bounded Adaptation Audits *(Selected for Deck #3)*
+### Candidate 3 — Pre-Deployment Agent Readiness & Resource-Bounded Adaptation Audits
 - **Who pays:** Enterprise teams deploying computer-use, browser, RPA, and autonomous ops agents where unfamiliar UI states, silent action failures, or API rate/cost budgets cause costly runaway loops.
 - **Pain solved:** Standard coding/QA benchmarks test static knowledge, not whether an agent notices *"my last action changed 0 pixels — stop repeating it"* or *"replanning/resetting now is cheaper than burning the remaining budget."*
 - **Why our factory specifically:**
@@ -62,22 +62,3 @@
 - **Who pays:** Behavioural research labs, clinical neuropsychology, or technical hiring platforms.
 - **Pain solved:** Culture- and language-independent measurement of inductive flexibility, spatial planning, and perseveration (`no_effect` streaks) with zero text instructions.
 - **Ethical & validation caveat (why excluded from commercial pitch):** Any human diagnostic or hiring use requires psychometric norming, IRB/clinical validation, accessibility accommodation (colour-vision, motor speed), and strict anti-bias auditing. Kept strictly as an anonymized research baseline here.
-
----
-
-## 2. Top 3 Slide Picks for the Pitch Deck (`PLAN.md` §3.5 & §3.6)
-
-1. **Verifiable RL Training Factory for AI Labs (AfterQuery Core Market):**
-   *CPU-light procedural generator (`<2 s/seed`, zero human authoring) producing exploit-proof episode rewards and auto-mined failure decision points — addressing the exact causal-discovery gap where naive action SFT (`4/180` levels) fails.*
-2. **Contamination-Proof Private Evals-as-a-Service (Harbor + MCP Ready):**
-   *Every evaluation customer receives a fresh, mathematically verified seed range with permuted palettes and held-out rule pairs — packaged out-of-the-box as `harbor==0.26.0` sidecar tasks (`oracle 1.000`, `9/9` red-team exploits `0.000`).*
-3. **Pre-Deployment Agent Loop & Budget-Hygiene Stress Testing:**
-   *Quantifies runaway action loops (`55%–77%` zero-effect action waste in weak agents) and sunk-cost reset failures before enterprise teams put autonomous GUI/ops agents into production.*
-
-
----
-
-## 3. Two-Outcome Pitch Pivot at the 07:00 Lock (Aligned with `BACKUP IDEAS.md`)
-
-- **If `SFT v2` / `GRPO` clears the Pre-Registered Honesty Rule (`transfer_shown == true`):** Lead with **Candidate 1 (Verifiable RL Training Factory)** + **Candidate 2 (Contamination-Proof Evals)** — our procedural worlds measurably improve out-of-distribution reasoning beyond equal-token general supervision.
-- **If outside transfer is null (`transfer_shown == false`, `BACKUP IDEAS.md` reframe):** Lead with **Candidate 2 (Contamination-Proof Evals)** + **Candidate 3 (Pre-Deployment Agent Sanity Gate)**, backed by **Candidate 5 (Game Studio Solvable-Level SDK)** as a non-AI revenue hedge and `/challenge` (**Daily "Beat the AI" Flywheel**) for proprietary human discovery traces — because if fine-tuning on `28.7k` examples of our own games cannot game unseen rule combinations, **no lab can train to the test.**

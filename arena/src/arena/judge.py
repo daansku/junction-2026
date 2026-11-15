@@ -1,15 +1,15 @@
-"""Judge-LLM calls for failure explanations (human plan Sat 14:10, section 2; A5 builds prompts, A3 runs calls).
+"""Judge-LLM calls for failure explanations.
 
     python -m arena judge --in prompts.jsonl --out replies.jsonl [--model gemini-pro] [--dry-run] [--approve-cost N]
 
-Input (one JSON object per line, written by A5's `analysis`):
+Input (one JSON object per line, written by the `analysis`):
     {"id": "<run_id>:<level>", "prompt": "...", "system": "... (optional)", "max_tokens": 8000 (optional; thinking models spend part of it on hidden reasoning)}
 Output (one line per input id, appended; rerun resumes by skipping ids already answered without error):
     {"id", "model", "text", "tokens_in", "tokens_out", "cost_usd", "latency_ms", "error"}
 
 The judge may see the truth (rules, optimal path, truth events); playing models never do. This tool only sends what
-A5 put in the prompt. Spend: a cost estimate is printed first, and the run refuses to go over the DECISIONS.md
-per-sweep cap unless --approve-cost is given.
+the analysis put in the prompt. Spend: a cost estimate is printed first, and the run refuses to go over the
+per-sweep cap ($20, `arena.runner.DEFAULT_CAP`) unless --approve-cost is given.
 """
 from __future__ import annotations
 
@@ -115,7 +115,7 @@ def run(inp: Path, out: Path, model_id: str = DEFAULT_MODEL, effort: str | None 
     return {"todo": len(todo), "est_cost": est, "sent": len(todo), "errors": n_err, "spent": spent}
 
 
-# ---------------------------------------------------------------- single-call hooks for A5's `analysis explain`
+# ---------------------------------------------------------------- single-call hooks for the `analysis explain`
 # Python: arena.judge.complete(prompt, system=..., max_tokens=350) -> {"reply", "model", "cost_usd", ...}
 # CLI:    echo '{"system": "...", "prompt": "...", "max_tokens": 350}' | python -m arena judge-one
 # Spend across calls (and across processes) is tracked in a ledger and refused above the cap.

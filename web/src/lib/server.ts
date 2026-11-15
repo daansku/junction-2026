@@ -10,7 +10,7 @@ function forcedPublished(): boolean {
 }
 
 /**
- * Server capabilities. In published mode (A2-11) the server serves a frozen snapshot:
+ * Server capabilities. In published mode the server serves a frozen snapshot:
  * visitor plays are not listed under /runs, so their replays and the live wall are hidden.
  */
 export function useServerInfo() {

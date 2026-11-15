@@ -8,7 +8,7 @@ const repoRoot = path.resolve(here, '..')
 
 // VITE_API: "mock" (reads ../data/fixtures), "local" (http://localhost:8000/api),
 // or a full base URL such as https://xyz.trycloudflare.com/api.
-// Unset: dev → coordination/API_URL when present, build → same-origin /api.
+// Unset: dev → the repo-root API_URL file when present, build → same-origin /api.
 export default defineConfig({
   plugins: [react()],
   resolve: {

@@ -1,10 +1,10 @@
-# PLAN phase 2 gate H1: h2 plays one eval-v1 game end to end with an Anthropic model. Claude Haiku 5.5 (high) on the
-# first h2-subset game; ~$0.4 (Anthropic key nearly spent). Lands on the h2 board as a single-attempt row.
+# h2 gate: h2 plays one eval-v1 game end to end with an Anthropic model. Claude Haiku 5.5 (high) on the
+# first h2-subset game; ~$0.4. Lands on the h2 board as a single-attempt row.
 name: h2-gate-haiku
 harness: h2
 collection: eval-v1
 games: [gridworld-s900000-d1-l6-33a57ce4]
-attempts: 2   # attempt 0 (17:20) was cut by the 3M token-budget bug at 3/6 in 66 actions: ignore it
+attempts: 2   # attempt 0 was cut by the 3M token-budget bug at 3/6 in 66 actions: ignore it
 concurrency: 1
 est_steps_per_game: 250
 models:

@@ -1,7 +1,7 @@
 # Project Submission Sheet (`docs/SUBMISSION.md`)
 
-> Pre-filled submission reference matching `PLAN.md §7`, `docs/CHALLENGE.md`, and `coordination/JUDGING.md`.
-> **Rule:** Every benchmark number below traces directly to `coordination/JUDGING.md`, `data/derived/*.json`, and `data/fixtures/derived/*.json` (verified by `python -m analysis check-claims`).
+> Submission reference for the AfterQuery challenge. Judging path and results: `docs/JUDGING.md`.
+> **Rule:** Every benchmark number below traces directly to `docs/JUDGING.md`, `data/derived/*.json`, and `data/fixtures/derived/*.json` (verified by `python -m analysis check-claims`).
 
 ---
 
@@ -9,7 +9,7 @@
 
 - **Challenge / Track:** AfterQuery — *Build an RL Environment That Exposes Frontier Agent Failure Modes & Preserves Reward Integrity*
 - **Repository:** `junction-2026` (`main`)
-- **Live Server URL (`coordination/API_URL`):** Shared FastAPI + React 19 web app (`Play`, `Gallery`, `Replays`, `Compare`, `Live`, `Leaderboard`, `Insights`)
+- **Live Server URL (`API_URL` at the repo root):** Shared FastAPI + React 19 web app (`Play`, `Gallery`, `Replays`, `Compare`, `Live`, `Leaderboard`, `Insights`)
 - **Official Harbor + OpenCode Judge One-Liner (`arena/HARBOR.md`, `arena/judge.sh`):**
   ```bash
   make judge                                     # eval-v2 game 1: reference 1.000, do-nothing 0.000, stop-early 0.125
@@ -29,13 +29,12 @@ We built a procedurally seeded 64×64 pixel RL game factory (runtime engine `0.6
 ## How It Maps to the AfterQuery Judging Rubric (100 Points)
 
 ### 1. The Gap (30 pts)
-- **Historical frozen eval-v2 snapshot** (difficulty 4, 8 levels, 3 Tier 3 rules per game), board built Sat 14.11 19:19 UTC from 1,006 runs. Raw runs and `data/derived/` are absent from this clone; figures below are copied from that recorded snapshot and have not been revalidated here:
+- **Historical frozen eval-v2 snapshot** (difficulty 4, 8 levels, 3 Tier 3 rules per game), board built 2026-11-14 from 1,006 runs. Raw runs and `data/derived/` are not in the repo; figures below are copied from that recorded snapshot:
   optimal **1.000**; first-attempt humans **0.693** (20 games, 150/160 levels, 75% full wins, CI 0.632-0.749);
   Gemini 4 Argon h1 **0.494** (7 games, CI 0.372-0.621); Gemini 3.1 Pro h2 **0.439**; Kimi K3.1 h2 **0.398**;
   Gemini 3.8 Flash h1 **0.028**; random / stop-early / do-nothing **0.000**.
 - **Paired, same games:** humans ahead on every shared game: Argon 6/6, Flash 7/7, Gemini Pro h2 4/4, Kimi h2 4/4.
-- **Honest caveats:** Gemini 4 Carbon's first finished eval-v2 game scored 0.789 (above the humans on that game;
-  sweep still running). eval-v1 is the easy set (Gemini 4 models 0.82-0.93 on its game 1).
+- **Honest caveats:** Gemini 4 Carbon's first finished eval-v2 game scored 0.789 (above the humans on that game). eval-v1 is the easy set (Gemini 4 models 0.82-0.93 on its game 1).
 - **On the judges' harness (Harbor + OpenCode), eval-v2 game 1, k=3, 60-min cap** ([harbor/run-logs/](../harbor/run-logs/README.md)):
   reference 1.000; **Gemini 4 Carbon 0.743 / 0.767 / 0.777 (mean 0.762, 7/8 levels each)**; Gemini 3.8 Flash mean 0.322
   (quit early twice); Gemini 4 Argon 0.247 (OpenCode crashed on a Gemini 4 API error, agent-harness bug); stop-early
@@ -60,12 +59,12 @@ We built a procedurally seeded 64×64 pixel RL game factory (runtime engine `0.6
 
 ---
 
-## Architecture Summary (5 Workstreams)
+## Architecture Summary (5 Components)
 
-| Agent | Package | Responsibility |
+| Component | Package | Responsibility |
 |---|---|---|
-| **A1 (FORGE)** | `engine/` + `rules/` | Procedural gridworld generator (runtime engine `0.6.0`), BFS solver, frozen evaluation collections, hold-out splits, rule visuals |
-| **A2 (GATEWAY)** | `server/` + `contracts/` | FastAPI server, crash-safe trace recorder, WebSocket live feed, published snapshot mode, JSON/OpenAPI contracts |
-| **A3 (ARENA)** | `arena/` | Official Harbor task exporter (`harbor-export` + sidecar/verifier), `h1` multi-provider harness, baselines & sweeps |
-| **A4 (STUDIO)** | `web/` (`overview`, `play`, `gallery`, `replay`, `compare`, `live`) | Dark pixel-ledger UI, human play canvas, multi-run comparison, Harbor Docker + OpenCode verification |
-| **A5 (LENS)** | `analysis/`, `web/.../leaderboard\|insights`, `docs/` | Run hygiene & attribution, efficiency/hold-out metrics, rule-discovery matrix, `check-claims`, `eval-v2` auto-proposals, docs & deck |
+| **Engine** | `engine/` + `rules/` | Procedural gridworld generator (runtime engine `0.6.0`), BFS solver, frozen evaluation collections, hold-out splits, rule visuals |
+| **Server** | `server/` + `contracts/` | FastAPI server, crash-safe trace recorder, WebSocket live feed, published snapshot mode, JSON/OpenAPI contracts |
+| **Arena** | `arena/` | Official Harbor task exporter (`harbor-export` + sidecar/verifier), `h1` multi-provider harness, baselines & sweeps |
+| **Web app** | `web/` (`overview`, `play`, `gallery`, `replay`, `compare`, `live`) | Dark pixel-ledger UI, human play canvas, multi-run comparison, Harbor Docker + OpenCode verification |
+| **Analysis** | `analysis/`, `web/.../leaderboard\|insights`, `docs/` | Run hygiene & attribution, efficiency/hold-out metrics, rule-discovery matrix, `check-claims`, `eval-v2` auto-proposals, docs & deck |

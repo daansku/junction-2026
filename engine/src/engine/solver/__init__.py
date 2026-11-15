@@ -1,4 +1,4 @@
-"""Level solver and validity checks (PLAN.md §5)."""
+"""Level solver and validity checks."""
 from __future__ import annotations
 
 import math

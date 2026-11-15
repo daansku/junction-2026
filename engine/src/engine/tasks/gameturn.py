@@ -1,6 +1,6 @@
 """`game_turn`: RL directly on the maps, in the exact h1 harness turn format.
 
-The prompt is A3's real h1 turn (system prompt, previous NOTES, recent actions with changed-cell
+The prompt is the arena's real h1 turn (system prompt, previous NOTES, recent actions with changed-cell
 counts, current screen as RLE), reached by playing a train-v1 game from level 1 with the Narrator
 writing the notes, plus occasional detours so recovery states appear. The reply is the h1 JSON.
 
@@ -62,15 +62,15 @@ def optimal_first_actions(level: Level, state: State, cap: int = BFS_CAP) -> tup
     return None
 
 
-# ---- A5-21 failure targets: what to oversample ------------------------------------------------
+# ---- failure targets: what to oversample ------------------------------------------------
 _DEFAULT_MODES = {"zero_change_wall_bump": 0.47, "late_reset": 0.42, "missed_new_rule": 0.06,
                   "premature_hypothesis": 0.05}
 
 
 @lru_cache(maxsize=1)
 def targets() -> dict:
-    """A5's `analysis/decision_point_targets.json` (oversample weights from real model failures on
-    hold-out-safe runs). Falls back to its 17:55 values if the file is missing."""
+    """The `analysis/decision_point_targets.json` (oversample weights from real model failures on
+    hold-out-safe runs). Falls back to built-in values if the file is missing."""
     from .common import collections_dir_root
     p = collections_dir_root() / "analysis" / "decision_point_targets.json"
     try:
@@ -89,7 +89,7 @@ def _pick_level(rng, g, rule_w: dict, teaching_only: bool) -> int | None:
 
 
 def make_game_turn(seed: int, i: int) -> Sample | None:
-    from arena.agent_loop import SYSTEM, build_parts       # A3's harness: train == inference
+    from arena.agent_loop import SYSTEM, build_parts       # the arena harness: train == inference
     from arena.dataset import MODES, parts_to_text
 
     rng = task_rng("game_turn", seed, i)

@@ -6,7 +6,7 @@
 #   bash arena/harbor_models_smoke.sh [OUT_DIR] [MODEL ...]
 #   CAP=0.05 TASK=harbor/eval-v2/gridworld-s910000-d4-l8-f71ee29e PAR=3 bash arena/harbor_models_smoke.sh /tmp/smoke
 #
-# Needs Docker, harbor==0.26.0 and the keys in .env (coordination/KEYS.md).
+# Needs Docker, harbor==0.26.0 and the keys in .env (docs/KEYS.md).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 OUT=${1:-/tmp/harbor-models-smoke}; shift || true

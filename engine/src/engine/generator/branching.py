@@ -1,4 +1,4 @@
-"""Branching levels (A7): the `gridbranch` family. More alternative routes, more complex levels.
+"""Branching levels: the `gridbranch` family. More alternative routes, more complex levels.
 
 Opt-in like `gridforce` (generator/interaction.py), which stays as it is so the two can be compared:
 only families named "gridbranch*" use this file. Per level, on top of gridforce (new rule forced,
@@ -20,7 +20,7 @@ v2 (BRANCH_VERSION 2) builds instead of rejecting: loops are opened in the layou
 target is met, start and goal are a far pair, a goal vault is added whenever a gate rule needs a
 chokepoint, and one_way / hazards / push_blocks / ice are placed on a minimum cut across every
 start-goal route (the naive shortest route is the trap), so the mechanic is met whichever route
-the player takes. Other rules keep A1's placement. Checks run cheapest first.
+the player takes. Other rules keep the default placement. Checks run cheapest first.
 
 Changing any constant changes every `gridbranch` game: bump BRANCH_VERSION.
 """
@@ -252,7 +252,7 @@ def path_cells(lv: Level, actions) -> list[Pos]:
 
 
 class BranchDraft(Draft):
-    """Draft whose reach / path know teleporters: entering one end puts you on the other. A1's
+    """Draft whose reach / path know teleporters: entering one end puts you on the other. The default
     placement code calls these, so doors, plates and the rest still find the route (and its
     chokepoints) after teleporters have walled the goal side off."""
 
@@ -525,7 +525,7 @@ def _travel(dr: Draft, c: Pos, ds, dg) -> tuple[int, int] | None:
 
 
 def place_on_routes(dr: Draft, rule: str, cut: list[Pos]) -> bool:
-    """Write `rule`'s level data (A1's format) so that every route meets the mechanic, with the
+    """Write `rule`'s level data (the standard format) so that every route meets the mechanic, with the
     routes differing: the naive shortest one is the trap, another is the way through."""
     ds, dg = dr.reach(dr.start), dr.reach(dr.goal)
     cut = [c for c in cut if c not in dr.occupied]
@@ -671,7 +671,7 @@ def try_level(seed: int, family: str, difficulty: int, level_idx: int, rules: tu
             if place_on_routes(dr, c.name, cut):
                 cut = [p for p in cut if p not in dr.occupied] or route_cut(dr) or []
                 continue
-        if not c.place(dr):  # gates and the rest: A1's placement (vault gives the chokepoint)
+        if not c.place(dr):  # gates and the rest: default placement (vault gives the chokepoint)
             return _rej("place", c.name, t0)
     data = dict(dr.data)
     data["layout"] = f"{style}{'+vault' if vault else ''}"

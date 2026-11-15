@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
 })
 
 const router = createBrowserRouter([
-  // Booth kiosk: the challenge without the top bar (PLAN.md §3.4).
+  // Booth kiosk: the challenge without the top bar.
   { path: '/kiosk', element: <ChallengePage kiosk /> },
   {
     element: <Layout />,

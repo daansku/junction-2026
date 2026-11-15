@@ -3,7 +3,7 @@
 Two ways to reach the model, same settings either way:
   --model <hf id | dir> [--lora <dir>]    load it in-process with vLLM (needs a free GPU)
   --api <base url ending in /v1> --served-name <name> --tokenizer <hf id | dir>
-                                          an OpenAI-compatible vLLM server that already serves it (e.g. A3's
+                                          an OpenAI-compatible vLLM server that already serves it (e.g. our
                                           `vllm serve` on the GPU box); key from $OPENAI_API_KEY
 
 Passes:

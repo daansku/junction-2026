@@ -34,7 +34,7 @@ def cmd_gen(a) -> int:
 
 
 def _build_one(args: tuple) -> dict | None:
-    seed, levels, d, *rest = args  # optional: family (A7, gridforce), rule pool (A1, eval-v4)
+    seed, levels, d, *rest = args  # optional: family (gridforce), rule pool (eval-v4)
     fam = rest[0] if rest else "gridworld"
     pool = rest[1] if len(rest) > 1 else None
     view = rest[2] if len(rest) > 2 else None
@@ -90,10 +90,10 @@ def cmd_collection(a) -> int:
 
 
 def cmd_tasks(a) -> int:
-    """A1-20: auxiliary verifiable tasks for post-training, as chat JSONL."""
+    """Auxiliary verifiable tasks for post-training, as chat JSONL."""
     from .tasks import DEFAULT_ALL, write_jsonl
     names = list(DEFAULT_ALL) if a.task == "all" else a.task.split(",")
-    if a.collection:  # A7: build tasks from another train collection (e.g. train-v3b, gridbranch)
+    if a.collection:  # build tasks from another train collection (e.g. train-v3b, gridbranch)
         from .tasks import common
         common.SOURCE = a.collection
     t0 = time.time()
@@ -117,7 +117,7 @@ def cmd_rs(a) -> int:
 
 
 def cmd_probe(a) -> int:
-    """A1-23: transfer-probe collection. Fresh seeds (eval range, never trained) whose levels
+    """Transfer-probe collection. Fresh seeds (eval range, never trained) whose levels
     use rule combinations that appear in no level of train-v1 or eval-v1. Tiers 1-2 only, so it
     measures near transfer (new combinations of known rules), not unseen rules (that is eval-v2).
     Each game lists its novel levels in `probe_levels` (1-based)."""
@@ -337,10 +337,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--workers", type=int, default=1)
     p.add_argument("--limit", type=int, default=0, help="keep at most N games after filtering")
     p.add_argument("--frozen", action="store_true", help="mark the collection frozen")
-    p.add_argument("--family", default="gridworld", help="gridforce = forced-interaction generator (A7)")
+    p.add_argument("--family", default="gridworld", help="gridforce = forced-interaction generator")
     p.add_argument("--rule-pool", default="", help="comma list: each game draws its rules from this pool, "
-                   "in a per-seed order (A1, eval-v4); default = the curriculum's pool")
-    p.add_argument("--view", default="", help="what the player sees, rules untouched (A1, eval-v6): "
+                   "in a per-seed order (eval-v4); default = the curriculum's pool")
+    p.add_argument("--view", default="", help="what the player sees, rules untouched (eval-v6): "
                    "comma list of fog<r>, glimpse, recolor (generator/view.py)")
     p.set_defaults(fn=cmd_collection)
     p = sub.add_parser("play", help="play in the terminal"); _game_args(p); p.set_defaults(fn=cmd_play)

@@ -1,4 +1,4 @@
-"""A7 interaction audit: how close does a player who never uses a level's rule get to optimal?
+"""Interaction audit: how close does a player who never uses a level's rule get to optimal?
 
   python engine/tools/interaction_audit.py --collection eval-v1 [--max-games 30] [--out audit.json]
   python engine/tools/interaction_audit.py --family gridforce --difficulty 2 --seeds 5000:5020

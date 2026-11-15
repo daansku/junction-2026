@@ -1,4 +1,4 @@
-"""GRPO on A1's engine-verified tasks, from a LoRA SFT checkpoint (PLAN.md phase 2 §3.3 step 3, A3-25).
+"""GRPO on the engine-verified tasks, from a LoRA SFT checkpoint.
 
 Built on TRL's GRPOTrainer (checked against trl 1.18.0): passing a `PeftModel` whose adapter is already
 trained makes TRL copy it to a frozen "ref" adapter, so the KL term (`beta`) is to the SFT policy, not the
@@ -79,7 +79,7 @@ def make_reward(fake: bool = False, thinking: bool = False, tok=None):
         def score(sample: dict, reply: str) -> float:  # toy: answer line present + shorter is better
             return (0.5 if "ANSWER:" in reply else 0.0) + 0.5 / (1 + len(reply) / 50)
     else:
-        from engine.tasks import reward as score  # A1-22, exploit-tested; do not wrap with partial credit
+        from engine.tasks import reward as score  # exploit-tested; do not wrap with partial credit
 
     def grade(sample: dict, reply: str) -> float:
         if sample["task"].startswith("rg:"):

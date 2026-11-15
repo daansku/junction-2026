@@ -1,7 +1,7 @@
-"""Engine API contract (PLAN.md section 4.3). Frozen at G0; additive changes only, via a request to A2.
+"""Engine API contract. Frozen at G0; additive changes only.
 
-A1 implements this in `engine` (import path: `from engine import make_game, load_game, GameSpec, Action`).
-A2, A3 and A5 code against these types. This file is a reference: it has no dependencies and is
+The `engine` package implements this (import path: `from engine import make_game, load_game, GameSpec, Action`).
+The server, arena and analysis code against these types. This file is a reference: it has no dependencies and is
 importable on its own (`python contracts/engine_api.py` runs a self-check).
 
 Frame wire format: list of 64 strings, each 64 lowercase hex chars (one char per cell, value 0-15),
@@ -41,7 +41,7 @@ class GameSpec:
     difficulty: int = 2            # 1..3
     rules: Optional[list[str]] = None  # None -> curriculum picks from the seed
     skin_shuffle: bool = True
-    # A1, eval-v6: what the player sees, never the rules ("fog2,glimpse,recolor", engine generator/view.py).
+    # eval-v6: what the player sees, never the rules ("fog2,glimpse,recolor", engine generator/view.py).
     # Optional: games without a view omit the key in their spec dict, exactly as before.
     view: Optional[str] = None
 
