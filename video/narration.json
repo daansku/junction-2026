@@ -28,7 +28,7 @@
       "Each failure gets a label. And everything they needed was on the screen."
     ]},
     {"key": "S4", "file": "s4_reward", "scene": "S4Reward", "lines": [
-      "To trust these numbers, the score has to be hard to game. It rewards solving levels efficiently, and nothing else.",
+      "The score rewards solving levels efficiently, and nothing else.",
       "On the judges' own harness, doing nothing scores zero, and stopping after one level earns only that level.",
       "Resetting never erases the moves already spent.",
       "And the score is computed in a separate container that the agent cannot reach."
@@ -38,8 +38,11 @@
       "We trained a nine-billion-parameter model on single moves from our games, with reinforcement learning and thinking switched on. After thirty steps, it solves five points more maths problems."
     ]},
     {"key": "S5R", "file": "s5r_rover", "scene": "S5RRover", "lines": [
-      "We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home.",
-      "A scripted explorer almost always succeeds, and random driving almost never. A small four-billion-parameter model completes thirty-nine missions in a hundred.",
+      "We also built a test outside our games: a rover whose controls are scrambled. It has to work out which button drives which way, find a beacon, and get home."
+    ]},
+    {"key": "S5M", "file": "s5m_mars", "scene": "S5MMars", "lines": []},
+    {"key": "S5C", "file": "s5r_rover", "scene": "S5RChart", "lines": [
+      "A scripted explorer almost always succeeds. A small four-billion-parameter model completes thirty-nine in a hundred.",
       "After one round of training on our games, it completes forty-four."
     ]},
     {"key": "S6S7", "file": "s6_s7_close", "scene": "S6S7Close", "lines": [

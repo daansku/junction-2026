@@ -37,7 +37,7 @@ def env():
 
 
 def render(sc, quality):
-    log = MEDIA / f"log_{sc['file']}.txt"
+    log = MEDIA / f"log_{sc['key']}.txt"
     with open(log, "w", encoding="utf-8") as f:
         r = subprocess.run([str(MANIM), f"-q{quality}", "--media_dir", str(MEDIA), f"{sc['file']}.py", sc["scene"]],
                            cwd=VIDEO / "scenes", env=env(), stdout=f, stderr=subprocess.STDOUT)

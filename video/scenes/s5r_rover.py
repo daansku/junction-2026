@@ -147,9 +147,20 @@ class S5RRover(Scene):
             self.play(rover.body.animate.set_fill(GOOD), run_time=0.3)
         self.wait(0.4)
 
+        # hand over to the 3D scene (s5m_mars.py): only the map and the rover stay on screen
+        keep = {id(m) for m in (grid, base_mark, base_lab, rover, beacon)}
+        self.play(FadeOut(Group(*[m for m in self.mobjects if id(m) not in keep])), run_time=0.4)
+        vo.finish(extra=0.1)
+
+
+class S5RChart(Scene):
+    """Second half of the rover segment: the results chart (narration key S5C)."""
+
+    def construct(self):
+        cfg = json.loads((VIDEO / "rover.json").read_text(encoding="utf-8"))
+        vo = Narration(self, "S5C")
         # ---- the chart: frontier vs the small model ----
-        vo.cue(1, delay=0.4)
-        self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)
+        vo.cue(0, delay=0.3)
         title = Text(cfg["chart_title"], font=SANS, font_size=26, color=TEXT_1).to_edge(UP, buff=0.7)
         sub = Text(cfg["chart_sub"], font=MONO, font_size=14, color=TEXT_3).next_to(title, DOWN, buff=0.12)
         x0, width, y = -1.2, 6.0, 1.3
@@ -197,7 +208,7 @@ class S5RRover(Scene):
             self.add(tag)
 
         # ---- our model's row ----
-        vo.cue(2, delay=0.2)
+        vo.cue(1, delay=0.2)
         for b, lab, bar, ci, num in ours:
             self.play(FadeIn(lab), GrowFromEdge(bar, LEFT), run_time=0.8)
             self.play(FadeIn(VGroup(ci, num)), run_time=0.4)

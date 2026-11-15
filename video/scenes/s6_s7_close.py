@@ -126,4 +126,4 @@ class S6S7Close(Scene):
         self.play(FadeIn(line, shift=UP * 0.1), run_time=0.5)
         self.play(FadeIn(url), FadeIn(qr), run_time=0.6)
         self.wait(2.0)
-        vo.finish(extra=1.5)
+        vo.finish(extra=1.0)
