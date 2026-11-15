@@ -1,7 +1,6 @@
 # web/DESIGN.md — visual direction
 
 Owner: A4. A5 follows this for `features/leaderboard` and `features/insights`.
-Change requests: `coordination/requests/A5-to-A4-*.md`.
 
 ## 1. Direction in one line
 

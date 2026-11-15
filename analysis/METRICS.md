@@ -1,13 +1,13 @@
 # Metrics Specification (`analysis/METRICS.md`)
 
-Exact mathematical definitions for every derived table in `data/derived/` and `data/fixtures/derived/`, matching `contracts/trace.schema.json`, `contracts/derived.schema.json`, and `PLAN.md §4.6`.
+Exact mathematical definitions for every derived table in `data/derived/` and `data/fixtures/derived/`, matching `contracts/trace.schema.json`, `contracts/derived.schema.json`.
 
 ---
 
 ## 1. Run Hygiene & Trace Attribution (`steps.jsonl` → Per-Level Segments)
 
 ### Benchmark Run Hygiene (`filter_benchmark_runs`)
-Before aggregation, `load_runs(..., clean=True)` removes non-benchmark noise from shared server exports (`PLAN.md §3.2`, `coordination/OVERNIGHT.md`):
+Before aggregation, `load_runs(..., clean=True)` removes non-benchmark noise from shared server exports:
 1. **Unlabelled practice humans & mid-run take-overs:** `player.kind == "human"` with `name/id` in `{"anonymous", "test"}` (intentional labelled human baseline runs use `--player human:<label>`), plus any session with `meta.start_level` or `meta.takeover_of` set (`COORDINATION.md` §3: `[ TAKE OVER FROM STEP N ]` sessions jump straight into level $L$ and are never counted in baselines).
 2. **Smoke checks:** `player.id` starting with `"smoke-"`.
 3. **Infrastructure / timeout aborts:** runs with `end_reason == "idle_timeout"`, or `player.kind == "model"` with `outcome == "ABORTED"` (provider disconnects, 530 tunnel drops, or interrupted batch pools), while preserving intentional reward-integrity baselines (`noop`, `stop_early`, `random`) whose `outcome` may be `"ABORTED"`.
@@ -33,11 +33,11 @@ Each finished run consists of `meta.json` and `steps.jsonl`:
 
 ## 2. Headline Efficiency Score (`leaderboard.json`)
 
-> **Ranking (human decision, Sat ~23:45, `coordination/DECISIONS.md`):** boards rank **completion first**: games won,
+> **Ranking (human decision, Sat ~23:45):** boards rank **completion first**: games won,
 > then levels solved, then this efficiency score as the tiebreak (`web/src/features/leaderboard/ranking.ts`,
 > `aggregate.py` row order). The score below is shown as **Efficiency**; it is still the Harbor / RL reward.
 
-Adopted from ARC-AGI-3's action-efficiency scoring (`PLAN.md §4.6` & `contracts/derived.schema.json`):
+Adopted from ARC-AGI-3's action-efficiency scoring (`contracts/derived.schema.json`):
 
 For each level $L \in \{1, \dots, \text{levels\_total}\}$ of a game:
 
@@ -137,14 +137,14 @@ For every attempted failed level (`actions_used > 0` and `solved == False`) on a
 
 ## 7. Lab-Standard Evaluation & Confidence Intervals (`leaderboard_h2.json`, Phase 2 `A5-20`)
 
-### Strict Harness Separation (`PLAN.md` §1.1 & §3.1)
+### Strict Harness Separation
 - `leaderboard.json` aggregates **only** `h1` model runs (`harness_filter == "h1"`, stateless rolling-notes harness) plus reference baselines/humans.
 - `leaderboard_h2.json` aggregates **only** `h2` model runs (`harness_filter == "h2"`, multi-turn conversation + preserved reasoning blocks + native `act(action, hypothesis, belief)` tool + `high`/`max` effort + `64k`/`32k` output cap + last-5 image frames with prompt caching) plus reference `Optimal` and `Human` rows matched to the `h2` game subset per collection.
 - **Additional Phase 2 Run Hygiene (`loader.py`):**
   - Visitor kiosk runs from `/challenge` (`player.mode == "challenge"` or `player.purpose == "challenge"`) and assisted `/play` runs (`assisted == True`) are excluded from benchmark tables.
   - Unfinished/aborted runs (`is_finished() == False`: missing `result`, `outcome == "IN_PROGRESS"`, or `end_reason in INFRA_REASONS` such as `error`, `aborted`, `timeout`, `rate_limited`, `provider_error`, `disconnected`) are excluded so aborted runs never drag scores down.
   - Pre-`2026-11-14T15:35:00Z` `h2` runs ending with `end_reason == "budget_tokens"` (3M cached-context token counter bug) are dropped.
-  - Cost-capped model runs (`end_reason == "budget_cost"`, e.g. early `$2`/`$4`/`$18` per-game safety caps) remain visible as lower bounds while uncapped reruns are in flight, and are automatically superseded per `(player_id, effort, harness_version, game_id)` as soon as at least one uncapped finished replacement run lands (`DECISIONS.md` lines 36–37).
+  - Cost-capped model runs (`end_reason == "budget_cost"`, e.g. early `$2`/`$4`/`$18` per-game safety caps) remain visible as lower bounds while uncapped reruns are in flight, and are automatically superseded per `(player_id, effort, harness_version, game_id)` as soon as at least one uncapped finished replacement run lands.
   - Pre-`2026-11-14T15:15:00Z` Gemini `h1` rows are flagged with `cost_underreported = true` and `cost_note` (`~3.6x` undercount before `billed_tokens` included thinking tokens).
 
 ### Bootstrap 95% Confidence Intervals
@@ -157,12 +157,12 @@ For any row with $G \ge 2$ game runs and per-game scores $s_1, \dots, s_G$:
 
 ## 8. Post-Training & Outside-Benchmark Transfer (`bench_summary.json`, Phase 2 `A5-20`)
 
-Built by `analysis/src/analysis/bench_agg.py` from `data/derived/bench/<run>/{summary.json,items.jsonl,summary_v3.json,items_v3.jsonl}` (`bench/PROTOCOL.md` v3, `FT_BENCHMARKS.md`, & `DECISIONS.md` Sat 20:50 / 21:15):
+Built by `analysis/src/analysis/bench_agg.py` from `data/derived/bench/<run>/{summary.json,items.jsonl,summary_v3.json,items_v3.jsonl}` (`bench/PROTOCOL.md` v3, `FT_BENCHMARKS.md`):
 
 - **Canonical `PROTOCOL v3` Rescoring (`items_v3.jsonl` / `summary_v3.json`):** Automatically prefers `items_v3.jsonl` / `summary_v3.json` written by `python -m posttrain.rescore_answer` (which accepts `"ANSWER: X"` when lm-eval's strict filter returned `[invalid]`, changing `0` items on `base`), while preserving official raw lm-eval means (`official_mean`, `rescored_count`, `official_tier_means`) alongside `v3` means for full transparency.
 - **Two-Line Candidate Promotion & Matched Controls:**
   - Line 1 (no-thinking SFT v2 / RL): `ctrl`, `games` (promoting `sft-games-dev-merged` when full `games` is absent), `mix`, and `rl-nothink` (`rl-grpo-*`), paired against `ctrl`.
-  - Line 2 (`DECISIONS.md` Sat 21:15 Thinking-On GRPO from base): promotes best checkpoint of `rl-think-games-*` → `think-games` and `rl-think-ctrl-*` → `think-ctrl`, pairing `think-games` directly against matched `think-ctrl` (and shared-item `base`).
+  - Line 2 (thinking-on GRPO from base): promotes best checkpoint of `rl-think-games-*` → `think-games` and `rl-think-ctrl-*` → `think-ctrl`, pairing `think-games` directly against matched `think-ctrl` (and shared-item `base`).
 - **Primary Far-Transfer Suite (6 benchmarks, unweighted mean = headline):**
   1. `bbh` (`bbh_cot_fewshot`, all 27 tasks, 3-shot CoT, 1,350 full / 675 dev-slice items)
   2. `math` (`minerva_math`, 0-shot CoT, 350 full / 140 dev-slice items)

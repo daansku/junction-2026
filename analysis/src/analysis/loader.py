@@ -88,7 +88,7 @@ def find_repo_root(start: Path | None = None) -> Path:
     if cur.is_file():
         cur = cur.parent
     for candidate in [cur, *cur.parents]:
-        if (candidate / "contracts" / "derived.schema.json").exists() or (candidate / "PLAN.md").exists():
+        if (candidate / "contracts" / "derived.schema.json").exists():
             return candidate
     return Path.cwd()
 

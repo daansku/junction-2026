@@ -1,34 +1,10 @@
 # Judging path: Harbor + OpenCode over MCP
 
-PLAN.md assigns none of this. A human decided on Sat 14.11 03:21: **the team does the missing pieces now, with the owners below.**
-`DECISIONS.md` should get a line pointing here.
+Judges rerun the environment with their standard harness, **Harbor running the OpenCode agent over MCP**: a reference run, agent runs, a do-nothing baseline and a stop-early baseline, then hunt for reward exploits. One command runs it: `make judge` (see the README).
 
-## What judges do (docs/CHALLENGE.md)
-They rerun with their standard harness, **Harbor running the OpenCode agent over MCP**:
-a reference run, 3 agent runs, a do-nothing baseline and a stop-early baseline.
-Then they spend 15 minutes hunting reward exploits. They must be able to run the eval from the README with one command.
-
-## Decision
-- **Official judging path = A3's Harbor export** (`arena/HARBOR.md`, `python -m arena harbor-export`).
-  The game runs in a sidecar exposing only MCP `observe`/`act`. Its score is written inside the sidecar and graded by a separate verifier container.
-- **No second judging path.** A2 does not build a fixed-game MCP mode or a score endpoint for judging. `python -m server mcp` (A2-06) stays for the demo and dev, and is not what judges run.
-- Docs must send judges to the Harbor commands, not to `python -m server mcp`.
-
-## Owners and checklist
-| # | Task | Owner | Status |
-|---|---|---|---|
-| 1 | Harbor task export: sidecar, verifier, oracle (reference), nop (do-nothing) | A3 | done (`harbor lint` clean, oracle 1.0 natively) |
-| 2 | **Stop-early baseline**: `-a oracle --ae ORACLE_STOP_AFTER_LEVELS=<n>` (oracle replays only the first n levels) | A4 | done |
-| 3 | **Docker build + full `harbor run`** with oracle / nop / stop-early on `dev` (needs Docker: A4's machine has it) | A4 | done (see Results) |
-| 4 | **OpenCode agent run** through Harbor, using the organisers' Nemotron opencode config (`NVIDIA_VERDA_INFERENCE_KEY`, see `coordination/KEYS.md`) | A4 | done once (see Results); 3 attempts in OVERNIGHT.md |
-| 5 | Export the frozen `eval-v1` after the 11:00 freeze and rerun oracle once | A3 | done 13:25: `harbor/eval-v1/` (30 tasks, engine 0.6.0, lint clean); Docker oracle 1.0 / nop 0.0 / stop-early 0.167 (Results) |
-| 6 | README one-command eval + fix SUBMISSION / QA_PREP / DEMO_SCRIPT / PITCH to use the Harbor commands | A5 | done (`README.md`, `docs/{SUBMISSION,QA_PREP,DEMO_SCRIPT,PITCH}.md`) |
-| 7 | Reward integrity check: do-nothing = 0, stop-early earns only the solved levels, oracle = 1.0, reported in the deck | A5 (numbers from A4's runs) | done (`docs/deck/SLIDES.md`, `docs/deck/index.html`) |
-| 8 | **Red-team the reward** from the agent's seat (custom Harbor agent inside the agent container): forged evidence, hidden files, side routes, malformed actions, sessions, races, spam | A4 | done Sat 14:55: every attack 0.0 (Results → Red team) |
-| 9 | **Judge simulation:** fresh clone, follow `README.md` literally, oracle + nop on frozen `eval-v1` | A4 | done Sat 14:40: oracle 1.0 / nop 0.0 after `make setup`; README setup order + committed `harbor/eval-v1` command fixed by A5 |
-
-Update the Status column when you finish a row.
-Results of the runs go under "Results" below, with the exact commands.
+- **Official judging path = the Harbor export** (`arena/HARBOR.md`, `python -m arena harbor-export`). The game runs in a sidecar exposing only MCP `observe`/`act`. Its score is written inside the sidecar and graded by a separate verifier container.
+- `python -m server mcp` exists for the demo and local dev only; it is not the judging path.
+- Model API keys: `coordination/KEYS.md`.
 
 ## Results
 Sat 14.11 03:2x, A4's machine: Docker 29.8.1, Harbor 0.26.0 (`uv tool install harbor==0.26.0`).

@@ -1,6 +1,6 @@
 # Project Submission Sheet (`docs/SUBMISSION.md`)
 
-> Pre-filled submission reference matching `PLAN.md §7`, `docs/CHALLENGE.md`, and `coordination/JUDGING.md`.
+> Submission reference for the AfterQuery challenge; judging details in `coordination/JUDGING.md`.
 > **Rule:** Every benchmark number below traces directly to `coordination/JUDGING.md`, `data/derived/*.json`, and `data/fixtures/derived/*.json` (verified by `python -m analysis check-claims`).
 
 ---

@@ -1,8 +1,8 @@
 # Running our games in Harbor (the AfterQuery judging harness)
 
 The judges rerun everything with **Harbor + OpenCode over MCP**: a reference run, three agent runs,
-a do-nothing baseline and a stop-early baseline, then spend 15 minutes hunting reward exploits
-(docs/CHALLENGE.md). This folder turns each game into a Harbor task they can run as-is.
+a do-nothing baseline and a stop-early baseline, then spend 15 minutes hunting reward exploits.
+This folder turns each game into a Harbor task they can run as-is.
 
 ```bash
 python -m arena harbor-export --collection eval-v1 --out harbor/eval-v1
@@ -24,7 +24,7 @@ harbor run -p harbor/eval-v1 -a opencode -m <provider/model>    # frontier agent
 | `solution/solve.sh` | oracle: replays the optimal path through the MCP tools |
 
 ## Reward
-Per PLAN.md §4.6 (ARC-AGI-3 style): mean over levels of `min(1, optimal_moves / actions_on_level)` for solved
+ARC-AGI-3 style: mean over levels of `min(1, optimal_moves / actions_on_level)` for solved
 levels, 0 for unsolved. Every move and RESET on a level counts. In [0, 1]; only optimal play reaches 1.
 
 ## Exploit surface (what judges can poke at)
