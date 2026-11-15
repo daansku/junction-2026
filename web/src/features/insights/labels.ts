@@ -154,6 +154,105 @@ export function conciseSummary(raw?: string | null): string {
   return s.length > 165 ? `${s.slice(0, 162).trimEnd()}…` : s
 }
 
+// ---- Plain-language failure summaries
+// The auditor writes one sentence per failure from fixed templates (analysis/src/analysis/explain.py), full of
+// pipeline terms ("engine truth", "Knowing-Doing Gap", "spatial rollout", backticked slugs). These rules turn each
+// template back into short, plain sentences with the same facts and numbers (style: github.com/blader/humanizer).
+// Text that matches no template falls back to conciseSummary.
+
+const EVENT_PLAIN: Record<string, string> = {
+  bump: 'a wall',
+  hurt: 'a hazard',
+  caught: 'an enemy',
+  'budget exhaustion': 'the move limit',
+  floor_collapsed: 'a collapsing floor',
+  walls_closed: 'a closing wall',
+  pushed: 'a block it pushed',
+  '[NO_EFFECT]': 'a wall',
+}
+
+function eventPlain(ev: string): string {
+  return EVENT_PLAIN[ev] ?? RULE_LABELS[ev] ?? ev.replace(/_/g, ' ')
+}
+
+/** "ran into a wall at step 5", or "ran out of moves at step 150" for the move-limit event */
+function hitAt(ev: string, step: string): string {
+  return ev === 'budget exhaustion' ? `ran out of moves at step ${step}` : `ran into ${eventPlain(ev)} at step ${step}`
+}
+
+function rulePlain(rule: string): string {
+  return RULE_LABELS[rule] ?? rule.replace(/_/g, ' ')
+}
+
+const T = '`([^`]+)`' // a backticked slug
+const N = '(\\d+)'
+const SRC = '(?:h\\d notes|h\\d CoT|hypothesis trace \\(CoT encrypted\\))'
+
+const PLAIN_RULES: Array<[RegExp, (m: string[]) => string]> = [
+  [
+    new RegExp(`misread \\d+x\\d+ wall/goal coordinates around step ${N}.*?recorded ${N} blocked moves.*?optimal: ${N} moves`),
+    (m) => `It misjudged where the walls and the goal were (from step ${m[1]}). ${m[2]} of its moves walked into a wall and changed nothing. The shortest route takes ${m[3]} moves.`,
+  ],
+  [
+    new RegExp(`${SRC} correctly identified ${T} at step ${N}, but multi-step rollout failed across ${N} actions \\(engine optimal: ${N} moves\\)`),
+    (m) => `It worked out ${rulePlain(m[1])} by step ${m[2]}, but couldn't turn that into a working route. It used ${m[3]} moves where ${m[4]} were enough.`,
+  ],
+  [
+    new RegExp(`executed ${N} no-effect actions \\(streak of ${N} starting near step ${N}\\) without inducing ${T} or rerouting around engine ${T} feedback`),
+    (m) =>
+      `${m[1] === m[2] ? `It made ${m[1]} moves in a row that changed nothing, starting at step ${m[3]}.` : `It made ${m[1]} moves that changed nothing, ${m[2]} of them in a row from step ${m[3]}.`} It kept pushing into ${eventPlain(m[5])} instead of trying another way, and never figured out ${rulePlain(m[4])}.`,
+  ],
+  [
+    new RegExp(`After triggering ${T} at step ${N}, model deduced ${T} in ${SRC} at step ${N} yet failed spatial recovery across ${N} moves \\(optimal: ${N} moves\\)`),
+    (m) => `It ${hitAt(m[1], m[2])} and worked out ${rulePlain(m[3])} at step ${m[4]}, but never found a way through. It used ${m[5]} moves; the shortest route takes ${m[6]}.`,
+  ],
+  [
+    new RegExp(`acted under an unverified hypothesis without deducing ${T} in ${SRC}; engine truth recorded ${T} at step ${N} \\(optimal: ${N} moves\\)`),
+    (m) => `It went with an untested guess and never worked out ${rulePlain(m[1])}. It ${hitAt(m[2], m[3])}. The shortest route takes ${m[4]} moves.`,
+  ],
+  [
+    new RegExp(`claimed forward movement at step ${N} while engine truth recorded ${T} \\(${T} / 0 pixels changed across ${N} consecutive steps\\)`),
+    (m) => `At step ${m[1]} it thought it was moving forward, but it was stuck against ${eventPlain(m[3])} for ${m[4]} moves in a row.`,
+  ],
+  [
+    new RegExp(`Despite mentioning ${T} at step ${N}, model repeated ${N} consecutive zero-effect actions without revising its blocked route`),
+    (m) => `It mentioned ${rulePlain(m[1])} at step ${m[2]}, then made ${m[3]} moves in a row that changed nothing without changing its route.`,
+  ],
+  [
+    new RegExp(`${SRC} never identified ${T}, and engine truth confirms ${N} ${T} events across all ${N} actions`),
+    (m) =>
+      m[2] === '0'
+        ? `It never worked out ${rulePlain(m[1])} and never once used it in ${m[4]} moves.`
+        : `It never worked out ${rulePlain(m[1])}, even though it ran into ${eventPlain(m[3])} ${m[2]} times in ${m[4]} moves.`,
+  ],
+  [
+    new RegExp(`articulated ${T} in ${SRC} at step ${N}, yet its trajectory collided with ${T} at step ${N} \\(optimal: ${N} moves\\)`),
+    (m) => `It described ${rulePlain(m[1])} at step ${m[2]}, but still ${hitAt(m[3], m[4])}. The shortest route takes ${m[5]} moves.`,
+  ],
+  [
+    new RegExp(`deduced ${T} by step ${N} but delayed RESET until step ${N}, exhausting ${N}/${N} moves against a ${N}-move solution`),
+    (m) => `It worked out ${rulePlain(m[1])} by step ${m[2]} but didn't restart the level until step ${m[3]}. By then it had used ${m[4]} of its ${m[5]} moves. The shortest route takes ${m[6]}.`,
+  ],
+  [
+    new RegExp(`spent ${N} moves across ${N} late resets \\(first at step ${N}\\) without inducing ${T} in time for the ${N}-move path`),
+    (m) => `It restarted the level ${m[2]} times (first at step ${m[3]}) and used ${m[1]} moves, but never worked out ${rulePlain(m[4])}. The shortest route takes ${m[5]} moves.`,
+  ],
+  [
+    new RegExp(`reported \`belief=(\\w+)\` at step ${N} while engine truth was \`(\\w+)\` \\(${T} remained unsatisfied\\)`),
+    (m) => `At step ${m[2]} it thought it had ${m[1] === 'won' ? 'won' : m[1]}, but the level was still going: ${rulePlain(m[4])} wasn't done yet.`,
+  ],
+]
+
+/** One or two plain sentences for a failure card, built from the auditor's sentence. */
+export function plainSummary(raw?: string | null): string {
+  if (!raw) return ''
+  for (const [rx, fmt] of PLAIN_RULES) {
+    const m = raw.match(rx)
+    if (m) return fmt(m)
+  }
+  return conciseSummary(raw)
+}
+
 export function truncateQuote(raw?: string | null, max = 115): string {
   if (!raw) return ''
   const clean = raw.replace(/\s+/g, ' ').trim()

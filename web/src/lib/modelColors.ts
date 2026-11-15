@@ -4,6 +4,7 @@
 // (same leaderboard collection, the challenge table, the overview) never share a colour.
 // Models not listed fall back to their position in arena/models.yaml, so a new model still
 // gets a stable colour without code changes. Humans and baselines are not series colours.
+import { canonicalModelId } from '@/lib/modelNames'
 import { cssVar } from '@/lib/PlotFigure'
 
 export const SERIES_SLOTS = 12
@@ -48,7 +49,8 @@ export function baseModelId(id: string): string {
 }
 
 function modelSlot(id: string): number {
-  const base = baseModelId(id)
+  // short ids from analysis files ("open", "ft-qwen3-5-9b", "gemini-flash:medium") resolve to the registry id
+  const base = canonicalModelId(id)
   const fixed = MODEL_SLOT[base]
   if (fixed) return fixed
   const order = REGISTRY_ORDER.indexOf(base)

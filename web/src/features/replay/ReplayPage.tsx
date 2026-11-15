@@ -7,7 +7,7 @@ import { isTyping } from '@/lib/keys'
 import type { Frame, RunMeta, Step } from '@/lib/types'
 import { Button, Chip, Empty, ErrorState, Kbd, Loading, PageHeader, Panel, Stat, cx } from '@/design/primitives'
 import { fetchExplanations } from '@/features/play/epistemicApi'
-import { conciseSummary, friendlyCause, friendlyRule, friendlyStageShort, truncateQuote } from '@/features/insights/labels'
+import { plainSummary, friendlyCause, friendlyRule, friendlyStageShort, truncateQuote } from '@/features/insights/labels'
 import { RuleSprite, XrayOverlay } from '@/features/play/XrayOverlay'
 import './replay.css'
 
@@ -648,7 +648,7 @@ export function ReplayPage() {
                   </div>
                   {(activeExplanation.truth_contrast || activeExplanation.explanation) && (
                     <p className="replay-exp-text">
-                      {conciseSummary(activeExplanation.truth_contrast || activeExplanation.explanation)}
+                      {plainSummary(activeExplanation.truth_contrast || activeExplanation.explanation)}
                     </p>
                   )}
                   {activeExplanation.evidence_quote && (

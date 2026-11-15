@@ -84,13 +84,15 @@ function Showcase({ run }: { run: RunMeta }) {
         <span className="muted">
           live playback · step {i + 1}/{n || '?'}
         </span>
+        {/* bordered (not ghost) so it reads as a button; says what a click does */}
         <Button
-          variant="ghost"
           mono
           active={xraySplit != null}
+          aria-pressed={xraySplit != null}
+          title="Overlay what the game knows: the hidden rules and objects"
           onClick={() => setXraySplit((v) => (v == null ? 50 : null))}
         >
-          X-ray {xraySplit != null ? `${xraySplit}%` : 'off'}
+          {xraySplit != null ? 'Hide X-ray' : 'Show X-ray'}
         </Button>
       </div>
       <div className="ov-canvas-center">

@@ -443,3 +443,20 @@
   .ins-forensic-table .ins-mode-inline { display: inline; font-size: 11px; }
   .ins-forensic-table td { white-space: normal; }
 }
+
+/* model colour swatch next to the name (same colours as the leaderboard) */
+.ins-model-cell { display: inline-flex; align-items: center; gap: var(--s2); }
+
+/* Solved-by-level heatmap: same cell style as the challenge results table */
+.ins-heat { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ins-heat th { color: var(--text-2); font-weight: 500; text-align: center; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.ins-heat td { text-align: center; padding: 4px 6px; border-bottom: 1px solid var(--line); height: 28px; min-width: 48px; }
+.ins-heat .l { text-align: left; white-space: nowrap; }
+.ins-heat tr.ins-heat-few td { opacity: 0.5; }
+/* narrow screens scroll the level columns; the player name stays pinned on the left */
+.ins-heat .l { position: sticky; left: 0; z-index: 1; background: var(--surface-1); }
+@media (max-width: 600px) {
+  .ins-heat { font-size: 11px; }
+  .ins-heat td { min-width: 38px; padding: 4px 3px; }
+  .ins-heat .l { white-space: normal; max-width: 120px; }
+}

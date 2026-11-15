@@ -39,15 +39,21 @@ const NON_MODELS: Record<string, string> = {
   stop_early: 'Stop early',
 }
 
+/**
+ * Registry id for any id the data uses: "gemini-flash@h2b" -> "gemini-flash", "open" -> "featherless-open",
+ * "ft-qwen3-5-9b" -> "verda-ft-qwen3-5-9b", "gemini-flash:medium" -> "gemini-flash". Unknown ids come back as-is.
+ */
+export function canonicalModelId(rawId: string): string {
+  const id = rawId.split('@')[0].split(':')[0]
+  const target = ALIASES[id] ?? id
+  for (const p of PROVIDER_PREFIXES) if (REGISTRY.has(p + target)) return p + target
+  return id
+}
+
 /** Display name for a model or player id ("gemini-flash@h2b" and "open" included), or null if unknown. */
 export function modelName(rawId?: string | null): string | null {
   if (!rawId) return null
   const id = rawId.split('@')[0]
   if (NON_MODELS[id]) return NON_MODELS[id]
-  const target = ALIASES[id] ?? id
-  for (const p of PROVIDER_PREFIXES) {
-    const hit = REGISTRY.get(p + target)
-    if (hit) return hit
-  }
-  return null
+  return REGISTRY.get(canonicalModelId(id)) ?? null
 }

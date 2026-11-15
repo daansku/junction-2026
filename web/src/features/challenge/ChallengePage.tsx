@@ -2,7 +2,7 @@
 // recorded runs (ghost slices from /games/{id}/ghosts) and precomputed per-level stats.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useQueries, useQuery } from '@tanstack/react-query'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { FrameCanvas } from '@/lib/FrameCanvas'
 import { cssVar } from '@/lib/PlotFigure'
@@ -954,7 +954,7 @@ function EndScreen(props: {
   return (
     <div className="ch-end">
       <section className={`ch-verdict ch-a-verdict ${outcome.beat ? 'good' : 'bad'}`}>
-        <span className="kicker">{outcome.beat ? 'result · win' : 'result · loss'}</span>
+        <span className="kicker">{outcome.beat ? 'Win' : 'Loss'}</span>
         <h2 className="ch-verdict-line">{outcome.beat ? 'You beat the AI.' : 'The AI wins this round.'}</h2>
         <div className="ch-stats">
           <div>
@@ -977,7 +977,6 @@ function EndScreen(props: {
           <Button variant="primary" onClick={onAgain}>
             Play again <Kbd>Enter</Kbd>
           </Button>
-          {outcome.runId && <Link to={`/replay/${outcome.runId}`}>Watch your replay</Link>}
         </div>
       </section>
 

@@ -1,4 +1,3 @@
-import * as Plot from '@observablehq/plot'
 import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -10,16 +9,16 @@ import {
   Loading,
   PageHeader,
   Panel,
+  Swatch,
   cx,
 } from '@/design/primitives'
 import { api } from '@/lib/api'
-import { PlotFigure, cssVar } from '@/lib/PlotFigure'
 import { playerColor } from '@/lib/modelColors'
 import type { RunMeta } from '@/lib/types'
 import { fetchExplanations } from '@/features/play/epistemicApi'
 import { RuleSprite } from '@/features/play/XrayOverlay'
 import {
-  conciseSummary,
+  plainSummary,
   friendlyFailureMode,
   friendlyPlayer,
   friendlyRule,
@@ -47,7 +46,6 @@ export function InsightsPage() {
   })
 
   const whyFailedRef = useRef<HTMLDivElement | null>(null)
-  const [curveMode, setCurveMode] = useState<'plot' | 'table'>('plot')
   const [expRuleFilter, setExpRuleFilter] = useState<string>('all')
   const [expStageFilter, setExpStageFilter] = useState<string>('all')
   const [expModelFilter, setExpModelFilter] = useState<string>('all')
@@ -104,34 +102,33 @@ export function InsightsPage() {
     [failureModes],
   )
 
-  const curvePlayers = useMemo(() => {
-    const nonTrivial = learningCurve.filter((p) => p.player_id !== 'noop' && p.player_id !== 'stop_early')
-    const src = nonTrivial.length > 0 ? nonTrivial : learningCurve
-    const unique = Array.from(new Set(src.map((p) => p.player_id)))
-    let chosen = src
-    if (unique.length > 4) {
-      const scoreByPlayer = new Map<string, number>()
-      const countByPlayer = new Map<string, number>()
-      for (const pt of src) {
-        scoreByPlayer.set(pt.player_id, (scoreByPlayer.get(pt.player_id) ?? 0) + pt.mean_score)
-        countByPlayer.set(pt.player_id, (countByPlayer.get(pt.player_id) ?? 0) + 1)
-      }
-      const ranked = [...unique].sort((a, b) => {
-        if (a === 'optimal') return -1
-        if (b === 'optimal') return 1
-        if (a === 'human') return -1
-        if (b === 'human') return 1
-        const ma = (scoreByPlayer.get(a) ?? 0) / Math.max(1, countByPlayer.get(a) ?? 1)
-        const mb = (scoreByPlayer.get(b) ?? 0) / Math.max(1, countByPlayer.get(b) ?? 1)
-        return mb - ma
-      })
-      const keep = new Set(ranked.slice(0, 4))
-      chosen = src.filter((p) => keep.has(p.player_id))
+  // Solve-rate heatmap: one row per player, one column per level. Only players with every level of the
+  // longest game set are shown, so "L3" means the same level for every row (6-level eval-v1 rows would mix in).
+  const heat = useMemo(() => {
+    const SKIP = new Set(['noop', 'stop_early', 'random', 'optimal'])
+    const byPlayer = new Map<string, typeof learningCurve>()
+    for (const pt of learningCurve) {
+      if (SKIP.has(pt.player_id)) continue
+      const list = byPlayer.get(pt.player_id) ?? []
+      list.push(pt)
+      byPlayer.set(pt.player_id, list)
     }
-    return chosen.map((pt) => ({
-      ...pt,
-      playerLabel: friendlyPlayer(pt.player_id),
-    }))
+    const nLevels = Math.max(0, ...learningCurve.map((p) => p.level))
+    const rows = [...byPlayer.entries()]
+      .map(([id, pts]) => {
+        const levels = [...pts].sort((a, b) => a.level - b.level)
+        return {
+          id,
+          name: friendlyPlayer(id),
+          color: playerColor({ id }),
+          levels,
+          runs: Math.max(...levels.map((l) => l.attempts)),
+          mean: levels.reduce((a, l) => a + l.solve_rate, 0) / Math.max(1, levels.length),
+        }
+      })
+      .filter((r) => r.levels.length === nLevels)
+      .sort((a, b) => (a.id === 'human' ? -1 : b.id === 'human' ? 1 : b.mean - a.mean))
+    return { nLevels, rows }
   }, [learningCurve])
 
   const ruleSummaryRows = useMemo(() => {
@@ -275,9 +272,9 @@ export function InsightsPage() {
               onClick={() => jumpToFailures({ stage: expStageFilter === 'h2' ? 'all' : 'h2' })}
             >
               <span className="ins-stat-num mono">
-                {h1PerceptionPct}% → {h2PerceptionPct}%
+                {h1PerceptionPct}% vs {h2PerceptionPct}%
               </span>
-              <span className="ins-stat-title">Misread the board, standard → extended</span>
+              <span className="ins-stat-title">Misread the board: standard vs extended</span>
               <span className="ins-stat-sub mono muted">Remembering earlier turns removes misreads</span>
             </button>
 
@@ -397,7 +394,10 @@ export function InsightsPage() {
                             }}
                           >
                             <td>
-                              <strong>{friendlyPlayer(m.player_id)}</strong>
+                              <span className="ins-model-cell">
+                                <Swatch color={playerColor({ id: m.player_id })} />
+                                <strong>{friendlyPlayer(m.player_id)}</strong>
+                              </span>
                               {m.harness_version === 'h2' && <span className="ins-h2-tag ins-mode-inline mono"> extended</span>}
                             </td>
                             <td className="mono ins-col-mode">
@@ -491,13 +491,16 @@ export function InsightsPage() {
                 {filteredExplanations.slice(0, visibleCount).map((ex) => {
                   const replayHref = `/replay/${encodeURIComponent(ex.run_id)}?step=${ex.step ?? 0}&xray=50`
                   const tkHref = buildTakeoverHref(ex.run_id, ex.step, ex.level, ex.game_id, ex.player_id)
-                  const oneLiner = conciseSummary(ex.truth_contrast || ex.explanation)
+                  const oneLiner = plainSummary(ex.truth_contrast || ex.explanation)
                   const shortQuote = truncateQuote(ex.evidence_quote, 115)
 
                   return (
                     <div key={`${ex.run_id}-${ex.level}`} className="ins-exp-card">
                       <div className="ins-exp-card-head">
-                        <strong>{friendlyPlayer(ex.player_id)}</strong>
+                        <span className="ins-model-cell">
+                          {ex.player_id && <Swatch color={playerColor({ id: ex.player_id })} />}
+                          <strong>{friendlyPlayer(ex.player_id)}</strong>
+                        </span>
 
                         <span className="ins-card-badges">
                           {ex.deduced_rule_in_cot && (
@@ -555,82 +558,53 @@ export function InsightsPage() {
 
       {/* 3. SIMPLE SUPPORTING CHARTS */}
       <div className="ins-two-col">
-        <Panel
-          label="Score by Level"
-          actions={
-            learningCurve.length > 0 && (
-              <Button
-                mono
-                active={curveMode === 'table'}
-                onClick={() => setCurveMode((m) => (m === 'plot' ? 'table' : 'plot'))}
-              >
-                {curveMode === 'plot' ? 'Table' : 'Chart'}
-              </Button>
-            )
-          }
-        >
-          {!learningCurve.length ? (
+        <Panel label="Solved by Level" actions={<span className="mono muted">share of attempts that solved each level</span>}>
+          {!heat.rows.length ? (
             <Empty>No level scores yet.</Empty>
-          ) : curveMode === 'table' ? (
+          ) : (
             <div className="table-wrap">
-              <table className="table">
+              <table className="ins-heat mono">
                 <thead>
                   <tr>
-                    <th className="num">Level</th>
-                    <th>Player</th>
-                    <th className="num">Solved</th>
-                    <th className="num">Efficiency</th>
+                    <th className="l">Player</th>
+                    {Array.from({ length: heat.nLevels }, (_, i) => (
+                      <th key={i}>L{i + 1}</th>
+                    ))}
+                    <th title="Attempts per level">Runs</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {learningCurve.map((pt) => (
-                    <tr key={`${pt.level}-${pt.player_id}`}>
-                      <td className="num mono">L{pt.level}</td>
-                      <td>{friendlyPlayer(pt.player_id)}</td>
-                      <td className="num mono">{(pt.solve_rate * 100).toFixed(0)}%</td>
-                      <td className="num mono">{pt.mean_score.toFixed(3)}</td>
-                    </tr>
-                  ))}
+                  {heat.rows.map((r) => {
+                    const few = r.runs < 3
+                    return (
+                      <tr key={r.id} className={few ? 'ins-heat-few' : undefined} title={few ? 'Fewer than 3 runs: treat as anecdotal' : undefined}>
+                        <td className="l">
+                          <span className="ins-model-cell">
+                            <Swatch color={r.color} />
+                            {r.name}
+                          </span>
+                        </td>
+                        {r.levels.map((l) => (
+                          <td
+                            key={l.level}
+                            className={l.solve_rate > 0 ? undefined : 'muted'}
+                            style={
+                              l.solve_rate > 0
+                                ? { background: `color-mix(in srgb, ${r.color} ${Math.round(8 + l.solve_rate * 32)}%, transparent)` }
+                                : undefined
+                            }
+                            title={`${r.name} · L${l.level}: solved ${Math.round(l.solve_rate * l.attempts)} of ${l.attempts}`}
+                          >
+                            {Math.round(l.solve_rate * 100)}%
+                          </td>
+                        ))}
+                        <td className="muted">{r.runs}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
-          ) : (
-            <PlotFigure
-              deps={[curvePlayers]}
-              make={(width) => ({
-                width,
-                height: 240,
-                marginBottom: 36,
-                x: {
-                  label: 'Level (each level adds 1 new rule)',
-                  tickFormat: (d: number) => `L${d}`,
-                },
-                y: { domain: [0, 1.04], label: 'Efficiency' },
-                color: (() => {
-                  // fixed per-player colours, same as the leaderboard (lib/modelColors.ts)
-                  const byLabel = new Map(curvePlayers.map((p) => [p.playerLabel, playerColor({ id: p.player_id })]))
-                  return { legend: true, domain: [...byLabel.keys()], range: [...byLabel.values()] }
-                })(),
-                marks: [
-                  Plot.ruleY([1.0], { stroke: cssVar('--text-2') }),
-                  Plot.lineY(curvePlayers, {
-                    x: 'level',
-                    y: 'mean_score',
-                    stroke: 'playerLabel',
-                    strokeWidth: 2,
-                  }),
-                  Plot.dot(curvePlayers, {
-                    x: 'level',
-                    y: 'mean_score',
-                    fill: 'playerLabel',
-                    stroke: cssVar('--surface-1'),
-                    strokeWidth: 1.5,
-                    r: 5,
-                    tip: true,
-                  }),
-                ],
-              })}
-            />
           )}
         </Panel>
 
