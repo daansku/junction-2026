@@ -6,6 +6,8 @@ placeholder colour and listed in NUMBERS.md. Replace with data/derived/bench/<ru
 """
 from __future__ import annotations
 
+import json
+
 import random
 
 from manim import (
@@ -17,7 +19,7 @@ from manim import (
 from common import (
     Narration, ACCENT,
     FAILURE_MODES, LINE_STRONG, MONO, PALETTE, PLACEHOLDER, SANS, TEXT_1, TEXT_2, TEXT_3,
-    agent_sprite,
+    VIDEO, agent_sprite,
 )
 
 random.seed(5)
@@ -28,7 +30,7 @@ class S5PostTrain(Scene):
     def construct(self):
         # ---- failure colours flow into one small agent ----
         bot = agent_sprite(PALETTE[15], unit=0.3)
-        name = Text("Qwen3.5-9B", font=MONO, font_size=22, color=TEXT_2).next_to(bot, DOWN, buff=0.3)
+        name = Text(json.loads((VIDEO / "s5_training.json").read_text(encoding="utf-8"))["rows"][0]["label"], font=MONO, font_size=22, color=TEXT_2).next_to(bot, DOWN, buff=0.3)
         bits = VGroup()
         for _ in range(90):
             c = random.choice([c for _, _, c in FAILURE_MODES])
@@ -47,8 +49,7 @@ class S5PostTrain(Scene):
         self.play(FadeOut(VGroup(bot, name, bits)), q.animate.scale(0.75).to_edge(UP, buff=0.4), run_time=0.6)
 
         # ---- the result: base vs RL on our games (values from video/s5_training.json) ----
-        import json
-        from common import VIDEO, GOOD
+        from common import GOOD
         res = json.loads((VIDEO / "s5_training.json").read_text(encoding="utf-8"))
         num_color = TEXT_1 if res.get("final") else PLACEHOLDER
         title = Text(res["title"], font=SANS, font_size=24, color=TEXT_1).next_to(q, DOWN, buff=0.35)
