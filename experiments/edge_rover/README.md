@@ -1,8 +1,11 @@
 # Edge rover: does game training transfer to a robot-style task?
 
-**Status (Sun 03:35):**
-- **Final:** the thinking-off results and Gemini Flash/Argon (tables below).
-- **Running:** the thinking-ON comparison (base vs our thinking RL checkpoint). Numbers expected ~04:20 for hidden controls and ~05:15 for both conditions; this file will be updated.
+**Status (Sun 03:55):**
+- **Final:** the thinking-off results, Gemini Flash/Argon, and the thinking-ON RL model on hidden controls: **51/100**.
+- **Still running:**
+  - The thinking-ON base: hidden controls ~04:20, then fixed controls ~05:15.
+  - The RL model's fixed-controls run.
+- This file will be updated.
 
 ## The question
 Our games ask a model to discover unseen rules by acting. Does training on them make a model better at a separate task that
@@ -91,8 +94,25 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
 - With hidden controls the 9B halves its success, while frontier models do not drop at all.
 - The gap is wide, and the hidden-rule condition is where small models break.
 
-### Thinking ON: running, numbers ~04:20 / ~05:15
+### Thinking ON: RL hidden controls final; base still running
 `base` vs `think-h2-s60`, 100 test seeds (5000-5099), both conditions.
+
+| Model (thinking on) | Hidden controls | Fixed controls |
+|---|---|---|
+| **think-h2-s60 (RL on our games)** | **51/100 (51%)**, 95% CI 41-61% | running (~04:20) |
+| base Qwen3.5-9B | running: **37 completed at step 31**, the same as the RL model at step 31 (37) | after hidden (~05:15) |
+
+**The RL model's hidden-controls run, in numbers:**
+- **Beacons:** found on 59 of 100 missions; 51 completed the return to base.
+- **Successful missions:** 24.9 actions on average, 17 energy left.
+- **Bumps:** 1.4 per mission, against 30 for thinking-off base.
+- **The thinking cap:** 3,522 of its 3,541 turns hit the 2,048-token cap, so almost every action was a budget-forced answer. 148 turns were still invalid.
+
+**Reading so far (not final):**
+- **Thinking is what matters for this task.** It takes the 9B from 5% (thinking off) to about 50% on hidden controls.
+- **Our thinking RL has shown no measurable advantage over base-with-thinking yet:** at step 31 both have 37 completed missions.
+- **Thinking-off RL is significantly worse than base** (see above).
+- The paired base-vs-RL result goes here when the base finishes.
 
 - **Decoding settings:**
   - Qwen3.5 model-card sampling: T=0.6, top_p=0.95, top_k=20, seeded per mission and turn.
@@ -102,7 +122,9 @@ LoRA stacks are merged into plain checkpoints with `merge_stack.py`, in training
   - **good-move %:** the share of moves that got the rover closer, on the true map, to its current target (the beacon, then base).
   - **Random play:** ~40%.
   - **Also logged:** bump %, mean distance to target, beacons found and successes so far.
-- **First steps (hidden controls):** base 45%, RL 46.5% good moves, both still exploring with the beacon unseen.
+- **RL over its hidden-controls run:** 57% good moves overall.
+  - Per step, it peaks at ~75% around step 18.
+  - After that the per-step average falls, because the missions that finish leave the pool and the stuck rovers remain (survivorship). Completed missions only ever go up.
 
 ## How to run
 **GPU eval, one model, all missions batched; each step is one vLLM generate call:**
@@ -158,6 +180,7 @@ python progress.py
 | `summarize2.py` | results table with CIs and paired tests |
 | `progress.py` | live CLI progress for the GPU runs |
 | `results-nothink/` | final thinking-off rows (one JSON line per mission, with full action history) |
+| `results-think/` | thinking-on rows + per-step direction metrics (`*.metrics.jsonl`) |
 | `test-api/` | Gemini rows |
 | `mission.py`, `run_eval.py`, `build_bootcamp.py`, `combine_bootcamp.py`, `summarize.py` | v1 (Codex), kept for the record |
 
